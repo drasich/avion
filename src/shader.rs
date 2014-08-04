@@ -4,8 +4,13 @@ use self::libc::{c_int, c_char};
 
 #[link(name = "cypher")]
 extern {
-    fn shader_request_add(vert : *const c_char, frag : *const c_char, att : *const c_char) -> c_int;
+    fn shader_request_add(vert : *const c_char, frag : *const c_char, att : *const c_char, cb: extern fn(i32)) -> c_int;
 }
+
+extern fn callback(a:i32) {
+    println!("I am called from C with value {}", a);
+}
+
 
 pub fn shader_init() -> ()
 {
@@ -36,7 +41,7 @@ gl_FragColor = vec4(0.3, 0.3, 0.4, 1.0);
 
         let attc = "position".to_c_str();
         //let id = shader_request_add(vertcp, fragcp, attc.as_ptr());
-        shader_request_add(vertcp, fragcp, attc.as_ptr());
+        shader_request_add(vertcp, fragcp, attc.as_ptr(), callback);
     }
 }
 
