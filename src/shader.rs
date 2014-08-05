@@ -1,6 +1,7 @@
 extern crate libc;
 
 use self::libc::{c_int, c_char};
+pub struct Shader;
 
 #[link(name = "cypher")]
 extern {
@@ -9,6 +10,16 @@ extern {
 
 extern fn callback(a:i32) {
     println!("I am called from C with value {}", a);
+}
+
+pub struct Material
+{
+    shader: *mut Shader,
+    state : i32
+}
+
+extern fn callback_result(material : *mut Material, answer_code :i32, shader : *const Shader) {
+    println!("I am called from C with value {}", answer_code);
 }
 
 
