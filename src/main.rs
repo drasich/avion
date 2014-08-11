@@ -1,4 +1,5 @@
 use std::collections::{DList,Deque};
+use std::mem;
 
 #[link(name = "joker")]
 extern {
@@ -10,6 +11,12 @@ mod shader;
 mod mesh;
 mod render;
 mod object;
+
+static vertex_data_test: [f32, ..6] = [
+    0.0,  0.5,
+    0.5, -0.5,
+    -0.5, -0.5
+      ];
 
 fn main() {
     unsafe {
@@ -23,9 +30,11 @@ fn main() {
     });
     */
 
+    /*
     spawn(proc() {
         mesh::mesh_init();
     });
+    */
 
     spawn(proc() {
 
@@ -36,7 +45,12 @@ fn main() {
                       objects : DList::new()
                   } };
 
-        r.pass.objects.push(object::Object{name : String::from_str("objectyep"), mesh : None}); 
+        let mut mesh = box mesh::Mesh { name : String::from_str("mesh_name"), buffer : None, state : 0 };
+        unsafe {
+            mesh::buffer_request_add(&mut *mesh, mem::transmute(&vertex_data_test[0]), 6, mesh::mesh_cb_result);
+        }
+
+        r.pass.objects.push(object::Object{name : String::from_str("objectyep"), mesh : Some(*mesh)}); 
 
         r.init();
         r.draw();

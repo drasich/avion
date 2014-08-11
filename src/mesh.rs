@@ -20,7 +20,7 @@ impl Mesh
     }
 }
 
-extern fn mesh_cb_result(mesh : *mut Mesh, answer_code :i32, buffer : *const Buffer) {
+pub extern fn mesh_cb_result(mesh : *mut Mesh, answer_code :i32, buffer : *const Buffer) {
     println!("I am called from C with value {}", answer_code);
     //*
     unsafe {
@@ -35,12 +35,16 @@ extern fn mesh_cb_result(mesh : *mut Mesh, answer_code :i32, buffer : *const Buf
 
 #[link(name = "cypher")]
 extern {
-    fn buffer_request_add(
+    pub fn buffer_request_add(
         mesh : *mut Mesh,
         vertex : *const c_void,
         count : c_int,
         cb: extern fn(*mut Mesh, i32, *const Buffer)
         ) -> c_int;
+
+    fn draw_data_set(
+        data : *const c_void
+        ) -> ();
 }
 
 //static VERTEX_DATA: [GLfloat, ..6] = [
