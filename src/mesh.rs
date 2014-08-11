@@ -21,10 +21,10 @@ impl Mesh
 }
 
 pub extern fn mesh_cb_result(mesh : *mut Mesh, answer_code :i32, buffer : *const Buffer) {
-    println!("I am called from C with value {}", answer_code);
+    println!("mesh cb result I am called from C with value {}", answer_code);
     //*
     unsafe {
-        println!("I am called from C, mesh is : {}", (*mesh).name);
+        println!(" mesh cb result I am called from C, mesh is : {}", (*mesh).name);
         (*mesh).state = answer_code;
         (*mesh).buffer = Some(buffer);
     }

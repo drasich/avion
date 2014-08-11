@@ -42,7 +42,8 @@ fn main() {
             pass :box render::RenderPass{
                       name : String::from_str("passtest"),
                       material : box shader::Material { name : String::from_str("nouveau"), shader : None, state : 0 },
-                      objects : DList::new()
+                      objects : DList::new(),
+                      drawables : DList::new(),
                   } };
 
         let mut mesh = box mesh::Mesh { name : String::from_str("mesh_name"), buffer : None, state : 0 };
@@ -52,6 +53,7 @@ fn main() {
 
         r.pass.objects.push(object::Object{name : String::from_str("objectyep"), mesh : Some(*mesh)}); 
 
+        //println!("my mesh : {}", (*mesh).name);
         r.init();
         r.draw();
     });
