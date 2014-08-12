@@ -1,5 +1,6 @@
 use std::collections::{DList,Deque};
 use std::mem;
+use std::ptr;
 
 #[link(name = "joker")]
 extern {
@@ -47,15 +48,27 @@ fn main() {
                   } };
 
         let mut mesh = box mesh::Mesh { name : String::from_str("mesh_name"), buffer : None, state : 0 };
-        unsafe {
-            mesh::buffer_request_add(&mut *mesh, mem::transmute(&vertex_data_test[0]), 6, mesh::mesh_cb_result);
-        }
-
         r.pass.objects.push(object::Object{name : String::from_str("objectyep"), mesh : Some(*mesh)}); 
 
-        //println!("my mesh : {}", (*mesh).name);
+        let x : i32 = 3;
+
+        //let closure = || -> () { println!("{}", x) };
+
+        extern fn yepyep(r : *const render::Render) -> *const render::Drawable {
+            unsafe {
+            return (*r).getDrawable();
+            }
+            //println!("test") ; 
+            //return ptr::null()
+        };
+
+        unsafe {
+            render::draw_data_set(yepyep, &*r);
+        }
+
         r.init();
         r.draw();
+
     });
 
     unsafe { 

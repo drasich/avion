@@ -62,3 +62,11 @@ pub fn mesh_init()
     }
 }
 
+pub fn mesh_buffer_init(mesh : &mut Mesh)
+{
+    unsafe {
+        buffer_request_add(&mut *mesh, mem::transmute(&VERTEX_DATA[0]), 6, mesh_cb_result);
+    }
+
+    mesh.state = 1;
+}

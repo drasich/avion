@@ -1,4 +1,6 @@
 use std::sync::Arc;
+use std::ptr;
+use std::mem;
 use std::collections::{DList,Deque};
 
 use shader;
@@ -14,7 +16,8 @@ pub struct Drawable
 #[link(name = "cypher")]
 extern {
     pub fn draw_data_set(
-        cb: extern fn() -> *const Drawable
+        cb: extern fn(*const Render) -> *const Drawable,
+        render: *const Render
         ) -> ();
 }
 
@@ -35,16 +38,13 @@ impl RenderPass
         return !self.drawables.is_empty();
     }
 
-    /*
-    pub fn getStuff(&self) -> Drawable
+    pub fn getDrawable(&self) -> *const Drawable
     {
         match self.drawables.front() {
-            Some(d) => ,
-            None
+            Some(d) => unsafe {return mem::transmute(&d)},
+            None => return ptr::null()
         }
-        return Drawable {
     }
-    */
 
     pub fn draw(&mut self)
     {
@@ -62,21 +62,31 @@ impl RenderPass
             return; //for now... TODO
         }
 
-        //println!("tet");
         self.drawables.clear();
         for o in self.objects.iter() {
             match  o.mesh  {
                 None => continue,
                 Some(ref m) => {
-                    //println!("there is a mesh {}", m.name);
                     match m.buffer {
-                        None => { continue;}//println!("but no buffer");continue},
-                        Some(b) => println!("tu viens jamais?") //self.drawables.push( Drawable{ shader: s, buffer :b})
+                        None => { continue;}
+                        Some(b) => self.drawables.push( Drawable{ shader: s, buffer :b})
                     }
                 }
             }
         }
 
+    }
+
+    pub fn init(&mut self)
+    {
+        for o in self.objects.mut_iter() {
+            match (*o).mesh {
+                None => continue,
+                Some(ref mut m) => if m.state == 0 {
+                    mesh::mesh_buffer_init(m);
+                }
+            }
+        }
     }
 }
 
@@ -89,6 +99,8 @@ impl Render{
     pub fn init(&mut self)
     {
         shader::material_shader_init(&mut *(*self.pass).material);
+
+        (*self.pass).init();
     }
 
     pub fn draw(&mut self)
@@ -96,6 +108,11 @@ impl Render{
         loop {
             (*self.pass).draw();
         }
+    }
+
+    pub fn getDrawable(&self) -> *const Drawable
+    {
+        return (*self.pass).getDrawable();
     }
 
 }
