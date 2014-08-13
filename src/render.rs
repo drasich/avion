@@ -1,7 +1,10 @@
+extern crate libc;
+
 use std::sync::Arc;
 use std::ptr;
 use std::mem;
 use std::collections::{DList,Deque};
+use self::libc::{c_void};
 
 use shader;
 use mesh;
@@ -11,6 +14,12 @@ pub struct Drawable
 {
     shader: *const shader::Shader,
     buffer: *const mesh::Buffer
+}
+
+pub struct CypherList
+{
+    data : *const c_void,
+    next : *const CypherList
 }
 
 #[link(name = "cypher")]
@@ -43,6 +52,62 @@ impl RenderPass
         match self.drawables.front() {
             Some(d) => unsafe {return mem::transmute(&d)},
             None => return ptr::null()
+        }
+    }
+
+    pub fn getDrawables(&self) -> *const CypherList
+    {
+        let mut cl = box CypherList{ data : ptr::null(), next : ptr::null()};
+        /*
+        {
+
+        //let mut parent = &mut *cl;
+        let mut parent : Option<&CypherList> = None;
+        let mut current = &mut *cl;
+
+        let first = true;
+        if !self.drawables.is_empty() {
+
+            let mut it = self.drawables.iter();
+
+            loop {
+
+                match it.next() {
+                    None => break,
+                    Some(ref dr) => {
+                        if first {
+                            unsafe {
+                                current.data = mem::transmute(dr)
+                            }
+                            first = false;
+                        }
+                        else {
+                            current = &mut * box CypherList{data : unsafe{mem::transmute(dr)}, next : ptr::null()};
+                        }
+
+                        match parent {
+                            None => {
+
+
+                            },
+                            Some(li) => 
+                                unsafe {
+                                    li.next = mem::transmute(current)
+                                }
+                        }
+
+                        parent = Some(&*current);
+                    }
+                }
+
+            }
+        }
+
+        }
+        */
+
+        unsafe {
+            return mem::transmute(&*cl);
         }
     }
 
