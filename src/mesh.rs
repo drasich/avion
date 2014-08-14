@@ -70,3 +70,4 @@ pub fn mesh_buffer_init(mesh : &mut Mesh)
 
     mesh.state = 1;
 }
+

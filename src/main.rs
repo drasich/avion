@@ -45,7 +45,8 @@ fn main() {
                       material : box shader::Material { name : String::from_str("nouveau"), shader : None, state : 0 },
                       objects : DList::new(),
                       drawables : DList::new(),
-                  } };
+                  }
+        };
 
         let mut mesh = box mesh::Mesh { name : String::from_str("mesh_name"), buffer : None, state : 0 };
         r.pass.objects.push(object::Object{name : String::from_str("objectyep"), mesh : Some(*mesh)}); 
@@ -62,8 +63,17 @@ fn main() {
             //return ptr::null()
         };
 
+        extern fn render_draw_cb(r : *const render::Render) -> () {
+            unsafe {
+            return (*r).draw_frame();
+            }
+            //println!("test") ; 
+            //return ptr::null()
+        };
+
         unsafe {
             render::draw_data_set(yepyep, &*r);
+            render::draw_callback_set(render_draw_cb, &*r);
         }
 
         r.init();
