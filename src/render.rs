@@ -6,6 +6,7 @@ use std::mem;
 use std::collections::{DList,Deque};
 use self::libc::{c_void};
 use std::rc::Rc;
+use std::cell::RefCell;
 
 use shader;
 use mesh;
@@ -17,10 +18,36 @@ pub struct Drawable
     buffer: *const mesh::Buffer
 }
 
+pub struct MeshManager
+{
+    pub mesh : Rc<RefCell<mesh::Mesh>>
+}
+
 pub struct Request
 {
-    data : Rc<Vec<f32>>,
-    mesh : Rc<mesh::Mesh>
+    pub mesh : Rc<RefCell<mesh::Mesh>>
+}
+
+impl Request
+{
+    pub fn handle(&mut self)
+    {
+        let mut mesh = self.mesh.borrow_mut();
+        mesh.name = String::from_str("newnewnew");
+    }
+}
+
+pub struct RequestManager
+{
+    pub requests : DList<Box<Request>>
+}
+
+impl RequestManager
+{
+    pub fn handleRequest(&mut self)
+    {
+
+    }
 }
 
 #[link(name = "cypher")]

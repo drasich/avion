@@ -1,6 +1,8 @@
 use std::collections::{DList,Deque};
 use std::mem;
 use std::ptr;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 #[link(name = "joker")]
 extern {
@@ -36,6 +38,25 @@ fn main() {
         mesh::mesh_init();
     });
     */
+
+    spawn(proc() {
+        let mut mm = box render::MeshManager {
+            mesh : Rc::new(RefCell::new(mesh::Mesh { name : String::from_str("chris test"), buffer : None, state : 0 }))
+        };
+
+        let mut rm = box render::RequestManager {
+            requests : DList::new()
+        };
+
+        rm.requests.push( box render::Request { mesh : mm.mesh.clone() });
+        match rm.requests.front_mut(){
+            None => (),
+            Some(req) => req.handle()
+        }
+
+        println!("mesh name : {} ", mm.mesh.borrow().name);
+
+    });
 
     spawn(proc() {
 

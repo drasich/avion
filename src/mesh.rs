@@ -18,6 +18,11 @@ impl Mesh
     {
 
     }
+
+    pub fn new() -> Mesh
+    {
+       Mesh { name : String::from_str("fromnew"), buffer : None, state : 0 }
+    }
 }
 
 pub extern fn mesh_cb_result(mesh : *mut Mesh, answer_code :i32, buffer : *const Buffer) {
