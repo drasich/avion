@@ -33,7 +33,10 @@ impl Request
     pub fn handle(&mut self)
     {
         let mut mesh = self.mesh.borrow_mut();
-        mesh.name = String::from_str("newnewnew");
+        //mesh.name = String::from_str("newnewnew");
+        //mesh::mesh_buffer_init(&mut *mesh);
+        println!(" I am handling request of {} ", mesh.name);
+        mesh.init();
     }
 }
 
@@ -44,10 +47,16 @@ pub struct RequestManager
 
 impl RequestManager
 {
-    pub fn handleRequest(&mut self)
+    pub fn handleRequests(&mut self)
     {
+        match self.requests.front_mut(){
+            None => (),
+            Some(req) => req.handle()
+        }
 
+        self.requests.clear();
     }
+
 }
 
 #[link(name = "cypher")]
@@ -58,7 +67,7 @@ extern {
         ) -> ();
 
     pub fn draw_callback_set(
-        cb: extern fn(*const Render) -> (),
+        cb: extern fn(*mut Render) -> (),
         render: *const Render
         ) -> ();
 
@@ -92,6 +101,7 @@ impl RenderPass
 
     pub fn draw(&mut self)
     {
+    /*
         if (*(self.material)).shader == None {
             return;
         }
@@ -118,11 +128,12 @@ impl RenderPass
                 }
             }
         }
-
+    */
     }
 
     pub fn init(&mut self)
     {
+        /*
         for o in self.objects.mut_iter() {
             match (*o).mesh {
                 None => continue,
@@ -131,6 +142,7 @@ impl RenderPass
                 }
             }
         }
+        */
     }
 
     pub fn draw_frame(&self) -> ()
@@ -151,7 +163,7 @@ impl RenderPass
             match  o.mesh  {
                 None => continue,
                 Some(ref m) => {
-                    match m.buffer {
+                    match m.borrow().buffer {
                         None => { continue;}
                         Some(b) => unsafe { shader_draw(s,b); }
                     }
@@ -163,7 +175,9 @@ impl RenderPass
 
 pub struct Render
 {
-    pub pass : Box<RenderPass>
+    pub pass : Box<RenderPass>,
+    pub request_manager : Box<RequestManager>
+        
 }
 
 /*
@@ -201,6 +215,7 @@ impl Render {
         //(*self.pass).init();
         //for o in self.objects.mut_iter() {
         //for o in pass.objects.iter() {
+        /*
         for o in (*self.pass).objects.mut_iter() {
             match (*o).mesh {
                 None => continue,
@@ -210,6 +225,7 @@ impl Render {
                 }
             }
         }
+        */
     }
 
     pub fn draw(&mut self)
@@ -224,9 +240,10 @@ impl Render {
         return (*self.pass).getDrawable();
     }
 
-    pub fn draw_frame(&self) -> ()
+    pub fn draw_frame(&mut self) -> ()
     {
         println!("render draw frame");
+        self.request_manager.handleRequests();
         return (*self.pass).draw_frame();
     }
 

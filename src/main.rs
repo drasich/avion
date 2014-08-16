@@ -39,9 +39,13 @@ fn main() {
     });
     */
 
+    /*
     spawn(proc() {
         let mut mm = box render::MeshManager {
-            mesh : Rc::new(RefCell::new(mesh::Mesh { name : String::from_str("chris test"), buffer : None, state : 0 }))
+            mesh : Rc::new(RefCell::new(mesh::Mesh {
+                       name : String::from_str("chris test"),
+                       buffer : None,
+                       state : 0 }))
         };
 
         let mut rm = box render::RequestManager {
@@ -49,14 +53,12 @@ fn main() {
         };
 
         rm.requests.push( box render::Request { mesh : mm.mesh.clone() });
-        match rm.requests.front_mut(){
-            None => (),
-            Some(req) => req.handle()
-        }
+        //rm.handleRequests();
 
         println!("mesh name : {} ", mm.mesh.borrow().name);
 
     });
+    */
 
     spawn(proc() {
 
@@ -66,11 +68,22 @@ fn main() {
                       material : box shader::Material { name : String::from_str("nouveau"), shader : None, state : 0 },
                       objects : DList::new(),
                       drawables : DList::new(),
-                  }
+                  },
+            request_manager : box render::RequestManager {
+                                  requests : DList::new()
+                              }
         };
 
-        let mut mesh = box mesh::Mesh { name : String::from_str("mesh_name"), buffer : None, state : 0 };
-        r.pass.objects.push(object::Object{name : String::from_str("objectyep"), mesh : Some(*mesh)}); 
+        //let mut mesh = box mesh::Mesh { name : String::from_str("mesh_name"), buffer : None, state : 0 };
+        //r.pass.objects.push(object::Object{name : String::from_str("objectyep"), mesh : Some(*mesh)}); 
+
+        let mut mesh = Rc::new(RefCell::new( mesh::Mesh {
+            name : String::from_str("mesh_name"),
+            buffer : None,
+            state : 0 }));
+        r.request_manager.requests.push( box render::Request { mesh : mesh.clone() });
+
+        r.pass.objects.push(object::Object{name : String::from_str("objectyep"), mesh : Some(mesh.clone())}); 
 
         let x : i32 = 3;
 
@@ -84,7 +97,7 @@ fn main() {
             //return ptr::null()
         };
 
-        extern fn render_draw_cb(r : *const render::Render) -> () {
+        extern fn render_draw_cb(r : *mut render::Render) -> () {
             unsafe {
             return (*r).draw_frame();
             }
