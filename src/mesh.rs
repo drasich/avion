@@ -2,6 +2,7 @@ extern crate libc;
 
 use self::libc::{c_int, c_void};
 use std::mem;
+use resource;
 
 #[link(name = "cypher")]
 extern {
@@ -36,7 +37,11 @@ impl Mesh
        Mesh { name : String::from_str("mesh_new"), buffer : None, state : 0 }
     }
 
-    pub fn init(&mut self)
+}
+
+impl resource::ResourceT for Mesh
+{
+    fn init(&mut self)
     {
         if self.state != 11 {
             unsafe {

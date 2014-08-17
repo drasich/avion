@@ -8,6 +8,7 @@ extern {
     fn elm_simple_window_main();
 }
 
+mod resource;
 mod shader;
 mod mesh;
 mod render;
@@ -35,7 +36,9 @@ fn main() {
             name : String::from_str("mesh_name"),
             buffer : None,
             state : 0 }));
-        r.request_manager.requests.push( box render::Request { mesh : mesh.clone() });
+
+        r.request_manager.requests.push(
+            box render::Request { resource : mesh.clone() });
 
         r.pass.objects.push(object::Object{name : String::from_str("objectyep"), mesh : Some(mesh.clone())}); 
 

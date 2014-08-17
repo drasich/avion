@@ -5,6 +5,7 @@ use std::collections::{DList,Deque};
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use resource;
 use shader;
 use mesh;
 use object;
@@ -14,35 +15,33 @@ pub struct MeshManager
     pub mesh : Rc<RefCell<mesh::Mesh>>
 }
 
-pub struct Request
+pub struct Request<T>
 {
-    pub mesh : Rc<RefCell<mesh::Mesh>>
+    //pub mesh : Rc<RefCell<mesh::Mesh>>
+    pub resource : Rc<RefCell<T>>
 }
 
-impl Request
+impl<T : resource::ResourceT> Request<T>
 {
     pub fn handle(&mut self)
     {
-        let mut mesh = self.mesh.borrow_mut();
-        //mesh.name = String::from_str("newnewnew");
-        //mesh::mesh_buffer_init(&mut *mesh);
-        println!(" I am handling request of {} ", mesh.name);
-        mesh.init();
+        let mut resource = self.resource.borrow_mut();
+        resource.init();
     }
 }
 
+
 pub struct RequestManager
 {
-    pub requests : DList<Box<Request>>
+   pub requests : DList<Box<Request<mesh::Mesh>>>
 }
 
 impl RequestManager
 {
     pub fn handle_requests(&mut self)
     {
-        match self.requests.front_mut(){
-            None => (),
-            Some(req) => req.handle()
+        for req in self.requests.mut_iter() {
+            req.handle();
         }
 
         self.requests.clear();
@@ -123,32 +122,7 @@ pub struct Render
 {
     pub pass : Box<RenderPass>,
     pub request_manager : Box<RequestManager>
-        
 }
-
-/*
-pub struct RequestManager<'rm>
-{
-    pub requests : DList<Request<'rm>>
-}
-
-
-impl<'rm> RequestManager<'rm>
-{
-    pub fn add_req(&mut self, mesh : &'rm mut mesh::Mesh, data : Rc<Vec<f32>>)
-    {
-        mesh.state = 1;
-        self.requests.push( Request{mesh : mesh, data: data.clone()});
-    }
-
-    pub fn add_req(&mut self, mesh : &'rm mut mesh::Mesh, data : &'rm [f32])
-    {
-        mesh.state = 1;
-        self.requests.push( Request{mesh : mesh, data: data});
-    }
-}
-*/
-
 
 impl Render {
     pub fn init(&mut self)
