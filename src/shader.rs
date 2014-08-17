@@ -2,23 +2,23 @@ extern crate libc;
 use resource;
 
 use self::libc::{c_char};
-pub struct Shader;
+pub struct CglShader;
 
 pub struct Material
 {
     pub name : String,
-    pub shader: Option<*const Shader>,
+    pub shader: Option<*const CglShader>,
     pub state : i32
 }
 
 #[link(name = "cypher")]
 extern {
-    fn shader_init_string(
+    fn cgl_shader_init_string(
         vert : *const c_char,
         frat : *const c_char,
-        att : *const c_char) -> *const Shader;
+        att : *const c_char) -> *const CglShader;
 
-    pub fn shader_use(shader : *const Shader);
+    pub fn cgl_shader_use(shader : *const CglShader);
 }
 
 impl resource::ResourceT for Material
@@ -54,7 +54,7 @@ gl_FragColor = vec4(0.3, 0.3, 0.4, 1.0);
         let fragcp = fragc.as_ptr();
 
         let attc = "position".to_c_str();
-        self.shader = Some(shader_init_string(vertcp, fragcp, attc.as_ptr()));
+        self.shader = Some(cgl_shader_init_string(vertcp, fragcp, attc.as_ptr()));
     }
 
 

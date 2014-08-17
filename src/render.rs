@@ -65,7 +65,7 @@ extern {
         render: *const Render
         ) -> ();
 
-    pub fn shader_draw(shader : *const shader::Shader, buffer : *const mesh::CglBuffer) -> ();
+    pub fn cgl_shader_draw(shader : *const shader::CglShader, buffer : *const mesh::CglBuffer) -> ();
 }
 
 pub extern fn draw_cb(r : *mut Render) -> () {
@@ -108,14 +108,14 @@ impl RenderPass
             return;
         }
 
-        let s : *const shader::Shader;
+        let s : *const shader::CglShader;
         match (*self.material.borrow()).shader  {
             None => return,
             Some(sh) => s = sh
         }
 
         unsafe {
-            shader::shader_use(s);
+            shader::cgl_shader_use(s);
         };
 
         for o in self.objects.iter() {
@@ -124,7 +124,7 @@ impl RenderPass
                 Some(ref m) => {
                     match m.borrow().buffer {
                         None => { continue;}
-                        Some(b) => unsafe { shader_draw(s,b); }
+                        Some(b) => unsafe { cgl_shader_draw(s,b); }
                     }
                 }
             }

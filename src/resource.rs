@@ -3,7 +3,7 @@ use shader;
 
 pub enum Resource {
     Mesh(mesh::Mesh),
-    Shader(shader::Shader)
+    Shader(shader::Material)
 }
 
 pub struct ResourceS

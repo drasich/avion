@@ -15,9 +15,6 @@ mod render;
 mod object;
 
 fn main() {
-    unsafe {
-        simple_window_init();
-    };
 
     //spawn(proc() {
     //
