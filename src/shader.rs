@@ -1,7 +1,6 @@
 extern crate libc;
 
 use self::libc::{c_int, c_char};
-use std::rc::Rc;
 pub struct Shader;
 
 pub struct Material
@@ -11,6 +10,7 @@ pub struct Material
     pub state : i32
 }
 
+/*
 impl Material
 {
     pub fn set_shader(&self, name : String)
@@ -18,6 +18,7 @@ impl Material
 
     }
 }
+*/
 
 #[link(name = "cypher")]
 extern {
@@ -30,11 +31,6 @@ extern {
         cb: extern fn(*mut Material, i32, *const Shader)) -> c_int;
 }
 
-extern fn callback(a:i32) {
-    println!("I am called from C with value {}", a);
-}
-
-
 extern fn callback_result(mat : *mut Material, answer_code :i32, shader : *const Shader) {
     println!("I am called from C with value {}", answer_code);
     //*
@@ -45,15 +41,6 @@ extern fn callback_result(mat : *mut Material, answer_code :i32, shader : *const
     }
     //*/
     //TODO add this shader to list of shader
-}
-
-
-pub fn shader_init() -> ()
-{
-    //let mut mat = box Material { shader : None, state : 0 };
-    let mut mat = box Material { name : String::from_str("yep"), shader : None, state : 0 };
-    material_shader_init(&mut *mat);
-    println!("this is not over yet");
 }
 
 pub fn material_shader_init(mat : &mut Material)
