@@ -1,6 +1,7 @@
 extern crate libc;
+use resource;
 
-use self::libc::{c_int, c_char};
+use self::libc::{c_char};
 pub struct Shader;
 
 pub struct Material
@@ -10,41 +11,22 @@ pub struct Material
     pub state : i32
 }
 
-/*
-impl Material
-{
-    pub fn set_shader(&self, name : String)
-    {
-
-    }
-}
-*/
-
 #[link(name = "cypher")]
 extern {
-    fn shader_request_add(
-        material : *mut Material,
+    fn shader_init_string(
         vert : *const c_char,
-        frag : *const c_char,
-        att : *const c_char,
-        //cb: extern fn(i32)) -> c_int;
-        cb: extern fn(*mut Material, i32, *const Shader)) -> c_int;
+        frat : *const c_char,
+        att : *const c_char) -> *const Shader;
+
+    pub fn shader_use(shader : *const Shader);
 }
 
-extern fn callback_result(mat : *mut Material, answer_code :i32, shader : *const Shader) {
-    println!("I am called from C with value {}", answer_code);
-    //*
-    unsafe {
-        println!("I am called from C, material is : {}", (*mat).name);
-        (*mat).state = answer_code;
-        (*mat).shader = Some(shader);
-    }
-    //*/
-    //TODO add this shader to list of shader
-}
-
-pub fn material_shader_init(mat : &mut Material)
+impl resource::ResourceT for Material
 {
+    fn init(&mut self)
+    {
+        if self.state != 11 {
+
     let vert  = 
 "
 attribute vec2 position;
@@ -72,10 +54,12 @@ gl_FragColor = vec4(0.3, 0.3, 0.4, 1.0);
         let fragcp = fragc.as_ptr();
 
         let attc = "position".to_c_str();
-        //let id = shader_request_add(vertcp, fragcp, attc.as_ptr());
-        //shader_request_add(vertcp, fragcp, attc.as_ptr(), callback);
-        //shader_request_add(&mut *mat, vertcp, fragcp, attc.as_ptr(), callback_result);
-        shader_request_add(&mut *mat, vertcp, fragcp, attc.as_ptr(), callback_result);
+        self.shader = Some(shader_init_string(vertcp, fragcp, attc.as_ptr()));
+    }
+
+
+            self.state = 11;
+        }
     }
 }
 

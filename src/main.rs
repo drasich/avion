@@ -20,22 +20,45 @@ fn main() {
     };
 
     //spawn(proc() {
+    //
+        let mut mat = Rc::new(RefCell::new( shader::Material {
+            name : String::from_str("my_mat"),
+            shader : None,
+            state : 0 }));
 
         let mut r = box render::Render { 
             pass :box render::RenderPass{
                       name : String::from_str("passtest"),
-                      material : box shader::Material { name : String::from_str("nouveau"), shader : None, state : 0 },
+                      material : mat.clone(),
                       objects : DList::new(),
                   },
             request_manager : box render::RequestManager {
-                                  requests : DList::new()
+                                  requests : DList::new(),
+                                  requests_material : DList::new()
                               }
         };
+
+        r.request_manager.requests_material.push(
+            box render::Request { resource : mat.clone() });
+
 
         let mut mesh = Rc::new(RefCell::new( mesh::Mesh {
             name : String::from_str("mesh_name"),
             buffer : None,
             state : 0 }));
+
+        /*
+        let mut mesh = Rc::new(RefCell::new( 
+                resource::ResourceS {
+                    state : 0,
+                    data : resource::Mesh(mesh::Mesh {
+                        name : String::from_str("mesh_name"),
+                        buffer : None,
+                        state : 0 })
+                }
+                )
+                              );
+                              */
 
         r.request_manager.requests.push(
             box render::Request { resource : mesh.clone() });

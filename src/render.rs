@@ -19,6 +19,7 @@ pub struct Request<T>
 {
     //pub mesh : Rc<RefCell<mesh::Mesh>>
     pub resource : Rc<RefCell<T>>
+    //pub resource : Rc<RefCell<resource::ResourceS>>
 }
 
 impl<T : resource::ResourceT> Request<T>
@@ -30,10 +31,11 @@ impl<T : resource::ResourceT> Request<T>
     }
 }
 
-
 pub struct RequestManager
 {
-   pub requests : DList<Box<Request<mesh::Mesh>>>
+   pub requests : DList<Box<Request<mesh::Mesh>>>,
+   pub requests_material : DList<Box<Request<shader::Material>>>
+   //pub requests : DList<Box<Request>>
 }
 
 impl RequestManager
@@ -45,6 +47,13 @@ impl RequestManager
         }
 
         self.requests.clear();
+
+        for req in self.requests_material.mut_iter() {
+            req.handle();
+        }
+
+        self.requests_material.clear();
+
     }
 
 }
@@ -70,7 +79,8 @@ pub struct RenderPass
 {
     pub name : String,
     //pub material : Arc<shader::Material>,
-    pub material : Box<shader::Material>,
+    //pub material : Box<shader::Material>,
+    pub material : Rc<RefCell<shader::Material>>,
     pub objects : DList<object::Object>,
 }
 
@@ -94,15 +104,19 @@ impl RenderPass
     {
         println!("draw frame");
 
-        if (*(self.material)).shader == None {
+        if (*(self.material.borrow())).shader == None {
             return;
         }
 
         let s : *const shader::Shader;
-        match (*self.material).shader  {
+        match (*self.material.borrow()).shader  {
             None => return,
             Some(sh) => s = sh
         }
+
+        unsafe {
+            shader::shader_use(s);
+        };
 
         for o in self.objects.iter() {
             match  o.mesh  {
@@ -127,7 +141,6 @@ pub struct Render
 impl Render {
     pub fn init(&mut self)
     {
-        shader::material_shader_init(&mut *(*self.pass).material);
     }
 
     pub fn draw(&mut self)
@@ -136,7 +149,6 @@ impl Render {
 
     pub fn draw_frame(&mut self) -> ()
     {
-        println!("render draw frame");
         self.request_manager.handle_requests();
         return (*self.pass).draw_frame();
     }
