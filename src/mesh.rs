@@ -1,6 +1,6 @@
 extern crate libc;
 
-use self::libc::{c_int, c_void};
+use self::libc::{c_int, c_uint, c_void};
 use std::mem;
 use resource;
 
@@ -17,7 +17,7 @@ extern {
 
     pub fn buffer_init(
         vertex : *const c_void,
-        count : c_int
+        count : c_uint
         ) -> *const Buffer;
 }
 
@@ -27,16 +27,21 @@ pub struct Mesh
 {
     pub name : String,
     pub buffer: Option<*const Buffer>,
-    pub state : i32
+    pub state : i32,
+    pub vertex : Vec<f32>
 }
 
 impl Mesh
 {
     pub fn new() -> Mesh
     {
-       Mesh { name : String::from_str("mesh_new"), buffer : None, state : 0 }
+       Mesh {
+           name : String::from_str("mesh_new"),
+           buffer : None,
+           state : 0,
+           vertex : Vec::from_slice(VERTEX_DATA)
+       }
     }
-
 }
 
 impl resource::ResourceT for Mesh
@@ -45,7 +50,9 @@ impl resource::ResourceT for Mesh
     {
         if self.state != 11 {
             unsafe {
-                self.buffer = Some( buffer_init(mem::transmute(&VERTEX_DATA[0]), 6) );
+                self.buffer = Some( buffer_init(
+                        mem::transmute(self.vertex.as_ptr()),
+                        self.vertex.len() as c_uint) );
             }
             self.state = 11;
         }
