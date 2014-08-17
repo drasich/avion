@@ -4,6 +4,8 @@ use self::libc::{c_int, c_uint, c_void};
 use std::mem;
 use resource;
 
+pub struct CglBuffer;
+
 #[link(name = "cypher")]
 extern {
     /*
@@ -15,18 +17,17 @@ extern {
         ) -> c_int;
         */
 
-    pub fn buffer_init(
+    pub fn cgl_buffer_init(
         vertex : *const c_void,
         count : c_uint
-        ) -> *const Buffer;
+        ) -> *const CglBuffer;
 }
 
-pub struct Buffer;
 
 pub struct Mesh
 {
     pub name : String,
-    pub buffer: Option<*const Buffer>,
+    pub buffer: Option<*const CglBuffer>,
     pub state : i32,
     pub vertex : Vec<f32>
 }
@@ -50,7 +51,7 @@ impl resource::ResourceT for Mesh
     {
         if self.state != 11 {
             unsafe {
-                self.buffer = Some( buffer_init(
+                self.buffer = Some( cgl_buffer_init(
                         mem::transmute(self.vertex.as_ptr()),
                         self.vertex.len() as c_uint) );
             }

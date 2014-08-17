@@ -65,7 +65,7 @@ extern {
         render: *const Render
         ) -> ();
 
-    pub fn shader_draw(shader : *const shader::Shader, buffer : *const mesh::Buffer) -> ();
+    pub fn shader_draw(shader : *const shader::Shader, buffer : *const mesh::CglBuffer) -> ();
 }
 
 pub extern fn draw_cb(r : *mut Render) -> () {
