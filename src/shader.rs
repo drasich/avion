@@ -1,8 +1,16 @@
 extern crate libc;
 use resource;
+use std::collections::HashMap;
 
 use self::libc::{c_char};
 pub struct CglShader;
+pub struct CglShaderAttribute;
+
+pub struct Shader
+{
+    cgl_shader : *const CglShader,
+    attributes : HashMap<String, CglShaderAttribute>
+}
 
 pub struct Material
 {
