@@ -1,9 +1,11 @@
 extern crate libc;
 use std::collections::{DList,Deque};
+use std::collections::HashMap;
 
-use self::libc::{c_int, c_uint, c_void};
+use self::libc::{c_char, c_int, c_uint, c_void};
 use std::mem;
 use resource;
+use shader;
 
 pub struct CglBuffer;
 
@@ -13,7 +15,13 @@ extern {
         vertex : *const c_void,
         count : c_uint
         ) -> *const CglBuffer;
+
+    pub fn cgl_shader_attribute_send(
+        att : *const shader::CglShaderAttribute,
+        name : *const c_char,
+        buffer : *const CglBuffer) -> ();
 }
+
 
 pub struct Buffer<T>
 {
@@ -35,18 +43,30 @@ impl<T> Buffer<T>
 
 pub trait BufferSend
 {
-    fn send(&mut self) -> *const CglBuffer;
+    fn send(&mut self) -> ();
+
+    fn usebuf(&self, att : *const shader::CglShaderAttribute) ->();
 }
 
 impl<T> BufferSend for Buffer<T> {
-    fn send(&mut self) -> *const CglBuffer
+    fn send(&mut self) -> ()
     {
         unsafe {
             let cgl_buffer = cgl_buffer_init(
                 mem::transmute(self.data.as_ptr()),
                 self.data.len() as c_uint);
             self.cgl_buffer = Some(cgl_buffer);
-            return cgl_buffer;
+        }
+    }
+
+    fn usebuf(&self, att : *const shader::CglShaderAttribute) ->()
+    {
+        match self.cgl_buffer {
+            Some(b) =>
+                unsafe {
+                    cgl_shader_attribute_send(att, self.name.to_c_str().as_ptr(), b);
+                },
+                None => ()
         }
     }
 }
@@ -54,11 +74,9 @@ impl<T> BufferSend for Buffer<T> {
 pub struct Mesh
 {
     pub name : String,
-    //TODO remove buffer
-    pub buffer: Option<*const CglBuffer>,
     pub state : i32,
     pub vertex : Vec<f32>,
-    pub buffers : DList<Box<BufferSend>>,
+    pub buffers : HashMap<String, Box<BufferSend>>,
 }
 
 impl Mesh
@@ -67,14 +85,15 @@ impl Mesh
     {
        let mut m = Mesh {
            name : String::from_str("mesh_new"),
-           buffer : None,
            state : 0,
            vertex : Vec::from_slice(VERTEX_DATA),
-           buffers : DList::new(),
+           buffers : HashMap::new(),
        };
 
-       m.buffers.push( box Buffer::new(
-               String::from_str("mybuf"),
+       let bufname = String::from_str("position");
+
+       m.buffers.insert(bufname.clone(), box Buffer::new(
+               bufname.clone(),
                Vec::from_slice(VERTEX_DATA)));
 
        return m;
@@ -87,8 +106,8 @@ impl resource::ResourceT for Mesh
     {
         if self.state != 11 {
             unsafe {
-                for b in self.buffers.mut_iter() {
-                    self.buffer = Some(b.send());
+                for (_,b) in self.buffers.mut_iter() {
+                    Some(b.send());
                 }
             }
             self.state = 11;

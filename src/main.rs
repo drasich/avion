@@ -40,19 +40,6 @@ fn main() {
 
         let mut mesh = Rc::new(RefCell::new( mesh::Mesh::new()));
 
-        /*
-        let mut mesh = Rc::new(RefCell::new( 
-                resource::ResourceS {
-                    state : 0,
-                    data : resource::Mesh(mesh::Mesh {
-                        name : String::from_str("mesh_name"),
-                        buffer : None,
-                        state : 0 })
-                }
-                )
-                              );
-                              */
-
         r.request_manager.requests.push(
             box render::Request { resource : mesh.clone() });
 

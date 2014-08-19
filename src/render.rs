@@ -4,6 +4,7 @@ extern crate libc;
 use std::collections::{DList,Deque};
 use std::rc::Rc;
 use std::cell::RefCell;
+use self::libc::{c_char};
 
 use resource;
 use shader;
@@ -65,7 +66,7 @@ extern {
         render: *const Render
         ) -> ();
 
-    pub fn cgl_shader_draw(shader : *const shader::CglShader, buffer : *const mesh::CglBuffer) -> ();
+    pub fn cgl_draw() -> ();
 }
 
 pub extern fn draw_cb(r : *mut Render) -> () {
@@ -104,27 +105,32 @@ impl RenderPass
     {
         println!("draw frame");
 
-        if (*(self.material.borrow())).shader == None {
-            return;
-        }
+        let material = self.material.borrow();
+        let shader : &shader::Shader;
 
-        let s : *const shader::CglShader;
-        match (*self.material.borrow()).shader  {
+        match (*material).shader  {
             None => return,
-            Some(sh) => s = sh
+            Some(ref sh) => shader = sh
         }
 
         unsafe {
-            shader::cgl_shader_use(s);
+            shader::cgl_shader_use(shader.cgl_shader);
         };
 
         for o in self.objects.iter() {
             match  o.mesh  {
                 None => continue,
                 Some(ref m) => {
-                    match m.borrow().buffer {
-                        None => { continue;}
-                        Some(b) => unsafe { cgl_shader_draw(s,b); }
+                    let mb = m.borrow();
+                    for (name, cgl_att) in shader.attributes.iter() {
+                        let cgl_buf = mb.buffers.find(name);
+                        match cgl_buf {
+                            Some(ref cb) => cb.usebuf(*cgl_att),
+                            None => println!("this mesh does not have the '{}' buffer", name)
+                        }
+                    }
+                    unsafe {
+                        cgl_draw();
                     }
                 }
             }
