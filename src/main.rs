@@ -13,6 +13,7 @@ mod shader;
 mod mesh;
 mod render;
 mod object;
+mod uniform;
 
 fn main() {
 
