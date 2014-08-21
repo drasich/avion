@@ -14,6 +14,7 @@ mod mesh;
 mod render;
 mod object;
 mod uniform;
+mod matrix;
 
 fn main() {
 
@@ -54,6 +55,9 @@ fn main() {
       //  r.draw();
 
     //});
+    
+    let mat = matrix::Matrix4::identity();
+    //let mat2 = matrix::Matrix<f64>::identity();
 
     unsafe { 
         elm_simple_window_main();

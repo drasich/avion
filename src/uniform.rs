@@ -16,5 +16,9 @@ extern {
         z : c_float,
         w : c_float
         ) -> ();
+
+    pub fn cgl_shader_uniform_mat4_set(
+        uniform : *const shader::CglShaderUniform,
+        x : *const c_float) -> ();
 }
 
