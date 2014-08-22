@@ -44,8 +44,7 @@ impl<T> Buffer<T>
 pub trait BufferSend
 {
     fn send(&mut self) -> ();
-
-    fn usebuf(&self, att : *const shader::CglShaderAttribute) ->();
+    fn utilise(&self, att : *const shader::CglShaderAttribute) ->();
 }
 
 impl<T> BufferSend for Buffer<T> {
@@ -59,7 +58,7 @@ impl<T> BufferSend for Buffer<T> {
         }
     }
 
-    fn usebuf(&self, att : *const shader::CglShaderAttribute) ->()
+    fn utilise(&self, att : *const shader::CglShaderAttribute) ->()
     {
         match self.cgl_buffer {
             Some(b) =>

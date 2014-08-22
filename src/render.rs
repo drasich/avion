@@ -4,7 +4,7 @@ extern crate libc;
 use std::collections::{DList,Deque};
 use std::rc::Rc;
 use std::cell::RefCell;
-use self::libc::{c_char};
+use self::libc::{c_char,c_uint};
 
 use resource;
 use shader;
@@ -66,7 +66,7 @@ extern {
         render: *const Render
         ) -> ();
 
-    pub fn cgl_draw() -> ();
+    pub fn cgl_draw(vertex_count : c_uint) -> ();
 }
 
 pub extern fn draw_cb(r : *mut Render) -> () {
@@ -113,24 +113,31 @@ impl RenderPass
             Some(ref sh) => shader = sh
         }
 
-        unsafe {
-            shader::cgl_shader_use(shader.cgl_shader);
-        };
+        shader.utilise();
 
         for o in self.objects.iter() {
             match  o.mesh  {
                 None => continue,
                 Some(ref m) => {
                     let mb = m.borrow();
+                    let mut can_render = true;
                     for (name, cgl_att) in shader.attributes.iter() {
                         let cgl_buf = mb.buffers.find(name);
                         match cgl_buf {
-                            Some(ref cb) => cb.usebuf(*cgl_att),
-                            None => println!("this mesh does not have the '{}' buffer", name)
+                            Some(ref cb) => cb.utilise(*cgl_att),
+                            None => {
+                                println!("while sending attributes, this mesh does not have the '{}' buffer, not rendering", name);
+                                can_render = false;
+                                break;
+                            }
                         }
                     }
-                    unsafe {
-                        cgl_draw();
+
+                    if can_render {
+                        //TODO if has indices
+                        unsafe {
+                            cgl_draw(mb.vertex.len() as c_uint);
+                        }
                     }
                 }
             }

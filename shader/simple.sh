@@ -1,5 +1,6 @@
 shader/simple.vert
 shader/simple.frag
 att,position,2,float
-uni,color,float,4
+uni,color,vec4,1
+uni,matrix,mat4,0
 

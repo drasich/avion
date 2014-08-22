@@ -15,6 +15,7 @@ mod render;
 mod object;
 mod uniform;
 mod matrix;
+mod vec;
 
 fn main() {
 

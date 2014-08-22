@@ -64,5 +64,16 @@ impl Matrix4
         ]
         }
     }
+
+    pub fn to_f32(&self) -> [f32, ..16]
+    {
+        let mut m : [f32, ..16] = [0f32, ..16];
+        for i in range(0u, 16)
+        {
+            m[i] = self.data[i] as f32;
+        }
+
+        m
+    }
 }
 

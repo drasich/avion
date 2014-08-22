@@ -6,6 +6,10 @@ use std::io::File;
 use std::io::BufferedReader;
 use std::io::File;
 use std::uint;
+use vec;
+use matrix;
+use uniform;
+use uniform::UniformSend;
 
 use self::libc::{c_char, c_uint};
 pub struct CglShader;
@@ -14,7 +18,7 @@ pub struct CglShaderUniform;
 
 pub struct Shader
 {
-    pub cgl_shader : *const CglShader,
+    cgl_shader : *const CglShader, //TODO private
     pub attributes : HashMap<String, *const CglShaderAttribute>,
     pub uniforms : HashMap<String, *const CglShaderUniform>
 }
@@ -38,11 +42,33 @@ impl Shader
         unsafe {
             let cgl_uni = cgl_shader_uniform_new(self.cgl_shader, unic.as_ptr());
             self.uniforms.insert(String::from_str(name), cgl_uni);
-            //TODO remove
-            cgl_shader_use(self.cgl_shader);
-            uniform::cgl_shader_uniform_vec4_set(cgl_uni, 1.0f32, 1.0f32, 0.5f32, 1.0f32);
         }
     }
+
+    fn uniform_set(&self, name : &str, value : &UniformSend)
+    {
+        match self.uniforms.find(&String::from_str(name)) {
+            Some(uni) => value.uniform_send(*uni),
+            None => println!("could not find such uniform '{}'",name)
+        }
+    }
+
+    pub fn utilise(&self)
+    {
+        unsafe {
+            cgl_shader_use(self.cgl_shader);
+        }
+    }
+
+    pub fn new(cgl_shader : *const CglShader) -> Shader
+    {
+        Shader {
+            cgl_shader : cgl_shader,
+            attributes : HashMap::new(),
+            uniforms : HashMap::new()
+        }
+    }
+
 }
 
 pub struct Material
@@ -79,7 +105,6 @@ impl Material
             return
         }
 
-        //let contents = File::open(&Path::new("shader/simple.frag")).read_to_string();
         let contents = File::open(&Path::new(fragpath)).read_to_string();
         let frag : String;
 
@@ -101,22 +126,9 @@ impl Material
         let fragc = frag.to_c_str();
         let fragcp = fragc.as_ptr();
 
-        let att_name = String::from_str("position");
-        let attc = att_name.to_c_str();
-
-        let uni_name = String::from_str("color");
-        let unic = uni_name.to_c_str();
-
-
         unsafe {
             let shader = cgl_shader_init_string(vertcp, fragcp);
-
-            self.shader = Some(Shader {
-                cgl_shader : shader,
-                attributes : HashMap::new(),
-                uniforms : HashMap::new()
-            });
-
+            self.shader = Some(Shader::new(shader));
         }
 
         self.state = 11;
@@ -167,11 +179,16 @@ impl resource::ResourceT for Material
             else if split[0] == "uni" {
                 shader.uniform_add(split[1]);
                 println!("it's an uniform {} yoo", split[1]);
-                if split[2] == "float" && split[3] == "4" {
+                if split[2] == "vec4" {
                     //TODO
                 }
             }
         }
+
+        //TODO remove
+        shader.utilise();
+        shader.uniform_set("color", &vec::Vec4::new(0.0f64, 0.5f64, 0.5f64, 1f64));
+        shader.uniform_set("matrix", &matrix::Matrix4::identity());
 
     }
 }
