@@ -57,9 +57,6 @@ fn main() {
 
     //});
     
-    let mat = matrix::Matrix4::identity();
-    //let mat2 = matrix::Matrix<f64>::identity();
-
     unsafe { 
         elm_simple_window_main();
     };

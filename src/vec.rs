@@ -38,3 +38,25 @@ impl Vec4
 }
 
 
+impl Vec3
+{
+    pub fn zero() -> Vec3
+    {
+        Vec3 {
+            x : 0f64,
+            y : 0f64,
+            z : 0f64
+        }
+    }
+
+    pub fn new(x : f64, y : f64, z : f64) -> Vec3
+    {
+        Vec3 {
+            x : x,
+            y : y,
+            z : z
+        }
+    }
+}
+
+
