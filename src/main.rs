@@ -41,7 +41,7 @@ fn main() {
         r.request_manager.requests_material.push(
             box render::Request { resource : mat.clone() });
 
-        let mut mesh = Rc::new(RefCell::new( mesh::Mesh::new()));
+        let mut mesh = Rc::new(RefCell::new( mesh::Mesh::new_from_file("model/skeletonmesh.mesh")));
 
         r.request_manager.requests.push(
             box render::Request { resource : mesh.clone() });

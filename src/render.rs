@@ -67,6 +67,7 @@ extern {
         ) -> ();
 
     pub fn cgl_draw(vertex_count : c_uint) -> ();
+    pub fn cgl_draw_faces(buffer : *const mesh::CglBuffer, index_count : c_uint) -> ();
 }
 
 pub extern fn draw_cb(r : *mut Render) -> () {
@@ -121,10 +122,16 @@ impl RenderPass
                 Some(ref m) => {
                     let mb = m.borrow();
                     let mut can_render = true;
+                    let mut vertex_data_count = 0;
                     for (name, cgl_att) in shader.attributes.iter() {
                         let cgl_buf = mb.buffers.find(name);
                         match cgl_buf {
-                            Some(ref cb) => cb.utilise(*cgl_att),
+                            Some(ref cb) => {
+                                cb.utilise(*cgl_att);
+                                if name.as_slice() == "position" {
+                                    vertex_data_count = cb.size_get();
+                                }
+                            },
                             None => {
                                 println!("while sending attributes, this mesh does not have the '{}' buffer, not rendering", name);
                                 can_render = false;
@@ -134,9 +141,20 @@ impl RenderPass
                     }
 
                     if can_render {
-                        //TODO if has indices
-                        unsafe {
-                            cgl_draw(mb.vertex.len() as c_uint);
+                        match mb.buffers.find(&String::from_str("faces")) {
+                            Some(ref bind) =>
+                                unsafe{
+                                    match bind.buffer_get() {
+                                        Some(b) => {
+                                            let faces_data_count = bind.size_get();
+                                            cgl_draw_faces(b, faces_data_count as c_uint);
+                                        },
+                                        None => ()
+                                    }
+                                },
+                            None => unsafe {
+                                cgl_draw(vertex_data_count as c_uint);
+                            }
                         }
                     }
                 }
