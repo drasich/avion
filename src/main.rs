@@ -16,6 +16,8 @@ mod object;
 mod uniform;
 mod matrix;
 mod vec;
+mod camera;
+mod scene;
 
 fn main() {
 
@@ -46,7 +48,14 @@ fn main() {
         r.request_manager.requests.push(
             box render::Request { resource : mesh.clone() });
 
-        r.pass.objects.push(object::Object{name : String::from_str("objectyep"), mesh : Some(mesh.clone())}); 
+        let mut o = object::Object::new("yep");
+        o.mesh_set(mesh.clone());
+        o.position = vec::Vec3::new(10f64,0f64,0f64);
+        o.position.x = 7f64;
+        r.pass.objects.push(o);
+
+        let mut cam = camera::Camera::new();
+        let mut scene = scene::Scene::new("the_scene");
 
         unsafe {
             render::draw_callback_set(render::draw_cb, &*r);
