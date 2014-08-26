@@ -52,7 +52,7 @@ fn main() {
         o.mesh_set(mesh.clone());
         o.position = vec::Vec3::new(10f64,0f64,0f64);
         o.position.x = 7f64;
-        r.pass.objects.push(o);
+        r.pass.objects.push(Rc::new(RefCell::new(o)));
 
         let mut cam = camera::Camera::new();
         let mut scene = scene::Scene::new("the_scene");

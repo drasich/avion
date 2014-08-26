@@ -83,7 +83,8 @@ pub struct RenderPass
     //pub material : Arc<shader::Material>,
     //pub material : Box<shader::Material>,
     pub material : Rc<RefCell<shader::Material>>,
-    pub objects : DList<object::Object>,
+    //pub objects : DList<object::Object>,
+    pub objects : DList<Rc<RefCell<object::Object>>>,
 }
 
 impl RenderPass
@@ -117,7 +118,7 @@ impl RenderPass
         shader.utilise();
 
         for o in self.objects.iter() {
-            match  o.mesh  {
+            match  o.borrow().mesh  {
                 None => continue,
                 Some(ref m) => {
                     let mb = m.borrow();
