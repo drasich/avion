@@ -44,7 +44,7 @@ impl Shader
         }
     }
 
-    fn uniform_set(&self, name : &str, value : &UniformSend)
+    pub fn uniform_set(&self, name : &str, value : &UniformSend)
     {
         match self.uniforms.find(&String::from_str(name)) {
             Some(uni) => value.uniform_send(*uni),
@@ -187,13 +187,6 @@ impl resource::ResourceT for Material
         //TODO remove
         shader.utilise();
         shader.uniform_set("color", &vec::Vec4::new(0.0f64, 0.5f64, 0.5f64, 1f64));
-        let camera = matrix::Matrix4::identity();
-        let object = matrix::Matrix4::translation(vec::Vec3::new(0f64, 0f64, -1000f64));
-        let projection = matrix::Matrix4::perspective(0.4f64,1f64,1f64,10000f64);
-        let m = projection * camera.inverse_get() * object ;
-        //shader.uniform_set("matrix", &matrix::Matrix4::identity());
-        shader.uniform_set("matrix", &m);
-
     }
 }
 

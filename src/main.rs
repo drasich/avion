@@ -1,6 +1,7 @@
 use std::collections::{DList};
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::f64::consts;
 
 #[link(name = "joker")]
 extern {
@@ -29,13 +30,14 @@ fn main() {
             state : 0 }));
 
         let mut cam = camera::Camera::new();
+        let mut scene = scene::Scene::new("the_scene");
 
         let mut r = box render::Render { 
             pass :box render::RenderPass{
                       name : String::from_str("passtest"),
                       material : mat.clone(),
                       objects : DList::new(),
-                      camera : Some(Rc::new(RefCell::new(cam)))
+                      camera : Rc::new(RefCell::new(cam))
                   },
             request_manager : box render::RequestManager {
                                   requests : DList::new(),
@@ -54,13 +56,22 @@ fn main() {
         {
             let mut o = object::Object::new("yep");
             o.mesh_set(mesh.clone());
-            o.position = vec::Vec3::new(10f64,0f64,0f64);
-            o.position.x = 7f64;
-            r.pass.objects.push(Rc::new(RefCell::new(o)));
+            o.position = vec::Vec3::new(100f64,0f64,-1000f64);
+            let mut oref = Rc::new(RefCell::new(o));
+            scene.objects.push(oref.clone());
+            r.pass.objects.push(oref.clone());
+            
         }
 
-
-        let mut scene = scene::Scene::new("the_scene");
+        {
+            let mut o = object::Object::new("yep2");
+            o.mesh_set(mesh.clone());
+            o.position = vec::Vec3::new(-100f64,0f64,-1000f64);
+            o.orientation = vec::Quat::new_axis_angle(vec::Vec3::new(0f64,1f64,0f64), consts::PI/2f64);
+            let mut oref = Rc::new(RefCell::new(o));
+            scene.objects.push(oref.clone());
+            r.pass.objects.push(oref.clone());
+        }
 
         unsafe {
             render::draw_callback_set(render::draw_cb, &*r);

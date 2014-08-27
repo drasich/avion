@@ -1,7 +1,12 @@
-use vec;
+use std::rc::Rc;
+use std::cell::RefCell;
 use std::f64::consts;
 
-pub struct Camera
+use vec;
+use object;
+use matrix;
+
+pub struct CameraData
 {
     fovy : f64,
     pub fovy_base : f64,
@@ -19,7 +24,13 @@ pub struct Camera
     local_offset : vec::Vec3,
     center : vec::Vec3,
 
-    clear_color : vec::Vec4
+    clear_color : vec::Vec4,
+}
+
+pub struct Camera
+{
+    pub data : CameraData,
+    pub object : Rc<RefCell<object::Object>>
 }
 
 
@@ -27,7 +38,7 @@ impl Camera
 {
     pub fn new() -> Camera
     {
-        Camera {
+        Camera { data : CameraData {
             fovy : consts::PI/8.0f64,
             fovy_base : consts::PI/8.0f64,
             near : 1f64,
@@ -44,8 +55,17 @@ impl Camera
             local_offset : vec::Vec3::zero(),
             center : vec::Vec3::zero(),
 
-            clear_color : vec::Vec4::zero(),
+            clear_color : vec::Vec4::zero()  
+        },
+        object : Rc::new(RefCell::new(object::Object::new("camera")))
         }
+    }
+
+    pub fn perspective_get(&self) -> matrix::Matrix4
+    {
+        //TODO
+        matrix::Matrix4::perspective(0.4f64,1f64,1f64,10000f64)
+        //matrix::Matrix4::perspective(fovy,1f64, near, far)
     }
 }
 

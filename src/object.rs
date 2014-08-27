@@ -2,6 +2,7 @@ use mesh;
 use std::rc::Rc;
 use std::cell::RefCell;
 use vec;
+use matrix;
 
 pub struct Object
 {
@@ -23,6 +24,11 @@ impl Object
         }
     }
 
+    pub fn newRef(name : &str) -> Rc<RefCell<Object>>
+    {
+        Rc::new(RefCell::new(Object::new(name)))
+    }
+
 
     pub fn empty() -> Object
     {
@@ -34,5 +40,16 @@ impl Object
         self.mesh = Some(mesh);
     }
 
+    pub fn matrix_get(&self) -> matrix::Matrix4
+    {
+        let mt = matrix::Matrix4::translation(self.position);
+        let mq = matrix::Matrix4::rotation(self.orientation);
+
+        println!("object '{}', name : {}", self.name, self.orientation);
+
+        mt * mq
+    }
+
 }
+
 

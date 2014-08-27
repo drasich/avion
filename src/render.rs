@@ -11,6 +11,7 @@ use shader;
 use mesh;
 use object;
 use camera;
+use matrix;
 
 pub struct MeshManager
 {
@@ -86,7 +87,7 @@ pub struct RenderPass
     pub material : Rc<RefCell<shader::Material>>,
     //pub objects : DList<object::Object>,
     pub objects : DList<Rc<RefCell<object::Object>>>,
-    pub camera : Option<Rc<RefCell<camera::Camera>>>
+    pub camera : Rc<RefCell<camera::Camera>>
 }
 
 impl RenderPass
@@ -119,8 +120,13 @@ impl RenderPass
 
         shader.utilise();
 
+        let cam_mat = self.camera.borrow().object.borrow().matrix_get();
+        let cam_projection = self.camera.borrow().perspective_get();
+        let cam_mat_inv = cam_mat.inverse_get();
+
         for o in self.objects.iter() {
-            match  o.borrow().mesh  {
+            let ob = o.borrow();
+            match  ob.mesh  {
                 None => continue,
                 Some(ref m) => {
                     let mb = m.borrow();
@@ -144,15 +150,10 @@ impl RenderPass
                     }
 
                     if can_render {
-                        //TODO camera matrix
-                        /*
-                        let camera = matrix::Matrix4::identity();
-                        let object = matrix::Matrix4::translation(vec::Vec3::new(0f64, 0f64, -1000f64));
-                        let projection = matrix::Matrix4::perspective(0.4f64,1f64,1f64,10000f64);
-                        let m = projection * camera.inverse_get() * object ;
-                        //shader.uniform_set("matrix", &matrix::Matrix4::identity());
+                        println!("object {} ", ob.name);
+                        let object = ob.matrix_get();
+                        let m = cam_projection * cam_mat_inv * object ;
                         shader.uniform_set("matrix", &m);
-                        */
 
                         match mb.buffers.find(&String::from_str("faces")) {
                             Some(ref bind) =>

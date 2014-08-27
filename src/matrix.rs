@@ -1,4 +1,6 @@
 use vec;
+use std::num::Zero;
+use std::fmt;
 
 pub struct Matrix4
 {
@@ -143,6 +145,75 @@ impl Matrix4
         Matrix4 { data : m }
     }
 
+    pub fn rotation(q : vec::Quat) -> Matrix4
+    {
+        let mut m : [f64, ..16] = [0f64, ..16];
+
+        let length2 = q.length2_get();
+
+        if length2.abs().is_zero() {
+            let mut mat = Matrix4 { data : m};
+            mat.identity_set();
+            return mat;
+        }
+
+        let rlength2 = 2.0f64/length2;
+
+        /*
+        if length2 == 1f64 {
+            rlength2 = 2f64;
+        }
+        else {
+            rlength2 = 2.0f64/length2;
+        }
+        */
+
+        println!("quat : {}, rlength2 : {} ", q, rlength2);
+
+        let x2 = rlength2*q.x;
+        let y2 = rlength2*q.y;
+        let z2 = rlength2*q.z;
+
+        let xx = q.x * x2;
+        let xy = q.x * y2;
+        let xz = q.x * z2;
+
+        let yy = q.y * y2;
+        let yz = q.y * z2;
+        let zz = q.z * z2;
+
+        let wx = q.w * x2;
+        let wy = q.w * y2;
+        let wz = q.w * z2;
+
+        m[3] = 0f64;
+        m[7] = 0f64;
+        m[11] = 0f64;
+        m[12] = 0f64;
+        m[13] = 0f64;
+        m[14] = 0f64;
+
+        m[15] = 1f64;
+
+        m[0] = 1f64 - (yy + zz);
+        m[4] = xy - wz;
+        m[8] = xz + wy;
+
+        m[1] = xy + wz;
+        m[5] = 1f64 - (xx + zz);
+        m[9] = yz - wx;
+
+        m[2] = xz - wy;
+        m[6] = yz + wx;
+        m[10] = 1f64 - (xx + yy);
+
+        let mm = Matrix4 { data : m};
+
+        println!("matrix : {} ", mm);
+
+        Matrix4 { data : m}
+    }
+
     pub fn inverse_get(&self) -> Matrix4
     {
         let m = &self.data;
@@ -250,6 +321,23 @@ impl Mul<Matrix4, Matrix4> for Matrix4 {
         out[15] = m[3] * n[12] + m[7] * n[13] + m[11] * n[14] + m[15] * n[15];
 
         Matrix4 { data : out }
+    }
+}
+
+impl fmt::Show for Matrix4
+{
+    fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
+        let mut yep = String::from_str("");
+
+        for i in range(0u,4) 
+        {
+            let line = format!("{}, {}, {}, {} \n", self.data[4*i], self.data[4*i + 1], self.data[4*i + 2], self.data[4*i + 3]);
+            yep.push_str(line.as_slice());
+
+        }
+
+        write!(fmt, "{}", yep.as_slice())
+
     }
 }
 
