@@ -60,6 +60,15 @@ impl Vec3
         }
     }
 
+    pub fn one() -> Vec3
+    {
+        Vec3 {
+            x : 1f64,
+            y : 1f64,
+            z : 1f64
+        }
+    }
+
     pub fn new(x : f64, y : f64, z : f64) -> Vec3
     {
         Vec3 {

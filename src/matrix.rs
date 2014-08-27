@@ -208,6 +208,19 @@ impl Matrix4
         Matrix4 { data : m}
     }
 
+    pub fn scale(s : vec::Vec3) -> Matrix4
+    {
+        let mut m : [f64, ..16] = [0f64, ..16];
+
+        m[0] = s.x;
+        m[5] = s.y;
+        m[10] = s.z;
+        m[15] = 1f64;
+
+        Matrix4 { data : m }
+    }
+
+
     pub fn inverse_get(&self) -> Matrix4
     {
         let m = &self.data;
@@ -327,7 +340,6 @@ impl fmt::Show for Matrix4
         {
             let line = format!("{}, {}, {}, {} \n", self.data[4*i], self.data[4*i + 1], self.data[4*i + 2], self.data[4*i + 3]);
             yep.push_str(line.as_slice());
-
         }
 
         write!(fmt, "{}", yep.as_slice())

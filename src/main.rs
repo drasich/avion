@@ -66,8 +66,9 @@ fn main() {
         {
             let mut o = object::Object::new("yep2");
             o.mesh_set(mesh.clone());
-            o.position = vec::Vec3::new(-100f64,0f64,-1000f64);
+            o.position = vec::Vec3::new(-100f64,-100f64,-1000f64);
             o.orientation = vec::Quat::new_axis_angle(vec::Vec3::new(0f64,1f64,0f64), consts::PI/2f64);
+            o.scale = vec::Vec3::new(2f64,2f64,2f64);
             let mut oref = Rc::new(RefCell::new(o));
             scene.objects.push(oref.clone());
             r.pass.objects.push(oref.clone());

@@ -9,7 +9,8 @@ pub struct Object
     pub name : String,
     pub mesh : Option<Rc<RefCell<mesh::Mesh>>>,
     pub position : vec::Vec3,
-    pub orientation : vec::Quat
+    pub orientation : vec::Quat,
+    pub scale : vec::Vec3
 }
 
 impl Object
@@ -20,7 +21,8 @@ impl Object
             name : String::from_str(name),
             mesh : None,
             position : vec::Vec3::zero(),
-            orientation : vec::Quat::identity()
+            orientation : vec::Quat::identity(),
+            scale : vec::Vec3::one()
         }
     }
 
@@ -44,8 +46,9 @@ impl Object
     {
         let mt = matrix::Matrix4::translation(self.position);
         let mq = matrix::Matrix4::rotation(self.orientation);
+        let ms = matrix::Matrix4::scale(self.scale);
 
-        mt * mq
+        mt * mq * ms
     }
 
 }
