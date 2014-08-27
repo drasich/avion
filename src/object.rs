@@ -45,8 +45,6 @@ impl Object
         let mt = matrix::Matrix4::translation(self.position);
         let mq = matrix::Matrix4::rotation(self.orientation);
 
-        println!("object '{}', name : {}", self.name, self.orientation);
-
         mt * mq
     }
 

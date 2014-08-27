@@ -150,7 +150,6 @@ impl RenderPass
                     }
 
                     if can_render {
-                        println!("object {} ", ob.name);
                         let object = ob.matrix_get();
                         let m = cam_projection * cam_mat_inv * object ;
                         shader.uniform_set("matrix", &m);

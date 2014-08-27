@@ -168,8 +168,6 @@ impl Matrix4
         }
         */
 
-        println!("quat : {}, rlength2 : {} ", q, rlength2);
-
         let x2 = rlength2*q.x;
         let y2 = rlength2*q.y;
         let z2 = rlength2*q.z;
@@ -206,10 +204,6 @@ impl Matrix4
         m[2] = xz - wy;
         m[6] = yz + wx;
         m[10] = 1f64 - (xx + yy);
-
-        let mm = Matrix4 { data : m};
-
-        println!("matrix : {} ", mm);
 
         Matrix4 { data : m}
     }
