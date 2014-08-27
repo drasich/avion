@@ -47,5 +47,5 @@ impl Camera
             clear_color : vec::Vec4::zero(),
         }
     }
-
 }
+

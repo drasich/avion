@@ -28,11 +28,14 @@ fn main() {
             shader : None,
             state : 0 }));
 
+        let mut cam = camera::Camera::new();
+
         let mut r = box render::Render { 
             pass :box render::RenderPass{
                       name : String::from_str("passtest"),
                       material : mat.clone(),
                       objects : DList::new(),
+                      camera : Some(Rc::new(RefCell::new(cam)))
                   },
             request_manager : box render::RequestManager {
                                   requests : DList::new(),
@@ -48,13 +51,15 @@ fn main() {
         r.request_manager.requests.push(
             box render::Request { resource : mesh.clone() });
 
-        let mut o = object::Object::new("yep");
-        o.mesh_set(mesh.clone());
-        o.position = vec::Vec3::new(10f64,0f64,0f64);
-        o.position.x = 7f64;
-        r.pass.objects.push(Rc::new(RefCell::new(o)));
+        {
+            let mut o = object::Object::new("yep");
+            o.mesh_set(mesh.clone());
+            o.position = vec::Vec3::new(10f64,0f64,0f64);
+            o.position.x = 7f64;
+            r.pass.objects.push(Rc::new(RefCell::new(o)));
+        }
 
-        let mut cam = camera::Camera::new();
+
         let mut scene = scene::Scene::new("the_scene");
 
         unsafe {
