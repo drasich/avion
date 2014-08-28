@@ -1,9 +1,9 @@
-extern crate libc;
 use std::collections::{DList,Deque};
 use std::collections::HashMap;
 use std::io::File;
+use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 
-use self::libc::{c_char, c_int, c_uint, c_void};
+use libc::{c_char, c_int, c_uint, c_void};
 use std::mem;
 use resource;
 use shader;
@@ -137,7 +137,7 @@ impl Mesh
     pub fn new_from_file(path : &str) -> Mesh
     {
        let mut m = Mesh {
-           name : String::from_str("mesh_new"),
+           name : String::from_str(path),
            state : 0,
            vertex : Vec::new(),
            buffers : HashMap::new(),
@@ -214,6 +214,28 @@ impl resource::ResourceT for Mesh
             self.state = 11;
         }
     }
+}
+
+impl <S: Encoder<E>, E> Encodable<S, E> for Mesh {
+  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+      encoder.emit_struct("Mesh", 0, |encoder| {
+          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
+          Ok(())
+      })
+  }
+}
+
+impl<S: Decoder<E>, E> Decodable<S, E> for Mesh {
+  fn decode(decoder: &mut S) -> Result<Mesh, E> {
+    decoder.read_struct("root", 0, |decoder| {
+         Ok(Mesh{
+          name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
+           state : 0,
+           vertex : Vec::from_slice(VERTEX_DATA),
+           buffers : HashMap::new()
+        })
+    })
+  }
 }
 
 //static VERTEX_DATA: [GLfloat, ..6] = [

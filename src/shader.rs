@@ -1,4 +1,3 @@
-extern crate libc;
 use resource;
 use uniform;
 use std::collections::HashMap;
@@ -10,7 +9,7 @@ use matrix;
 use uniform;
 use uniform::UniformSend;
 
-use self::libc::{c_char, c_uint};
+use libc::{c_char, c_uint};
 pub struct CglShader;
 pub struct CglShaderAttribute;
 pub struct CglShaderUniform;

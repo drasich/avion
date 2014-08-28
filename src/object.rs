@@ -1,9 +1,12 @@
-use mesh;
 use std::rc::Rc;
 use std::cell::RefCell;
+use serialize::json;
+
 use vec;
 use matrix;
+use mesh;
 
+#[deriving(Decodable, Encodable)]
 pub struct Object
 {
     pub name : String,

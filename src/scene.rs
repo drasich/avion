@@ -3,6 +3,8 @@ use std::collections::{DList,Deque};
 use std::rc::Rc;
 use std::cell::RefCell;
 
+
+#[deriving(Decodable, Encodable)]
 pub struct Scene
 {
     pub name : String,

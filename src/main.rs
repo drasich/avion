@@ -1,7 +1,14 @@
+extern crate serialize;
+extern crate libc;
+
 use std::collections::{DList};
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::f64::consts;
+use serialize::json;
+use serialize::json::ToJson;
+use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use std::io::stdio;
 
 #[link(name = "joker")]
 extern {
@@ -72,6 +79,20 @@ fn main() {
             let mut oref = Rc::new(RefCell::new(o));
             scene.objects.push(oref.clone());
             r.pass.objects.push(oref.clone());
+
+            ////println!("{}", json::encode(&*oref.borrow()));
+            //let ob_encoded = json::encode(&*oref.borrow());
+            //let ob_decoded : object::Object = json::decode(ob_encoded.as_slice()).unwrap();
+            //println!(" ob decoded {}", json::encode(&ob_decoded));
+
+
+            let mut stdwriter = stdio::stdout();
+            //let mut encoder = json::Encoder::new(&mut stdwriter);
+            let mut encoder = json::PrettyEncoder::new(&mut stdwriter);
+
+            //println!("scene : \n\n {}", json::encode(&scene));
+
+            scene.encode(&mut encoder).unwrap();
         }
 
         unsafe {

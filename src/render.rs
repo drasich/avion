@@ -1,10 +1,9 @@
-extern crate libc;
 
 //use std::sync::Arc;
 use std::collections::{DList,Deque};
 use std::rc::Rc;
 use std::cell::RefCell;
-use self::libc::{c_char,c_uint};
+use libc::{c_char,c_uint};
 
 use resource;
 use shader;

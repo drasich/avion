@@ -1,6 +1,8 @@
+use serialize::json;
 use std::f64::consts;
 use std::fmt;
 
+#[deriving(Decodable, Encodable)]
 pub struct Vec3
 {
     pub x : f64,
@@ -8,6 +10,7 @@ pub struct Vec3
     pub z : f64
 }
 
+#[deriving(Decodable, Encodable)]
 pub struct Vec4
 {
     pub x : f64,
@@ -16,6 +19,7 @@ pub struct Vec4
     pub w : f64
 }
 
+#[deriving(Decodable, Encodable)]
 pub struct Quat
 {
     pub x : f64,
