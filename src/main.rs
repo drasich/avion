@@ -9,6 +9,7 @@ use serialize::json;
 use serialize::json::ToJson;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::stdio;
+use std::io::File;
 
 #[link(name = "joker")]
 extern {
@@ -37,7 +38,11 @@ fn main() {
             state : 0 }));
 
         let mut cam = camera::Camera::new();
-        let mut scene = scene::Scene::new("the_scene");
+
+        let scene_path = "scene/simple.scene";
+        let file = File::open(&Path::new(scene_path)).read_to_string().unwrap();
+        let mut scene : scene::Scene = json::decode(file.as_slice()).unwrap();
+        //let mut scene = scene::Scene::new("the_scene");
 
         let mut r = box render::Render { 
             pass :box render::RenderPass{
@@ -65,7 +70,7 @@ fn main() {
             o.mesh_set(mesh.clone());
             o.position = vec::Vec3::new(100f64,0f64,-1000f64);
             let mut oref = Rc::new(RefCell::new(o));
-            scene.objects.push(oref.clone());
+            //scene.objects.push(oref.clone());
             r.pass.objects.push(oref.clone());
             
         }
@@ -77,7 +82,7 @@ fn main() {
             o.orientation = vec::Quat::new_axis_angle(vec::Vec3::new(0f64,1f64,0f64), consts::PI/2f64);
             o.scale = vec::Vec3::new(2f64,2f64,2f64);
             let mut oref = Rc::new(RefCell::new(o));
-            scene.objects.push(oref.clone());
+            //scene.objects.push(oref.clone());
             r.pass.objects.push(oref.clone());
 
             ////println!("{}", json::encode(&*oref.borrow()));
@@ -86,13 +91,19 @@ fn main() {
             //println!(" ob decoded {}", json::encode(&ob_decoded));
 
 
+            /*
+            let mut file = File::create(&Path::new(scene_path));
             let mut stdwriter = stdio::stdout();
             //let mut encoder = json::Encoder::new(&mut stdwriter);
-            let mut encoder = json::PrettyEncoder::new(&mut stdwriter);
+            //let mut encoder = json::PrettyEncoder::new(&mut stdwriter);
+            let mut encoder = json::PrettyEncoder::new(&mut file);
+            //let mut encoder = json::Encoder::new(&mut file);
 
             //println!("scene : \n\n {}", json::encode(&scene));
 
             scene.encode(&mut encoder).unwrap();
+            */
+
         }
 
         unsafe {

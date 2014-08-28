@@ -1,0 +1,49 @@
+{
+  "name": "the_scene",
+  "objects": [
+    {
+      "name": "yep",
+      "mesh": {
+        "name": "model/skeletonmesh.mesh"
+      },
+      "position": {
+        "x": 100,
+        "y": 0,
+        "z": -1000
+      },
+      "orientation": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 1
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      }
+    },
+    {
+      "name": "yep2",
+      "mesh": {
+        "name": "model/skeletonmesh.mesh"
+      },
+      "position": {
+        "x": -100,
+        "y": -100,
+        "z": -1000
+      },
+      "orientation": {
+        "x": 0,
+        "y": 0.707107,
+        "z": 0,
+        "w": 0.707107
+      },
+      "scale": {
+        "x": 2,
+        "y": 2,
+        "z": 2
+      }
+    }
+  ]
+}

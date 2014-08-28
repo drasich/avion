@@ -218,7 +218,7 @@ impl resource::ResourceT for Mesh
 
 impl <S: Encoder<E>, E> Encodable<S, E> for Mesh {
   fn encode(&self, encoder: &mut S) -> Result<(), E> {
-      encoder.emit_struct("Mesh", 0, |encoder| {
+      encoder.emit_struct("Mesh", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
           Ok(())
       })
