@@ -5,7 +5,6 @@ use std::collections::{DList};
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::f64::consts;
-use serialize::json;
 use serialize::json::ToJson;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::stdio;
@@ -64,6 +63,13 @@ fn main() {
 
         r.request_manager.requests.push(
             box render::Request { resource : mesh.clone() });
+
+        /*
+        for o in scene.objects.iter() {
+            r.pass.objects.push((*o).clone());
+        }
+        */
+
 
         {
             let mut o = object::Object::new("yep");

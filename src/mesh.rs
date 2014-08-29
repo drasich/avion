@@ -109,7 +109,7 @@ pub struct Mesh
     pub name : String,
     pub state : i32,
     pub vertex : Vec<f32>,
-    pub buffers : HashMap<String, Box<BufferSend>>,
+    pub buffers : HashMap<String, Box<BufferSend+'static>>, //TODO check
 }
 
 impl Mesh
@@ -142,8 +142,13 @@ impl Mesh
            vertex : Vec::new(),
            buffers : HashMap::new(),
        };
+        
+       m
+    }
 
-       let mut file = File::open(&Path::new(path));
+    pub fn file_read(&mut self) 
+    {
+       let mut file = File::open(&Path::new(self.name.as_slice()));
 
        let typelen = file.read_le_u16().unwrap();
        println!("number : {} ", typelen);
@@ -171,7 +176,7 @@ impl Mesh
 
        let bufname = String::from_str("position");
 
-       m.buffers.insert(bufname.clone(), box Buffer::new(
+       self.buffers.insert(bufname.clone(), box Buffer::new(
                bufname.clone(),
                vvv,
                Vertex));
@@ -191,21 +196,28 @@ impl Mesh
 
        let bufname = String::from_str("faces");
 
-       m.buffers.insert(bufname.clone(), box Buffer::new(
+       self.buffers.insert(bufname.clone(), box Buffer::new(
                bufname.clone(),
                fff,
                Index));
        }
 
-       return m;
+       self.state = 1;
+
     }
+
 }
 
 impl resource::ResourceT for Mesh
 {
     fn init(&mut self)
     {
-        if self.state != 11 {
+        if self.state == 0 {
+            //TODO can be read anywhere
+            self.file_read();
+        }
+        
+        if self.state == 1 {
             unsafe {
                 for (_,b) in self.buffers.mut_iter() {
                     Some(b.send());

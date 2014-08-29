@@ -1,5 +1,4 @@
 use resource;
-use uniform;
 use std::collections::HashMap;
 use std::io::File;
 use std::io::BufferedReader;
