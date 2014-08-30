@@ -1,6 +1,8 @@
 use mesh;
 use shader;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use std::rc::Rc;
+use std::cell::RefCell;
 
 //#[deriving(Decodable, Encodable)]
 pub enum Resource {
@@ -25,7 +27,8 @@ pub trait ResourceT  {
 pub struct ResourceRefGen<T>
 {
     pub name : String,
-    pub resource : Option<T>
+    //pub resource : Option<T>
+    pub resource : Option<Rc<RefCell<T>>>,
 }
 
 impl<T> ResourceRefGen<T>
@@ -43,8 +46,6 @@ pub struct ResourceRef
     pub name : String,
     pub resource : Resource
 }
-
-
 
 /*
 impl <S: Encoder<E>, E> Encodable<S, E> for ResourceRefGen<mesh::Mesh> {
@@ -94,3 +95,4 @@ impl<S: Decoder<E>, E, T> Decodable<S, E> for ResourceRefGen<T> {
     })
   }
 }
+

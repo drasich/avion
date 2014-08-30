@@ -122,52 +122,61 @@ impl RenderPass
         let cam_mat = self.camera.borrow().object.borrow().matrix_get();
         let cam_projection = self.camera.borrow().perspective_get();
         let cam_mat_inv = cam_mat.inverse_get();
+        let matrix = cam_projection * cam_mat_inv;
 
         for o in self.objects.iter() {
             let ob = o.borrow();
-            match  ob.mesh  {
-                None => continue,
-                Some(ref m) => {
-                    let mb = m.borrow();
-                    let mut can_render = true;
-                    let mut vertex_data_count = 0;
-                    for (name, cgl_att) in shader.attributes.iter() {
-                        let cgl_buf = mb.buffers.find(name);
-                        match cgl_buf {
-                            Some(ref cb) => {
-                                cb.utilise(*cgl_att);
-                                if name.as_slice() == "position" {
-                                    vertex_data_count = cb.size_get();
-                                }
-                            },
-                            None => {
-                                println!("while sending attributes, this mesh does not have the '{}' buffer, not rendering", name);
-                                can_render = false;
-                                break;
+            RenderPass::draw_object(shader, &*ob, &matrix);
+        }
+    }
+
+    fn draw_object(
+        shader : &shader::Shader,
+        ob : &object::Object,
+        matrix : &matrix::Matrix4)
+    {
+        match  ob.mesh  {
+            None => return,
+            Some(ref m) => {
+                let mb = m.borrow();
+                let mut can_render = true;
+                let mut vertex_data_count = 0;
+                for (name, cgl_att) in shader.attributes.iter() {
+                    let cgl_buf = mb.buffers.find(name);
+                    match cgl_buf {
+                        Some(ref cb) => {
+                            cb.utilise(*cgl_att);
+                            if name.as_slice() == "position" {
+                                vertex_data_count = cb.size_get();
                             }
+                        },
+                        None => {
+                            println!("while sending attributes, this mesh does not have the '{}' buffer, not rendering", name);
+                            can_render = false;
+                            break;
                         }
                     }
+                }
 
-                    if can_render {
-                        let object = ob.matrix_get();
-                        let m = cam_projection * cam_mat_inv * object ;
-                        shader.uniform_set("matrix", &m);
+                if can_render {
+                    let object = ob.matrix_get();
+                    let m = matrix * object ;
+                    shader.uniform_set("matrix", &m);
 
-                        match mb.buffers.find(&String::from_str("faces")) {
-                            Some(ref bind) =>
-                                unsafe{
-                                    match bind.buffer_get() {
-                                        Some(b) => {
-                                            let faces_data_count = bind.size_get();
-                                            cgl_draw_faces(b, faces_data_count as c_uint);
-                                        },
-                                        None => ()
-                                    }
-                                },
+                    match mb.buffers.find(&String::from_str("faces")) {
+                        Some(ref bind) =>
+                            unsafe{
+                                match bind.buffer_get() {
+                                    Some(b) => {
+                                        let faces_data_count = bind.size_get();
+                                        cgl_draw_faces(b, faces_data_count as c_uint);
+                                    },
+                                    None => ()
+                                }
+                            },
                             None => unsafe {
                                 cgl_draw(vertex_data_count as c_uint);
                             }
-                        }
                     }
                 }
             }

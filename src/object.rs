@@ -5,12 +5,14 @@ use serialize::json;
 use vec;
 use matrix;
 use mesh;
+use resource;
 
 #[deriving(Decodable, Encodable)]
 pub struct Object
 {
     pub name : String,
     pub mesh : Option<Rc<RefCell<mesh::Mesh>>>,
+    //pub mesh : Option<resource::ResourceRefGen<mesh::Mesh>>,
     pub position : vec::Vec3,
     pub orientation : vec::Quat,
     pub scale : vec::Vec3
