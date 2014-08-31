@@ -48,7 +48,8 @@ fn main() {
                       name : String::from_str("passtest"),
                       material : mat.clone(),
                       objects : DList::new(),
-                      camera : Rc::new(RefCell::new(cam))
+                      camera : Rc::new(RefCell::new(cam)),
+                      resource_manager : Rc::new(RefCell::new(resource::ResourceManager::new()))
                   },
             request_manager : box render::RequestManager {
                                   requests : DList::new(),
@@ -59,18 +60,12 @@ fn main() {
         r.request_manager.requests_material.push(
             box render::Request { resource : mat.clone() });
 
-        let mut mesh = Rc::new(RefCell::new( mesh::Mesh::new_from_file("model/skeletonmesh.mesh")));
-
-        r.request_manager.requests.push(
-            box render::Request { resource : mesh.clone() });
-
-        /*
         for o in scene.objects.iter() {
             r.pass.objects.push((*o).clone());
         }
-        */
 
 
+        /*
         {
             let mut o = object::Object::new("yep");
             o.mesh_set(mesh.clone());
@@ -80,7 +75,9 @@ fn main() {
             r.pass.objects.push(oref.clone());
             
         }
+        */
 
+        /*
         {
             let mut o = object::Object::new("yep2");
             o.mesh_set(mesh.clone());
@@ -95,9 +92,12 @@ fn main() {
             //let ob_encoded = json::encode(&*oref.borrow());
             //let ob_decoded : object::Object = json::decode(ob_encoded.as_slice()).unwrap();
             //println!(" ob decoded {}", json::encode(&ob_decoded));
+            //
+        }
+        */
 
-
-            /*
+        /*
+        {
             let mut file = File::create(&Path::new(scene_path));
             let mut stdwriter = stdio::stdout();
             //let mut encoder = json::Encoder::new(&mut stdwriter);
@@ -108,9 +108,8 @@ fn main() {
             //println!("scene : \n\n {}", json::encode(&scene));
 
             scene.encode(&mut encoder).unwrap();
-            */
-
         }
+        */
 
         unsafe {
             render::draw_callback_set(render::draw_cb, &*r);

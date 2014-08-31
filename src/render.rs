@@ -86,7 +86,8 @@ pub struct RenderPass
     pub material : Rc<RefCell<shader::Material>>,
     //pub objects : DList<object::Object>,
     pub objects : DList<Rc<RefCell<object::Object>>>,
-    pub camera : Rc<RefCell<camera::Camera>>
+    pub camera : Rc<RefCell<camera::Camera>>,
+    pub resource_manager : Rc<RefCell<resource::ResourceManager>>
 }
 
 impl RenderPass
@@ -125,35 +126,44 @@ impl RenderPass
         let matrix = cam_projection * cam_mat_inv;
 
         for o in self.objects.iter() {
-            let ob = o.borrow();
-            RenderPass::draw_object(shader, &*ob, &matrix);
+            let mut ob = o.borrow_mut();
+            //RenderPass::draw_object(shader, &*ob, &matrix);
+            self.draw_object(shader, &mut *ob, &matrix);
         }
     }
 
     fn draw_object(
+        &self,
         shader : &shader::Shader,
-        ob : &object::Object,
+        ob : &mut object::Object,
         matrix : &matrix::Matrix4)
     {
-        let resource : &resource::ResourceRefGen<mesh::Mesh>;
+        match  ob.mesh  {
+            None =>  return,
+            Some(ref mut r) => {
+                match r.resource {
+                    None => 
+                        r.resource = Some(self.resource_manager.borrow_mut().get_or_create(r.name.as_slice())),
+                    _ => ()
+                }
+            }
+        }
+
+        let resource : & resource::ResourceRefGen<mesh::Mesh>;
         match  ob.mesh  {
             None => return,
-            Some(ref r) => resource = r
+            Some(ref r) => {
+                resource = r;
+            }
         }
 
-        /*
-        let mesh : &mesh::Mesh;
-        match resource.resource {
-            None => return,
-            Some(m) => mesh = m.borrow();
-        }
-        */
-
-        //match  ob.mesh  {
         match  resource.resource  {
-            None => return,
+            None => { println!("no mesh in resource '{}' ", resource.name); return;},
             Some(ref m) => {
-                let mb = m.borrow();
+                let mut mb = m.borrow_mut();
+                if mb.state == 0 {
+                    ((&mut *mb) as &mut resource::ResourceT).init();
+                }
                 let mut can_render = true;
                 let mut vertex_data_count = 0;
                 for (name, cgl_att) in shader.attributes.iter() {

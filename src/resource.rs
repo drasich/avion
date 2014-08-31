@@ -3,6 +3,8 @@ use shader;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::rc::Rc;
 use std::cell::RefCell;
+//use std::collections::{DList,Deque};
+use std::collections::HashMap;
 
 //#[deriving(Decodable, Encodable)]
 pub enum Resource {
@@ -33,6 +35,30 @@ impl<T> ResourceRefGen<T>
     {
         ResourceRefGen { name : String::from_str(name), resource : None }
     }
+}
+
+pub struct ResourceManager
+{
+    pub meshes : HashMap<String, Rc<RefCell<mesh::Mesh>>>
+}
+
+impl ResourceManager {
+    pub fn new() -> ResourceManager
+    {
+        ResourceManager {
+            meshes : HashMap::new()
+        }
+    }
+
+    pub fn get_or_create(&mut self, name : &str) -> Rc<RefCell<mesh::Mesh>>
+    {
+        match self.meshes.find(&String::from_str(name)) {
+            Some(mesh) => return mesh.clone(),
+            None => return Rc::new(RefCell::new(mesh::Mesh::new_from_file(name)))
+        }
+
+    }
+
 }
 
 
