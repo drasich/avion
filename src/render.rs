@@ -135,7 +135,22 @@ impl RenderPass
         ob : &object::Object,
         matrix : &matrix::Matrix4)
     {
+        let resource : &resource::ResourceRefGen<mesh::Mesh>;
         match  ob.mesh  {
+            None => return,
+            Some(ref r) => resource = r
+        }
+
+        /*
+        let mesh : &mesh::Mesh;
+        match resource.resource {
+            None => return,
+            Some(m) => mesh = m.borrow();
+        }
+        */
+
+        //match  ob.mesh  {
+        match  resource.resource  {
             None => return,
             Some(ref m) => {
                 let mb = m.borrow();

@@ -20,10 +20,6 @@ pub trait ResourceT  {
     fn init(&mut self);
 }
 
-
-/*
- * cannot encode/decode???
- */
 pub struct ResourceRefGen<T>
 {
     pub name : String,

@@ -11,8 +11,8 @@ use resource;
 pub struct Object
 {
     pub name : String,
-    pub mesh : Option<Rc<RefCell<mesh::Mesh>>>,
-    //pub mesh : Option<resource::ResourceRefGen<mesh::Mesh>>,
+    //pub mesh : Option<Rc<RefCell<mesh::Mesh>>>,
+    pub mesh : Option<resource::ResourceRefGen<mesh::Mesh>>,
     pub position : vec::Vec3,
     pub orientation : vec::Quat,
     pub scale : vec::Vec3
@@ -44,7 +44,8 @@ impl Object
 
     pub fn mesh_set(&mut self, mesh : Rc<RefCell<mesh::Mesh>>)
     {
-        self.mesh = Some(mesh);
+        //self.mesh = Some(mesh);
+        self.mesh = Some(resource::ResourceRefGen { name : mesh.borrow().name.clone(), resource : Some(mesh) });
     }
 
     pub fn matrix_get(&self) -> matrix::Matrix4
