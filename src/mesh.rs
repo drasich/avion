@@ -108,7 +108,6 @@ pub struct Mesh
 {
     pub name : String,
     pub state : i32,
-    pub vertex : Vec<f32>,
     pub buffers : HashMap<String, Box<BufferSend+'static>>, //TODO check
 }
 
@@ -119,7 +118,6 @@ impl Mesh
        let mut m = Mesh {
            name : String::from_str("mesh_new"),
            state : 0,
-           vertex : Vec::from_slice(VERTEX_DATA),
            buffers : HashMap::new(),
        };
 
@@ -139,7 +137,6 @@ impl Mesh
        let mut m = Mesh {
            name : String::from_str(path),
            state : 0,
-           vertex : Vec::new(),
            buffers : HashMap::new(),
        };
         
@@ -243,7 +240,6 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Mesh {
          Ok(Mesh{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
            state : 0,
-           vertex : Vec::from_slice(VERTEX_DATA),
            buffers : HashMap::new()
         })
     })
