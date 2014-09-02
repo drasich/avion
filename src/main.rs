@@ -1,5 +1,6 @@
 extern crate serialize;
 extern crate libc;
+extern crate sync;
 
 use std::collections::{DList};
 use std::rc::Rc;

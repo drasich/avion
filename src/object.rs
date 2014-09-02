@@ -45,7 +45,11 @@ impl Object
     pub fn mesh_set(&mut self, mesh : Rc<RefCell<mesh::Mesh>>)
     {
         //self.mesh = Some(mesh);
-        self.mesh = Some(resource::ResourceRefGen { name : mesh.borrow().name.clone(), resource : Some(mesh) });
+        self.mesh = Some(resource::ResourceRefGen {
+            name : mesh.borrow().name.clone(),
+            resource : Some(mesh),
+            resourcett : None
+        });
     }
 
     pub fn matrix_get(&self) -> matrix::Matrix4

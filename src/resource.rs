@@ -5,6 +5,8 @@ use std::rc::Rc;
 use std::cell::RefCell;
 //use std::collections::{DList,Deque};
 use std::collections::HashMap;
+use sync::{RWLock, Arc};
+
 
 //#[deriving(Decodable, Encodable)]
 pub enum Resource {
@@ -27,13 +29,17 @@ pub struct ResourceRefGen<T>
     pub name : String,
     //pub resource : Option<T>
     pub resource : Option<Rc<RefCell<T>>>,
+    pub resourcett : Option<Arc<RWLock<T>>>,
 }
 
 impl<T> ResourceRefGen<T>
 {
     pub fn new(name : &str) -> ResourceRefGen<T>
     {
-        ResourceRefGen { name : String::from_str(name), resource : None }
+        ResourceRefGen { 
+            name : String::from_str(name), 
+                 resource : None,
+                 resourcett : None }
     }
 }
 
@@ -111,7 +117,8 @@ impl<S: Decoder<E>, E, T> Decodable<S, E> for ResourceRefGen<T> {
          Ok(
              ResourceRefGen{
                  name : try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
-                 resource : None
+                 resource : None,
+                 resourcett : None
             }
            )
     })
