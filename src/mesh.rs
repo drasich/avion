@@ -108,7 +108,7 @@ pub struct Mesh
 {
     pub name : String,
     pub state : i32,
-    pub buffers : HashMap<String, Box<BufferSend+'static>>, //TODO check
+    pub buffers : HashMap<String, Box<BufferSend+'static+Send+Share>>, //TODO check
 }
 
 impl Mesh
@@ -201,6 +201,23 @@ impl Mesh
 
        self.state = 1;
 
+    }
+
+    pub fn inittt(&mut self)
+    {
+        if self.state == 0 {
+            //TODO can be read anywhere
+            self.file_read();
+        }
+        
+        if self.state == 1 {
+            unsafe {
+                for (_,b) in self.buffers.mut_iter() {
+                    Some(b.send());
+                }
+            }
+            self.state = 11;
+        }
     }
 
 }

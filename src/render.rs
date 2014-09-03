@@ -145,6 +145,11 @@ impl RenderPass
                     None => 
                         r.resource = Some(self.resource_manager.borrow_mut().get_or_create(r.name.as_slice())),
                     _ => ()
+                };
+                match r.resourcett {
+                    None => 
+                        r.resourcett = Some(self.resource_manager.borrow_mut().get_or_creatett(r.name.as_slice())),
+                    _ => ()
                 }
             }
         }
@@ -154,6 +159,23 @@ impl RenderPass
             None => return,
             Some(ref r) => {
                 resource = r;
+            }
+        }
+
+        //TODO chris
+        match resource.resourcett {
+            None => {},
+            Some(ref m) => {
+                let mbw = m.clone();
+                spawn( proc() {
+                    let mut val = mbw.write();
+                    val.inittt();
+                });
+
+                let mbr = m.clone();
+                let val = mbr.read();
+                if val.state == 0 {
+                }
             }
         }
 

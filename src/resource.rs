@@ -45,14 +45,16 @@ impl<T> ResourceRefGen<T>
 
 pub struct ResourceManager
 {
-    pub meshes : HashMap<String, Rc<RefCell<mesh::Mesh>>>
+    pub meshes : HashMap<String, Rc<RefCell<mesh::Mesh>>>,
+    pub meshestt : HashMap<String, Arc<RWLock<mesh::Mesh>>>
 }
 
 impl ResourceManager {
     pub fn new() -> ResourceManager
     {
         ResourceManager {
-            meshes : HashMap::new()
+            meshes : HashMap::new(),
+            meshestt : HashMap::new(),
         }
     }
 
@@ -61,6 +63,14 @@ impl ResourceManager {
         match self.meshes.find(&String::from_str(name)) {
             Some(mesh) => return mesh.clone(),
             None => return Rc::new(RefCell::new(mesh::Mesh::new_from_file(name)))
+        }
+    }
+
+    pub fn get_or_creatett(&mut self, name : &str) -> Arc<RWLock<mesh::Mesh>>
+    {
+        match self.meshestt.find(&String::from_str(name)) {
+            Some(mesh) => return mesh.clone(),
+            None => return Arc::new(RWLock::new(mesh::Mesh::new_from_file(name)))
         }
 
     }
