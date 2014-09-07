@@ -6,6 +6,8 @@ use std::cell::RefCell;
 //use std::collections::{DList,Deque};
 use std::collections::HashMap;
 use sync::{RWLock, Arc};
+use std::io::timer::sleep;
+//use std::time::duration::Duration;
 
 
 //#[deriving(Decodable, Encodable)]
@@ -43,6 +45,19 @@ impl<T> ResourceRefGen<T>
     }
 }
 
+pub enum ResTest<T>
+{
+    ResData(Arc<RWLock<T>>),
+    ResWait(Receiver<Arc<RWLock<T>>>),
+    ResNone
+}
+
+pub struct ResTT<T>
+{
+    pub name : String,
+    pub resource : ResTest<T>
+}
+
 pub struct ResourceManager
 {
     pub meshes : HashMap<String, Rc<RefCell<mesh::Mesh>>>,
@@ -68,11 +83,71 @@ impl ResourceManager {
 
     pub fn get_or_creatett(&mut self, name : &str) -> Arc<RWLock<mesh::Mesh>>
     {
+        let v = self.meshestt.find_or_insert_with(String::from_str(name), 
+                |key | Arc::new(RWLock::new(mesh::Mesh::new_from_file(name))));
+
+        return v.clone();
+
+        /*
         match self.meshestt.find(&String::from_str(name)) {
             Some(mesh) => return mesh.clone(),
-            None => return Arc::new(RWLock::new(mesh::Mesh::new_from_file(name)))
+            None => {
+                return Arc::new(RWLock::new(mesh::Mesh::new_from_file(name)))
+            }
+        }
+        */
+    }
+
+    //pub fn request_use(&mut self, name : &str) -> Receiver<Arc<RWLock<mesh::Mesh>>>
+    pub fn request_use(&mut self, name : &str) -> ResTest<mesh::Mesh>
+    {
+        let v = self.meshestt.find_or_insert_with(String::from_str(name), 
+                |key | Arc::new(RWLock::new(mesh::Mesh::new_from_file(name))));
+
+        if v.read().state == 0 {
+            v.write().state = 1;
+            let (tx, rx) = channel::<Arc<RWLock<mesh::Mesh>>>();
+            let vc = v.clone();
+
+            spawn( proc() {
+                sleep(::std::time::duration::Duration::seconds(5));
+                let mut vv = vc.write();
+                vv.init();
+                tx.send(vc);
+            });
+
+            return ResWait(rx);
+        }
+        else {
+        //    return Some(v.clone());
         }
 
+        return ResNone;
+
+
+        /*
+        let (tx, rx) = channel::<Arc<RWLock<mesh::Mesh>>>();
+            let vc = v.clone();
+
+        spawn( proc() {
+            sleep(::std::time::duration::Duration::seconds(5));
+            let mut vv = vc.write();
+            vv.init();
+            tx.send(vc);
+        });
+
+        return rx;
+        */
+
+        /*
+        loop {
+               match rx.try_recv() {
+                   Err(e) => {},//println!("nothing"),
+                   Ok(val) =>  { println!("received val {} ", val); }
+               }
+               println!("yo man");
+        }
+        */
     }
 
 }
@@ -85,17 +160,6 @@ pub struct ResourceRef
     pub resource : Resource
 }
 
-/*
-impl <S: Encoder<E>, E> Encodable<S, E> for ResourceRefGen<mesh::Mesh> {
-  fn encode(&self, encoder: &mut S) -> Result<(), E> {
-      encoder.emit_struct("Mesh", 1, |encoder| {
-          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
-          Ok(())
-      })
-  }
-}
-*/
-
 impl <S: Encoder<E>, E, T> Encodable<S, E> for ResourceRefGen<T> {
   fn encode(&self, encoder: &mut S) -> Result<(), E> {
       encoder.emit_struct("Mesh", 1, |encoder| {
@@ -104,22 +168,6 @@ impl <S: Encoder<E>, E, T> Encodable<S, E> for ResourceRefGen<T> {
       })
   }
 }
-
-/*
-impl<S: Decoder<E>, E> Decodable<S, E> for ResourceRefGen<mesh::Mesh> {
-  fn decode(decoder: &mut S) -> Result<Mesh, E> {
-    decoder.read_struct("root", 0, |decoder| {
-         Ok(
-             ResourceRefGen<mesh::Mesh>
-            {
-                name : try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
-                resource : None
-            }
-           )
-    })
-  }
-}
-*/
 
 impl<S: Decoder<E>, E, T> Decodable<S, E> for ResourceRefGen<T> {
   fn decode(decoder: &mut S) -> Result<ResourceRefGen<T>, E> {
@@ -134,4 +182,27 @@ impl<S: Decoder<E>, E, T> Decodable<S, E> for ResourceRefGen<T> {
     })
   }
 }
+
+impl <S: Encoder<E>, E, T> Encodable<S, E> for ResTT<T> {
+  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+      encoder.emit_struct("Mesh", 1, |encoder| {
+          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
+          Ok(())
+      })
+  }
+}
+
+impl<S: Decoder<E>, E, T> Decodable<S, E> for ResTT<T> {
+  fn decode(decoder: &mut S) -> Result<ResTT<T>, E> {
+    decoder.read_struct("root", 0, |decoder| {
+         Ok(
+             ResTT{
+                 name : try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
+                 resource : ResNone,
+            }
+           )
+    })
+  }
+}
+
 

@@ -4,6 +4,7 @@ use std::collections::{DList,Deque};
 use std::rc::Rc;
 use std::cell::RefCell;
 use libc::{c_char,c_uint};
+use sync::{RWLock, Arc};
 
 use resource;
 use shader;
@@ -162,22 +163,18 @@ impl RenderPass
             }
         }
 
-        //TODO chris
-        match resource.resourcett {
-            None => {},
-            Some(ref m) => {
-                let mbw = m.clone();
-                spawn( proc() {
-                    let mut val = mbw.write();
-                    val.inittt();
-                });
-
-                let mbr = m.clone();
-                let val = mbr.read();
-                if val.state == 0 {
-                }
-            }
+        //let rc_mesh : Option<Arc<RWLock<mesh::Mesh>>>;
+        match ob.mesht.resource{
+            resource::ResNone => {
+                //rc_mesh = self.resource_manager.borrow_mut().request_use(r.name.as_slice());
+                ob.mesht.resource = self.resource_manager.borrow_mut().request_use(ob.mesht.name.as_slice());
+            },
+            resource::ResData(ref data) => {},
+            resource::ResWait(ref wait) => {}
         }
+
+
+        //TODO chris
 
         match  resource.resource  {
             None => { println!("no mesh in resource '{}' ", resource.name); return;},

@@ -13,6 +13,7 @@ pub struct Object
     pub name : String,
     //pub mesh : Option<Rc<RefCell<mesh::Mesh>>>,
     pub mesh : Option<resource::ResourceRefGen<mesh::Mesh>>,
+    pub mesht : resource::ResTT<mesh::Mesh>,
     pub position : vec::Vec3,
     pub orientation : vec::Quat,
     pub scale : vec::Vec3
@@ -25,6 +26,7 @@ impl Object
         Object {
             name : String::from_str(name),
             mesh : None,
+            mesht : resource::ResTT {name : String::from_str("model/skeleton.mesh"), resource : resource::ResNone},
             position : vec::Vec3::zero(),
             orientation : vec::Quat::identity(),
             scale : vec::Vec3::one()
