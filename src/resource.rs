@@ -58,19 +58,26 @@ pub struct ResTT<T>
     pub resource : ResTest<T>
 }
 
+
 pub struct ResourceManager
 {
     pub meshes : HashMap<String, Rc<RefCell<mesh::Mesh>>>,
-    pub meshestt : HashMap<String, Arc<RWLock<mesh::Mesh>>>
+    pub meshestt : HashMap<String, Arc<RWLock<mesh::Mesh>>>,
+    pub meshes_states : HashMap<String, Arc<RWLock<ResTest<mesh::Mesh>>>>
 }
 
 impl ResourceManager {
     pub fn new() -> ResourceManager
     {
-        ResourceManager {
+        let rm = ResourceManager {
             meshes : HashMap::new(),
             meshestt : HashMap::new(),
-        }
+            meshes_states : HashMap::new(),
+        };
+
+        //spawn( proc() { rm.start();} );
+
+        rm
     }
 
     pub fn get_or_create(&mut self, name : &str) -> Rc<RefCell<mesh::Mesh>>
@@ -148,6 +155,14 @@ impl ResourceManager {
                println!("yo man");
         }
         */
+    }
+
+    pub fn start(&self)
+    {
+        //to be spawn
+        loop{
+            //TODO for all meshes state that are receiver, try to receive
+        }
     }
 
 }
