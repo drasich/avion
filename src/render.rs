@@ -88,7 +88,7 @@ pub struct RenderPass
     //pub objects : DList<object::Object>,
     pub objects : DList<Rc<RefCell<object::Object>>>,
     pub camera : Rc<RefCell<camera::Camera>>,
-    pub resource_manager : Rc<RefCell<resource::ResourceManager>>
+    pub resource_manager : Arc<RWLock<resource::ResourceManager>>
 }
 
 impl RenderPass
@@ -144,12 +144,14 @@ impl RenderPass
             Some(ref mut r) => {
                 match r.resource {
                     None => 
-                        r.resource = Some(self.resource_manager.borrow_mut().get_or_create(r.name.as_slice())),
+                        //r.resource = Some(self.resource_manager.borrow_mut().get_or_create(r.name.as_slice())),
+                        r.resource = Some(self.resource_manager.write().get_or_create(r.name.as_slice())),
                     _ => ()
                 };
                 match r.resourcett {
                     None => 
-                        r.resourcett = Some(self.resource_manager.borrow_mut().get_or_creatett(r.name.as_slice())),
+                        //r.resourcett = Some(self.resource_manager.borrow_mut().get_or_creatett(r.name.as_slice())),
+                        r.resourcett = Some(self.resource_manager.write().get_or_creatett(r.name.as_slice())),
                     _ => ()
                 }
             }
@@ -167,7 +169,8 @@ impl RenderPass
         match ob.mesht.resource{
             resource::ResNone => {
                 //rc_mesh = self.resource_manager.borrow_mut().request_use(r.name.as_slice());
-                ob.mesht.resource = self.resource_manager.borrow_mut().request_use(ob.mesht.name.as_slice());
+                //ob.mesht.resource = self.resource_manager.borrow_mut().request_use(ob.mesht.name.as_slice());
+                ob.mesht.resource = self.resource_manager.write().request_use(ob.mesht.name.as_slice());
             },
             resource::ResData(ref data) => {},
             resource::ResWait(ref wait) => {}

@@ -10,6 +10,7 @@ use serialize::json::ToJson;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::stdio;
 use std::io::File;
+use sync::{RWLock, Arc};
 
 #[link(name = "joker")]
 extern {
@@ -50,7 +51,8 @@ fn main() {
                       material : mat.clone(),
                       objects : DList::new(),
                       camera : Rc::new(RefCell::new(cam)),
-                      resource_manager : Rc::new(RefCell::new(resource::ResourceManager::new()))
+                      //resource_manager : Rc::new(RefCell::new(resource::ResourceManager::new()))
+                      resource_manager : Arc::new(RWLock::new(resource::ResourceManager::new()))
                   },
             request_manager : box render::RequestManager {
                                   requests : DList::new(),

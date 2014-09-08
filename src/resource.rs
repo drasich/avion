@@ -63,7 +63,7 @@ pub struct ResourceManager
 {
     pub meshes : HashMap<String, Rc<RefCell<mesh::Mesh>>>,
     pub meshestt : HashMap<String, Arc<RWLock<mesh::Mesh>>>,
-    pub meshes_states : HashMap<String, Arc<RWLock<ResTest<mesh::Mesh>>>>
+    pub meshes_states : HashMap<String, ResTest<mesh::Mesh>>
 }
 
 impl ResourceManager {
@@ -108,9 +108,32 @@ impl ResourceManager {
     //pub fn request_use(&mut self, name : &str) -> Receiver<Arc<RWLock<mesh::Mesh>>>
     pub fn request_use(&mut self, name : &str) -> ResTest<mesh::Mesh>
     {
-        let v = self.meshestt.find_or_insert_with(String::from_str(name), 
-                |key | Arc::new(RWLock::new(mesh::Mesh::new_from_file(name))));
+        let v = self.meshes_states.find_or_insert_with(String::from_str(name), 
+                //|key | Arc::new(RWLock::new(mesh::Mesh::new_from_file(name))));
+                |key | ResNone);
 
+        match *v 
+        {
+            ResNone => {
+                let (tx, rx) = channel::<Arc<RWLock<mesh::Mesh>>>();
+                //TODO spawn tx task : init mesh
+                //TODO spawn rx task : receive answer
+
+                /*
+                let newval = self.meshes_states.insert_or_update_with(String::from_str(name),
+                    ResNone,
+                    |_key, val| *val = ResWait(rx));
+                    */
+                *v = ResWait(rx);
+                return ResNone;
+            },
+            ResWait(ref yep) => return ResNone,// ResWait(yep.clone()),
+            ResData(ref yep) => return ResData(yep.clone())
+        }
+
+        return ResNone;
+
+        /*
         if v.read().state == 0 {
             v.write().state = 1;
             let (tx, rx) = channel::<Arc<RWLock<mesh::Mesh>>>();
@@ -130,6 +153,7 @@ impl ResourceManager {
         }
 
         return ResNone;
+        */
 
 
         /*
