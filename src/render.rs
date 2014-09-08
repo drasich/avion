@@ -173,7 +173,8 @@ impl RenderPass
                 ob.mesht.resource = self.resource_manager.write().request_use(ob.mesht.name.as_slice());
             },
             resource::ResData(ref data) => {},
-            resource::ResWait(ref wait) => {}
+            _ => {}
+            //resource::ResWait(ref wait) => {}
         }
 
 

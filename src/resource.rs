@@ -48,7 +48,8 @@ impl<T> ResourceRefGen<T>
 pub enum ResTest<T>
 {
     ResData(Arc<RWLock<T>>),
-    ResWait(Receiver<Arc<RWLock<T>>>),
+    //ResWait(Receiver<Arc<RWLock<T>>>),
+    ResWait,
     ResNone
 }
 
@@ -112,23 +113,42 @@ impl ResourceManager {
                 //|key | Arc::new(RWLock::new(mesh::Mesh::new_from_file(name))));
                 |key | ResNone);
 
+        let s = String::from_str(name);
+
         match *v 
         {
             ResNone => {
                 let (tx, rx) = channel::<Arc<RWLock<mesh::Mesh>>>();
                 //TODO spawn tx task : init mesh
                 //TODO spawn rx task : receive answer
+                spawn( proc() {
+                    let m = Arc::new(RWLock::new(mesh::Mesh::new_from_file(s.as_slice())));
+                    m.write().inittt();
+                    tx.send(m.clone());
+                });
+
+                spawn( proc() {
+                    loop {
+                    match rx.try_recv() {
+                        Err(e) => {},//println!("nothing"),
+                        Ok(val) =>  { println!("received val {} ", val.read().name); break; }
+                    }
+                    }
+                });
+
 
                 /*
                 let newval = self.meshes_states.insert_or_update_with(String::from_str(name),
                     ResNone,
                     |_key, val| *val = ResWait(rx));
                     */
-                *v = ResWait(rx);
+                *v = ResWait;
                 return ResNone;
             },
-            ResWait(ref yep) => return ResNone,// ResWait(yep.clone()),
-            ResData(ref yep) => return ResData(yep.clone())
+            ResData(ref yep) => return ResData(yep.clone()),
+            _ => return ResNone
+            //ResWait(_) => return ResNone,
+
         }
 
         return ResNone;
