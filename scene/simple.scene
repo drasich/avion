@@ -6,6 +6,9 @@
       "mesh": {
         "name": "model/skeletonmesh.mesh"
       },
+      "mesht": {
+        "name": "model/skeletonmesh.mesh"
+      },
       "position": {
         "x": 100,
         "y": 0,
@@ -26,6 +29,9 @@
     {
       "name": "yep2",
       "mesh": {
+        "name": "model/skeletonmesh.mesh"
+      },
+      "mesht": {
         "name": "model/skeletonmesh.mesh"
       },
       "position": {
