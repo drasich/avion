@@ -165,7 +165,7 @@ impl RenderPass
             }
         }
 
-        //let rc_mesh : Option<Arc<RWLock<mesh::Mesh>>>;
+        let mut themesh : Option<Arc<RWLock<mesh::Mesh>>> = None;
         match ob.mesht.resource{
             resource::ResNone => {
                 //rc_mesh = self.resource_manager.borrow_mut().request_use(r.name.as_slice());
@@ -175,6 +175,7 @@ impl RenderPass
             },
             resource::ResData(ref data) => {
                 println!("now I have some data!!! and I can use it !!!");
+                themesh = Some(data.clone());
             },
             resource::ResWait => {
                 ob.mesht.resource = self.resource_manager.write().request_use(ob.mesht.name.as_slice());
@@ -184,13 +185,13 @@ impl RenderPass
 
 
         //TODO chris
-
-        match  resource.resource  {
-            None => { println!("no mesh in resource '{}' ", resource.name); return;},
+        match  themesh  {
+            None => { println!("no mesh wait "); return;},
             Some(ref m) => {
-                let mut mb = m.borrow_mut();
-                if mb.state == 0 {
-                    ((&mut *mb) as &mut resource::ResourceT).init();
+                let mbc = m.clone();
+                let mut mb = mbc.write();
+                if mb.state == 1 {
+                    mb.init_buffers();
                 }
                 let mut can_render = true;
                 let mut vertex_data_count = 0;

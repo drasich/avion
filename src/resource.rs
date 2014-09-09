@@ -128,12 +128,11 @@ impl ResourceManager {
 
                 let (tx, rx) = channel::<Arc<RWLock<mesh::Mesh>>>();
                 spawn( proc() {
-                    sleep(::std::time::duration::Duration::seconds(5));
+                    //sleep(::std::time::duration::Duration::seconds(5));
                     let m = Arc::new(RWLock::new(mesh::Mesh::new_from_file(ss.as_slice())));
                     m.write().inittt();
                     tx.send(m.clone());
                 });
-
 
                 spawn( proc() {
                     loop {
