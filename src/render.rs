@@ -170,11 +170,16 @@ impl RenderPass
             resource::ResNone => {
                 //rc_mesh = self.resource_manager.borrow_mut().request_use(r.name.as_slice());
                 //ob.mesht.resource = self.resource_manager.borrow_mut().request_use(ob.mesht.name.as_slice());
+                println!("resource is none I request it");
                 ob.mesht.resource = self.resource_manager.write().request_use(ob.mesht.name.as_slice());
             },
-            resource::ResData(ref data) => {},
-            _ => {}
-            //resource::ResWait(ref wait) => {}
+            resource::ResData(ref data) => {
+                println!("now I have some data!!! and I can use it !!!");
+            },
+            resource::ResWait => {
+                ob.mesht.resource = self.resource_manager.write().request_use(ob.mesht.name.as_slice());
+                println!("now I have to wait");
+            }
         }
 
 
