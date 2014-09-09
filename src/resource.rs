@@ -48,7 +48,6 @@ impl<T> ResourceRefGen<T>
 pub enum ResTest<T>
 {
     ResData(Arc<RWLock<T>>),
-    //ResWait(Receiver<Arc<RWLock<T>>>),
     ResWait,
     ResNone
 }
@@ -62,54 +61,20 @@ pub struct ResTT<T>
 
 pub struct ResourceManager
 {
-    pub meshes : HashMap<String, Rc<RefCell<mesh::Mesh>>>,
-    pub meshestt : HashMap<String, Arc<RWLock<mesh::Mesh>>>,
-    pub meshes_states : Arc<RWLock<HashMap<String, ResTest<mesh::Mesh>>>>
+    meshes : Arc<RWLock<HashMap<String, ResTest<mesh::Mesh>>>>
 }
 
 impl ResourceManager {
     pub fn new() -> ResourceManager
     {
-        let rm = ResourceManager {
-            meshes : HashMap::new(),
-            meshestt : HashMap::new(),
-            meshes_states : Arc::new(RWLock::new(HashMap::new())),
-        };
-
-        //spawn( proc() { rm.start();} );
-
-        rm
-    }
-
-    pub fn get_or_create(&mut self, name : &str) -> Rc<RefCell<mesh::Mesh>>
-    {
-        match self.meshes.find(&String::from_str(name)) {
-            Some(mesh) => return mesh.clone(),
-            None => return Rc::new(RefCell::new(mesh::Mesh::new_from_file(name)))
+        ResourceManager {
+            meshes : Arc::new(RWLock::new(HashMap::new())),
         }
     }
 
-    pub fn get_or_creatett(&mut self, name : &str) -> Arc<RWLock<mesh::Mesh>>
-    {
-        let v = self.meshestt.find_or_insert_with(String::from_str(name), 
-                |key | Arc::new(RWLock::new(mesh::Mesh::new_from_file(name))));
-
-        return v.clone();
-
-        /*
-        match self.meshestt.find(&String::from_str(name)) {
-            Some(mesh) => return mesh.clone(),
-            None => {
-                return Arc::new(RWLock::new(mesh::Mesh::new_from_file(name)))
-            }
-        }
-        */
-    }
-
-    //pub fn request_use(&mut self, name : &str) -> Receiver<Arc<RWLock<mesh::Mesh>>>
     pub fn request_use(&mut self, name : &str) -> ResTest<mesh::Mesh>
     {
-        let ms1 = self.meshes_states.clone();
+        let ms1 = self.meshes.clone();
         let mut ms1w = ms1.write();
 
         let v : &mut ResTest<mesh::Mesh>  = ms1w.find_or_insert_with(String::from_str(name), 
@@ -117,7 +82,7 @@ impl ResourceManager {
 
         let s = String::from_str(name);
 
-        let msc = self.meshes_states.clone();
+        let msc = self.meshes.clone();
 
         match *v 
         {
@@ -138,30 +103,21 @@ impl ResourceManager {
                     loop {
                     match rx.try_recv() {
                         Err(e) => {},//println!("nothing"),
-                        //Ok(val) =>  { println!("received val {} ", val.read().name); break; }
-                        //Ok(val) =>  { println!("received val {} ", val.read().name); *v = ResData(val.clone()); break; }
                         Ok(value) =>  { 
                             println!("received val {} ", value.read().name);
 
                             let mut mscwww = msc.write();
 
-                            let newval = mscwww.insert_or_update_with(s.clone(),
-                            ResNone,
-                            |_key, val| *val = ResData(value.clone()));
-                            
-                            println!("end of received val {} ", value.read().name);
+                            let newval = mscwww.insert_or_update_with(
+                                s.clone(),
+                                ResNone,
+                                |_key, val| *val = ResData(value.clone()));
 
                             break; }
                     }
                     }
                 });
 
-
-                /*
-                let newval = self.meshes_states.insert_or_update_with(String::from_str(name),
-                    ResNone,
-                    |_key, val| *val = ResWait(rx));
-                    */
                 println!("request : it was none, now it is wait");
                 return ResWait;
             },
@@ -169,7 +125,6 @@ impl ResourceManager {
                 println!("request : yes! returning data");
                 return ResData(yep.clone());
             },
-            //_ => return ResNone
             ResWait => {
                 println!("request not yet, please wait");
                 return ResWait;
@@ -178,53 +133,6 @@ impl ResourceManager {
         }
 
         return ResNone;
-
-        /*
-        if v.read().state == 0 {
-            v.write().state = 1;
-            let (tx, rx) = channel::<Arc<RWLock<mesh::Mesh>>>();
-            let vc = v.clone();
-
-            spawn( proc() {
-                sleep(::std::time::duration::Duration::seconds(5));
-                let mut vv = vc.write();
-                vv.init();
-                tx.send(vc);
-            });
-
-            return ResWait(rx);
-        }
-        else {
-        //    return Some(v.clone());
-        }
-
-        return ResNone;
-        */
-
-
-        /*
-        let (tx, rx) = channel::<Arc<RWLock<mesh::Mesh>>>();
-            let vc = v.clone();
-
-        spawn( proc() {
-            sleep(::std::time::duration::Duration::seconds(5));
-            let mut vv = vc.write();
-            vv.init();
-            tx.send(vc);
-        });
-
-        return rx;
-        */
-
-        /*
-        loop {
-               match rx.try_recv() {
-                   Err(e) => {},//println!("nothing"),
-                   Ok(val) =>  { println!("received val {} ", val); }
-               }
-               println!("yo man");
-        }
-        */
     }
 
     pub fn start(&self)

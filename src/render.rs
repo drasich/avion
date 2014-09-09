@@ -139,58 +139,31 @@ impl RenderPass
         ob : &mut object::Object,
         matrix : &matrix::Matrix4)
     {
-        match  ob.mesh  {
-            None =>  return,
-            Some(ref mut r) => {
-                match r.resource {
-                    None => 
-                        //r.resource = Some(self.resource_manager.borrow_mut().get_or_create(r.name.as_slice())),
-                        r.resource = Some(self.resource_manager.write().get_or_create(r.name.as_slice())),
-                    _ => ()
-                };
-                match r.resourcett {
-                    None => 
-                        //r.resourcett = Some(self.resource_manager.borrow_mut().get_or_creatett(r.name.as_slice())),
-                        r.resourcett = Some(self.resource_manager.write().get_or_creatett(r.name.as_slice())),
-                    _ => ()
-                }
-            }
-        }
-
-        let resource : & resource::ResourceRefGen<mesh::Mesh>;
-        match  ob.mesh  {
-            None => return,
-            Some(ref r) => {
-                resource = r;
-            }
-        }
-
         let mut themesh : Option<Arc<RWLock<mesh::Mesh>>> = None;
-        match ob.mesht.resource{
+        match ob.mesh.resource{
             resource::ResNone => {
                 //rc_mesh = self.resource_manager.borrow_mut().request_use(r.name.as_slice());
                 //ob.mesht.resource = self.resource_manager.borrow_mut().request_use(ob.mesht.name.as_slice());
                 println!("resource is none I request it");
-                ob.mesht.resource = self.resource_manager.write().request_use(ob.mesht.name.as_slice());
+                ob.mesh.resource = self.resource_manager.write().request_use(ob.mesh.name.as_slice());
             },
             resource::ResData(ref data) => {
-                println!("now I have some data!!! and I can use it !!!");
+                //println!("now I have some data!!! and I can use it !!!");
                 themesh = Some(data.clone());
             },
             resource::ResWait => {
-                ob.mesht.resource = self.resource_manager.write().request_use(ob.mesht.name.as_slice());
+                ob.mesh.resource = self.resource_manager.write().request_use(ob.mesh.name.as_slice());
                 println!("now I have to wait");
             }
         }
-
 
         //TODO chris
         match  themesh  {
             None => { println!("no mesh wait "); return;},
             Some(ref m) => {
-                let mbc = m.clone();
-                let mut mb = mbc.write();
+                let mut mb = m.write();
                 if mb.state == 1 {
+                    println!("init buffers");
                     mb.init_buffers();
                 }
                 let mut can_render = true;
