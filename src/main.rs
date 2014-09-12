@@ -1,6 +1,7 @@
 extern crate serialize;
 extern crate libc;
 extern crate sync;
+extern crate png;
 
 use std::collections::{DList};
 use std::rc::Rc;
@@ -28,9 +29,11 @@ mod matrix;
 mod vec;
 mod camera;
 mod scene;
+mod texture;
 
 fn main() {
 
+    let t = texture::Texture::new("image/base_skeleton_col.png");
     //spawn(proc() {
     //
         let mut mat = Rc::new(RefCell::new( shader::Material {
