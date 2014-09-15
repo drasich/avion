@@ -7,6 +7,7 @@ use vec;
 use matrix;
 use uniform;
 use uniform::UniformSend;
+use texture;
 
 use libc::{c_char, c_uint};
 pub struct CglShader;
@@ -15,7 +16,7 @@ pub struct CglShaderUniform;
 
 pub struct Shader
 {
-    cgl_shader : *const CglShader, //TODO private
+    cgl_shader : *const CglShader, 
     pub attributes : HashMap<String, *const CglShaderAttribute>,
     pub uniforms : HashMap<String, *const CglShaderUniform>
 }
@@ -46,7 +47,7 @@ impl Shader
     {
         match self.uniforms.find(&String::from_str(name)) {
             Some(uni) => value.uniform_send(*uni),
-            None => println!("could not find such uniform '{}'",name)
+            None => println!("ERR!!!! : could not find such uniform '{}'",name)
         }
     }
 
@@ -72,7 +73,8 @@ pub struct Material
 {
     pub name : String,
     pub shader: Option<Shader>,
-    pub state : i32
+    pub state : i32,
+    pub texture : Option<texture::Texture>
 }
 
 #[link(name = "cypher")]
@@ -130,6 +132,7 @@ impl Material
 
         self.state = 11;
     }
+
 }
 
 impl resource::ResourceT for Material
@@ -186,5 +189,6 @@ impl resource::ResourceT for Material
         shader.utilise();
         shader.uniform_set("color", &vec::Vec4::new(0.0f64, 0.5f64, 0.5f64, 1f64));
     }
+
 }
 

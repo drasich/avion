@@ -112,15 +112,35 @@ impl RenderPass
     {
         println!("draw frame");
 
-        let material = self.material.borrow();
-        let shader : &shader::Shader;
+        {
+            let mut matm = self.material.borrow_mut();
+            let mut tex = &mut matm.texture;
+            match *tex  {
+                None => {},
+                Some(ref mut t) => {
+                    if t.state == 1 {
+                        t.init();
+                    }
+                }
+            }
+        }
 
+        let material = self.material.borrow();
+
+        let shader : &shader::Shader;
         match (*material).shader  {
             None => return,
             Some(ref sh) => shader = sh
         }
 
         shader.utilise();
+        //TODO
+        match material.texture  {
+            None => {},
+            Some(ref t) => {
+                shader.uniform_set("texture", t);
+            }
+        }
 
         let cam_mat = self.camera.borrow().object.borrow().matrix_get();
         let cam_projection = self.camera.borrow().perspective_get();

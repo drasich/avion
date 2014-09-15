@@ -4,6 +4,7 @@ use self::libc::{c_float};
 use shader;
 use matrix;
 use vec;
+use texture;
 
 #[link(name = "cypher")]
 extern {
@@ -22,6 +23,10 @@ extern {
     pub fn cgl_shader_uniform_mat4_set(
         uniform : *const shader::CglShaderUniform,
         x : *const c_float) -> ();
+
+    pub fn cgl_shader_uniform_texture_set(
+        uniform : *const shader::CglShaderUniform,
+        tex : *const texture::CglTexture) -> ();
 }
 
 pub trait UniformSend
@@ -60,4 +65,17 @@ impl UniformSend for matrix::Matrix4 {
     }
 }
 
+impl UniformSend for texture::Texture {
 
+    fn uniform_send(&self, uni : *const shader::CglShaderUniform) ->()
+    {
+        match self.cgl_texture {
+            None => {},
+            Some(t) => unsafe {
+                //TODO just one tex for now
+                cgl_shader_uniform_texture_set(uni, t);
+            }
+        }
+    }
+
+}

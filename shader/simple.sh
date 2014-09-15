@@ -4,4 +4,4 @@ att,position,3,float
 att,texcoord,2,float
 uni,color,vec4,1
 uni,matrix,mat4,0
-
+uni,texture,tex,1

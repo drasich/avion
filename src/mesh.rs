@@ -39,7 +39,7 @@ pub struct Buffer<T>
 {
     pub name: String,
     pub data : Vec<T>,
-    pub cgl_buffer: Option<*const CglBuffer>,
+    cgl_buffer: Option<*const CglBuffer>,
     buffer_type : BufferType
 }
 

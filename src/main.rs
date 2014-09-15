@@ -39,7 +39,9 @@ fn main() {
         let mut mat = Rc::new(RefCell::new( shader::Material {
             name : String::from_str("my_mat"),
             shader : None,
-            state : 0 }));
+            state : 0,
+            texture : Some(t)
+        }));
 
         let mut cam = camera::Camera::new();
 
