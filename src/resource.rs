@@ -58,7 +58,6 @@ pub struct ResTT<T>
     pub resource : ResTest<T>
 }
 
-
 pub struct ResourceManager
 {
     meshes : Arc<RWLock<HashMap<String, ResTest<mesh::Mesh>>>>

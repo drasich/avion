@@ -70,6 +70,7 @@ extern {
 
     pub fn cgl_draw(vertex_count : c_uint) -> ();
     pub fn cgl_draw_faces(buffer : *const mesh::CglBuffer, index_count : c_uint) -> ();
+    pub fn cgl_draw_end() -> ();
 }
 
 pub extern fn draw_cb(r : *mut Render) -> () {
@@ -197,6 +198,7 @@ impl RenderPass
                                     Some(b) => {
                                         let faces_data_count = bind.size_get();
                                         cgl_draw_faces(b, faces_data_count as c_uint);
+                                        cgl_draw_end();
                                     },
                                     None => ()
                                 }

@@ -13,7 +13,7 @@ pub struct CglBuffer;
 #[link(name = "cypher")]
 extern {
     pub fn cgl_buffer_init(
-        vertex : *const c_void,
+        data : *const c_void,
         count : c_uint
         ) -> *const CglBuffer;
 
@@ -24,14 +24,15 @@ extern {
 
     pub fn cgl_shader_attribute_send(
         att : *const shader::CglShaderAttribute,
-        name : *const c_char,
         buffer : *const CglBuffer) -> ();
 }
 
 pub enum BufferType
 {
     Vertex,
-    Index
+    Index,
+    Normal,
+    Uv
 }
 
 pub struct Buffer<T>
@@ -78,6 +79,13 @@ impl<T> BufferSend for Buffer<T> {
                     mem::transmute(self.data.as_ptr()),
                     self.data.len() as c_uint);
                 self.cgl_buffer = Some(cgl_buffer);
+            },
+            _ => unsafe {
+                println!("sending buffersend '{}'", self.name);
+                let cgl_buffer = cgl_buffer_init(
+                    mem::transmute(self.data.as_ptr()),
+                    self.data.len() as c_uint);
+                self.cgl_buffer = Some(cgl_buffer);
             }
         }
     }
@@ -87,7 +95,7 @@ impl<T> BufferSend for Buffer<T> {
         match self.cgl_buffer {
             Some(b) =>
                 unsafe {
-                    cgl_shader_attribute_send(att, self.name.to_c_str().as_ptr(), b);
+                    cgl_shader_attribute_send(att, b);
                 },
                 None => ()
         }
@@ -121,6 +129,7 @@ impl Mesh
            buffers : HashMap::new(),
        };
 
+       /*
        let bufname = String::from_str("position");
 
        m.buffers.insert(bufname.clone(), 
@@ -128,6 +137,7 @@ impl Mesh
                             bufname.clone(),
                             Vec::from_slice(VERTEX_DATA),
                             Vertex));
+                            */
 
        return m;
     }
@@ -147,60 +157,107 @@ impl Mesh
     {
        let mut file = File::open(&Path::new(self.name.as_slice()));
 
-       let typelen = file.read_le_u16().unwrap();
-       println!("number : {} ", typelen);
-       let typevec = file.read_exact(typelen as uint).unwrap();
-       let typename = String::from_utf8(typevec).unwrap();
-       println!("type name : {} ", typename);
-
-       let len = file.read_le_u16().unwrap();
-       println!("number : {} ", len);
-       let namevec = file.read_exact(len as uint).unwrap();
-       let name = String::from_utf8(namevec).unwrap();
-       println!("name : {} ", name);
-
        {
-       let vertex_count = file.read_le_u16().unwrap();
-       let count = (vertex_count as uint) * 3u;
-       let mut vvv : Vec<f32> = Vec::with_capacity(count);
+           let typelen = file.read_le_u16().unwrap();
+           println!("number : {} ", typelen);
+           let typevec = file.read_exact(typelen as uint).unwrap();
+           let typename = String::from_utf8(typevec).unwrap();
+           println!("type name : {} ", typename);
 
-       println!("vertex count : {} ", vertex_count);
-       for i in range(0u, count)
-       {
-           let x = file.read_le_f32().unwrap();
-           vvv.push(x);
-       }
-
-       let bufname = String::from_str("position");
-
-       self.buffers.insert(bufname.clone(), box Buffer::new(
-               bufname.clone(),
-               vvv,
-               Vertex));
+           let len = file.read_le_u16().unwrap();
+           println!("number : {} ", len);
+           let namevec = file.read_exact(len as uint).unwrap();
+           let name = String::from_utf8(namevec).unwrap();
+           println!("name : {} ", name);
        }
 
        {
-       let faces_count = file.read_le_u16().unwrap();
-       let count = (faces_count as uint) * 3u;
-       let mut fff : Vec<u32> = Vec::with_capacity(count);
+           let vertex_count = file.read_le_u16().unwrap();
+           let count = (vertex_count as uint) * 3u;
+           let mut vvv : Vec<f32> = Vec::with_capacity(count);
 
-       println!("faces count : {} ", faces_count);
-       for i in range(0u, count)
+           println!("vertex count : {} ", vertex_count);
+           for i in range(0u, count)
+           {
+               let x = file.read_le_f32().unwrap();
+               vvv.push(x);
+           }
+
+           let bufname = String::from_str("position");
+
+           self.buffers.insert(bufname.clone(), box Buffer::new(
+                   bufname.clone(),
+                   vvv,
+                   Vertex));
+       }
+
        {
-           let x = file.read_le_u16().unwrap();
-           fff.push(x as u32);
+           let faces_count = file.read_le_u16().unwrap();
+           let count = (faces_count as uint) * 3u;
+           let mut fff : Vec<u32> = Vec::with_capacity(count);
+
+           println!("faces count : {} ", faces_count);
+           for i in range(0u, count)
+           {
+               let x = file.read_le_u16().unwrap();
+               fff.push(x as u32);
+           }
+
+           let bufname = String::from_str("faces");
+
+           self.buffers.insert(bufname.clone(), box Buffer::new(
+                   bufname.clone(),
+                   fff,
+                   Index));
        }
 
-       let bufname = String::from_str("faces");
+       {
+           let normals_count = file.read_le_u16().unwrap();
+           if normals_count > 0 {
+               let count = (normals_count as uint) * 3u;
+               let mut nnn : Vec<f32> = Vec::with_capacity(count);
 
-       self.buffers.insert(bufname.clone(), box Buffer::new(
-               bufname.clone(),
-               fff,
-               Index));
+               println!("normals count : {} ", normals_count);
+               for i in range(0u, count)
+               {
+                   let x = file.read_le_f32().unwrap();
+                   nnn.push(x as f32);
+               }
+
+               let bufname = String::from_str("normal");
+
+               self.buffers.insert(bufname.clone(), box Buffer::new(
+                       bufname.clone(),
+                       nnn,
+                       Normal));
+           }
        }
+
+       {
+           let uv_count = file.read_le_u16().unwrap();
+           if uv_count > 0 {
+               let count = (uv_count as uint) * 2u;
+               let mut uuu : Vec<f32> = Vec::with_capacity(count);
+
+               println!("uvs count : {} ", uv_count);
+               for i in range(0u, count)
+               {
+                   let x = file.read_le_f32().unwrap();
+                   uuu.push(x as f32);
+               }
+
+               let bufname = String::from_str("texcoord");
+
+               self.buffers.insert(bufname.clone(), box Buffer::new(
+                       bufname.clone(),
+                       uuu,
+                       Uv));
+           }
+       }
+
+       //TODO weights
 
        self.state = 1;
-
     }
 
     pub fn inittt(&mut self)

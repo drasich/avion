@@ -1,6 +1,7 @@
 use png;
 use libc::{c_uint, c_void};
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use std::mem;
 
 pub struct CglTexture;
 
@@ -21,8 +22,7 @@ pub struct Texture
     pub state : i32,
     pub image : Option<png::Image>,
     pub cgl_texture: Option<*const CglTexture>,
-}
-
+} 
 impl Texture
 {
     pub fn new(name :&str) -> Texture
@@ -54,17 +54,28 @@ impl Texture
                 self.state = 1;
             }
         };
+    }
 
+    pub fn init(&mut self)
+    {
         if self.state != 1 {
             return
         }
 
-        unsafe {
-            //TODO
-        //let cgltex =  cgl_texture_init(
+        match self.image  {
+            None => {},
+            Some(ref img) => {
+                unsafe {
+                    let cgltex =  cgl_texture_init(
+                        mem::transmute(img.pixels.as_ptr()),
+                        1,
+                        img.width as c_uint,
+                        img.height as c_uint
+                        );
+                }
+                self.state = 2;
+            }
         }
-
-
     }
 }
 
