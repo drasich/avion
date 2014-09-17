@@ -1,5 +1,6 @@
 use resource;
 use std::collections::HashMap;
+use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::File;
 use std::io::BufferedReader;
 use std::uint;
@@ -10,13 +11,15 @@ use uniform::UniformSend;
 use texture;
 
 use libc::{c_char, c_uint};
+
 pub struct CglShader;
 pub struct CglShaderAttribute;
 pub struct CglShaderUniform;
 
 pub struct Shader
 {
-    cgl_shader : *const CglShader, 
+    pub name : String,
+    cgl_shader : Option<*const CglShader>, 
     pub attributes : HashMap<String, *const CglShaderAttribute>,
     pub uniforms : HashMap<String, *const CglShaderUniform>
 }
@@ -27,19 +30,28 @@ impl Shader
     {
         let attc = name.to_c_str();
 
-        unsafe {
-            let cgl_att = cgl_shader_attribute_new(self.cgl_shader, attc.as_ptr(), size);
-            self.attributes.insert(String::from_str(name), cgl_att);
+        match self.cgl_shader {
+            None => {},
+            Some(cs) =>
+                unsafe {
+                    let cgl_att = cgl_shader_attribute_new(cs, attc.as_ptr(), size);
+                    self.attributes.insert(String::from_str(name), cgl_att);
+                }
         }
+
     }
 
     fn uniform_add(&mut self, name : &str)
     {
         let unic = name.to_c_str();
 
-        unsafe {
-            let cgl_uni = cgl_shader_uniform_new(self.cgl_shader, unic.as_ptr());
-            self.uniforms.insert(String::from_str(name), cgl_uni);
+        match self.cgl_shader {
+            None => {},
+            Some(cs) =>
+                unsafe {
+                    let cgl_uni = cgl_shader_uniform_new(cs, unic.as_ptr());
+                    self.uniforms.insert(String::from_str(name), cgl_uni);
+                }
         }
     }
 
@@ -53,15 +65,30 @@ impl Shader
 
     pub fn utilise(&self)
     {
-        unsafe {
-            cgl_shader_use(self.cgl_shader);
+        match self.cgl_shader {
+            None => {},
+            Some(cs) =>
+                unsafe {
+                    cgl_shader_use(cs);
+                }
         }
     }
 
-    pub fn new(cgl_shader : *const CglShader) -> Shader
+    pub fn new_old(cgl_shader : *const CglShader) -> Shader
     {
         Shader {
-            cgl_shader : cgl_shader,
+            name : String::from_str("old"),
+            cgl_shader : Some(cgl_shader),
+            attributes : HashMap::new(),
+            uniforms : HashMap::new()
+        }
+    }
+
+    pub fn new(name : &str) -> Shader
+    {
+        Shader {
+            name : String::from_str(name),
+            cgl_shader : None,
             attributes : HashMap::new(),
             uniforms : HashMap::new()
         }
@@ -69,6 +96,7 @@ impl Shader
 
 }
 
+#[deriving(Decodable, Encodable)]
 pub struct Material
 {
     pub name : String,
@@ -98,6 +126,16 @@ extern {
 
 impl Material
 {
+    pub fn new() -> Material
+    {
+        Material {
+            name : String::from_str("my_mat"),
+            shader : None,
+            state : 0,
+            texture : None
+        }
+    }
+
     fn read(&mut self, vertpath : &str, fragpath : &str)
     {
         if self.state == 11 {
@@ -127,7 +165,7 @@ impl Material
 
         unsafe {
             let shader = cgl_shader_init_string(vertcp, fragcp);
-            self.shader = Some(Shader::new(shader));
+            self.shader = Some(Shader::new_old(shader));
         }
 
         self.state = 11;
@@ -190,5 +228,29 @@ impl resource::ResourceT for Material
         shader.uniform_set("color", &vec::Vec4::new(0.0f64, 0.5f64, 0.5f64, 1f64));
     }
 
+}
+
+
+impl <S: Encoder<E>, E> Encodable<S, E> for Shader {
+  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+      encoder.emit_struct("Mesh", 1, |encoder| {
+          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
+          Ok(())
+      })
+  }
+}
+
+impl<S: Decoder<E>, E> Decodable<S, E> for Shader {
+  fn decode(decoder: &mut S) -> Result<Shader, E> {
+    decoder.read_struct("root", 0, |decoder| {
+         Ok(Shader{
+          name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
+             cgl_shader : None,
+             attributes : HashMap::new(),
+             uniforms : HashMap::new()
+
+        })
+    })
+  }
 }
 

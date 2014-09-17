@@ -22,6 +22,7 @@ extern {
 mod resource;
 mod shader;
 mod mesh;
+mod mesh_render;
 mod render;
 mod object;
 mod uniform;
@@ -73,17 +74,16 @@ fn main() {
         }
 
 
-        /*
         {
-            let mut o = object::Object::new("yep");
-            o.mesh_set(mesh.clone());
-            o.position = vec::Vec3::new(100f64,0f64,-1000f64);
+            let mut o = object::Object::new("nouvel object");
+            //o.mesh_render =
+            //o.mesh_set(mesh::new::from_file("model/skeletonmesh.mesh");
+            //o.position = vec::Vec3::new(100f64,0f64,-1000f64);
             let mut oref = Rc::new(RefCell::new(o));
-            //scene.objects.push(oref.clone());
-            r.pass.objects.push(oref.clone());
+            scene.objects.push(oref.clone());
+            //r.pass.objects.push(oref.clone());
             
         }
-        */
 
         /*
         {
@@ -104,7 +104,6 @@ fn main() {
         }
         */
 
-        /*
         {
             let mut file = File::create(&Path::new(scene_path));
             let mut stdwriter = stdio::stdout();
@@ -117,7 +116,6 @@ fn main() {
 
             scene.encode(&mut encoder).unwrap();
         }
-        */
 
         unsafe {
             render::draw_callback_set(render::draw_cb, &*r);

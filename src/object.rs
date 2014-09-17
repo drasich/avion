@@ -5,6 +5,7 @@ use serialize::json;
 use vec;
 use matrix;
 use mesh;
+use mesh_render;
 use resource;
 
 #[deriving(Decodable, Encodable)]
@@ -14,6 +15,7 @@ pub struct Object
     //pub mesh : Option<Rc<RefCell<mesh::Mesh>>>,
     //pub mesh : Option<resource::ResourceRefGen<mesh::Mesh>>,
     pub mesh : resource::ResTT<mesh::Mesh>,
+    pub mesh_render : Option<mesh_render::MeshRender>,
     pub position : vec::Vec3,
     pub orientation : vec::Quat,
     pub scale : vec::Vec3
@@ -25,8 +27,8 @@ impl Object
     {
         Object {
             name : String::from_str(name),
-            //mesh : None,
             mesh : resource::ResTT {name : String::from_str("model/skeleton.mesh"), resource : resource::ResNone},
+            mesh_render : None,
             position : vec::Vec3::zero(),
             orientation : vec::Quat::identity(),
             scale : vec::Vec3::one()

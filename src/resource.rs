@@ -1,4 +1,5 @@
 use mesh;
+use texture;
 use shader;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::rc::Rc;
@@ -60,7 +61,9 @@ pub struct ResTT<T>
 
 pub struct ResourceManager
 {
-    meshes : Arc<RWLock<HashMap<String, ResTest<mesh::Mesh>>>>
+    meshes : Arc<RWLock<HashMap<String, ResTest<mesh::Mesh>>>>,
+    textures : Arc<RWLock<HashMap<String, ResTest<texture::Texture>>>>,
+    materials : Arc<RWLock<HashMap<String, ResTest<shader::Material>>>>
 }
 
 impl ResourceManager {
@@ -68,6 +71,8 @@ impl ResourceManager {
     {
         ResourceManager {
             meshes : Arc::new(RWLock::new(HashMap::new())),
+            textures : Arc::new(RWLock::new(HashMap::new())),
+            materials : Arc::new(RWLock::new(HashMap::new())),
         }
     }
 
