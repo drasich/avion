@@ -125,6 +125,9 @@ impl Shader
 
         self.read_vert_frag(vert.as_slice(), frag.as_slice());
 
+        //TODO remove from here
+        self.cgl_init();
+
         for line in file.lines() {
             let l = line.unwrap();
             let split : Vec<&str> = l.as_slice().split(',').collect();
@@ -151,7 +154,7 @@ impl Shader
 
     fn read_vert_frag(&mut self, vertpath : &str, fragpath : &str)
     {
-        if self.state == 11 {
+        if self.state > 1 {
             return
         }
 
@@ -170,10 +173,9 @@ impl Shader
         }
 
         self.state = 1;
-
     }
 
-    fn cgl_init(&mut self)
+    pub fn cgl_init(&mut self)
     {
         let mut vertc;
         match self.vert {
@@ -191,9 +193,7 @@ impl Shader
             }
         }
 
-        //let vertc = self.vert.unwrap().to_c_str();
         let vertcp = vertc.as_ptr();
-        //let fragc = self.frag.unwrap().to_c_str();
         let fragcp = fragc.as_ptr();
 
         unsafe {
@@ -201,7 +201,7 @@ impl Shader
             self.cgl_shader = Some(shader);
         }
 
-        self.state = 11;
+        self.state = 3;
     }
 
 
@@ -294,55 +294,16 @@ impl resource::ResourceT for Material
 {
     fn init(&mut self)
     {
-        let path = Path::new("shader/simple.sh");
-        let mut file = BufferedReader::new(File::open(&path));
-
-        let mut frag : String;
-        let mut vert : String;
-
-        match file.read_line() {
-            Ok(l) => { vert = l; vert.pop_char(); },
-            Err(_) => return
-        }
- 
-        match file.read_line() {
-            Ok(l) => { frag = l; frag.pop_char();},
-            Err(_) => return
-        }
-
-        self.read(vert.as_slice(), frag.as_slice());
-
-        let shader : &mut Shader;
-
         match self.shader {
-            Some(ref mut s) => shader = s,
-            None => return
-        }
-
-        for line in file.lines() {
-            let l = line.unwrap();
-            let split : Vec<&str> = l.as_slice().split(',').collect();
-            if split[0] == "att" {
-                let size : u32;
-                match from_str(split[2]) {
-                    Some(u) => size = u,
-                    None => continue
-                }
-                println!("it's an attribute {}, {}", split[1], size);
-                shader.attribute_add(split[1], size);
-            }
-            else if split[0] == "uni" {
-                shader.uniform_add(split[1]);
-                println!("it's an uniform {} yoo", split[1]);
-                if split[2] == "vec4" {
-                    //TODO
-                }
+            None => return,
+            Some(ref mut s) => {
+                s.read();
+                //TODO remove
+                s.utilise();
+                s.uniform_set("color", &vec::Vec4::new(0.0f64, 0.5f64, 0.5f64, 1f64));
             }
         }
-
-        //TODO remove
-        shader.utilise();
-        shader.uniform_set("color", &vec::Vec4::new(0.0f64, 0.5f64, 0.5f64, 1f64));
+        
     }
 
 }

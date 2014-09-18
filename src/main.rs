@@ -39,7 +39,8 @@ fn main() {
     //
         let mut mat = Rc::new(RefCell::new( shader::Material {
             name : String::from_str("my_mat"),
-            shader : None,
+            //shader : None,
+            shader : Some(shader::Shader::new("shader/simple.sh")),
             state : 0,
             texture : Some(t)
         }));
@@ -74,6 +75,7 @@ fn main() {
         }
 
 
+        /*
         {
             let mut o = object::Object::new("nouvel object");
             //o.mesh_render =
@@ -82,8 +84,8 @@ fn main() {
             let mut oref = Rc::new(RefCell::new(o));
             scene.objects.push(oref.clone());
             //r.pass.objects.push(oref.clone());
-            
         }
+        */
 
         /*
         {
