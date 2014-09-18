@@ -19,9 +19,14 @@ pub struct CglShaderUniform;
 pub struct Shader
 {
     pub name : String,
-    cgl_shader : Option<*const CglShader>, 
     pub attributes : HashMap<String, *const CglShaderAttribute>,
-    pub uniforms : HashMap<String, *const CglShaderUniform>
+    pub uniforms : HashMap<String, *const CglShaderUniform>,
+
+    vert : Option<String>,
+    frag : Option<String>,
+
+    cgl_shader : Option<*const CglShader>, 
+    state : int,
 }
 
 impl Shader
@@ -80,7 +85,10 @@ impl Shader
             name : String::from_str("old"),
             cgl_shader : Some(cgl_shader),
             attributes : HashMap::new(),
-            uniforms : HashMap::new()
+            uniforms : HashMap::new(),
+            vert : None,
+            frag : None,
+            state : 0
         }
     }
 
@@ -90,9 +98,112 @@ impl Shader
             name : String::from_str(name),
             cgl_shader : None,
             attributes : HashMap::new(),
-            uniforms : HashMap::new()
+            uniforms : HashMap::new(),
+            vert : None,
+            frag : None,
+            state : 0
         }
     }
+
+    pub fn read(&mut self)
+    {
+        let path = Path::new(self.name.clone());
+        let mut file = BufferedReader::new(File::open(&path));
+
+        let mut frag : String;
+        let mut vert : String;
+
+        match file.read_line() {
+            Ok(l) => { vert = l; vert.pop_char(); },
+            Err(_) => return
+        }
+ 
+        match file.read_line() {
+            Ok(l) => { frag = l; frag.pop_char();},
+            Err(_) => return
+        }
+
+        self.read_vert_frag(vert.as_slice(), frag.as_slice());
+
+        for line in file.lines() {
+            let l = line.unwrap();
+            let split : Vec<&str> = l.as_slice().split(',').collect();
+            if split[0] == "att" {
+                let size : u32;
+                match from_str(split[2]) {
+                    Some(u) => size = u,
+                    None => continue
+                }
+                println!("it's an attribute {}, {}", split[1], size);
+                self.attribute_add(split[1], size);
+            }
+            else if split[0] == "uni" {
+                self.uniform_add(split[1]);
+                println!("it's an uniform {} yoo", split[1]);
+                if split[2] == "vec4" {
+                    //TODO
+                }
+            }
+        }
+
+        self.state = 2;
+    }
+
+    fn read_vert_frag(&mut self, vertpath : &str, fragpath : &str)
+    {
+        if self.state == 11 {
+            return
+        }
+
+        let contents = File::open(&Path::new(fragpath)).read_to_string();
+
+        match contents {
+            Ok(r) => self.frag = Some(r),
+            _ => return
+        }
+
+        let contents = File::open(&Path::new(vertpath)).read_to_string();
+
+        match contents {
+            Ok(r) => self.vert = Some(r),
+            _ => return
+        }
+
+        self.state = 1;
+
+    }
+
+    fn cgl_init(&mut self)
+    {
+        let mut vertc;
+        match self.vert {
+            None => return,
+            Some(ref v) => {
+                vertc = v.to_c_str();
+            }
+        }
+
+        let mut fragc;
+        match self.frag {
+            None => return,
+            Some(ref f) => {
+                fragc = f.to_c_str();
+            }
+        }
+
+        //let vertc = self.vert.unwrap().to_c_str();
+        let vertcp = vertc.as_ptr();
+        //let fragc = self.frag.unwrap().to_c_str();
+        let fragcp = fragc.as_ptr();
+
+        unsafe {
+            let shader = cgl_shader_init_string(vertcp, fragcp);
+            self.cgl_shader = Some(shader);
+        }
+
+        self.state = 11;
+    }
+
 
 }
 
@@ -171,6 +282,12 @@ impl Material
         self.state = 11;
     }
 
+    /*
+    pub fn init(&mut self)
+    {
+    }
+    */
+
 }
 
 impl resource::ResourceT for Material
@@ -247,8 +364,10 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Shader {
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
              cgl_shader : None,
              attributes : HashMap::new(),
-             uniforms : HashMap::new()
-
+             uniforms : HashMap::new(),
+             vert : None,
+             frag : None,
+             state : 0
         })
     })
   }
