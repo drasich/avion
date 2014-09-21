@@ -45,6 +45,20 @@ fn main() {
             texture : Some(t)
         }));
 
+        {
+            let mut file = File::create(&Path::new("material/simple.mat"));
+            let mut stdwriter = stdio::stdout();
+            //let mut encoder = json::Encoder::new(&mut stdwriter);
+            //let mut encoder = json::PrettyEncoder::new(&mut stdwriter);
+            let mut encoder = json::PrettyEncoder::new(&mut file);
+            //let mut encoder = json::Encoder::new(&mut file);
+
+            //println!("scene : \n\n {}", json::encode(&scene));
+
+            mat.encode(&mut encoder).unwrap();
+        }
+
+
         let mut cam = camera::Camera::new();
 
         let scene_path = "scene/simple.scene";
@@ -67,8 +81,10 @@ fn main() {
                               }
         };
 
+        /*
         r.request_manager.requests_material.push(
             box render::Request { resource : mat.clone() });
+            */
 
         for o in scene.objects.iter() {
             r.pass.objects.push((*o).clone());
@@ -78,7 +94,7 @@ fn main() {
         /*
         {
             let mut o = object::Object::new("nouvel object");
-            //o.mesh_render =
+            //o.mesh_render = mesh_render::MeshRender::new("model/skeletonmesh.mesh", 
             //o.mesh_set(mesh::new::from_file("model/skeletonmesh.mesh");
             //o.position = vec::Vec3::new(100f64,0f64,-1000f64);
             let mut oref = Rc::new(RefCell::new(o));

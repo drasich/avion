@@ -15,7 +15,6 @@ extern {
         ) -> *const CglTexture;
 }
 
-
 pub struct Texture
 {
     name : String,

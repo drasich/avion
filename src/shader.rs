@@ -26,7 +26,7 @@ pub struct Shader
     frag : Option<String>,
 
     cgl_shader : Option<*const CglShader>, 
-    state : int,
+    pub state : int,
 }
 
 impl Shader
@@ -212,6 +212,7 @@ pub struct Material
 {
     pub name : String,
     pub shader: Option<Shader>,
+    //pub shader: resource::ResTT<Shader>,
     pub state : i32,
     pub texture : Option<texture::Texture>
 }
@@ -247,6 +248,30 @@ impl Material
         }
     }
 
+    pub fn new_from_file(name : &str) -> Material
+    {
+        Material {
+            name : String::from_str(name),
+            shader : None,
+            state : 0,
+            texture : None
+        }
+    }
+
+    /*
+    pub fn new(name : &str, shader : &str) -> Material
+    {
+        Material {
+            name : String::from_str(name),
+            shader : resource::ResTT::new(shader),
+            state : 0,
+            texture : None
+        }
+
+    }
+    */
+
+    /*
     fn read(&mut self, vertpath : &str, fragpath : &str)
     {
         if self.state == 11 {
@@ -281,6 +306,7 @@ impl Material
 
         self.state = 11;
     }
+    */
 
     /*
     pub fn init(&mut self)
@@ -295,6 +321,9 @@ impl resource::ResourceT for Material
     fn init(&mut self)
     {
         match self.shader {
+            //TODO now
+            _ => {},
+            /*
             None => return,
             Some(ref mut s) => {
                 s.read();
@@ -302,8 +331,9 @@ impl resource::ResourceT for Material
                 s.utilise();
                 s.uniform_set("color", &vec::Vec4::new(0.0f64, 0.5f64, 0.5f64, 1f64));
             }
+            */
         }
-        
+
     }
 
 }

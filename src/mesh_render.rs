@@ -10,20 +10,20 @@ pub struct MeshRender
 {
     pub mesh : resource::ResTT<mesh::Mesh>,
     //pub material : shader::Material
-    pub material : Rc<RefCell<shader::Material>>
+    //pub material : Rc<RefCell<shader::Material>>
+    pub material : resource::ResTT<shader::Material>
 }
 
-/*
 impl MeshRender
 {
     pub fn new(mesh : &str, material : &str) -> MeshRender
     {
         MeshRender {
-            mesh : mesh::
-            material : ,
+            mesh : resource::ResTT::new(mesh),
+            //material : shader::Material::new_from_file(material)
+            material : resource::ResTT::new(material)
         }
     }
 }
-*/
 
 

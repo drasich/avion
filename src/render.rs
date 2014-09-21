@@ -114,6 +114,20 @@ impl RenderPass
 
         {
             let mut matm = self.material.borrow_mut();
+
+            let mut shader = &mut matm.shader;
+            match *shader  {
+                None => {},
+                Some(ref mut s) => {
+                    if s.state == 0 {
+                        s.read();
+                    }
+                }
+            }
+        }
+
+        {
+            let mut matm = self.material.borrow_mut();
             let mut tex = &mut matm.texture;
             match *tex  {
                 None => {},
@@ -130,7 +144,9 @@ impl RenderPass
         let shader : &shader::Shader;
         match (*material).shader  {
             None => return,
-            Some(ref sh) => shader = sh
+            Some(ref sh) => {
+                shader = sh;
+            }
         }
 
         shader.utilise();
@@ -236,6 +252,7 @@ impl RenderPass
 pub struct Render
 {
     pub pass : Box<RenderPass>,
+    //TODO remove request manager?
     pub request_manager : Box<RequestManager>
 }
 
@@ -250,7 +267,7 @@ impl Render {
 
     pub fn draw_frame(&mut self) -> ()
     {
-        self.request_manager.handle_requests();
+        //self.request_manager.handle_requests();
         return (*self.pass).draw_frame();
     }
 

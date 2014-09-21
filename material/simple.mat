@@ -1,0 +1,10 @@
+{
+  "name": "my_mat",
+  "shader": {
+    "name": "shader/simple.sh"
+  },
+  "state": 0,
+  "texture": {
+    "name": "image/base_skeleton_col.png"
+  }
+}

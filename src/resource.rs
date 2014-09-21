@@ -59,11 +59,24 @@ pub struct ResTT<T>
     pub resource : ResTest<T>
 }
 
+impl<T> ResTT<T>
+{
+    pub fn new(name : &str) -> ResTT<T>
+    {
+        ResTT {
+            name : String::from_str(name),
+            resource : ResNone
+        }
+    }
+}
+
 pub struct ResourceManager
 {
     meshes : Arc<RWLock<HashMap<String, ResTest<mesh::Mesh>>>>,
-    textures : Arc<RWLock<HashMap<String, ResTest<texture::Texture>>>>,
-    materials : Arc<RWLock<HashMap<String, ResTest<shader::Material>>>>
+    //meshes : Arc<RWLock<HashMap<String, ResTest<T>>>>,
+    //textures : Arc<RWLock<HashMap<String, ResTest<texture::Texture>>>>,
+    //materials : Arc<RWLock<HashMap<String, ResTest<shader::Material>>>>,
+    //shaders : Arc<RWLock<HashMap<String, ResTest<shader::Shader>>>>
 }
 
 impl ResourceManager {
@@ -71,17 +84,19 @@ impl ResourceManager {
     {
         ResourceManager {
             meshes : Arc::new(RWLock::new(HashMap::new())),
-            textures : Arc::new(RWLock::new(HashMap::new())),
-            materials : Arc::new(RWLock::new(HashMap::new())),
+            //textures : Arc::new(RWLock::new(HashMap::new())),
+            //materials : Arc::new(RWLock::new(HashMap::new())),
         }
     }
 
     pub fn request_use(&mut self, name : &str) -> ResTest<mesh::Mesh>
+    //pub fn request_use(&mut self, name : &str) -> ResTest<T>
     {
         let ms1 = self.meshes.clone();
         let mut ms1w = ms1.write();
 
         let v : &mut ResTest<mesh::Mesh>  = ms1w.find_or_insert_with(String::from_str(name), 
+        //let v : &mut ResTest<T>  = ms1w.find_or_insert_with(String::from_str(name), 
                 |key | ResNone);
 
         let s = String::from_str(name);
@@ -96,9 +111,11 @@ impl ResourceManager {
                 let ss = s.clone();
 
                 let (tx, rx) = channel::<Arc<RWLock<mesh::Mesh>>>();
+                //let (tx, rx) = channel::<Arc<RWLock<T>>>();
                 spawn( proc() {
                     //sleep(::std::time::duration::Duration::seconds(5));
                     let m = Arc::new(RWLock::new(mesh::Mesh::new_from_file(ss.as_slice())));
+                    //let m = Arc::new(RWLock::new(self.create(ss.as_slice())));
                     m.write().inittt();
                     tx.send(m.clone());
                 });
