@@ -238,17 +238,7 @@ extern {
 
 impl Material
 {
-    pub fn new() -> Material
-    {
-        Material {
-            name : String::from_str("my_mat"),
-            shader : None,
-            state : 0,
-            texture : None
-        }
-    }
-
-    pub fn new_from_file(name : &str) -> Material
+    pub fn new(name : &str) -> Material
     {
         Material {
             name : String::from_str(name),
@@ -257,6 +247,15 @@ impl Material
             texture : None
         }
     }
+
+    pub fn new_from_file(file_path : &str) -> Material
+    {
+        let file = File::open(&Path::new(file_path)).read_to_string().unwrap();
+        let mut mat : Material = json::decode(file.as_slice()).unwrap();
+
+        mat
+    }
+
 
     /*
     pub fn new(name : &str, shader : &str) -> Material

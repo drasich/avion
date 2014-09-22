@@ -96,7 +96,7 @@ impl Create for shader::Material
 {
     fn create(name : &str) -> shader::Material
     {
-        shader::Material::new_from_file(name)
+        shader::Material::new(name)
     }
 
     fn inittt(&mut self)
@@ -241,7 +241,7 @@ impl<S: Decoder<E>, E, T> Decodable<S, E> for ResourceRefGen<T> {
 
 impl <S: Encoder<E>, E, T> Encodable<S, E> for ResTT<T> {
   fn encode(&self, encoder: &mut S) -> Result<(), E> {
-      encoder.emit_struct("Mesh", 1, |encoder| {
+      encoder.emit_struct("NotImportantName", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
           Ok(())
       })

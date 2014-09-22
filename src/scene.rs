@@ -2,6 +2,9 @@ use object;
 use std::collections::{DList,Deque};
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::io::File;
+use serialize::json::ToJson;
+use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 
 
 #[deriving(Decodable, Encodable)]
@@ -20,4 +23,13 @@ impl Scene
             objects : DList::new()
         }
     }
+
+    pub fn new_from_file(file_path : &str) -> Scene
+    {
+        let file = File::open(&Path::new(file_path)).read_to_string().unwrap();
+        let mut scene : Scene = json::decode(file.as_slice()).unwrap();
+
+        scene
+    }
+
 }

@@ -37,14 +37,17 @@ fn main() {
     let t = texture::Texture::new("image/base_skeleton_col.png");
     //spawn(proc() {
     //
+    //*
         let mut mat = Arc::new(RWLock::new( shader::Material {
             name : String::from_str("my_mat"),
-            //shader : None,
             //shader : Some(shader::Shader::new("shader/simple.sh")),
             shader : Some(resource::ResTT::new("shader/simple.sh")),
             state : 0,
             texture : Some(t)
         }));
+    //    */
+
+    //let mut mat = Arc::new(RWLock::new(shader::Material::new_from_file("material/simple.mat")));
 
         {
             let mut file = File::create(&Path::new("material/simple.mat"));
@@ -57,9 +60,7 @@ fn main() {
         let mut cam = camera::Camera::new();
 
         let scene_path = "scene/simple.scene";
-        let file = File::open(&Path::new(scene_path)).read_to_string().unwrap();
-        let mut scene : scene::Scene = json::decode(file.as_slice()).unwrap();
-        //let mut scene = scene::Scene::new("the_scene");
+        let mut scene = scene::Scene::new_from_file(scene_path);
 
         let mut r = box render::Render { 
             pass :box render::RenderPass{
