@@ -70,38 +70,81 @@ impl<T> ResTT<T>
     }
 }
 
-pub struct ResourceManager
+pub trait Create
 {
-    meshes : Arc<RWLock<HashMap<String, ResTest<mesh::Mesh>>>>,
-    //meshes : Arc<RWLock<HashMap<String, ResTest<T>>>>,
-    //textures : Arc<RWLock<HashMap<String, ResTest<texture::Texture>>>>,
-    //materials : Arc<RWLock<HashMap<String, ResTest<shader::Material>>>>,
-    //shaders : Arc<RWLock<HashMap<String, ResTest<shader::Shader>>>>
+    fn create(name : &str) -> Self;
+    fn inittt(&mut self);
 }
 
-impl ResourceManager {
-    pub fn new() -> ResourceManager
+impl Create for mesh::Mesh
+{
+    fn create(name : &str) -> mesh::Mesh
+    {
+        mesh::Mesh::new_from_file(name)
+    }
+
+    fn inittt(&mut self)
+    {
+        if self.state == 0 {
+            //TODO can be read anywhere
+            self.file_read();
+        }
+    }
+}
+
+impl Create for shader::Material
+{
+    fn create(name : &str) -> shader::Material
+    {
+        shader::Material::new_from_file(name)
+    }
+
+    fn inittt(&mut self)
+    {
+        //TODO
+    }
+}
+
+impl Create for shader::Shader
+{
+    fn create(name : &str) -> shader::Shader
+    {
+        shader::Shader::new(name)
+    }
+
+    fn inittt(&mut self)
+    {
+        //TODO
+        //self.read();
+    }
+}
+
+
+
+pub struct ResourceManager<T>
+{
+    resources : Arc<RWLock<HashMap<String, ResTest<T>>>>,
+}
+
+impl<T:'static+Create+Sync+Send> ResourceManager<T> {
+    pub fn new() -> ResourceManager<T>
     {
         ResourceManager {
-            meshes : Arc::new(RWLock::new(HashMap::new())),
-            //textures : Arc::new(RWLock::new(HashMap::new())),
-            //materials : Arc::new(RWLock::new(HashMap::new())),
+            resources : Arc::new(RWLock::new(HashMap::new())),
         }
     }
 
-    pub fn request_use(&mut self, name : &str) -> ResTest<mesh::Mesh>
-    //pub fn request_use(&mut self, name : &str) -> ResTest<T>
+    pub fn request_use(&mut self, name : &str) -> ResTest<T>
     {
-        let ms1 = self.meshes.clone();
+        let ms1 = self.resources.clone();
         let mut ms1w = ms1.write();
 
-        let v : &mut ResTest<mesh::Mesh>  = ms1w.find_or_insert_with(String::from_str(name), 
-        //let v : &mut ResTest<T>  = ms1w.find_or_insert_with(String::from_str(name), 
+        let v : &mut ResTest<T>  = ms1w.find_or_insert_with(String::from_str(name), 
                 |key | ResNone);
 
         let s = String::from_str(name);
 
-        let msc = self.meshes.clone();
+        let msc = self.resources.clone();
 
         match *v 
         {
@@ -110,12 +153,11 @@ impl ResourceManager {
 
                 let ss = s.clone();
 
-                let (tx, rx) = channel::<Arc<RWLock<mesh::Mesh>>>();
-                //let (tx, rx) = channel::<Arc<RWLock<T>>>();
+                let (tx, rx) = channel::<Arc<RWLock<T>>>();
                 spawn( proc() {
                     //sleep(::std::time::duration::Duration::seconds(5));
-                    let m = Arc::new(RWLock::new(mesh::Mesh::new_from_file(ss.as_slice())));
-                    //let m = Arc::new(RWLock::new(self.create(ss.as_slice())));
+                    let mt : T = Create::create(ss.as_slice());
+                    let m = Arc::new(RWLock::new(mt));
                     m.write().inittt();
                     tx.send(m.clone());
                 });
@@ -125,7 +167,7 @@ impl ResourceManager {
                     match rx.try_recv() {
                         Err(e) => {},//println!("nothing"),
                         Ok(value) =>  { 
-                            println!("received val {} ", value.read().name);
+                            //println!("received val {} ", value.read().name);
 
                             let mut mscwww = msc.write();
 
@@ -160,7 +202,7 @@ impl ResourceManager {
     {
         //to be spawn
         loop{
-            //TODO for all meshes state that are receiver, try to receive
+            //TODO for all resources state that are receiver, try to receive
         }
     }
 

@@ -260,6 +260,7 @@ impl Mesh
        self.state = 1;
     }
 
+    /*
     pub fn inittt(&mut self)
     {
         if self.state == 0 {
@@ -267,6 +268,7 @@ impl Mesh
             self.file_read();
         }
     }
+    */
     pub fn init_buffers(&mut self)
     {
         if self.state == 1 {

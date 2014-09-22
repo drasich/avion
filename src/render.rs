@@ -4,7 +4,7 @@ use std::collections::{DList,Deque};
 use std::rc::Rc;
 use std::cell::RefCell;
 use libc::{c_char,c_uint};
-use sync::{RWLock, Arc};
+use sync::{RWLock, Arc,RWLockReadGuard};
 
 use resource;
 use shader;
@@ -85,15 +85,52 @@ pub struct RenderPass
     pub name : String,
     //pub material : Arc<shader::Material>,
     //pub material : Box<shader::Material>,
-    pub material : Rc<RefCell<shader::Material>>,
+    //pub material : Rc<RefCell<shader::Material>>,
+    pub material : Arc<RWLock<shader::Material>>,
     //pub objects : DList<object::Object>,
     pub objects : DList<Rc<RefCell<object::Object>>>,
     pub camera : Rc<RefCell<camera::Camera>>,
-    pub resource_manager : Arc<RWLock<resource::ResourceManager>>
+    pub mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
+    pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>
+}
+
+fn resource_get<T:'static+resource::Create+Send+Sync>(
+    manager : &mut resource::ResourceManager<T>,
+    res: &mut resource::ResTT<T>) 
+    -> Option<Arc<RWLock<T>>>
+{
+    let mut the_res : Option<Arc<RWLock<T>>> = None;
+    match res.resource{
+        resource::ResNone => {
+            //rc_mesh = self.mesh_manager.borrow_mut().request_use(r.name.as_slice());
+            //ob.mesht.resource = self.mesh_manager.borrow_mut().request_use(ob.mesht.name.as_slice());
+            println!("resource is none I request it");
+            res.resource = manager.request_use(res.name.as_slice());
+        },
+        resource::ResData(ref data) => {
+            //println!("now I have some data!!! and I can use it !!!");
+            the_res = Some(data.clone());
+        },
+        resource::ResWait => {
+            res.resource = manager.request_use(res.name.as_slice());
+            println!("now I have to wait");
+        }
+    }
+
+    the_res
 }
 
 impl RenderPass
 {
+    /*
+    pub new() -> RenderPass
+    {
+        RenderPass {
+            name : String::from_str("yep"),
+        }
+    }
+    */
+
     pub fn init(&mut self)
     {
         /*
@@ -113,21 +150,8 @@ impl RenderPass
         println!("draw frame");
 
         {
-            let mut matm = self.material.borrow_mut();
-
-            let mut shader = &mut matm.shader;
-            match *shader  {
-                None => {},
-                Some(ref mut s) => {
-                    if s.state == 0 {
-                        s.read();
-                    }
-                }
-            }
-        }
-
-        {
-            let mut matm = self.material.borrow_mut();
+            //let mut matm = self.material.borrow_mut();
+            let mut matm = self.material.write();
             let mut tex = &mut matm.texture;
             match *tex  {
                 None => {},
@@ -139,13 +163,56 @@ impl RenderPass
             }
         }
 
-        let material = self.material.borrow();
+
+        //let shader : &shader::Shader;
+        let mut yep : Option<Arc<RWLock<shader::Shader>>> = None;
+
+        {
+            //let mut matm = self.material.borrow_mut();
+            let mut matm = self.material.write();
+
+            let mut shaderres = &mut matm.shader;
+            match *shaderres  {
+                None => {},
+                Some(ref mut s) => {
+                    yep = resource_get(&mut *self.shader_manager.write(), s);
+                    match yep.clone() {
+                        None => {},
+                        Some(yy) => {
+                            let mut yoyo = yy.write();
+                            if yoyo.state == 0 {
+                                yoyo.read();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        //let material = self.material.borrow();
+        let material = self.material.read();
 
         let shader : &shader::Shader;
+        /*
         match (*material).shader  {
             None => return,
             Some(ref sh) => {
                 shader = sh;
+            }
+        }
+        */
+
+        let c : Arc<RWLock<shader::Shader>>;
+        let cr : RWLockReadGuard<shader::Shader>;
+
+        match yep
+        {
+            None => return,
+            Some(ref sh) => {
+                c = sh.clone();
+                cr = c.read();
+                shader = & *cr;
             }
         }
 
@@ -176,23 +243,7 @@ impl RenderPass
         ob : &mut object::Object,
         matrix : &matrix::Matrix4)
     {
-        let mut themesh : Option<Arc<RWLock<mesh::Mesh>>> = None;
-        match ob.mesh.resource{
-            resource::ResNone => {
-                //rc_mesh = self.resource_manager.borrow_mut().request_use(r.name.as_slice());
-                //ob.mesht.resource = self.resource_manager.borrow_mut().request_use(ob.mesht.name.as_slice());
-                println!("resource is none I request it");
-                ob.mesh.resource = self.resource_manager.write().request_use(ob.mesh.name.as_slice());
-            },
-            resource::ResData(ref data) => {
-                //println!("now I have some data!!! and I can use it !!!");
-                themesh = Some(data.clone());
-            },
-            resource::ResWait => {
-                ob.mesh.resource = self.resource_manager.write().request_use(ob.mesh.name.as_slice());
-                println!("now I have to wait");
-            }
-        }
+        let mut themesh = resource_get(&mut *self.mesh_manager.write(), &mut ob.mesh);
 
         //TODO chris
         match  themesh  {
@@ -257,6 +308,26 @@ pub struct Render
 }
 
 impl Render {
+
+    /*
+    pub fn new() -> Render
+    {
+        Render { 
+            pass : box render::RenderPass{
+                      name : String::from_str("passtest"),
+                      material : mat.clone(),
+                      objects : DList::new(),
+                      camera : Rc::new(RefCell::new(cam)),
+                      mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new()))
+                  },
+            request_manager : box render::RequestManager {
+                                  requests : DList::new(),
+                                  requests_material : DList::new()
+                              }
+        }
+    }
+    */
+
     pub fn init(&mut self)
     {
     }

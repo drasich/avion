@@ -37,10 +37,11 @@ fn main() {
     let t = texture::Texture::new("image/base_skeleton_col.png");
     //spawn(proc() {
     //
-        let mut mat = Rc::new(RefCell::new( shader::Material {
+        let mut mat = Arc::new(RWLock::new( shader::Material {
             name : String::from_str("my_mat"),
             //shader : None,
-            shader : Some(shader::Shader::new("shader/simple.sh")),
+            //shader : Some(shader::Shader::new("shader/simple.sh")),
+            shader : Some(resource::ResTT::new("shader/simple.sh")),
             state : 0,
             texture : Some(t)
         }));
@@ -48,14 +49,8 @@ fn main() {
         {
             let mut file = File::create(&Path::new("material/simple.mat"));
             let mut stdwriter = stdio::stdout();
-            //let mut encoder = json::Encoder::new(&mut stdwriter);
-            //let mut encoder = json::PrettyEncoder::new(&mut stdwriter);
             let mut encoder = json::PrettyEncoder::new(&mut file);
-            //let mut encoder = json::Encoder::new(&mut file);
-
-            //println!("scene : \n\n {}", json::encode(&scene));
-
-            mat.encode(&mut encoder).unwrap();
+            mat.read().encode(&mut encoder).unwrap();
         }
 
 
@@ -72,8 +67,8 @@ fn main() {
                       material : mat.clone(),
                       objects : DList::new(),
                       camera : Rc::new(RefCell::new(cam)),
-                      //resource_manager : Rc::new(RefCell::new(resource::ResourceManager::new()))
-                      resource_manager : Arc::new(RWLock::new(resource::ResourceManager::new()))
+                      mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+                      shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new()))
                   },
             request_manager : box render::RequestManager {
                                   requests : DList::new(),

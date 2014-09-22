@@ -211,8 +211,8 @@ impl Shader
 pub struct Material
 {
     pub name : String,
-    pub shader: Option<Shader>,
-    //pub shader: resource::ResTT<Shader>,
+    //pub shader: Option<Shader>,
+    pub shader: Option<resource::ResTT<Shader>>,
     pub state : i32,
     pub texture : Option<texture::Texture>
 }
@@ -270,50 +270,6 @@ impl Material
 
     }
     */
-
-    /*
-    fn read(&mut self, vertpath : &str, fragpath : &str)
-    {
-        if self.state == 11 {
-            return
-        }
-
-        let contents = File::open(&Path::new(fragpath)).read_to_string();
-        let frag : String;
-
-        match contents {
-            Ok(r) => frag = r,
-            _ => return
-        }
-
-        let contents = File::open(&Path::new(vertpath)).read_to_string();
-        let vert : String;
-
-        match contents {
-            Ok(r) => vert = r,
-            _ => return
-        }
-
-        let vertc = vert.to_c_str();
-        let vertcp = vertc.as_ptr();
-        let fragc = frag.to_c_str();
-        let fragcp = fragc.as_ptr();
-
-        unsafe {
-            let shader = cgl_shader_init_string(vertcp, fragcp);
-            self.shader = Some(Shader::new_old(shader));
-        }
-
-        self.state = 11;
-    }
-    */
-
-    /*
-    pub fn init(&mut self)
-    {
-    }
-    */
-
 }
 
 impl resource::ResourceT for Material
