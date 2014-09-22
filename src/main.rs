@@ -34,48 +34,43 @@ mod texture;
 
 fn main() {
 
-    let t = texture::Texture::new("image/base_skeleton_col.png");
+    //let t = texture::Texture::new("image/base_skeleton_col.png");
     //spawn(proc() {
     //
-    //*
-        let mut mat = Arc::new(RWLock::new( shader::Material {
+    /*
+       let mut mat = Arc::new(RWLock::new( shader::Material {
             name : String::from_str("my_mat"),
             //shader : Some(shader::Shader::new("shader/simple.sh")),
             shader : Some(resource::ResTT::new("shader/simple.sh")),
             state : 0,
-            texture : Some(t)
+            //texture : Some(t)
+            texture : Some(resource::ResTT::new("image/base_skeleton_col.png"))
         }));
-    //    */
+        */
 
-    //let mut mat = Arc::new(RWLock::new(shader::Material::new_from_file("material/simple.mat")));
+    let mut mat = Arc::new(RWLock::new(shader::Material::new_from_file("material/simple.mat")));
+    mat.read().save();
 
-        {
-            let mut file = File::create(&Path::new("material/simple.mat"));
-            let mut stdwriter = stdio::stdout();
-            let mut encoder = json::PrettyEncoder::new(&mut file);
-            mat.read().encode(&mut encoder).unwrap();
-        }
+    let mut cam = camera::Camera::new();
 
+    let scene_path = "scene/simple.scene";
+    let mut scene = scene::Scene::new_from_file(scene_path);
 
-        let mut cam = camera::Camera::new();
-
-        let scene_path = "scene/simple.scene";
-        let mut scene = scene::Scene::new_from_file(scene_path);
-
-        let mut r = box render::Render { 
-            pass :box render::RenderPass{
-                      name : String::from_str("passtest"),
-                      material : mat.clone(),
-                      objects : DList::new(),
-                      camera : Rc::new(RefCell::new(cam)),
-                      mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
-                      shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new()))
-                  },
-            request_manager : box render::RequestManager {
-                                  requests : DList::new(),
-                                  requests_material : DList::new()
-                              }
-        };
+    let mut r = box render::Render { 
+        pass :box render::RenderPass{
+                  name : String::from_str("passtest"),
+                  material : mat.clone(),
+                  objects : DList::new(),
+                  camera : Rc::new(RefCell::new(cam)),
+                  mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+                  shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+                  texture_manager : Arc::new(RWLock::new(resource::ResourceManager::new()))
+              },
+              request_manager : box render::RequestManager {
+                                    requests : DList::new(),
+                                    requests_material : DList::new()
+                                }
+    };
 
         /*
         r.request_manager.requests_material.push(

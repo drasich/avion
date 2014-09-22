@@ -119,6 +119,21 @@ impl Create for shader::Shader
     }
 }
 
+impl Create for texture::Texture
+{
+    fn create(name : &str) -> texture::Texture
+    {
+        texture::Texture::new(name)
+    }
+
+    fn inittt(&mut self)
+    {
+        //TODO
+        self.load();
+    }
+}
+
+
 
 
 pub struct ResourceManager<T>

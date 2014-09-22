@@ -12,6 +12,7 @@ use mesh;
 use object;
 use camera;
 use matrix;
+use texture;
 
 pub struct MeshManager
 {
@@ -91,7 +92,8 @@ pub struct RenderPass
     pub objects : DList<Rc<RefCell<object::Object>>>,
     pub camera : Rc<RefCell<camera::Camera>>,
     pub mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
-    pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>
+    pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
+    pub texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>
 }
 
 fn resource_get<T:'static+resource::Create+Send+Sync>(
@@ -149,6 +151,7 @@ impl RenderPass
     {
         println!("draw frame");
 
+        /*
         {
             //let mut matm = self.material.borrow_mut();
             let mut matm = self.material.write();
@@ -158,6 +161,28 @@ impl RenderPass
                 Some(ref mut t) => {
                     if t.state == 1 {
                         t.init();
+                    }
+                }
+            }
+        }
+        */
+
+        {
+            let mut matm = self.material.write();
+
+            let mut texres = &mut matm.texture;
+            match *texres  {
+                None => {},
+                Some(ref mut t) => {
+                    let mut yep = resource_get(&mut *self.texture_manager.write(), t);
+                    match yep.clone() {
+                        None => {},
+                        Some(yy) => {
+                            let mut yoyo = yy.write();
+                            if yoyo.state == 1 {
+                                yoyo.init();
+                            }
+                        }
                     }
                 }
             }
@@ -191,7 +216,7 @@ impl RenderPass
 
 
         //let material = self.material.borrow();
-        let material = self.material.read();
+        //let mut material = self.material.write();
 
         let shader : &shader::Shader;
         /*
@@ -218,11 +243,22 @@ impl RenderPass
 
         shader.utilise();
         //TODO
-        match material.texture  {
+        {
+        let mut material = self.material.write();
+        let mut texres = &mut material.texture;
+        match *texres  {
+        //match material.texture  {
             None => {},
-            Some(ref t) => {
-                shader.uniform_set("texture", t);
+            Some(ref mut t) => {
+                let mut yep = resource_get(&mut *self.texture_manager.write(), t);
+                match yep {
+                    Some(yoyo) => {
+                        shader.uniform_set("texture", & *yoyo.read());
+                    },
+                    None => {}
+                }
             }
+        }
         }
 
         let cam_mat = self.camera.borrow().object.borrow().matrix_get();

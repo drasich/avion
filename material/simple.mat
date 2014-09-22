@@ -1,5 +1,5 @@
 {
-  "name": "my_mat",
+  "name": "material/simple.mat",
   "shader": {
     "name": "shader/simple.sh"
   },

@@ -1,6 +1,7 @@
 use resource;
 use std::collections::HashMap;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use std::io::stdio;
 use std::io::File;
 use std::io::BufferedReader;
 use std::uint;
@@ -211,10 +212,10 @@ impl Shader
 pub struct Material
 {
     pub name : String,
-    //pub shader: Option<Shader>,
     pub shader: Option<resource::ResTT<Shader>>,
     pub state : i32,
-    pub texture : Option<texture::Texture>
+    //pub texture : Option<texture::Texture>
+    pub texture : Option<resource::ResTT<texture::Texture>>
 }
 
 #[link(name = "cypher")]
@@ -255,6 +256,15 @@ impl Material
 
         mat
     }
+
+    pub fn save(&self)
+    {
+        let mut file = File::create(&Path::new(self.name.as_slice()));
+        let mut stdwriter = stdio::stdout();
+        let mut encoder = json::PrettyEncoder::new(&mut file);
+        self.encode(&mut encoder).unwrap();
+    }
+
 
 
     /*
