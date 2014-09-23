@@ -3,7 +3,7 @@ extern crate libc;
 extern crate sync;
 extern crate png;
 
-use std::collections::{DList};
+use std::collections::{DList,HashMap};
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::f64::consts;
@@ -57,6 +57,7 @@ fn main() {
     let mut scene = scene::Scene::new_from_file(scene_path);
 
     let mut r = box render::Render { 
+            passes : HashMap::new(),
         pass :box render::RenderPass{
                   name : String::from_str("passtest"),
                   material : mat.clone(),
@@ -76,6 +77,8 @@ fn main() {
         r.request_manager.requests_material.push(
             box render::Request { resource : mat.clone() });
             */
+
+        r.prepare_passes(&scene);
 
         for o in scene.objects.iter() {
             r.pass.objects.push((*o).clone());

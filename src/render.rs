@@ -5,6 +5,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use libc::{c_char,c_uint};
 use sync::{RWLock, Arc,RWLockReadGuard};
+use std::collections::HashMap;
 
 use resource;
 use shader;
@@ -13,6 +14,7 @@ use object;
 use camera;
 use matrix;
 use texture;
+use scene;
 
 pub struct MeshManager
 {
@@ -261,7 +263,6 @@ impl RenderPass
         ob : &mut object::Object,
         matrix : &matrix::Matrix4)
     {
-        //*
         let themesh = match ob.mesh_render {
             Some(ref mut mr) => resource_get(&mut *self.mesh_manager.write(), &mut mr.mesh),
             None => {
@@ -269,11 +270,6 @@ impl RenderPass
                 return;
             }
         };
-        //*/
-
-        //let mut themesh = resource_get(&mut *self.mesh_manager.write(), &mut ob.mesh);
-        //let mut themesh = resource_get(&mut *self.mesh_manager.write(), &mut mesh_render.mesh);
-        //drop(mesh_render);
 
         //TODO chris
         match  themesh  {
@@ -333,6 +329,8 @@ impl RenderPass
 pub struct Render
 {
     pub pass : Box<RenderPass>,
+    pub passes : HashMap<String, Box<RenderPass>>, //TODO check
+    //pub passes : DList<Box<RenderPass>>,
     //TODO remove request manager?
     pub request_manager : Box<RequestManager>
 }
@@ -370,6 +368,20 @@ impl Render {
     {
         //self.request_manager.handle_requests();
         return (*self.pass).draw_frame();
+    }
+
+    pub fn prepare_passes(&mut self, scene : &scene::Scene)
+    {
+        //let v : &mut ResTest<T>  = ms1w.find_or_insert_with(String::from_str(name), 
+         //       |key | ResNone);
+        for o in scene.objects.iter() {
+            let ob = o.borrow();
+            let mesh_render = match ob.mesh_render {
+                Some(ref mr) => mr,
+                None => continue
+            };
+            //r.pass.objects.push((*o).clone());
+        }
     }
 
 }
