@@ -150,23 +150,6 @@ impl RenderPass
     pub fn draw_frame(&self) -> ()
     {
         println!("draw frame");
-
-        /*
-        {
-            //let mut matm = self.material.borrow_mut();
-            let mut matm = self.material.write();
-            let mut tex = &mut matm.texture;
-            match *tex  {
-                None => {},
-                Some(ref mut t) => {
-                    if t.state == 1 {
-                        t.init();
-                    }
-                }
-            }
-        }
-        */
-
         {
             let mut matm = self.material.write();
 
@@ -187,7 +170,6 @@ impl RenderPass
                 }
             }
         }
-
 
         //let shader : &shader::Shader;
         let mut yep : Option<Arc<RWLock<shader::Shader>>> = None;
@@ -279,7 +261,19 @@ impl RenderPass
         ob : &mut object::Object,
         matrix : &matrix::Matrix4)
     {
-        let mut themesh = resource_get(&mut *self.mesh_manager.write(), &mut ob.mesh);
+        //*
+        let themesh = match ob.mesh_render {
+            Some(ref mut mr) => resource_get(&mut *self.mesh_manager.write(), &mut mr.mesh),
+            None => {
+                println!("no mesh render");
+                return;
+            }
+        };
+        //*/
+
+        //let mut themesh = resource_get(&mut *self.mesh_manager.write(), &mut ob.mesh);
+        //let mut themesh = resource_get(&mut *self.mesh_manager.write(), &mut mesh_render.mesh);
+        //drop(mesh_render);
 
         //TODO chris
         match  themesh  {

@@ -12,9 +12,6 @@ use resource;
 pub struct Object
 {
     pub name : String,
-    //pub mesh : Option<Rc<RefCell<mesh::Mesh>>>,
-    //pub mesh : Option<resource::ResourceRefGen<mesh::Mesh>>,
-    pub mesh : resource::ResTT<mesh::Mesh>,
     pub mesh_render : Option<mesh_render::MeshRender>,
     pub position : vec::Vec3,
     pub orientation : vec::Quat,
@@ -27,7 +24,6 @@ impl Object
     {
         Object {
             name : String::from_str(name),
-            mesh : resource::ResTT {name : String::from_str("model/skeletonmesh.mesh"), resource : resource::ResNone},
             mesh_render : None,
             position : vec::Vec3::zero(),
             orientation : vec::Quat::identity(),
@@ -44,19 +40,6 @@ impl Object
     pub fn empty() -> Object
     {
         Object::new("empty")
-    }
-
-    pub fn mesh_set(&mut self, mesh : Rc<RefCell<mesh::Mesh>>)
-    {
-        println!("TODO この関数はなにもしてない");
-        //self.mesh = Some(mesh);
-        /*
-        self.mesh = Some(resource::ResourceRefGen {
-            name : mesh.borrow().name.clone(),
-            resource : Some(mesh),
-            resourcett : None
-        });
-        */
     }
 
     pub fn matrix_get(&self) -> matrix::Matrix4

@@ -3,10 +3,14 @@
   "objects": [
     {
       "name": "yep",
-      "mesh": {
-        "name": "model/skeletonmesh.mesh"
+      "mesh_render": {
+        "mesh": {
+          "name": "model/skeletonmesh.mesh"
+        },
+        "material": {
+          "name": "material/simple.mat"
+        }
       },
-      "mesh_render": null,
       "position": {
         "x": 100,
         "y": 0,
@@ -26,10 +30,14 @@
     },
     {
       "name": "yep2",
-      "mesh": {
-        "name": "model/skeletonmesh.mesh"
+      "mesh_render": {
+        "mesh": {
+          "name": "model/skeletonmesh.mesh"
+        },
+        "material": {
+          "name": "material/simple.mat"
+        }
       },
-      "mesh_render": null,
       "position": {
         "x": -100,
         "y": -100,
@@ -49,9 +57,6 @@
     },
     {
       "name": "nouvel object",
-      "mesh": {
-        "name": "model/skeletonmesh.mesh"
-      },
       "mesh_render": {
         "mesh": {
           "name": "model/skeletonmesh.mesh"
@@ -63,7 +68,7 @@
       "position": {
         "x": 0,
         "y": 0,
-        "z": 0
+        "z": -500
       },
       "orientation": {
         "x": 0,
