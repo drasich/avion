@@ -53,6 +53,7 @@ pub enum ResTest<T>
     ResNone
 }
 
+
 pub struct ResTT<T>
 {
     pub name : String,
@@ -196,7 +197,6 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                     }
                 });
 
-                println!("request : it was none, now it is wait");
                 return ResWait;
             },
             ResData(ref yep) => {

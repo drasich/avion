@@ -27,7 +27,7 @@ impl Object
     {
         Object {
             name : String::from_str(name),
-            mesh : resource::ResTT {name : String::from_str("model/skeleton.mesh"), resource : resource::ResNone},
+            mesh : resource::ResTT {name : String::from_str("model/skeletonmesh.mesh"), resource : resource::ResNone},
             mesh_render : None,
             position : vec::Vec3::zero(),
             orientation : vec::Quat::identity(),

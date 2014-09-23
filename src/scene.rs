@@ -3,6 +3,7 @@ use std::collections::{DList,Deque};
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::io::File;
+use std::io::stdio;
 use serialize::json::ToJson;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 
@@ -30,6 +31,19 @@ impl Scene
         let mut scene : Scene = json::decode(file.as_slice()).unwrap();
 
         scene
+    }
+
+    pub fn save(&self)
+    {
+        let mut file = File::create(&Path::new(self.name.as_slice()));
+        let mut stdwriter = stdio::stdout();
+        //let mut encoder = json::Encoder::new(&mut stdwriter);
+        //let mut encoder = json::PrettyEncoder::new(&mut stdwriter);
+        let mut encoder = json::PrettyEncoder::new(&mut file);
+        //let mut encoder = json::Encoder::new(&mut file);
+
+        //println!("scene : \n\n {}", json::encode(&scene));
+        self.encode(&mut encoder).unwrap();
     }
 
 }

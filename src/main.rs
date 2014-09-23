@@ -85,7 +85,7 @@ fn main() {
         /*
         {
             let mut o = object::Object::new("nouvel object");
-            //o.mesh_render = mesh_render::MeshRender::new("model/skeletonmesh.mesh", 
+            o.mesh_render = Some(mesh_render::MeshRender::new("model/skeletonmesh.mesh", "material/simple.mat"));
             //o.mesh_set(mesh::new::from_file("model/skeletonmesh.mesh");
             //o.position = vec::Vec3::new(100f64,0f64,-1000f64);
             let mut oref = Rc::new(RefCell::new(o));
@@ -113,18 +113,7 @@ fn main() {
         }
         */
 
-        {
-            let mut file = File::create(&Path::new(scene_path));
-            let mut stdwriter = stdio::stdout();
-            //let mut encoder = json::Encoder::new(&mut stdwriter);
-            //let mut encoder = json::PrettyEncoder::new(&mut stdwriter);
-            let mut encoder = json::PrettyEncoder::new(&mut file);
-            //let mut encoder = json::Encoder::new(&mut file);
-
-            //println!("scene : \n\n {}", json::encode(&scene));
-
-            scene.encode(&mut encoder).unwrap();
-        }
+        scene.save();
 
         unsafe {
             render::draw_callback_set(render::draw_cb, &*r);

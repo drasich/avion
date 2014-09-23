@@ -155,7 +155,17 @@ impl Mesh
 
     pub fn file_read(&mut self) 
     {
-       let mut file = File::open(&Path::new(self.name.as_slice()));
+        if self.state != 0 {
+            return;
+        }
+
+        let mut file = match File::open(&Path::new(self.name.as_slice())) {
+            Ok(f) => {f},
+            Err(e) => {
+                println!("Error reading file '{}'. Error: {}", self.name, e);
+                return;
+            }
+        };
 
        {
            let typelen = file.read_le_u16().unwrap();
@@ -288,7 +298,6 @@ impl resource::ResourceT for Mesh
     fn init(&mut self)
     {
         if self.state == 0 {
-            //TODO can be read anywhere
             self.file_read();
         }
         
