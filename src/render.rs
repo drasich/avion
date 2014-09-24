@@ -396,7 +396,11 @@ impl Render {
 
     pub fn prepare_passes(&mut self)
     {
-        println!("prepare passes");
+        for (_,p) in self.passes.iter_mut()
+        {
+            p.objects.clear();
+        }
+
         //self.passes.clear();
         for o in self.scene.objects.mut_iter() {
             let oc = o.clone();
@@ -413,33 +417,11 @@ impl Render {
                 Some(mat) => mat
             };
 
-            /*
-            let material = match mesh_render.material.resource {
-                resource::ResData(ref rd) => rd,
-                _ => continue
-            };
-            */
-
-            /*
-            match mesh_render.mesh.resource {
-                resource::ResData(_) => {},
-                _ => {}//continue
-            }
-            */
-
             let rp : &mut Box<RenderPass>  = self.passes.find_or_insert_with(
                 mesh_render_material.name.clone(),
                 |key| box RenderPass::new(mat.clone()));
 
-            //println!("borrow object name");
-            //println!("adding object {}", oc.borrow().name);
-            //println!("borrow object name end");
             rp.objects.push(o.clone());
-
-            //let v : &mut ResTest<T>  = ms1w.find_or_insert_with(String::from_str(name), 
-            //    |key | ResNone);
-
-            //r.pass.objects.push((*o).clone());
         }
     }
 

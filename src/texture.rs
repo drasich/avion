@@ -44,7 +44,7 @@ impl Texture
             return
         }
 
-        let result = png::load_png(&Path::new("image/base_skeleton_col.png"));
+        let result = png::load_png(&Path::new(self.name.as_slice()));
         
         match (result) {
             Err(e) => {},
@@ -71,6 +71,8 @@ impl Texture
                         img.width as c_uint,
                         img.height as c_uint
                         );
+
+                    self.cgl_texture = Some(cgltex);
                 }
                 self.state = 2;
             }

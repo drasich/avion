@@ -1,0 +1,10 @@
+{
+  "name": "material/simple2.mat",
+  "shader": {
+    "name": "shader/simple.sh"
+  },
+  "state": 0,
+  "texture": {
+    "name": "image/tex_ground.png"
+  }
+}

@@ -34,7 +34,6 @@ mod texture;
 
 fn main() {
 
-    //let t = texture::Texture::new("image/base_skeleton_col.png");
     //spawn(proc() {
     //
     /*

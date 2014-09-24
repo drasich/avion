@@ -59,10 +59,10 @@
       "name": "nouvel object",
       "mesh_render": {
         "mesh": {
-          "name": "model/skeletonmesh.mesh"
+          "name": "model/plane_xy.mesh"
         },
         "material": {
-          "name": "material/simple.mat"
+          "name": "material/simple2.mat"
         }
       },
       "position": {
@@ -77,9 +77,9 @@
         "w": 1
       },
       "scale": {
-        "x": 1,
-        "y": 1,
-        "z": 1
+        "x": 51,
+        "y": 51,
+        "z": 51
       }
     }
   ]
