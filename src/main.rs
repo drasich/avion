@@ -54,23 +54,28 @@ fn main() {
     let mut cam = camera::Camera::new();
 
     let scene_path = "scene/simple.scene";
-    let mut scene = scene::Scene::new_from_file(scene_path);
+    //let mut scene = scene::Scene::new_from_file(scene_path);
 
     let mut r = box render::Render { 
-            passes : HashMap::new(),
+        passes : HashMap::new(),
+        /*
         pass :box render::RenderPass{
-                  name : String::from_str("passtest"),
-                  material : mat.clone(),
-                  objects : DList::new(),
-                  camera : Rc::new(RefCell::new(cam)),
-                  mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
-                  shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
-                  texture_manager : Arc::new(RWLock::new(resource::ResourceManager::new()))
-              },
-              request_manager : box render::RequestManager {
-                                    requests : DList::new(),
-                                    requests_material : DList::new()
-                                }
+            name : String::from_str("passtest"),
+            material : mat.clone(),
+            objects : DList::new(),
+            camera : Rc::new(RefCell::new(cam)),
+        },
+        */
+        request_manager : box render::RequestManager {
+                              requests : DList::new(),
+                              requests_material : DList::new()
+                          },
+
+        mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+        shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+        texture_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+        material_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+        scene : box scene::Scene::new_from_file(scene_path)
     };
 
         /*
@@ -78,11 +83,13 @@ fn main() {
             box render::Request { resource : mat.clone() });
             */
 
-        r.prepare_passes(&scene);
+        //r.prepare_passes();
 
+        /*
         for o in scene.objects.iter() {
             r.pass.objects.push((*o).clone());
         }
+        */
 
 
         /*
@@ -116,7 +123,7 @@ fn main() {
         }
         */
 
-        scene.save();
+        //scene.save();
 
         unsafe {
             render::draw_callback_set(render::draw_cb, &*r);

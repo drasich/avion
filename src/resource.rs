@@ -103,6 +103,7 @@ impl Create for shader::Material
     fn inittt(&mut self)
     {
         //TODO
+        self.read();
     }
 }
 

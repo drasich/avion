@@ -93,9 +93,6 @@ pub struct RenderPass
     //pub objects : DList<object::Object>,
     pub objects : DList<Rc<RefCell<object::Object>>>,
     pub camera : Rc<RefCell<camera::Camera>>,
-    pub mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
-    pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
-    pub texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>
 }
 
 fn resource_get<T:'static+resource::Create+Send+Sync>(
@@ -126,14 +123,18 @@ fn resource_get<T:'static+resource::Create+Send+Sync>(
 
 impl RenderPass
 {
-    /*
-    pub new() -> RenderPass
+    pub fn new(material : Arc<RWLock<shader::Material>>) -> RenderPass
     {
+        //TODO 
+        let mut cam = camera::Camera::new();
+
         RenderPass {
-            name : String::from_str("yep"),
-        }
+                  name : String::from_str("passtest"),
+                  material : material.clone(),
+                  objects : DList::new(),
+                  camera : Rc::new(RefCell::new(cam)),
+              }
     }
-    */
 
     pub fn init(&mut self)
     {
@@ -149,7 +150,11 @@ impl RenderPass
         */
     }
 
-    pub fn draw_frame(&self) -> ()
+    pub fn draw_frame(&self,
+                      mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
+                      shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
+                      texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>
+                     ) -> ()
     {
         println!("draw frame");
         {
@@ -159,7 +164,7 @@ impl RenderPass
             match *texres  {
                 None => {},
                 Some(ref mut t) => {
-                    let mut yep = resource_get(&mut *self.texture_manager.write(), t);
+                    let mut yep = resource_get(&mut *texture_manager.write(), t);
                     match yep.clone() {
                         None => {},
                         Some(yy) => {
@@ -184,7 +189,7 @@ impl RenderPass
             match *shaderres  {
                 None => {},
                 Some(ref mut s) => {
-                    yep = resource_get(&mut *self.shader_manager.write(), s);
+                    yep = resource_get(&mut *shader_manager.write(), s);
                     match yep.clone() {
                         None => {},
                         Some(yy) => {
@@ -217,7 +222,9 @@ impl RenderPass
 
         match yep
         {
-            None => return,
+            None => {
+                println!("something wrong with the shader ");
+                return;},
             Some(ref sh) => {
                 c = sh.clone();
                 cr = c.read();
@@ -234,7 +241,7 @@ impl RenderPass
         //match material.texture  {
             None => {},
             Some(ref mut t) => {
-                let mut yep = resource_get(&mut *self.texture_manager.write(), t);
+                let mut yep = resource_get(&mut *texture_manager.write(), t);
                 match yep {
                     Some(yoyo) => {
                         shader.uniform_set("texture", & *yoyo.read());
@@ -253,7 +260,7 @@ impl RenderPass
         for o in self.objects.iter() {
             let mut ob = o.borrow_mut();
             //RenderPass::draw_object(shader, &*ob, &matrix);
-            self.draw_object(shader, &mut *ob, &matrix);
+            self.draw_object(shader, &mut *ob, &matrix, mesh_manager.clone());
         }
     }
 
@@ -261,10 +268,12 @@ impl RenderPass
         &self,
         shader : &shader::Shader,
         ob : &mut object::Object,
-        matrix : &matrix::Matrix4)
+        matrix : &matrix::Matrix4,
+        mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>
+        )
     {
         let themesh = match ob.mesh_render {
-            Some(ref mut mr) => resource_get(&mut *self.mesh_manager.write(), &mut mr.mesh),
+            Some(ref mut mr) => resource_get(&mut *mesh_manager.write(), &mut mr.mesh),
             None => {
                 println!("no mesh render");
                 return;
@@ -328,11 +337,17 @@ impl RenderPass
 
 pub struct Render
 {
-    pub pass : Box<RenderPass>,
+    //pub pass : Box<RenderPass>,
     pub passes : HashMap<String, Box<RenderPass>>, //TODO check
     //pub passes : DList<Box<RenderPass>>,
     //TODO remove request manager?
-    pub request_manager : Box<RequestManager>
+    pub request_manager : Box<RequestManager>,
+
+    pub mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
+    pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
+    pub texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
+    pub material_manager : Arc<RWLock<resource::ResourceManager<shader::Material>>>,
+    pub scene : Box<scene::Scene>,
 }
 
 impl Render {
@@ -366,20 +381,64 @@ impl Render {
 
     pub fn draw_frame(&mut self) -> ()
     {
+        self.prepare_passes();
         //self.request_manager.handle_requests();
-        return (*self.pass).draw_frame();
+        //return (*self.pass).draw_frame();
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                        );
+        }
     }
 
-    pub fn prepare_passes(&mut self, scene : &scene::Scene)
+    pub fn prepare_passes(&mut self)
     {
-        //let v : &mut ResTest<T>  = ms1w.find_or_insert_with(String::from_str(name), 
-         //       |key | ResNone);
-        for o in scene.objects.iter() {
-            let ob = o.borrow();
-            let mesh_render = match ob.mesh_render {
-                Some(ref mr) => mr,
+        println!("prepare passes");
+        //self.passes.clear();
+        for o in self.scene.objects.mut_iter() {
+            let oc = o.clone();
+            let mut render = &mut oc.borrow_mut().mesh_render;
+            let mut mesh_render_material = match *render {
+                Some(ref mut mr) => &mut mr.material,
                 None => continue
             };
+
+            let mut material = resource_get(&mut *self.material_manager.write(), mesh_render_material);
+
+            let mut mat = match material.clone() {
+                None => continue,
+                Some(mat) => mat
+            };
+
+            /*
+            let material = match mesh_render.material.resource {
+                resource::ResData(ref rd) => rd,
+                _ => continue
+            };
+            */
+
+            /*
+            match mesh_render.mesh.resource {
+                resource::ResData(_) => {},
+                _ => {}//continue
+            }
+            */
+
+            let rp : &mut Box<RenderPass>  = self.passes.find_or_insert_with(
+                mesh_render_material.name.clone(),
+                |key| box RenderPass::new(mat.clone()));
+
+            //println!("borrow object name");
+            //println!("adding object {}", oc.borrow().name);
+            //println!("borrow object name end");
+            rp.objects.push(o.clone());
+
+            //let v : &mut ResTest<T>  = ms1w.find_or_insert_with(String::from_str(name), 
+            //    |key | ResNone);
+
             //r.pass.objects.push((*o).clone());
         }
     }

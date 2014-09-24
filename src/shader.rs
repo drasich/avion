@@ -257,6 +257,26 @@ impl Material
         mat
     }
 
+    pub fn read(&mut self)
+    {
+        //TODO 
+
+        let file = File::open(&Path::new(self.name.as_slice())).read_to_string().unwrap();
+        let mut mat : Material = json::decode(file.as_slice()).unwrap();
+        self.name = mat.name.clone();
+        match mat.shader {
+            Some(s) => 
+                self.shader = Some(resource::ResTT::new(s.name.as_slice())),
+            None => self.shader = None
+        }
+
+        match mat.texture {
+            Some(t) => 
+                self.texture = Some(resource::ResTT::new(t.name.as_slice())),
+            None => self.texture = None
+        }
+    }
+
     pub fn save(&self)
     {
         let mut file = File::create(&Path::new(self.name.as_slice()));
