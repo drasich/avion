@@ -33,8 +33,6 @@ impl Texture
             cgl_texture : None
         };
 
-        t.load();
-
         t
     }
 
@@ -64,10 +62,22 @@ impl Texture
         match self.image  {
             None => {},
             Some(ref img) => {
+                /*
+                 let data = match img.pixels {
+                     //png::RGB8(ref pixels) => pixels.as_ptr(),
+                     png::RGBA8(ref pixels) =>  { for i in range(0u, 8) { println!("{}RGBA{} : {}", self.name, i, pixels[i])};pixels.as_ptr()},
+                     //png::K8(ref pixels) => pixels.as_ptr(),
+                     //png::KA8(ref pixels) => pixels.as_ptr(),
+                     _ => { println!("it's not rgba8"); return; }
+                 };
+                 */
+
                 unsafe {
+
                     let cgltex =  cgl_texture_init(
                         mem::transmute(img.pixels.as_ptr()),
-                        1,
+                        //mem::transmute(data),
+                        4,
                         img.width as c_uint,
                         img.height as c_uint
                         );
