@@ -1,12 +1,14 @@
-use resource;
 use std::collections::HashMap;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::stdio;
 use std::io::File;
 use std::io::BufferedReader;
 use std::uint;
+use std::collections::{DList,Deque};
+
 use vec;
 use matrix;
+use resource;
 use uniform;
 use uniform::UniformSend;
 use texture;
@@ -215,7 +217,8 @@ pub struct Material
     pub shader: Option<resource::ResTT<Shader>>,
     pub state : i32,
     //pub texture : Option<texture::Texture>
-    pub texture : Option<resource::ResTT<texture::Texture>>
+    pub texture : Option<resource::ResTT<texture::Texture>>,
+    pub textures : DList<resource::ResTT<texture::Texture>>
 }
 
 #[link(name = "cypher")]
@@ -245,7 +248,8 @@ impl Material
             name : String::from_str(name),
             shader : None,
             state : 0,
-            texture : None
+            texture : None,
+            textures : DList::new()
         }
     }
 
