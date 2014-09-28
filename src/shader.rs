@@ -222,15 +222,46 @@ impl Shader
 
 }
 
+
+#[deriving(Decodable,Encodable)]
+pub enum UniformData
+{
+    Int(i32),
+    Float(f32),
+    Color(vec::Vec4),
+}
+
+macro_rules! unimatch(
+    ($inp:expr, $uni:expr, [ $($sp:ident)|+ ]) => (
+        match $inp {
+            $(
+                $sp(x) => { x.uniform_send($uni); }
+             )+
+            _ => {}
+        }
+    );
+)
+
+impl UniformSend for UniformData
+{
+    fn uniform_send(&self, uni : *const CglShaderUniform) ->()
+    {
+        unimatch!(*self, uni, [Float|Color]);
+    }
+}
+
 //#[deriving(Decodable, Encodable, Default)]
-#[deriving(Encodable, Default)]
+//#[deriving(Encodable, Default)]
 pub struct Material
 {
     pub name : String,
     pub shader: Option<resource::ResTT<Shader>>,
     pub state : i32,
-    pub textures : Vec<resource::ResTT<texture::Texture>>
+    pub textures : Vec<resource::ResTT<texture::Texture>>,
+    //pub uniforms : HashMap<String, Box<UniformSend+'static>>,
+    pub uniforms : HashMap<String, Box<UniformData>>,
 }
+
 
 /*
 impl Default for Material
@@ -274,7 +305,8 @@ impl Material
             name : String::from_str(name),
             shader : None,
             state : 0,
-            textures : Vec::new()
+            textures : Vec::new(),
+            uniforms : HashMap::new(),
         }
     }
 
@@ -294,7 +326,12 @@ impl Material
         let mut mat : Material = match json::decode(file.as_slice())
         {
             Ok(m) => m,
-            Err(e) => { println!("{} {} error reading material: {}, creating new material", file!(), line!(), e); Material::new(self.name.as_slice()) }
+            Err(e) => { 
+                println!("{}, line {}: error reading material '{}': {}, creating new material",
+                         file!(),
+                         line!(),
+                         self.name,
+                         e); Material::new(self.name.as_slice()) }
         };
 
         self.name = mat.name.clone();
@@ -314,7 +351,8 @@ impl Material
     {
         let mut file = File::create(&Path::new(self.name.as_slice()));
         let mut stdwriter = stdio::stdout();
-        let mut encoder = json::PrettyEncoder::new(&mut file);
+        //let mut encoder = json::PrettyEncoder::new(&mut file);
+        let mut encoder = json::Encoder::new(&mut file);
         self.encode(&mut encoder).unwrap();
     }
 
@@ -401,6 +439,19 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Shader {
   }
 }
 
+impl <M: Encoder<E>, E> Encodable<M, E> for Material {
+  fn encode(&self, encoder: &mut M) -> Result<(), E> {
+      encoder.emit_struct("Material", 1, |encoder| {
+          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
+          try!(encoder.emit_struct_field( "shader", 1u, |encoder| self.shader.encode(encoder)));
+          try!(encoder.emit_struct_field( "textures", 2u, |encoder| self.textures.encode(encoder)));
+          try!(encoder.emit_struct_field( "uniforms", 3u, |encoder| self.uniforms.encode(encoder)));
+          Ok(())
+      })
+  }
+}
+
+
 impl<M: Decoder<E>, E> Decodable<M, E> for Material {
   fn decode(decoder: &mut M) -> Result<Material, E> {
     decoder.read_struct("root", 0, |decoder| {
@@ -410,6 +461,8 @@ impl<M: Decoder<E>, E> Decodable<M, E> for Material {
           state : 0,
           //texture: try!(decoder.read_struct_field("texture", 0, |decoder| Decodable::decode(decoder))),
           textures: try!(decoder.read_struct_field("textures", 0, |decoder| Decodable::decode(decoder))),
+          uniforms: try!(decoder.read_struct_field("uniforms", 0, |decoder| Decodable::decode(decoder))),
+          //uniforms: HashMap::new()
         })
     })
   }

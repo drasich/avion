@@ -199,23 +199,10 @@ impl RenderPass
             }
         }
 
-
-        //let material = self.material.borrow();
-        //let mut material = self.material.write();
-
-        let shader : &shader::Shader;
-        /*
-        match (*material).shader  {
-            None => return,
-            Some(ref sh) => {
-                shader = sh;
-            }
-        }
-        */
-
         let c : Arc<RWLock<shader::Shader>>;
         let cr : RWLockReadGuard<shader::Shader>;
 
+        let shader : &shader::Shader;
         match yep
         {
             None => {
@@ -229,8 +216,9 @@ impl RenderPass
         }
 
         shader.utilise();
-        //TODO
         {
+            //TODO for shader textures, for uniform textures instead of 'for material
+            //tex/uniforms'?
             let mut material = self.material.write();
 
             let mut i = 0u32;
@@ -243,6 +231,10 @@ impl RenderPass
                     },
                     None => {}
                 }
+            }
+
+            for (k,v) in material.uniforms.iter() {
+                shader.uniform_set(k.as_slice(), &(**v));
             }
         }
 

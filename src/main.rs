@@ -1,3 +1,4 @@
+#![feature(macro_rules)]
 extern crate serialize;
 extern crate libc;
 extern crate sync;
@@ -43,12 +44,14 @@ fn main() {
             shader : Some(resource::ResTT::new("shader/simple.sh")),
             state : 0,
             //texture : Some(t)
-            textures : Vec::new()
+            textures : Vec::new(),
+            uniforms : HashMap::new(),
         }));
             mattt.write().textures.push(resource::ResTT::new("image/base_skeleton_col.png"));
+            mattt.write().uniforms.insert(String::from_str("unitest"), shader::Float(5.6f32));
     //mattt.read().savetoml();
     mattt.read().save();
-    // */
+     */
 
     /*
     let matoml = r#"name = "material/my_mat"

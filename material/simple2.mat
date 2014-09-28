@@ -8,5 +8,8 @@
     {
       "name": "image/test.png"
     }
-  ]
+  ],
+  "uniforms": {
+    "unitest": { "variant": "Float", "fields" : [5.6] }
+  }
 }
