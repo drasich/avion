@@ -253,7 +253,17 @@ impl Mesh
                for i in range(0u, count)
                {
                    let x = file.read_le_f32().unwrap();
-                   uuu.push(x as f32);
+                   //TODO invert y in png
+                   /*
+                   if i % 2u == 1u
+                   {
+                       uuu.push((1f32 - x) as f32);
+                   }
+                   else 
+                   */
+                   {
+                       uuu.push(x as f32);
+                   }
                }
 
                let bufname = String::from_str("texcoord");

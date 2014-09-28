@@ -160,18 +160,14 @@ impl RenderPass
         {
             let mut matm = self.material.write();
 
-            let mut texres = &mut matm.texture;
-            match *texres  {
-                None => {},
-                Some(ref mut t) => {
-                    let mut yep = resource_get(&mut *texture_manager.write(), t);
-                    match yep.clone() {
-                        None => {},
-                        Some(yy) => {
-                            let mut yoyo = yy.write();
-                            if yoyo.state == 1 {
-                                yoyo.init();
-                            }
+            for t in matm.textures.mut_iter() {
+                let mut yep = resource_get(&mut *texture_manager.write(), t);
+                match yep.clone() {
+                    None => {},
+                    Some(yy) => {
+                        let mut yoyo = yy.write();
+                        if yoyo.state == 1 {
+                            yoyo.init();
                         }
                     }
                 }
@@ -235,21 +231,19 @@ impl RenderPass
         shader.utilise();
         //TODO
         {
-        let mut material = self.material.write();
-        let mut texres = &mut material.texture;
-        match *texres  {
-        //match material.texture  {
-            None => {},
-            Some(ref mut t) => {
+            let mut material = self.material.write();
+
+            let mut i = 0u32;
+            for t in material.textures.mut_iter() {
                 let mut yep = resource_get(&mut *texture_manager.write(), t);
                 match yep {
                     Some(yoyo) => {
-                        shader.uniform_set("texture", & *yoyo.read());
+                        shader.texture_set("texture", & *yoyo.read(),i);
+                        i = i +1;
                     },
                     None => {}
                 }
             }
-        }
         }
 
         let cam_mat = self.camera.borrow().object.borrow().matrix_get();

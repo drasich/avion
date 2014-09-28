@@ -2,6 +2,7 @@ extern crate serialize;
 extern crate libc;
 extern crate sync;
 extern crate png;
+extern crate toml;
 
 use std::collections::{DList,HashMap};
 use std::rc::Rc;
@@ -35,17 +36,32 @@ mod texture;
 fn main() {
 
     //spawn(proc() {
-    //
     /*
-       let mut mat = Arc::new(RWLock::new( shader::Material {
-            name : String::from_str("my_mat"),
+       let mut mattt = Arc::new(RWLock::new( shader::Material {
+            name : String::from_str("material/my_mat"),
             //shader : Some(shader::Shader::new("shader/simple.sh")),
             shader : Some(resource::ResTT::new("shader/simple.sh")),
             state : 0,
             //texture : Some(t)
-            texture : Some(resource::ResTT::new("image/base_skeleton_col.png"))
+            textures : Vec::new()
         }));
-        */
+            mattt.write().textures.push(resource::ResTT::new("image/base_skeleton_col.png"));
+    //mattt.read().savetoml();
+    mattt.read().save();
+    // */
+
+    /*
+    let matoml = r#"name = "material/my_mat"
+state = 0
+[shader]
+name = "shader/simple.sh"
+[texture]
+name = "image/base_skeleton_col.png"
+"#;
+
+    let mattt = shader::Material::new_toml(matoml);
+    */
+
 
     let mut mat = Arc::new(RWLock::new(shader::Material::new_from_file("material/simple.mat")));
     mat.read().save();

@@ -1,6 +1,6 @@
 extern crate libc;
 
-use self::libc::{c_float};
+use self::libc::{c_float, c_uint};
 use shader;
 use matrix;
 use vec;
@@ -26,7 +26,9 @@ extern {
 
     pub fn cgl_shader_uniform_texture_set(
         uniform : *const shader::CglShaderUniform,
-        tex : *const texture::CglTexture) -> ();
+        tex : *const texture::CglTexture,
+        index : c_uint
+        ) -> ();
 }
 
 pub trait UniformSend
@@ -65,6 +67,7 @@ impl UniformSend for matrix::Matrix4 {
     }
 }
 
+/*
 impl UniformSend for texture::Texture {
 
     fn uniform_send(&self, uni : *const shader::CglShaderUniform) ->()
@@ -77,5 +80,24 @@ impl UniformSend for texture::Texture {
             }
         }
     }
+}
+*/
 
+pub trait TextureSend
+{
+    fn uniform_send(&self, uni : *const shader::CglShaderUniform, index : u32) ->();
+}
+
+impl TextureSend for texture::Texture {
+
+    fn uniform_send(&self, uni : *const shader::CglShaderUniform, index : u32) ->()
+    {
+        match self.cgl_texture {
+            None => {},
+            Some(t) => unsafe {
+                //TODO just one tex for now
+                cgl_shader_uniform_texture_set(uni, t, index);
+            }
+        }
+    }
 }

@@ -5,12 +5,16 @@ use std::io::File;
 use std::io::BufferedReader;
 use std::uint;
 use std::collections::{DList,Deque};
+use std::default::Default;
+use toml;
+
 
 use vec;
 use matrix;
 use resource;
 use uniform;
 use uniform::UniformSend;
+use uniform::TextureSend;
 use texture;
 
 use libc::{c_char, c_uint};
@@ -67,6 +71,14 @@ impl Shader
     {
         match self.uniforms.find(&String::from_str(name)) {
             Some(uni) => value.uniform_send(*uni),
+            None => println!("ERR!!!! : could not find such uniform '{}'",name)
+        }
+    }
+
+    pub fn texture_set(&self, name : &str, value : &TextureSend, index : u32)
+    {
+        match self.uniforms.find(&String::from_str(name)) {
+            Some(uni) => value.uniform_send(*uni, index),
             None => println!("ERR!!!! : could not find such uniform '{}'",name)
         }
     }
@@ -210,16 +222,30 @@ impl Shader
 
 }
 
-#[deriving(Decodable, Encodable)]
+//#[deriving(Decodable, Encodable, Default)]
+#[deriving(Encodable, Default)]
 pub struct Material
 {
     pub name : String,
     pub shader: Option<resource::ResTT<Shader>>,
     pub state : i32,
-    //pub texture : Option<texture::Texture>
-    pub texture : Option<resource::ResTT<texture::Texture>>,
-    pub textures : DList<resource::ResTT<texture::Texture>>
+    pub textures : Vec<resource::ResTT<texture::Texture>>
 }
+
+/*
+impl Default for Material
+{
+    fn default() -> Material {
+          Material {
+            name : String::from_str("default"),
+            shader : None,
+            state : 0,
+            texture : None,
+            textures : DList::new()
+        }
+    }
+}
+*/
 
 #[link(name = "cypher")]
 extern {
@@ -248,8 +274,7 @@ impl Material
             name : String::from_str(name),
             shader : None,
             state : 0,
-            texture : None,
-            textures : DList::new()
+            textures : Vec::new()
         }
     }
 
@@ -257,7 +282,6 @@ impl Material
     {
         let file = File::open(&Path::new(file_path)).read_to_string().unwrap();
         let mut mat : Material = json::decode(file.as_slice()).unwrap();
-
         mat
     }
 
@@ -266,7 +290,13 @@ impl Material
         //TODO 
 
         let file = File::open(&Path::new(self.name.as_slice())).read_to_string().unwrap();
-        let mut mat : Material = json::decode(file.as_slice()).unwrap();
+        //let mut mat : Material = json::decode(file.as_slice()).unwrap();
+        let mut mat : Material = match json::decode(file.as_slice())
+        {
+            Ok(m) => m,
+            Err(e) => { println!("{} {} error reading material: {}, creating new material", file!(), line!(), e); Material::new(self.name.as_slice()) }
+        };
+
         self.name = mat.name.clone();
         match mat.shader {
             Some(s) => 
@@ -274,10 +304,9 @@ impl Material
             None => self.shader = None
         }
 
-        match mat.texture {
-            Some(t) => 
-                self.texture = Some(resource::ResTT::new(t.name.as_slice())),
-            None => self.texture = None
+        for t in mat.textures.iter()
+        {
+            self.textures.push(resource::ResTT::new(t.name.as_slice()));
         }
     }
 
@@ -287,6 +316,25 @@ impl Material
         let mut stdwriter = stdio::stdout();
         let mut encoder = json::PrettyEncoder::new(&mut file);
         self.encode(&mut encoder).unwrap();
+    }
+
+    pub fn savetoml(&self)
+    {
+        /*
+        let mut encoder = toml::Encoder::new();
+        let yep = self.encode(&mut encoder).unwrap();
+        println!("yep : {} ", yep );
+        //println!("encoder : {} ", encoder );
+        println!("encoder toml : {} ", encoder.toml );
+        */
+        let s = toml::encode_str(self);
+        println!("encoder toml : {} ", s );
+    }
+
+    pub fn new_toml(s : &str) -> Material
+    {
+        let mut mat : Material = toml::decode_str(s).unwrap();
+        mat
     }
 
 
@@ -348,6 +396,20 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Shader {
              vert : None,
              frag : None,
              state : 0
+        })
+    })
+  }
+}
+
+impl<M: Decoder<E>, E> Decodable<M, E> for Material {
+  fn decode(decoder: &mut M) -> Result<Material, E> {
+    decoder.read_struct("root", 0, |decoder| {
+         Ok(Material{
+          name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
+          shader: try!(decoder.read_struct_field("shader", 0, |decoder| Decodable::decode(decoder))),
+          state : 0,
+          //texture: try!(decoder.read_struct_field("texture", 0, |decoder| Decodable::decode(decoder))),
+          textures: try!(decoder.read_struct_field("textures", 0, |decoder| Decodable::decode(decoder))),
         })
     })
   }

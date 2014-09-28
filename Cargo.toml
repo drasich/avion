@@ -16,3 +16,7 @@ git = "https://github.com/sebcrozet/rust-png.git"
 #[dependencies.cypher]
 
 #git = "https://github.com/drasich/cypher.git"
+
+[dependencies.toml]
+git = "https://github.com/alexcrichton/toml-rs"
+
