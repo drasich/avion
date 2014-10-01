@@ -6,6 +6,7 @@ use std::cell::RefCell;
 use libc::{c_char,c_uint};
 use sync::{RWLock, Arc,RWLockReadGuard};
 use std::collections::HashMap;
+use std::collections::hashmap::{Occupied,Vacant};
 
 use resource;
 use shader;
@@ -48,13 +49,13 @@ impl RequestManager
 {
     pub fn handle_requests(&mut self)
     {
-        for req in self.requests.mut_iter() {
+        for req in self.requests.iter_mut() {
             req.handle();
         }
 
         self.requests.clear();
 
-        for req in self.requests_material.mut_iter() {
+        for req in self.requests_material.iter_mut() {
             req.handle();
         }
 
@@ -126,7 +127,7 @@ impl RenderPass
     pub fn new(material : Arc<RWLock<shader::Material>>) -> RenderPass
     {
         //TODO 
-        let mut cam = camera::Camera::new();
+        let cam = camera::Camera::new();
 
         RenderPass {
                   name : String::from_str("passtest"),
@@ -160,8 +161,8 @@ impl RenderPass
         {
             let mut matm = self.material.write();
 
-            for t in matm.textures.mut_iter() {
-                let mut yep = resource_get(&mut *texture_manager.write(), t);
+            for t in matm.textures.iter_mut() {
+                let yep = resource_get(&mut *texture_manager.write(), t);
                 match yep.clone() {
                     None => {},
                     Some(yy) => {
@@ -181,7 +182,7 @@ impl RenderPass
             //let mut matm = self.material.borrow_mut();
             let mut matm = self.material.write();
 
-            let mut shaderres = &mut matm.shader;
+            let shaderres = &mut matm.shader;
             match *shaderres  {
                 None => {},
                 Some(ref mut s) => {
@@ -222,8 +223,8 @@ impl RenderPass
             let mut material = self.material.write();
 
             let mut i = 0u32;
-            for t in material.textures.mut_iter() {
-                let mut yep = resource_get(&mut *texture_manager.write(), t);
+            for t in material.textures.iter_mut() {
+                let yep = resource_get(&mut *texture_manager.write(), t);
                 match yep {
                     Some(yoyo) => {
                         shader.texture_set("texture", & *yoyo.read(),i);
@@ -361,9 +362,11 @@ impl Render {
     {
     }
 
+    /*
     pub fn draw(&mut self)
     {
     }
+    */
 
     pub fn draw_frame(&mut self) -> ()
     {
@@ -388,24 +391,25 @@ impl Render {
         }
 
         //self.passes.clear();
-        for o in self.scene.objects.mut_iter() {
+        for o in self.scene.objects.iter_mut() {
             let oc = o.clone();
-            let mut render = &mut oc.borrow_mut().mesh_render;
-            let mut mesh_render_material = match *render {
+            let render = &mut oc.borrow_mut().mesh_render;
+            let mesh_render_material = match *render {
                 Some(ref mut mr) => &mut mr.material,
                 None => continue
             };
 
-            let mut material = resource_get(&mut *self.material_manager.write(), mesh_render_material);
+            let material = resource_get(&mut *self.material_manager.write(), mesh_render_material);
 
-            let mut mat = match material.clone() {
+            let mat = match material.clone() {
                 None => continue,
                 Some(mat) => mat
             };
 
-            let rp : &mut Box<RenderPass>  = self.passes.find_or_insert_with(
-                mesh_render_material.name.clone(),
-                |key| box RenderPass::new(mat.clone()));
+            let rp = match self.passes.entry(mesh_render_material.name.clone()) {
+                Vacant(entry) => entry.set(box RenderPass::new(mat.clone())),
+                Occupied(entry) => entry.into_mut(),
+            };
 
             rp.objects.push(o.clone());
         }

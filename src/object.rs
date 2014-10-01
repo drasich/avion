@@ -1,12 +1,6 @@
-use std::rc::Rc;
-use std::cell::RefCell;
-use serialize::json;
-
 use vec;
 use matrix;
-use mesh;
 use mesh_render;
-use resource;
 
 #[deriving(Decodable, Encodable)]
 pub struct Object
@@ -31,10 +25,12 @@ impl Object
         }
     }
 
-    pub fn newRef(name : &str) -> Rc<RefCell<Object>>
+    /*
+    pub fn new_ref(name : &str) -> Rc<RefCell<Object>>
     {
         Rc::new(RefCell::new(Object::new(name)))
     }
+    */
 
 
     pub fn empty() -> Object

@@ -7,6 +7,7 @@ pub struct Matrix4
     data : [f64, .. 16]
 }
 
+/*
 pub struct Matrix<T>
 {
     data : [T, .. 16]
@@ -26,6 +27,7 @@ impl Matrix<f64>
         }
     }
 }
+*/
 
 impl Matrix4
 {
@@ -249,22 +251,22 @@ impl Matrix4
         let mut v4 = m21 * m33 - m23 * m31;
         let mut v5 = m22 * m33 - m23 * m32;
 
-        let t00 = (v5 * m11 - v4 * m12 + v3 * m13);
+        let t00 = v5 * m11 - v4 * m12 + v3 * m13;
         let t10 = - (v5 * m10 - v2 * m12 + v1 * m13);
-        let t20 = (v4 * m10 - v2 * m11 + v0 * m13);
+        let t20 = v4 * m10 - v2 * m11 + v0 * m13;
         let t30 = - (v3 * m10 - v1 * m11 + v0 * m12);
 
-        let invDet = 1f64 / (t00 * m00 + t10 * m01 + t20 * m02 + t30 * m03);
+        let inv_det = 1f64 / (t00 * m00 + t10 * m01 + t20 * m02 + t30 * m03);
 
-        let d00 = t00 * invDet;
-        let d10 = t10 * invDet;
-        let d20 = t20 * invDet;
-        let d30 = t30 * invDet;
+        let d00 = t00 * inv_det;
+        let d10 = t10 * inv_det;
+        let d20 = t20 * inv_det;
+        let d30 = t30 * inv_det;
 
-        let d01 = - (v5 * m01 - v4 * m02 + v3 * m03) * invDet;
-        let d11 = (v5 * m00 - v2 * m02 + v1 * m03) * invDet;
-        let d21 = - (v4 * m00 - v2 * m01 + v0 * m03) * invDet;
-        let d31 = (v3 * m00 - v1 * m01 + v0 * m02) * invDet;
+        let d01 = - (v5 * m01 - v4 * m02 + v3 * m03) * inv_det;
+        let d11 = (v5 * m00 - v2 * m02 + v1 * m03) * inv_det;
+        let d21 = - (v4 * m00 - v2 * m01 + v0 * m03) * inv_det;
+        let d31 = (v3 * m00 - v1 * m01 + v0 * m02) * inv_det;
 
         v0 = m10 * m31 - m11 * m30;
         v1 = m10 * m32 - m12 * m30;
@@ -273,10 +275,10 @@ impl Matrix4
         v4 = m11 * m33 - m13 * m31;
         v5 = m12 * m33 - m13 * m32;
 
-        let d02 = (v5 * m01 - v4 * m02 + v3 * m03) * invDet;
-        let d12 = - (v5 * m00 - v2 * m02 + v1 * m03) * invDet;
-        let d22 = (v4 * m00 - v2 * m01 + v0 * m03) * invDet;
-        let d32 = - (v3 * m00 - v1 * m01 + v0 * m02) * invDet;
+        let d02 = (v5 * m01 - v4 * m02 + v3 * m03) * inv_det;
+        let d12 = - (v5 * m00 - v2 * m02 + v1 * m03) * inv_det;
+        let d22 = (v4 * m00 - v2 * m01 + v0 * m03) * inv_det;
+        let d32 = - (v3 * m00 - v1 * m01 + v0 * m02) * inv_det;
 
         v0 = m21 * m10 - m20 * m11;
         v1 = m22 * m10 - m20 * m12;
@@ -285,10 +287,10 @@ impl Matrix4
         v4 = m23 * m11 - m21 * m13;
         v5 = m23 * m12 - m22 * m13;
 
-        let d03 = - (v5 * m01 - v4 * m02 + v3 * m03) * invDet;
-        let d13 = (v5 * m00 - v2 * m02 + v1 * m03) * invDet;
-        let d23 = - (v4 * m00 - v2 * m01 + v0 * m03) * invDet;
-        let d33 = (v3 * m00 - v1 * m01 + v0 * m02) * invDet;
+        let d03 = - (v5 * m01 - v4 * m02 + v3 * m03) * inv_det;
+        let d13 = (v5 * m00 - v2 * m02 + v1 * m03) * inv_det;
+        let d23 = - (v4 * m00 - v2 * m01 + v0 * m03) * inv_det;
+        let d33 = (v3 * m00 - v1 * m01 + v0 * m02) * inv_det;
 
         Matrix4 { data : [
             d00, d01, d02, d03,

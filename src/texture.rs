@@ -1,8 +1,9 @@
 use png;
 use libc::{c_uint, c_void};
-use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use serialize::{Encodable, Encoder, Decoder, Decodable};
 use std::mem;
 
+#[repr(C)]
 pub struct CglTexture;
 
 #[link(name = "cypher")]
@@ -26,7 +27,7 @@ impl Texture
 {
     pub fn new(name :&str) -> Texture
     {
-        let mut t = Texture{
+        let t = Texture{
             name: String::from_str(name),
             state : 0,
             image : None,
@@ -44,8 +45,8 @@ impl Texture
 
         let result = png::load_png(&Path::new(self.name.as_slice()));
         
-        match (result) {
-            Err(e) => {},
+        match result {
+            Err(_) => {},
             Ok(img) => {
                 self.image = Some(img);
                 self.state = 1;

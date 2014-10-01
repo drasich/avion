@@ -19,8 +19,11 @@ use texture;
 
 use libc::{c_char, c_uint};
 
+#[repr(C)]
 pub struct CglShader;
+#[repr(C)]
 pub struct CglShaderAttribute;
+#[repr(C)]
 pub struct CglShaderUniform;
 
 pub struct Shader
@@ -351,8 +354,8 @@ impl Material
     {
         let mut file = File::create(&Path::new(self.name.as_slice()));
         let mut stdwriter = stdio::stdout();
-        //let mut encoder = json::PrettyEncoder::new(&mut file);
-        let mut encoder = json::Encoder::new(&mut file);
+        let mut encoder = json::PrettyEncoder::new(&mut file);
+        //let mut encoder = json::Encoder::new(&mut file);
         self.encode(&mut encoder).unwrap();
     }
 

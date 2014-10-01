@@ -6,10 +6,6 @@ extern crate png;
 extern crate toml;
 
 use std::collections::{DList,HashMap};
-use std::rc::Rc;
-use std::cell::RefCell;
-use std::f64::consts;
-use serialize::json::ToJson;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::stdio;
 use std::io::File;
@@ -66,10 +62,10 @@ name = "image/base_skeleton_col.png"
     */
 
 
-    let mut mat = Arc::new(RWLock::new(shader::Material::new_from_file("material/simple.mat")));
+    let mat = Arc::new(RWLock::new(shader::Material::new_from_file("material/simple.mat")));
     mat.read().save();
 
-    let mut cam = camera::Camera::new();
+    //let cam = camera::Camera::new();
 
     let scene_path = "scene/simple.scene";
     //let mut scene = scene::Scene::new_from_file(scene_path);

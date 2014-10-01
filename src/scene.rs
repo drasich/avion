@@ -1,11 +1,11 @@
 use object;
-use std::collections::{DList,Deque};
+//use std::collections::{DList,Deque};
+use std::collections::{DList};
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::io::File;
-use std::io::stdio;
-use serialize::json::ToJson;
-use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+//use serialize::{Encodable, Encoder, Decoder, Decodable};
+use serialize::{json, Encodable, Encoder, Decoder};
 
 
 #[deriving(Decodable, Encodable)]
@@ -28,7 +28,7 @@ impl Scene
     pub fn new_from_file(file_path : &str) -> Scene
     {
         let file = File::open(&Path::new(file_path)).read_to_string().unwrap();
-        let mut scene : Scene = json::decode(file.as_slice()).unwrap();
+        let scene : Scene = json::decode(file.as_slice()).unwrap();
 
         scene
     }
@@ -36,7 +36,7 @@ impl Scene
     pub fn save(&self)
     {
         let mut file = File::create(&Path::new(self.name.as_slice()));
-        let mut stdwriter = stdio::stdout();
+        //let mut stdwriter = stdio::stdout();
         //let mut encoder = json::Encoder::new(&mut stdwriter);
         //let mut encoder = json::PrettyEncoder::new(&mut stdwriter);
         let mut encoder = json::PrettyEncoder::new(&mut file);

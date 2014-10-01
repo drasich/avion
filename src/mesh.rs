@@ -8,6 +8,7 @@ use std::mem;
 use resource;
 use shader;
 
+#[repr(C)]
 pub struct CglBuffer;
 
 #[link(name = "cypher")]

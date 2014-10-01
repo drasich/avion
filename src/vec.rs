@@ -1,5 +1,3 @@
-use serialize::json;
-use std::f64::consts;
 use std::fmt;
 
 #[deriving(Decodable, Encodable)]

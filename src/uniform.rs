@@ -1,6 +1,5 @@
 extern crate libc;
 
-use serialize::{Encodable, Encoder, Decoder, Decodable};
 use self::libc::{c_float, c_uint};
 use shader;
 use matrix;
