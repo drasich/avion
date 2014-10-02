@@ -16,49 +16,6 @@ use matrix;
 use texture;
 use scene;
 
-pub struct Request<T>
-{
-    //pub mesh : Rc<RefCell<mesh::Mesh>>
-    pub resource : Rc<RefCell<T>>
-    //pub resource : Rc<RefCell<resource::ResourceS>>
-}
-
-impl<T : resource::ResourceT> Request<T>
-{
-    pub fn handle(&mut self)
-    {
-        let mut resource = self.resource.borrow_mut();
-        resource.init();
-    }
-}
-
-pub struct RequestManager
-{
-   pub requests : DList<Box<Request<mesh::Mesh>>>,
-   pub requests_material : DList<Box<Request<shader::Material>>>
-   //pub requests : DList<Box<Request>>
-}
-
-impl RequestManager
-{
-    pub fn handle_requests(&mut self)
-    {
-        for req in self.requests.iter_mut() {
-            req.handle();
-        }
-
-        self.requests.clear();
-
-        for req in self.requests_material.iter_mut() {
-            req.handle();
-        }
-
-        self.requests_material.clear();
-
-    }
-
-}
-
 #[link(name = "cypher")]
 extern {
     pub fn draw_callback_set(
@@ -81,11 +38,7 @@ pub extern fn draw_cb(r : *mut Render) -> () {
 pub struct RenderPass
 {
     pub name : String,
-    //pub material : Arc<shader::Material>,
-    //pub material : Box<shader::Material>,
-    //pub material : Rc<RefCell<shader::Material>>,
     pub material : Arc<RWLock<shader::Material>>,
-    //pub objects : DList<object::Object>,
     pub objects : DList<Rc<RefCell<object::Object>>>,
     pub camera : Rc<RefCell<camera::Camera>>,
 }
@@ -98,18 +51,13 @@ fn resource_get<T:'static+resource::Create+Send+Sync>(
     let mut the_res : Option<Arc<RWLock<T>>> = None;
     match res.resource{
         resource::ResNone => {
-            //rc_mesh = self.mesh_manager.borrow_mut().request_use(r.name.as_slice());
-            //ob.mesht.resource = self.mesh_manager.borrow_mut().request_use(ob.mesht.name.as_slice());
-            println!("resource is none I request it");
             res.resource = manager.request_use(res.name.as_slice());
         },
         resource::ResData(ref data) => {
-            //println!("now I have some data!!! and I can use it !!!");
             the_res = Some(data.clone());
         },
         resource::ResWait => {
             res.resource = manager.request_use(res.name.as_slice());
-            println!("now I have to wait");
         }
     }
 
@@ -129,20 +77,6 @@ impl RenderPass
                   objects : DList::new(),
                   camera : Rc::new(RefCell::new(cam)),
               }
-    }
-
-    pub fn init(&mut self)
-    {
-        /*
-        for o in self.objects.mut_iter() {
-            match (*o).mesh {
-                None => continue,
-                Some(ref mut m) => if m.state == 0 {
-                    mesh::mesh_buffer_init(m);
-                }
-            }
-        }
-        */
     }
 
     pub fn draw_frame(&self,
@@ -318,12 +252,7 @@ impl RenderPass
 
 pub struct Render
 {
-    //pub pass : Box<RenderPass>,
     pub passes : HashMap<String, Box<RenderPass>>, //TODO check
-    //pub passes : DList<Box<RenderPass>>,
-    //TODO remove request manager?
-    pub request_manager : Box<RequestManager>,
-
     pub mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
     pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
     pub texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,

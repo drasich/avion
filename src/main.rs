@@ -70,30 +70,12 @@ name = "image/base_skeleton_col.png"
 
     let mut r = box render::Render { 
         passes : HashMap::new(),
-        /*
-        pass :box render::RenderPass{
-            name : String::from_str("passtest"),
-            material : mat.clone(),
-            objects : DList::new(),
-            camera : Rc::new(RefCell::new(cam)),
-        },
-        */
-        request_manager : box render::RequestManager {
-                              requests : DList::new(),
-                              requests_material : DList::new()
-                          },
-
         mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
         shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
         texture_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
         material_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
         scene : box scene::Scene::new_from_file(scene_path)
     };
-
-        /*
-        r.request_manager.requests_material.push(
-            box render::Request { resource : mat.clone() });
-            */
 
         //r.prepare_passes();
 
