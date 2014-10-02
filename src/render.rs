@@ -1,9 +1,8 @@
-
 //use std::sync::Arc;
-use std::collections::{DList,Deque};
+use std::collections::{DList};
 use std::rc::Rc;
 use std::cell::RefCell;
-use libc::{c_char,c_uint};
+use libc::{c_uint};
 use sync::{RWLock, Arc,RWLockReadGuard};
 use std::collections::HashMap;
 use std::collections::hashmap::{Occupied,Vacant};
@@ -16,11 +15,6 @@ use camera;
 use matrix;
 use texture;
 use scene;
-
-pub struct MeshManager
-{
-    pub mesh : Rc<RefCell<mesh::Mesh>>
-}
 
 pub struct Request<T>
 {

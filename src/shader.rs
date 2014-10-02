@@ -3,16 +3,14 @@ use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::stdio;
 use std::io::File;
 use std::io::BufferedReader;
-use std::uint;
-use std::collections::{DList,Deque};
-use std::default::Default;
+//use std::default::Default;
 use toml;
 
 
 use vec;
-use matrix;
+//use matrix;
 use resource;
-use uniform;
+//use uniform;
 use uniform::UniformSend;
 use uniform::TextureSend;
 use texture;
@@ -97,19 +95,6 @@ impl Shader
         }
     }
 
-    pub fn new_old(cgl_shader : *const CglShader) -> Shader
-    {
-        Shader {
-            name : String::from_str("old"),
-            cgl_shader : Some(cgl_shader),
-            attributes : HashMap::new(),
-            uniforms : HashMap::new(),
-            vert : None,
-            frag : None,
-            state : 0
-        }
-    }
-
     pub fn new(name : &str) -> Shader
     {
         Shader {
@@ -132,12 +117,12 @@ impl Shader
         let mut vert : String;
 
         match file.read_line() {
-            Ok(l) => { vert = l; vert.pop_char(); },
+            Ok(l) => { vert = l; vert.pop(); },
             Err(_) => return
         }
  
         match file.read_line() {
-            Ok(l) => { frag = l; frag.pop_char();},
+            Ok(l) => { frag = l; frag.pop();},
             Err(_) => return
         }
 
@@ -316,7 +301,7 @@ impl Material
     pub fn new_from_file(file_path : &str) -> Material
     {
         let file = File::open(&Path::new(file_path)).read_to_string().unwrap();
-        let mut mat : Material = json::decode(file.as_slice()).unwrap();
+        let mat : Material = json::decode(file.as_slice()).unwrap();
         mat
     }
 
@@ -326,8 +311,7 @@ impl Material
 
         let file = File::open(&Path::new(self.name.as_slice())).read_to_string().unwrap();
         //let mut mat : Material = json::decode(file.as_slice()).unwrap();
-        let mut mat : Material = match json::decode(file.as_slice())
-        {
+        let mat : Material = match json::decode(file.as_slice()){
             Ok(m) => m,
             Err(e) => { 
                 println!("{}, line {}: error reading material '{}': {}, creating new material",
@@ -353,7 +337,7 @@ impl Material
     pub fn save(&self)
     {
         let mut file = File::create(&Path::new(self.name.as_slice()));
-        let mut stdwriter = stdio::stdout();
+        //let mut stdwriter = stdio::stdout();
         let mut encoder = json::PrettyEncoder::new(&mut file);
         //let mut encoder = json::Encoder::new(&mut file);
         self.encode(&mut encoder).unwrap();
@@ -374,7 +358,7 @@ impl Material
 
     pub fn new_toml(s : &str) -> Material
     {
-        let mut mat : Material = toml::decode_str(s).unwrap();
+        let mat : Material = toml::decode_str(s).unwrap();
         mat
     }
 

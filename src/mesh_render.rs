@@ -2,9 +2,6 @@ use shader;
 use mesh;
 use resource;
 
-use std::rc::Rc;
-use std::cell::RefCell;
-
 #[deriving(Decodable, Encodable)]
 pub struct MeshRender
 {

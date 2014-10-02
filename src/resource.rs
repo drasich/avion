@@ -1,16 +1,15 @@
 use mesh;
 use texture;
 use shader;
-use serialize::{json, Encodable, Encoder, Decoder, Decodable};
-use std::rc::Rc;
-use std::cell::RefCell;
-//use std::collections::{DList,Deque};
+use serialize::{Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
+use std::collections::hashmap::{Occupied,Vacant};
 use sync::{RWLock, Arc};
-use std::io::timer::sleep;
+//use std::io::timer::sleep;
 //use std::time::duration::Duration;
 
 
+/*
 //#[deriving(Decodable, Encodable)]
 pub enum Resource {
     Mesh(mesh::Mesh),
@@ -22,6 +21,7 @@ pub struct ResourceS
     state : int,
     data : Resource
 }
+*/
 
 pub trait ResourceT  {
     fn init(&mut self);
@@ -137,11 +137,12 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
         let ms1 = self.resources.clone();
         let mut ms1w = ms1.write();
 
-        let v : &mut ResTest<T>  = ms1w.find_or_insert_with(String::from_str(name), 
-                |key | ResNone);
+        let v : &mut ResTest<T> = match ms1w.entry(String::from_str(name)) {
+            Vacant(entry) => entry.set(ResNone),
+            Occupied(entry) => entry.into_mut(),
+        };
 
         let s = String::from_str(name);
-
         let msc = self.resources.clone();
 
         match *v 
@@ -163,16 +164,19 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                 spawn( proc() {
                     loop {
                     match rx.try_recv() {
-                        Err(e) => {},//println!("nothing"),
+                        Err(_) => {},//println!("nothing"),
                         Ok(value) =>  { 
                             //println!("received val {} ", value.read().name);
 
                             let mut mscwww = msc.write();
 
-                            let newval = mscwww.insert_or_update_with(
-                                s.clone(),
-                                ResNone,
-                                |_key, val| *val = ResData(value.clone()));
+                            match mscwww.entry(s.clone()) {
+                                Vacant(entry) => entry.set(ResNone),
+                                Occupied(mut entry) => { 
+                                    *entry.get_mut() = ResData(value.clone());
+                                    entry.into_mut()
+                                }
+                            };
 
                             break; }
                     }
@@ -189,29 +193,19 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                 println!("request not yet, please wait");
                 return ResWait;
             }
-
-        }
-
-        return ResNone;
-    }
-
-    pub fn start(&self)
-    {
-        //to be spawn
-        loop{
-            //TODO for all resources state that are receiver, try to receive
         }
     }
-
 }
 
 
 //#[deriving(Decodable, Encodable)]
+/*
 pub struct ResourceRef
 {
     pub name : String,
     pub resource : Resource
 }
+*/
 
 impl <S: Encoder<E>, E, T> Encodable<S, E> for ResTT<T> {
   fn encode(&self, encoder: &mut S) -> Result<(), E> {

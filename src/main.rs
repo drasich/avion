@@ -6,14 +6,12 @@ extern crate png;
 extern crate toml;
 
 use std::collections::{DList,HashMap};
-use serialize::{json, Encodable, Encoder, Decoder, Decodable};
-use std::io::stdio;
-use std::io::File;
+//use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use sync::{RWLock, Arc};
 
 #[link(name = "joker")]
 extern {
-    fn simple_window_init();
+    //fn simple_window_init();
     fn elm_simple_window_main();
 }
 

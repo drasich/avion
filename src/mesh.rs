@@ -1,9 +1,9 @@
-use std::collections::{DList,Deque};
 use std::collections::HashMap;
 use std::io::File;
-use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use serialize::{Encodable, Encoder, Decoder, Decodable};
 
-use libc::{c_char, c_int, c_uint, c_void};
+//use libc::{c_char, c_int, c_uint, c_void};
+use libc::{c_uint, c_void};
 use std::mem;
 use resource;
 use shader;
@@ -68,7 +68,7 @@ pub trait BufferSend
 impl<T> BufferSend for Buffer<T> {
     fn send(&mut self) -> ()
     {
-        match (self.buffer_type) {
+        match self.buffer_type {
             Vertex => unsafe {
                 let cgl_buffer = cgl_buffer_init(
                     mem::transmute(self.data.as_ptr()),
@@ -124,7 +124,7 @@ impl Mesh
 {
     pub fn new() -> Mesh
     {
-       let mut m = Mesh {
+       let m = Mesh {
            name : String::from_str("mesh_new"),
            state : 0,
            buffers : HashMap::new(),
@@ -145,7 +145,7 @@ impl Mesh
 
     pub fn new_from_file(path : &str) -> Mesh
     {
-       let mut m = Mesh {
+       let m = Mesh {
            name : String::from_str(path),
            state : 0,
            buffers : HashMap::new(),
@@ -188,7 +188,7 @@ impl Mesh
            let mut vvv : Vec<f32> = Vec::with_capacity(count);
 
            println!("vertex count : {} ", vertex_count);
-           for i in range(0u, count)
+           for _ in range(0u, count)
            {
                let x = file.read_le_f32().unwrap();
                vvv.push(x);
@@ -208,7 +208,7 @@ impl Mesh
            let mut fff : Vec<u32> = Vec::with_capacity(count);
 
            println!("faces count : {} ", faces_count);
-           for i in range(0u, count)
+           for _ in range(0u, count)
            {
                let x = file.read_le_u16().unwrap();
                fff.push(x as u32);
@@ -229,7 +229,7 @@ impl Mesh
                let mut nnn : Vec<f32> = Vec::with_capacity(count);
 
                println!("normals count : {} ", normals_count);
-               for i in range(0u, count)
+               for _ in range(0u, count)
                {
                    let x = file.read_le_f32().unwrap();
                    nnn.push(x as f32);
@@ -251,7 +251,7 @@ impl Mesh
                let mut uuu : Vec<f32> = Vec::with_capacity(count);
 
                println!("uvs count : {} ", uv_count);
-               for i in range(0u, count)
+               for _ in range(0u, count)
                {
                    let x = file.read_le_f32().unwrap();
                    //TODO invert y in png
@@ -293,10 +293,8 @@ impl Mesh
     pub fn init_buffers(&mut self)
     {
         if self.state == 1 {
-            unsafe {
-                for (_,b) in self.buffers.mut_iter() {
-                    Some(b.send());
-                }
+            for (_,b) in self.buffers.iter_mut() {
+                Some(b.send());
             }
             self.state = 11;
         }
@@ -313,10 +311,8 @@ impl resource::ResourceT for Mesh
         }
         
         if self.state == 1 {
-            unsafe {
-                for (_,b) in self.buffers.mut_iter() {
-                    Some(b.send());
-                }
+            for (_,b) in self.buffers.iter_mut() {
+                Some(b.send());
             }
             self.state = 11;
         }
@@ -344,11 +340,13 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Mesh {
   }
 }
 
+/*
 //static VERTEX_DATA: [GLfloat, ..6] = [
 static VERTEX_DATA: [f32, ..6] = [
     0.0,  0.5,
     0.5, -0.5,
     -0.5, -0.5
       ];
+      */
 
 
