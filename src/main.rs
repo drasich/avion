@@ -9,10 +9,25 @@ use std::collections::{DList,HashMap};
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use sync::{RWLock, Arc};
 
+#[repr(C)]
+pub struct JkList;
+#[repr(C)]
+pub struct Tree;
+#[repr(C)]
+pub struct Creator;
+
 #[link(name = "joker")]
 extern {
     //fn simple_window_init();
     fn elm_simple_window_main();
+    fn jk_list_new() -> *const JkList;
+    fn tree_widget_new() -> *const Tree;
+    fn creator_new() -> *const Creator;
+    fn creator_tree_new(creator : *const Creator);
+
+    pub fn init_callback_set(
+        cb: extern fn() -> ()
+        ) -> ();
 }
 
 mod resource;
@@ -29,6 +44,10 @@ mod scene;
 mod texture;
 
 fn main() {
+
+    unsafe {
+    let l = jk_list_new();
+    };
 
     //spawn(proc() {
     /*
@@ -119,17 +138,23 @@ name = "image/base_skeleton_col.png"
 
         //scene.save();
 
-        unsafe {
-            render::draw_callback_set(render::draw_cb, &*r);
-        }
+    unsafe {
+        render::draw_callback_set(render::draw_cb, &*r);
+        init_callback_set(init_cb);
+    }
 
-        r.init();
-      //  r.draw();
+    r.init();
 
-    //});
     
     unsafe { 
         elm_simple_window_main();
     };
+}
+
+pub extern fn init_cb() -> () {
+    unsafe {
+        let c = creator_new();
+        creator_tree_new(c);
+    }
 }
 
