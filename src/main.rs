@@ -5,9 +5,12 @@ extern crate sync;
 extern crate png;
 extern crate toml;
 
+use libc::{c_char, c_void};
+use std::mem;
 use std::collections::{DList,HashMap};
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use sync::{RWLock, Arc};
+use std::c_str::CString;
 
 #[repr(C)]
 pub struct JkList;
@@ -22,11 +25,25 @@ extern {
     fn elm_simple_window_main();
     fn jk_list_new() -> *const JkList;
     fn tree_widget_new() -> *const Tree;
+    fn tree_register_cb(
+        tree : *mut Tree,
+        name_get : extern fn(data : *const c_void) -> *const c_char,
+        select : extern fn(data : *const c_void) -> (),
+        can_expand : extern fn(data : *const c_void) -> bool,
+        expand : extern fn(data : *const c_void) -> (),
+        );
+
+    fn tree_object_add(
+        tree : *mut Tree,
+        object : *const c_void
+        );
     fn creator_new() -> *const Creator;
-    fn creator_tree_new(creator : *const Creator);
+    fn creator_tree_new(creator : *const Creator) -> *mut Tree;
+    fn creator_button_new(creator : *const Creator);
 
     pub fn init_callback_set(
-        cb: extern fn() -> ()
+        cb: extern fn(*mut render::Render) -> (),
+        render: *const render::Render
         ) -> ();
 }
 
@@ -140,7 +157,7 @@ name = "image/base_skeleton_col.png"
 
     unsafe {
         render::draw_callback_set(render::draw_cb, &*r);
-        init_callback_set(init_cb);
+        init_callback_set(init_cb, &*r);
     }
 
     r.init();
@@ -151,10 +168,81 @@ name = "image/base_skeleton_col.png"
     };
 }
 
-pub extern fn init_cb() -> () {
+
+pub extern fn name_get(data : *const c_void) -> *const c_char {
+    let o = data as *const object::Object;
+    /*
+    unsafe {
+        //let s : String = (*o).name.clone();
+        //let sc = s.to_c_str();
+        println!("name get from rust 00000 ::::  {}", (*o).name);
+        let sc = CString::new("cccccstring".as_slice(), true);
+        let sptr = sc.as_ptr();
+        return sptr;
+    }
+    */
+    let caca = "cacabouda";
+    let cacabouda = caca.to_c_str().as_ptr();
+    unsafe {
+    let sc = CString::new(cacabouda, false);
+    return sc.as_ptr();
+    }
+    println!("name get from rust {}", cacabouda);
+    //return caca.to_c_str().as_ptr();
+    cacabouda
+}
+
+pub extern fn select(data : *const c_void) -> () {
+    println!("select !");
+}
+
+pub extern fn can_expand(data : *const c_void) -> bool {
+    return false;
+}
+
+pub extern fn expand(data : *const c_void) -> () {
+    println!("expand !");
+}
+
+
+
+/*
+        name_get : extern fn(data : *const c_void) -> *const c_char,
+        select : extern fn(data : *const c_void) -> (),
+        can_expand : extern fn(data : *const c_void) -> (),
+        expand : extern fn(data : *const c_void) -> (),
+        */
+
+pub extern fn init_cb(render: *mut render::Render) -> () {
     unsafe {
         let c = creator_new();
-        creator_tree_new(c);
+        let t = creator_tree_new(c);
+        tree_register_cb(
+            t,
+            name_get,
+            select,
+            can_expand,
+            expand);
+
+        for o in (*render).scene.objects.iter() {
+            let oc = o.clone();
+            //let oo = &mut oc.borrow();
+            let oo : &object::Object = &*oc.borrow();
+            //let oo = Object
+            //let oo : object::Object = o.;
+            println!("yoyo {} ", oo.name);
+            tree_object_add(t, mem::transmute(oo));
+            //tree_object_add(t, mem::transmute(o));
+            //tree_object_add(t, mem::transmute(&*o));
+        }
+        //let yep = (&o) as *const c_void;
+        //let yep = mem::transmute(&o);
+        //tree_object_add(t, ((&o) as *const c_void));
+        //tree_object_add(t, yep);
+        //tree_object_add(t, mem::transmute(OB));
+        //tree_object_add(t, mem::transmute(OB));
+
+        creator_button_new(c);
     }
 }
 
