@@ -191,7 +191,10 @@ pub extern fn can_expand(data : *const c_void) -> bool {
 }
 
 pub extern fn expand(data : *const c_void) -> () {
-    println!("expand !");
+    let o = data as *const object::Object;
+    unsafe {
+        println!("expand ! {} ", (*o).name);
+    }
 }
 
 pub extern fn init_cb(render: *mut render::Render) -> () {
