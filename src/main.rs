@@ -171,29 +171,19 @@ name = "image/base_skeleton_col.png"
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
     let o = data as *const object::Object;
-    /*
+
     unsafe {
-        //let s : String = (*o).name.clone();
-        //let sc = s.to_c_str();
-        println!("name get from rust 00000 ::::  {}", (*o).name);
-        let sc = CString::new("cccccstring".as_slice(), true);
-        let sptr = sc.as_ptr();
-        return sptr;
+        let cs = (*o).name.to_c_str();
+        //cs.clone().unwrap()
+        cs.unwrap()
     }
-    */
-    let caca = "cacabouda";
-    let cacabouda = caca.to_c_str().as_ptr();
-    unsafe {
-    let sc = CString::new(cacabouda, false);
-    return sc.as_ptr();
-    }
-    println!("name get from rust {}", cacabouda);
-    //return caca.to_c_str().as_ptr();
-    cacabouda
 }
 
 pub extern fn select(data : *const c_void) -> () {
-    println!("select !");
+    let o = data as *const object::Object;
+    unsafe {
+        println!("select ! {} ", (*o).name);
+    }
 }
 
 pub extern fn can_expand(data : *const c_void) -> bool {
@@ -203,15 +193,6 @@ pub extern fn can_expand(data : *const c_void) -> bool {
 pub extern fn expand(data : *const c_void) -> () {
     println!("expand !");
 }
-
-
-
-/*
-        name_get : extern fn(data : *const c_void) -> *const c_char,
-        select : extern fn(data : *const c_void) -> (),
-        can_expand : extern fn(data : *const c_void) -> (),
-        expand : extern fn(data : *const c_void) -> (),
-        */
 
 pub extern fn init_cb(render: *mut render::Render) -> () {
     unsafe {
@@ -226,21 +207,9 @@ pub extern fn init_cb(render: *mut render::Render) -> () {
 
         for o in (*render).scene.objects.iter() {
             let oc = o.clone();
-            //let oo = &mut oc.borrow();
             let oo : &object::Object = &*oc.borrow();
-            //let oo = Object
-            //let oo : object::Object = o.;
-            println!("yoyo {} ", oo.name);
             tree_object_add(t, mem::transmute(oo));
-            //tree_object_add(t, mem::transmute(o));
-            //tree_object_add(t, mem::transmute(&*o));
         }
-        //let yep = (&o) as *const c_void;
-        //let yep = mem::transmute(&o);
-        //tree_object_add(t, ((&o) as *const c_void));
-        //tree_object_add(t, yep);
-        //tree_object_add(t, mem::transmute(OB));
-        //tree_object_add(t, mem::transmute(OB));
 
         creator_button_new(c);
     }
