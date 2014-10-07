@@ -5,11 +5,12 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use sync::{RWLock, Arc,RWLockReadGuard};
 use std::io::File;
-//use serialize::{Encodable, Encoder, Decoder, Decodable};
-use serialize::{json, Encodable, Encoder, Decoder};
+use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+//use serialize::{json, Encodable, Encoder, Decoder};
 
 
-#[deriving(Decodable, Encodable)]
+//#[deriving(Decodable, Encodable)]
+//#[deriving(Decodable)]
 pub struct Scene
 {
     pub name : String,
@@ -50,3 +51,41 @@ impl Scene
     }
 
 }
+
+impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RWLock<object::Object>> {
+  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+      self.encode(encoder)
+  }
+}
+
+impl<S: Decoder<E>, E> Decodable<S, E> for Arc<RWLock<object::Object>> {
+  fn decode(decoder: &mut S) -> Result<Arc<RWLock<object::Object>>, E> {
+      Ok(Arc::new(RWLock::new(try!(Decodable::decode(decoder)))))
+  }
+}
+
+
+impl <S: Encoder<E>, E> Encodable<S, E> for Scene {
+  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+      encoder.emit_struct("Scene", 1, |encoder| {
+          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
+          try!(encoder.emit_struct_field( "objects", 1u, |encoder| self.objects.encode(encoder)));
+          Ok(())
+      })
+  }
+}
+
+impl<S: Decoder<E>, E> Decodable<S, E> for Scene {
+  fn decode(decoder: &mut S) -> Result<Scene, E> {
+    decoder.read_struct("root", 0, |decoder| {
+         Ok(Scene{
+          name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
+          //objects: DList::new(),
+          objects: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
+          //tests: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
+          tests: DList::new()
+        })
+    })
+  }
+}
+
