@@ -39,8 +39,7 @@ pub struct RenderPass
 {
     pub name : String,
     pub material : Arc<RWLock<shader::Material>>,
-    pub objects : DList<Rc<RefCell<object::Object>>>,
-    //pub objects : DList<Arc<RWLock<object::Object>>>,
+    pub objects : DList<Arc<RWLock<object::Object>>>,
     pub camera : Rc<RefCell<camera::Camera>>,
 }
 
@@ -174,8 +173,7 @@ impl RenderPass
         let matrix = cam_projection * cam_mat_inv;
 
         for o in self.objects.iter() {
-            let mut ob = o.borrow_mut();
-            //RenderPass::draw_object(shader, &*ob, &matrix);
+            let mut ob = o.write();
             self.draw_object(shader, &mut *ob, &matrix, mesh_manager.clone());
         }
     }
@@ -317,8 +315,7 @@ impl Render {
         //self.passes.clear();
         for o in self.scene.objects.iter_mut() {
             let oc = o.clone();
-            let render = &mut oc.borrow_mut().mesh_render;
-            //let render = &mut oc.write().mesh_render;
+            let render = &mut oc.write().mesh_render;
             let mesh_render_material = match *render {
                 Some(ref mut mr) => &mut mr.material,
                 None => continue

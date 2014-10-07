@@ -187,6 +187,7 @@ pub extern fn select(data : *const c_void) -> () {
 }
 
 pub extern fn can_expand(data : *const c_void) -> bool {
+    let o = data as *const object::Object;
     return false;
 }
 
@@ -210,7 +211,7 @@ pub extern fn init_cb(render: *mut render::Render) -> () {
 
         for o in (*render).scene.objects.iter() {
             let oc = o.clone();
-            let oo : &object::Object = &*oc.borrow();
+            let oo : &object::Object = &*oc.read();
             tree_object_add(t, mem::transmute(oo));
         }
 

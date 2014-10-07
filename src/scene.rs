@@ -6,16 +6,11 @@ use std::cell::RefCell;
 use sync::{RWLock, Arc,RWLockReadGuard};
 use std::io::File;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
-//use serialize::{json, Encodable, Encoder, Decoder};
 
-
-//#[deriving(Decodable, Encodable)]
-//#[deriving(Decodable)]
 pub struct Scene
 {
     pub name : String,
-    pub objects : DList<Rc<RefCell<object::Object>>>,
-    pub tests : DList<Arc<RWLock<object::Object>>>
+    pub objects : DList<Arc<RWLock<object::Object>>>
 }
 
 impl Scene
@@ -25,7 +20,6 @@ impl Scene
         Scene {
             name : String::from_str(name),
             objects : DList::new(),
-            tests : DList::new()
         }
     }
 
@@ -83,7 +77,7 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Scene {
           //objects: DList::new(),
           objects: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
           //tests: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
-          tests: DList::new()
+          //tests: DList::new()
         })
     })
   }

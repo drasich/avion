@@ -3,6 +3,7 @@ use matrix;
 use mesh_render;
 
 use std::collections::{DList};
+use sync::{RWLock, Arc};//,RWLockReadGuard};
 
 #[deriving(Decodable, Encodable)]
 pub struct Object
@@ -12,7 +13,7 @@ pub struct Object
     pub position : vec::Vec3,
     pub orientation : vec::Quat,
     pub scale : vec::Vec3,
-    //pub children : DList<Rc<RefCell<Object>>>
+    pub children : DList<Arc<RWLock<Object>>>
 }
 
 impl Object
@@ -25,7 +26,7 @@ impl Object
             position : vec::Vec3::zero(),
             orientation : vec::Quat::identity(),
             scale : vec::Vec3::one(),
-            //children : DList::new()
+            children : DList::new()
         }
     }
 
