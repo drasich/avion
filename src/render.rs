@@ -40,6 +40,7 @@ pub struct RenderPass
     pub name : String,
     pub material : Arc<RWLock<shader::Material>>,
     pub objects : DList<Rc<RefCell<object::Object>>>,
+    //pub objects : DList<Arc<RWLock<object::Object>>>,
     pub camera : Rc<RefCell<camera::Camera>>,
 }
 
@@ -317,6 +318,7 @@ impl Render {
         for o in self.scene.objects.iter_mut() {
             let oc = o.clone();
             let render = &mut oc.borrow_mut().mesh_render;
+            //let render = &mut oc.write().mesh_render;
             let mesh_render_material = match *render {
                 Some(ref mut mr) => &mut mr.material,
                 None => continue

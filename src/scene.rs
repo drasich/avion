@@ -3,6 +3,7 @@ use object;
 use std::collections::{DList};
 use std::rc::Rc;
 use std::cell::RefCell;
+use sync::{RWLock, Arc,RWLockReadGuard};
 use std::io::File;
 //use serialize::{Encodable, Encoder, Decoder, Decodable};
 use serialize::{json, Encodable, Encoder, Decoder};
@@ -12,7 +13,8 @@ use serialize::{json, Encodable, Encoder, Decoder};
 pub struct Scene
 {
     pub name : String,
-    pub objects : DList<Rc<RefCell<object::Object>>>
+    pub objects : DList<Rc<RefCell<object::Object>>>,
+    pub tests : DList<Arc<RWLock<object::Object>>>
 }
 
 impl Scene
@@ -21,7 +23,8 @@ impl Scene
     {
         Scene {
             name : String::from_str(name),
-            objects : DList::new()
+            objects : DList::new(),
+            tests : DList::new()
         }
     }
 

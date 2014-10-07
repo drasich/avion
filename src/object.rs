@@ -2,6 +2,8 @@ use vec;
 use matrix;
 use mesh_render;
 
+use std::collections::{DList};
+
 #[deriving(Decodable, Encodable)]
 pub struct Object
 {
@@ -9,7 +11,8 @@ pub struct Object
     pub mesh_render : Option<mesh_render::MeshRender>,
     pub position : vec::Vec3,
     pub orientation : vec::Quat,
-    pub scale : vec::Vec3
+    pub scale : vec::Vec3,
+    //pub children : DList<Rc<RefCell<Object>>>
 }
 
 impl Object
@@ -21,7 +24,8 @@ impl Object
             mesh_render : None,
             position : vec::Vec3::zero(),
             orientation : vec::Quat::identity(),
-            scale : vec::Vec3::one()
+            scale : vec::Vec3::one(),
+            //children : DList::new()
         }
     }
 
