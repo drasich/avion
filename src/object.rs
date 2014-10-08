@@ -52,6 +52,11 @@ impl Object
         mt * mq * ms
     }
 
+    pub fn child_add(&mut self, child : Arc<RWLock<Object>>)
+    {
+        self.children.push(child);
+    }
+
 }
 
 

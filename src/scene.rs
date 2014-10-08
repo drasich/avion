@@ -44,6 +44,18 @@ impl Scene
         self.encode(&mut encoder).unwrap();
     }
 
+    pub fn object_find(&self, name : &str) -> Option<Arc<RWLock<object::Object>>>
+    {
+        for o in self.objects.iter()
+        {
+            if o.read().name.as_slice() == name {
+                return Some(o.clone());
+            }
+        }
+
+        None
+    }
+
 }
 
 impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RWLock<object::Object>> {

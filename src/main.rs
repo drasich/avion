@@ -11,6 +11,7 @@ use std::collections::{DList,HashMap};
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use sync::{RWLock, Arc};
 use std::c_str::CString;
+use std::ptr;
 
 #[repr(C)]
 pub struct JkList;
@@ -30,12 +31,13 @@ extern {
         name_get : extern fn(data : *const c_void) -> *const c_char,
         select : extern fn(data : *const c_void) -> (),
         can_expand : extern fn(data : *const c_void) -> bool,
-        expand : extern fn(data : *const c_void) -> (),
+        expand : extern fn(tree: *mut Tree, data : *const c_void, parent: *const c_void) -> (),
         );
 
     fn tree_object_add(
         tree : *mut Tree,
-        object : *const c_void
+        object : *const c_void,
+        parent : *const c_void,
         );
     fn creator_new() -> *const Creator;
     fn creator_tree_new(creator : *const Creator) -> *mut Tree;
@@ -113,6 +115,15 @@ name = "image/base_skeleton_col.png"
         scene : box scene::Scene::new_from_file(scene_path)
     };
 
+    let oo = r.scene.object_find("yep");
+    match oo {
+        Some(o) => { println!("I found the obj");
+            o.write().child_add(Arc::new(RWLock::new(object::Object::new("my_child"))));
+        }
+        None => {}
+    }
+
+
         //r.prepare_passes();
 
         /*
@@ -188,12 +199,27 @@ pub extern fn select(data : *const c_void) -> () {
 
 pub extern fn can_expand(data : *const c_void) -> bool {
     let o = data as *const object::Object;
-    return false;
+    unsafe {
+        println!("can expand :{}", (*o).children.is_empty());
+        return !(*o).children.is_empty();
+    }
+    //return false;
 }
 
-pub extern fn expand(data : *const c_void) -> () {
+pub extern fn expand(tree: *mut Tree, data : *const c_void, parent : *const c_void) -> () {
     let o = data as *const object::Object;
+
     unsafe {
+    println!("expanding ! {} ", (*o).name);
+
+        for c in (*o).children.iter() {
+            println!("expanding ! with child {} ", (*c).read().name);
+            let oc = c.clone();
+            let oo : &object::Object = &*oc.read();
+            tree_object_add(tree, mem::transmute(oo), parent);
+        }
+
+
         println!("expand ! {} ", (*o).name);
     }
 }
@@ -212,10 +238,10 @@ pub extern fn init_cb(render: *mut render::Render) -> () {
         for o in (*render).scene.objects.iter() {
             let oc = o.clone();
             let oo : &object::Object = &*oc.read();
-            tree_object_add(t, mem::transmute(oo));
+            tree_object_add(t, mem::transmute(oo), ptr::null());
         }
 
-        creator_button_new(c);
+        //creator_button_new(c);
     }
 }
 
