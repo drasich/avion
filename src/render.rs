@@ -312,8 +312,10 @@ impl Render {
             p.objects.clear();
         }
 
+        let objects = &self.scene.objects;
         //self.passes.clear();
-        for o in self.scene.objects.iter_mut() {
+        for o in objects.iter() {
+            /*
             let oc = o.clone();
             let render = &mut oc.write().mesh_render;
             let mesh_render_material = match *render {
@@ -334,8 +336,50 @@ impl Render {
             };
 
             rp.objects.push(o.clone());
+            */
+            prepare_passes_object(o.clone(), &mut self.passes, self.material_manager.clone());
         }
     }
+}
 
+fn prepare_passes_object(o : Arc<RWLock<object::Object>>,
+    passes : &mut HashMap<String, Box<RenderPass>>, 
+    //pub mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
+    //pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
+    //pub texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
+    material_manager : Arc<RWLock<resource::ResourceManager<shader::Material>>>)
+{
+    {
+    let oc = o.clone();
+    let render = &mut oc.write().mesh_render;
+    let mesh_render_material = match *render {
+        Some(ref mut mr) => &mut mr.material,
+        None => return
+    };
+
+    let material = resource_get(&mut *material_manager.write(), mesh_render_material);
+
+    let mat = match material.clone() {
+        None => return,
+        Some(mat) => mat
+    };
+
+    {
+        let rp = match passes.entry(mesh_render_material.name.clone()) {
+            Vacant(entry) => entry.set(box RenderPass::new(mat.clone())),
+            Occupied(entry) => entry.into_mut(),
+        };
+
+        rp.objects.push(o.clone());
+    }
+    }
+
+    {
+        let occ = o.clone();
+        for c in occ.read().children.iter()
+        {
+            prepare_passes_object(c.clone(), passes, material_manager.clone());
+        }
+    }
 }
 
