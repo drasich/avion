@@ -181,46 +181,46 @@ name = "image/base_skeleton_col.png"
 
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
-    let o = data as *const object::Object;
+
+    let o : &Arc<RWLock<object::Object>> = unsafe {
+        mem::transmute(data)
+    };
+
+    let cs = o.read().name.to_c_str();
 
     unsafe {
-        let cs = (*o).name.to_c_str();
-        //cs.clone().unwrap()
         cs.unwrap()
     }
 }
 
 pub extern fn select(data : *const c_void) -> () {
-    let o = data as *const object::Object;
-    unsafe {
-        println!("select ! {} ", (*o).name);
-    }
+    let o : &Arc<RWLock<object::Object>> = unsafe {
+        mem::transmute(data)
+    };
+    println!("select ! {} ", o.read().name);
 }
 
 pub extern fn can_expand(data : *const c_void) -> bool {
-    let o = data as *const object::Object;
-    unsafe {
-        println!("can expand :{}", (*o).children.is_empty());
-        return !(*o).children.is_empty();
-    }
-    //return false;
+    let o : &Arc<RWLock<object::Object>> = unsafe {
+        mem::transmute(data)
+    };
+
+    println!("can expand :{}", o.read().children.is_empty());
+    return !o.read().children.is_empty();
 }
 
 pub extern fn expand(tree: *mut Tree, data : *const c_void, parent : *const c_void) -> () {
-    let o = data as *const object::Object;
+    let o : &Arc<RWLock<object::Object>> = unsafe {
+        mem::transmute(data)
+    };
 
-    unsafe {
-    println!("expanding ! {} ", (*o).name);
+    println!("expanding ! {} ", o.read().name);
 
-        for c in (*o).children.iter() {
-            println!("expanding ! with child {} ", (*c).read().name);
-            let oc = c.clone();
-            let oo : &object::Object = &*oc.read();
-            tree_object_add(tree, mem::transmute(oo), parent);
+    for c in o.read().children.iter() {
+        println!("expanding ! with child {} ", (*c).read().name);
+        unsafe {
+            tree_object_add(tree, mem::transmute(c), parent);
         }
-
-
-        println!("expand ! {} ", (*o).name);
     }
 }
 
@@ -236,9 +236,7 @@ pub extern fn init_cb(render: *mut render::Render) -> () {
             expand);
 
         for o in (*render).scene.objects.iter() {
-            let oc = o.clone();
-            let oo : &object::Object = &*oc.read();
-            tree_object_add(t, mem::transmute(oo), ptr::null());
+            tree_object_add(t, mem::transmute(o), ptr::null());
         }
 
         //creator_button_new(c);
