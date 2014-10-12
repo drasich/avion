@@ -47,6 +47,23 @@ collections {
          }
 
          part {
+            name: "part_property_test";
+            type: SWALLOW;
+            description {
+               state: "default" 0.0;
+               min: 50 0;
+               max: 100 0;
+               //color: 255 0 255 0; /* blue */
+               //rel1.relative: 1.0 0.0;
+               //rel2.relative: 1.0 1.0;
+               //min: 500 500;
+
+               //fixed: 1 1;
+               align: 1.0 0.0;
+            }
+         }
+
+         part {
             name: "part_property";
             type: SWALLOW;
             //effect: GLOW LEFT;

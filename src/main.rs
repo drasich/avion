@@ -18,6 +18,8 @@ pub struct JkList;
 #[repr(C)]
 pub struct Tree;
 #[repr(C)]
+pub struct Property;
+#[repr(C)]
 pub struct Creator;
 
 #[link(name = "joker")]
@@ -42,11 +44,36 @@ extern {
     fn creator_new() -> *const Creator;
     fn creator_tree_new(creator : *const Creator) -> *mut Tree;
     fn creator_button_new(creator : *const Creator);
+    fn creator_property_new(creator : *const Creator) -> *mut Property;
 
     pub fn init_callback_set(
         cb: extern fn(*mut render::Render) -> (),
         render: *const render::Render
         ) -> ();
+
+    /*
+    fn property_object_set(
+        Property : *mut Property,
+        object : *const c_void
+        );
+
+    fn property_object_update(
+        Property : *mut Property
+        );
+        */
+
+    /*
+    fn property_set(
+        Property : *mut Property,
+        name : *const c_char,
+        value : *const c_char
+        );
+        */
+
+    fn property_register_cb(
+        Property : *mut Property,
+        changed : extern fn(object : *const c_void, data : *const c_void)
+        );
 }
 
 mod resource;
@@ -224,6 +251,16 @@ pub extern fn expand(tree: *mut Tree, data : *const c_void, parent : *const c_vo
     }
 }
 
+pub extern fn changed(object : *const c_void, data : *const c_void) {
+    let o : &Arc<RWLock<object::Object>> = unsafe {
+        mem::transmute(object)
+    };
+
+    let s = unsafe {CString::new(data as *const i8, false) };
+    println!("data changed : {}", s);
+}
+
+
 pub extern fn init_cb(render: *mut render::Render) -> () {
     unsafe {
         let c = creator_new();
@@ -238,6 +275,11 @@ pub extern fn init_cb(render: *mut render::Render) -> () {
         for o in (*render).scene.objects.iter() {
             tree_object_add(t, mem::transmute(o), ptr::null());
         }
+
+        let p = creator_property_new(c);
+        property_register_cb(
+            p,
+            changed);
 
         //creator_button_new(c);
     }
