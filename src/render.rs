@@ -256,7 +256,7 @@ pub struct Render
     pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
     pub texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
     pub material_manager : Arc<RWLock<resource::ResourceManager<shader::Material>>>,
-    pub scene : Box<scene::Scene>,
+    pub scene : Arc<RWLock<scene::Scene>>,
 }
 
 impl Render {
@@ -312,7 +312,7 @@ impl Render {
             p.objects.clear();
         }
 
-        let objects = &self.scene.objects;
+        let objects = &self.scene.read().objects;
         //self.passes.clear();
         for o in objects.iter() {
             prepare_passes_object(

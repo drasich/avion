@@ -139,10 +139,11 @@ name = "image/base_skeleton_col.png"
         shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
         texture_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
         material_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
-        scene : box scene::Scene::new_from_file(scene_path)
+        //scene : box scene::Scene::new_from_file(scene_path)
+        scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path)))
     };
 
-    let oo = r.scene.object_find("yep");
+    let oo = r.scene.read().object_find("yep");
     match oo {
         Some(o) => { println!("I found the obj");
             o.write().child_add(Arc::new(RWLock::new(object::Object::new("my_child"))));
@@ -193,9 +194,12 @@ name = "image/base_skeleton_col.png"
 
         //scene.save();
 
+    let mut m = box ui::Master::new();
+    m.scene = Some(r.scene.clone());
+
     unsafe {
         render::draw_callback_set(render::draw_cb, &*r);
-        ui::init_callback_set(ui::init_cb, &*r);
+        ui::init_callback_set(ui::init_cb, &*m);
     }
 
     r.init();

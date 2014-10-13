@@ -1,18 +1,20 @@
 use libc::{c_char, c_void};
 use render;
 use object;
+use std::collections::{DList};
 
 use std::mem;
 use sync::{RWLock, Arc};
 use std::c_str::CString;
 use std::ptr;
+use scene;
 
 #[repr(C)]
 pub struct Tree;
 #[repr(C)]
 pub struct Property;
 #[repr(C)]
-pub struct Creator;
+pub struct Window;
 
 #[link(name = "joker")]
 extern {
@@ -32,14 +34,14 @@ extern {
         object : *const c_void,
         parent : *const c_void,
         );
-    fn creator_new() -> *const Creator;
-    fn creator_tree_new(creator : *const Creator) -> *mut Tree;
-    fn creator_button_new(creator : *const Creator);
-    fn creator_property_new(creator : *const Creator) -> *mut Property;
+    fn window_new() -> *const Window;
+    fn window_tree_new(window : *const Window) -> *mut Tree;
+    fn window_button_new(window : *const Window);
+    fn window_property_new(window : *const Window) -> *mut Property;
 
     pub fn init_callback_set(
-        cb: extern fn(*mut render::Render) -> (),
-        render: *const render::Render
+        cb: extern fn(*mut Master) -> (),
+        master: *const Master 
         ) -> ();
 
     /*
@@ -65,6 +67,28 @@ extern {
         Property : *mut Property,
         changed : extern fn(object : *const c_void, data : *const c_void)
         );
+}
+
+pub struct Master
+{
+    //windows : DList<Window>
+    pub window : Option<*const Window>,
+    pub tree : Option<*const Tree>,
+    pub property : Option<*const Property>,
+    pub scene : Option<Arc<RWLock<scene::Scene>>>,
+}
+
+impl Master
+{
+    pub fn new() -> Master
+    {
+        Master {
+            window : None,
+            tree : None,
+            property : None,
+            scene : None
+        }
+    }
 }
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
@@ -121,10 +145,10 @@ pub extern fn changed(object : *const c_void, data : *const c_void) {
 }
 
 
-pub extern fn init_cb(render: *mut render::Render) -> () {
+pub extern fn init_cb(master: *mut Master) -> () {
     unsafe {
-        let c = creator_new();
-        let t = creator_tree_new(c);
+        let c = window_new();
+        let t = window_tree_new(c);
         tree_register_cb(
             t,
             name_get,
@@ -132,16 +156,39 @@ pub extern fn init_cb(render: *mut render::Render) -> () {
             can_expand,
             expand);
 
-        for o in (*render).scene.objects.iter() {
-            tree_object_add(t, mem::transmute(o), ptr::null());
-        }
+        match (*master).scene {
+            Some(ref s) => {
+                for o in s.read().objects.iter() {
+                    tree_object_add(t, mem::transmute(o), ptr::null());
+                }
+            }
+            None => {}
+        };
 
-        let p = creator_property_new(c);
+        let p = window_property_new(c);
         property_register_cb(
             p,
             changed);
 
-        //creator_button_new(c);
+        //window_button_new(c);
+    }
+}
+
+pub struct PropertyWidget {
+    name : String,
+}
+
+trait PropertyShow
+{
+    //fn create_widget() -> Widget;
+    fn create_widget(window : &Window);
+}
+
+impl PropertyShow for String
+{
+    fn create_widget(window : &Window)
+    {
+        let c = unsafe { window_property_new(window) };
     }
 }
 

@@ -59,4 +59,14 @@ impl Object
 
 }
 
+/*
+impl PropertyShow for Object
+{
+    fn create_widget(window : &Window)
+    {
+        let c = unsafe { window_property_new(window) };
+    }
+}
+*/
+
 
