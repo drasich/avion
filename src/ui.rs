@@ -8,6 +8,7 @@ use sync::{RWLock, Arc};
 use std::c_str::CString;
 use std::ptr;
 use scene;
+//use property;
 
 #[repr(C)]
 pub struct Tree;

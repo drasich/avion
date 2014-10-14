@@ -10,24 +10,24 @@
 //use serialize::{json, Encodable, Decodable};
 use std::str;
 
-log_syntax!()
-trace_macros!(true)
+//log_syntax!()
+//trace_macros!(true)
 
 macro_rules! new_test(
-  ($member:ident, String) => (
-    self.$member.to_owned()
+  ($yo:ident, $member:ident, String) => (
+    $yo.$member.to_owned()
     );
-  ($member:ident, Struct) => (
-    self.$member.clone()
+  ($yo:ident, $member:ident, Struct) => (
+    $yo.$member.clone()
     );
-  ($member:ident, $yep:expr) => (
-    self.$member
+  ($yo:ident, $member:ident, $yep:expr) => (
+    $yo.$member
     )
   )
 
 macro_rules! new_test_set(
-  ($member:ident, String) => (
-    match value {
+  ($member:ident, String, $value:ident) => (
+    match $value {
     &String(ref s) => {
     self.$member = s.to_owned()
     }
@@ -36,8 +36,8 @@ macro_rules! new_test_set(
     }
     }
     );
-  ($member:ident, Struct) => (
-    match value {
+  ($member:ident, Struct, $value:ident) => (
+    match $value {
     &Struct(ref s) => {
     for p in s.fields().iter() {
       self.$member.set_property(p.to_owned(),& s.get_property(p.to_owned()));
@@ -48,8 +48,8 @@ macro_rules! new_test_set(
     }
     }
     );
-  ($member:ident, $yep:ident) => (
-    match value {
+  ($member:ident, $yep:ident, $value:ident) => (
+    match $value {
     &$yep(f) => {
     self.$member = f;
     }
@@ -85,7 +85,7 @@ macro_rules! property_impl(
 
       impl Property for $my_type
       {
-        fn fields(&self) -> ~[~str]
+        fn fields(&self) -> Box<[String]>
         {
           //return box ["xaa".to_owned(), "y".to_owned(), "z".to_owned()];
           //*
@@ -104,7 +104,7 @@ macro_rules! property_impl(
             if name == stringify!($member)
             {
               //return $mytype(self.$member)
-              return $mytype(new_test!($member, $mytype))
+              return $mytype(new_test!(self, $member, $mytype))
             }
            )+
 
@@ -119,7 +119,7 @@ macro_rules! property_impl(
           $(
             if name == stringify!($member)
             {
-              new_test_set!($member, $mytype)
+              new_test_set!($member, $mytype, value)
             /*
               match value {
                 //&Float(v) => {
@@ -159,7 +159,7 @@ pub struct Quat
   w : f64,
   t : i32,
   v : Box<Vec3>,
-  txt : ~str
+  //txt : ~str
 }
 
 property_impl!(Vec3, [x,Float|y,Float|z,Float])
@@ -171,7 +171,7 @@ property_impl!(Quat, [x,Float|y,Float|z,Float|t,Int|txt,String|v,Struct])
 
 pub struct TestStruct {
   id: i32,
-  name : ~str,
+  //name : ~str,
   speed : f64,
   position : Box<Vec3>
 }
@@ -179,7 +179,7 @@ pub struct TestStruct {
 enum PropertyType {
   Int(i32),
   Float(f64),
-  String(~str),
+  String(String),
   Struct(Box<Property>),
 }
 
@@ -191,11 +191,6 @@ pub struct Floata<'r>
 pub struct Inta<'r>
 {
   value : &'r i32,
-}
-
-pub struct Stringa<'r>
-{
-  value : &'r ~str,
 }
 
 pub struct Structa<'r>
@@ -210,7 +205,7 @@ pub struct Structa<'r>
 
 trait Property {
   //fn fields(&self) -> ~[u8];
-  fn fields(&self) -> ~[~str];
+  fn fields(&self) -> Box<[String]>;
   //fn get_type(&self, name: &[u8]) -> u8;
   fn get_property(&self, name: &str) -> PropertyType;
   fn set_property(&mut self, name: &str, value: &PropertyType);
@@ -261,7 +256,7 @@ impl Property for Vec3
 
 impl Property for TestStruct
 {
-  fn fields(&self) -> ~[~str]
+  fn fields(&self) -> Box<[String]>
   {
     //return ["id", "name", "speed", "position"];
     return box ["id".to_owned(), "name".to_owned(), "speed".to_owned(), "position".to_owned()];
