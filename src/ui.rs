@@ -22,22 +22,22 @@ extern {
     pub fn elm_simple_window_main();
     fn tree_widget_new() -> *const Tree;
     fn tree_register_cb(
-        tree : *mut Tree,
+        tree : *const Tree,
         name_get : extern fn(data : *const c_void) -> *const c_char,
         select : extern fn(data : *const c_void) -> (),
         can_expand : extern fn(data : *const c_void) -> bool,
-        expand : extern fn(tree: *mut Tree, data : *const c_void, parent: *const c_void) -> (),
+        expand : extern fn(tree: *const Tree, data : *const c_void, parent: *const c_void) -> (),
         );
 
     fn tree_object_add(
-        tree : *mut Tree,
+        tree : *const Tree,
         object : *const c_void,
         parent : *const c_void,
         );
     fn window_new() -> *const Window;
-    fn window_tree_new(window : *const Window) -> *mut Tree;
+    fn window_tree_new(window : *const Window) -> *const Tree;
     fn window_button_new(window : *const Window);
-    fn window_property_new(window : *const Window) -> *mut Property;
+    fn window_property_new(window : *const Window) -> *const Property;
 
     pub fn init_callback_set(
         cb: extern fn(*mut Master) -> (),
@@ -64,8 +64,14 @@ extern {
         */
 
     fn property_register_cb(
-        Property : *mut Property,
-        changed : extern fn(object : *const c_void, data : *const c_void)
+        Property : *const Property,
+        changed : extern fn(object : *const c_void, data : *const c_void),
+        get : extern fn(data : *const c_void) -> *const c_char
+        );
+
+    fn property_data_set(
+        Property : *const Property,
+        data : *const c_void
         );
 }
 
@@ -120,7 +126,7 @@ pub extern fn can_expand(data : *const c_void) -> bool {
     return !o.read().children.is_empty();
 }
 
-pub extern fn expand(tree: *mut Tree, data : *const c_void, parent : *const c_void) -> () {
+pub extern fn expand(tree: *const Tree, data : *const c_void, parent : *const c_void) -> () {
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
@@ -156,23 +162,37 @@ pub extern fn init_cb(master: *mut Master) -> () {
             can_expand,
             expand);
 
+        let p = window_property_new(w);
+        
+        property_register_cb(
+            p,
+            changed,
+            name_get
+            ); 
+    
         match (*master).scene {
             Some(ref s) => {
                 for o in s.read().objects.iter() {
                     tree_object_add(t, mem::transmute(o), ptr::null());
                 }
+
+                let oo = s.read().object_find("yep");
+                match oo {
+                    Some(ref o) => { println!("I found the obj in init_cb");
+                        property_data_set(p, mem::transmute(o));
+                    }
+                    None => {}
+                };
             }
             None => {}
         };
 
-        let p = window_property_new(w);
-        property_register_cb(
-            p,
-            changed);
 
         //window_button_new(w);
 
         (*master).window = Some(w);
+        (*master).tree = Some(t);
+        (*master).property = Some(p);
     }
 }
 
