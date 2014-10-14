@@ -147,8 +147,8 @@ pub extern fn changed(object : *const c_void, data : *const c_void) {
 
 pub extern fn init_cb(master: *mut Master) -> () {
     unsafe {
-        let c = window_new();
-        let t = window_tree_new(c);
+        let w = window_new();
+        let t = window_tree_new(w);
         tree_register_cb(
             t,
             name_get,
@@ -165,12 +165,14 @@ pub extern fn init_cb(master: *mut Master) -> () {
             None => {}
         };
 
-        let p = window_property_new(c);
+        let p = window_property_new(w);
         property_register_cb(
             p,
             changed);
 
-        //window_button_new(c);
+        //window_button_new(w);
+
+        (*master).window = Some(w);
     }
 }
 
