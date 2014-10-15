@@ -142,6 +142,25 @@ pub extern fn expand(tree: *const Tree, data : *const c_void, parent : *const c_
     }
 }
 
+struct PropertySet
+{
+    name : String
+}
+
+trait PropertyTest
+{
+    fn set(property_set :&PropertySet, field : String, value : Self);
+    
+}
+
+impl PropertyTest for int
+{
+    fn set(property_set: &PropertySet, field : String, value : int)
+    {
+        let test = value;
+    }
+}
+
 pub extern fn changed(object : *const c_void, data : *const c_void) {
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(object)
