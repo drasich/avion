@@ -56,7 +56,6 @@ impl Object
     {
         self.children.push(child);
     }
-
 }
 
 /*

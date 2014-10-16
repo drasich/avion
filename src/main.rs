@@ -1,9 +1,11 @@
 #![feature(macro_rules)]
+//#![feature(globs)]
 extern crate serialize;
 extern crate libc;
 extern crate sync;
 extern crate png;
 extern crate toml;
+extern crate debug;
 
 use libc::{c_char, c_void};
 use std::mem;
@@ -12,6 +14,7 @@ use std::collections::{DList,HashMap};
 use sync::{RWLock, Arc};
 use std::c_str::CString;
 use std::ptr;
+use property::TProperty;
 
 #[repr(C)]
 pub struct JkList;
@@ -88,7 +91,8 @@ mod camera;
 mod scene;
 mod texture;
 mod ui;
-//mod property;
+mod property;
+
 
 fn main() {
 
@@ -148,6 +152,8 @@ name = "image/base_skeleton_col.png"
     match oo {
         Some(o) => { println!("I found the obj");
             o.write().child_add(Arc::new(RWLock::new(object::Object::new("my_child"))));
+            println!("yooooooooooooooooooooooooooooooooo");
+            property::print_pt(o.read().get_property("name"));
         }
         None => {}
     }

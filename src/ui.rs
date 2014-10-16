@@ -8,7 +8,8 @@ use sync::{RWLock, Arc};
 use std::c_str::CString;
 use std::ptr;
 use scene;
-//use property;
+use property::TProperty;
+use property;
 
 #[repr(C)]
 pub struct Tree;
@@ -168,6 +169,15 @@ pub extern fn changed(object : *const c_void, data : *const c_void) {
 
     let s = unsafe {CString::new(data as *const i8, false) };
     println!("data changed : {}", s);
+
+    match s.as_str() {
+        Some(ss) => {
+            let sss = property::SString(String::from_str(ss));
+            o.write().set_property("name", &sss);
+        },
+        _ => ()
+    }
+
 }
 
 
