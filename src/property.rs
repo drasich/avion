@@ -14,6 +14,10 @@ use object;
 //log_syntax!()
 //trace_macros!(true)
 
+pub trait PropertyYep
+{
+    fn transform(&self) -> PropertyType;
+}
 
 pub trait TProperty {
   //fn fields(&self) -> ~[u8];
@@ -21,6 +25,7 @@ pub trait TProperty {
   //fn get_type(&self, name: &[u8]) -> u8;
   fn get_property(&self, name: &str) -> PropertyType;
   fn set_property(&mut self, name: &str, value: &PropertyType);
+  fn set_easy(&mut self, name: &str, value: &PropertyYep);
 }
 
 pub enum PropertyType {
@@ -155,7 +160,11 @@ pub macro_rules! property_impl(
            )+
            //*/
         }
-      }
+        fn set_easy(&mut self, name : &str, value: &PropertyYep)
+        {
+            self.set_property(name, &value.transform());
+        }
+     }
   );
 )
 

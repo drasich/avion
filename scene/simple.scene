@@ -2,7 +2,7 @@
   "name": "scene/simple.scene",
   "objects": [
     {
-      "name": "yep",
+      "name": "yepyoyo",
       "mesh_render": {
         "mesh": {
           "name": "model/skeletonmesh.mesh"
@@ -27,7 +27,29 @@
         "y": 1,
         "z": 1
       },
-      "children" : []
+      "children": [
+        {
+          "name": "my_child",
+          "mesh_render": null,
+          "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "orientation": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "w": 1
+          },
+          "scale": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "children": []
+        }
+      ]
     },
     {
       "name": "yep2",
@@ -55,7 +77,7 @@
         "y": 2,
         "z": 2
       },
-      "children" : []
+      "children": []
     },
     {
       "name": "nouvel object",
@@ -83,7 +105,7 @@
         "y": 51,
         "z": 51
       },
-      "children" : []
+      "children": []
     }
   ]
 }

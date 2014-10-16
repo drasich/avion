@@ -60,7 +60,7 @@ impl Scene
 
 impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RWLock<object::Object>> {
   fn encode(&self, encoder: &mut S) -> Result<(), E> {
-      self.encode(encoder)
+      self.read().encode(encoder)
   }
 }
 

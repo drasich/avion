@@ -105,6 +105,8 @@ pub extern fn name_get(data : *const c_void) -> *const c_char {
         mem::transmute(data)
     };
 
+    println!("name get {:?}", o);
+
     let cs = o.read().name.to_c_str();
 
     unsafe {
@@ -168,12 +170,11 @@ pub extern fn changed(object : *const c_void, data : *const c_void) {
     };
 
     let s = unsafe {CString::new(data as *const i8, false) };
-    println!("data changed : {}", s);
 
     match s.as_str() {
         Some(ss) => {
             let sss = property::SString(String::from_str(ss));
-            o.write().set_property("name", &sss);
+            o.clone().write().set_property("name", &sss);
         },
         _ => ()
     }
@@ -203,13 +204,13 @@ pub extern fn init_cb(master: *mut Master) -> () {
         match (*master).scene {
             Some(ref s) => {
                 for o in s.read().objects.iter() {
-                    tree_object_add(t, mem::transmute(o), ptr::null());
+                    tree_object_add(t, mem::transmute(box o.clone()), ptr::null());
                 }
 
                 let oo = s.read().object_find("yep");
                 match oo {
-                    Some(ref o) => { println!("I found the obj in init_cb");
-                        property_data_set(p, mem::transmute(o));
+                    Some(o) => { 
+                        property_data_set(p, mem::transmute(box o.clone()));
                     }
                     None => {}
                 };

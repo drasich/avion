@@ -148,6 +148,7 @@ name = "image/base_skeleton_col.png"
         scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path)))
     };
 
+    /*
     let oo = r.scene.read().object_find("yep");
     match oo {
         Some(o) => { println!("I found the obj");
@@ -157,6 +158,7 @@ name = "image/base_skeleton_col.png"
         }
         None => {}
     }
+    */
 
 
         //r.prepare_passes();
@@ -215,6 +217,8 @@ name = "image/base_skeleton_col.png"
     unsafe { 
         ui::elm_simple_window_main();
     };
+
+    //r.scene.read().save();
 }
 
 
