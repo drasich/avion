@@ -85,7 +85,6 @@ impl RenderPass
                       texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>
                      ) -> ()
     {
-        println!("draw frame");
         {
             let mut matm = self.material.write();
 
@@ -196,7 +195,7 @@ impl RenderPass
 
         //TODO chris
         match  themesh  {
-            None => { println!("no mesh wait "); return;},
+            None => return,
             Some(ref m) => {
                 let mut mb = m.write();
                 if mb.state == 1 {

@@ -186,11 +186,9 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                 return ResWait;
             },
             ResData(ref yep) => {
-                println!("request : yes! returning data");
                 return ResData(yep.clone());
             },
             ResWait => {
-                println!("request not yet, please wait");
                 return ResWait;
             }
         }
