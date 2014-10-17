@@ -16,68 +16,6 @@ use std::c_str::CString;
 use std::ptr;
 use property::TProperty;
 
-#[repr(C)]
-pub struct JkList;
-
-#[link(name = "joker")]
-extern {
-    fn jk_list_new() -> *const JkList;
-
-    //fn simple_window_init();
-    /*
-    fn elm_simple_window_main();
-    fn tree_widget_new() -> *const Tree;
-    fn tree_register_cb(
-        tree : *mut Tree,
-        name_get : extern fn(data : *const c_void) -> *const c_char,
-        select : extern fn(data : *const c_void) -> (),
-        can_expand : extern fn(data : *const c_void) -> bool,
-        expand : extern fn(tree: *mut Tree, data : *const c_void, parent: *const c_void) -> (),
-        );
-
-    fn tree_object_add(
-        tree : *mut Tree,
-        object : *const c_void,
-        parent : *const c_void,
-        );
-    fn creator_new() -> *const Creator;
-    fn creator_tree_new(creator : *const Creator) -> *mut Tree;
-    fn creator_button_new(creator : *const Creator);
-    fn creator_property_new(creator : *const Creator) -> *mut Property;
-
-    pub fn init_callback_set(
-        cb: extern fn(*mut render::Render) -> (),
-        render: *const render::Render
-        ) -> ();
-        */
-
-    /*
-    fn property_object_set(
-        Property : *mut Property,
-        object : *const c_void
-        );
-
-    fn property_object_update(
-        Property : *mut Property
-        );
-        */
-
-    /*
-    fn property_set(
-        Property : *mut Property,
-        name : *const c_char,
-        value : *const c_char
-        );
-        */
-
-    /*
-    fn property_register_cb(
-        Property : *mut Property,
-        changed : extern fn(object : *const c_void, data : *const c_void)
-        );
-        */
-}
-
 mod resource;
 mod shader;
 mod mesh;
@@ -95,10 +33,6 @@ mod property;
 
 
 fn main() {
-
-    unsafe {
-    let l = jk_list_new();
-    };
 
     //spawn(proc() {
     /*
@@ -130,8 +64,8 @@ name = "image/base_skeleton_col.png"
     */
 
 
-    let mat = Arc::new(RWLock::new(shader::Material::new_from_file("material/simple.mat")));
-    mat.read().save();
+    //let mat = Arc::new(RWLock::new(shader::Material::new_from_file("material/simple.mat")));
+    //mat.read().save();
 
     //let cam = camera::Camera::new();
 

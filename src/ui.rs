@@ -14,7 +14,7 @@ use property;
 #[repr(C)]
 pub struct Tree;
 #[repr(C)]
-pub struct Property;
+pub struct JkProperty;
 #[repr(C)]
 pub struct Window;
 
@@ -39,7 +39,7 @@ extern {
     fn window_new() -> *const Window;
     fn window_tree_new(window : *const Window) -> *const Tree;
     fn window_button_new(window : *const Window);
-    fn window_property_new(window : *const Window) -> *const Property;
+    fn window_property_new(window : *const Window) -> *const JkProperty;
 
     pub fn init_callback_set(
         cb: extern fn(*mut Master) -> (),
@@ -66,13 +66,13 @@ extern {
         */
 
     fn property_register_cb(
-        Property : *const Property,
+        property : *const JkProperty,
         changed : extern fn(object : *const c_void, data : *const c_void),
         get : extern fn(data : *const c_void) -> *const c_char
         );
 
     fn property_data_set(
-        Property : *const Property,
+        property : *const JkProperty,
         data : *const c_void
         );
 }
@@ -82,7 +82,7 @@ pub struct Master
     //windows : DList<Window>
     pub window : Option<*const Window>,
     pub tree : Option<*const Tree>,
-    pub property : Option<*const Property>,
+    pub property : Option<*const JkProperty>,
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
 }
 
@@ -105,7 +105,7 @@ pub extern fn name_get(data : *const c_void) -> *const c_char {
         mem::transmute(data)
     };
 
-    println!("name get {:?}", o);
+    //println!("name get {:?}", o);
 
     let cs = o.read().name.to_c_str();
 
@@ -207,7 +207,7 @@ pub extern fn init_cb(master: *mut Master) -> () {
                     tree_object_add(t, mem::transmute(box o.clone()), ptr::null());
                 }
 
-                let oo = s.read().object_find("yep");
+                let oo = s.read().object_find("yepyoyo");
                 match oo {
                     Some(o) => { 
                         property_data_set(p, mem::transmute(box o.clone()));
