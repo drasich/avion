@@ -66,16 +66,19 @@ fn resource_get<T:'static+resource::Create+Send+Sync>(
 
 impl RenderPass
 {
-    pub fn new(material : Arc<RWLock<shader::Material>>) -> RenderPass
+    pub fn new(
+        material : Arc<RWLock<shader::Material>>,
+        camera : Rc<RefCell<camera::Camera>>) -> RenderPass
     {
         //TODO 
-        let cam = camera::Camera::new();
+        //let cam = camera::Camera::new();
 
         RenderPass {
                   name : String::from_str("passtest"),
                   material : material.clone(),
                   objects : DList::new(),
-                  camera : Rc::new(RefCell::new(cam)),
+                  //camera : Rc::new(RefCell::new(cam)),
+                  camera : camera,
               }
     }
 
@@ -166,7 +169,7 @@ impl RenderPass
             }
         }
 
-        let cam_mat = self.camera.borrow().object.borrow().matrix_get();
+        let cam_mat = self.camera.borrow().object.read().matrix_get();
         let cam_projection = self.camera.borrow().perspective_get();
         let cam_mat_inv = cam_mat.inverse_get();
         let matrix = cam_projection * cam_mat_inv;
@@ -256,32 +259,33 @@ pub struct Render
     pub texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
     pub material_manager : Arc<RWLock<resource::ResourceManager<shader::Material>>>,
     pub scene : Arc<RWLock<scene::Scene>>,
+    pub camera : Rc<RefCell<camera::Camera>>,
 }
 
 impl Render {
 
-    /*
     pub fn new() -> Render
     {
-        Render { 
-            pass : box render::RenderPass{
-                      name : String::from_str("passtest"),
-                      material : mat.clone(),
-                      objects : DList::new(),
-                      camera : Rc::new(RefCell::new(cam)),
-                      mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new()))
-                  },
-            request_manager : box render::RequestManager {
-                                  requests : DList::new(),
-                                  requests_material : DList::new()
-                              }
-        }
-    }
-    */
+        let scene_path = "scene/simple.scene";
+        let r = Render { 
+            passes : HashMap::new(),
+            mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+            shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+            texture_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+            material_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+            //scene : box scene::Scene::new_from_file(scene_path)
+            scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path))),
+            camera : Rc::new(RefCell::new(camera::Camera::new())),
+        };
 
+        r
+    }
+
+    /*
     pub fn init(&mut self)
     {
     }
+    */
 
     /*
     pub fn draw(&mut self)
@@ -317,14 +321,18 @@ impl Render {
             prepare_passes_object(
                 o.clone(),
                 &mut self.passes,
-                self.material_manager.clone());
+                self.material_manager.clone(),
+                self.camera.clone());
         }
     }
 }
 
-fn prepare_passes_object(o : Arc<RWLock<object::Object>>,
+fn prepare_passes_object(
+    o : Arc<RWLock<object::Object>>,
     passes : &mut HashMap<String, Box<RenderPass>>, 
-    material_manager : Arc<RWLock<resource::ResourceManager<shader::Material>>>)
+    material_manager : Arc<RWLock<resource::ResourceManager<shader::Material>>>,
+    camera : Rc<RefCell<camera::Camera>>
+    )
 {
     {
         let oc = o.clone();
@@ -343,7 +351,7 @@ fn prepare_passes_object(o : Arc<RWLock<object::Object>>,
 
         {
             let rp = match passes.entry(mesh_render_material.name.clone()) {
-                Vacant(entry) => entry.set(box RenderPass::new(mat.clone())),
+                Vacant(entry) => entry.set(box RenderPass::new(mat.clone(), camera.clone())),
                 Occupied(entry) => entry.into_mut(),
             };
 
@@ -355,7 +363,7 @@ fn prepare_passes_object(o : Arc<RWLock<object::Object>>,
         let occ = o.clone();
         for c in occ.read().children.iter()
         {
-            prepare_passes_object(c.clone(), passes, material_manager.clone());
+            prepare_passes_object(c.clone(), passes, material_manager.clone(), camera.clone());
         }
     }
 }

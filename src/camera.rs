@@ -1,10 +1,12 @@
 use std::rc::Rc;
-use std::cell::RefCell;
+use sync::{RWLock, Arc};
 use std::f64::consts;
 
 use vec;
+use vec::{Vec3, Quat};
 use object;
 use matrix;
+use geometry;
 
 pub struct CameraData
 {
@@ -30,9 +32,8 @@ pub struct CameraData
 pub struct Camera
 {
     pub data : CameraData,
-    pub object : Rc<RefCell<object::Object>>
+    pub object : Arc<RWLock<object::Object>>
 }
-
 
 impl Camera
 {
@@ -57,7 +58,7 @@ impl Camera
 
             clear_color : vec::Vec4::zero()  
         },
-        object : Rc::new(RefCell::new(object::Object::new("camera")))
+        object : Arc::new(RWLock::new(object::Object::new("camera")))
         }
     }
 
@@ -66,6 +67,42 @@ impl Camera
         //TODO
         matrix::Matrix4::perspective(0.4f64,1f64,1f64,10000f64)
         //matrix::Matrix4::perspective(fovy,1f64, near, far)
+    }
+
+    pub fn ray_from_screen(&self, x : f64, y : f64, length: f64) -> geometry::Ray
+    {
+        let c = self.data;
+        let o = self.object.read();
+
+        let near = c.near;
+        let camz = o.orientation.rotate_vec3(&Vec3::forward());
+        let up = o.orientation.rotate_vec3(&Vec3::up());
+        let h = (camz^up).normalized();
+        let vl = (c.fovy/2f64).tan() * near;
+
+        let width = c.width;
+        let height = c.height;
+        let aspect : f64 = width / height;
+        let vh = vl * aspect;
+
+        let up = up * vl;
+        let h = h * vh;
+
+        let x : f64 = x - (width /2.0f64);
+        let y : f64 = y - (height /2.0f64);
+
+        let x : f64 = x / (width /2.0f64);
+        let y : f64 = y / (height /2.0f64);
+
+        let pos = o.position + (camz * near) + ( (h * x) + (up * -y));
+        let dir = pos - o.position;
+        let dir = dir.normalized();
+        let dir = dir * length;
+
+        geometry::Ray {
+            start : pos,
+            direction : dir
+        }
     }
 }
 

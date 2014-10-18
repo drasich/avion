@@ -130,18 +130,25 @@ pub struct Master
     pub tree : Option<*const Tree>,
     pub property : Option<*const JkProperty>,
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
+    pub render : render::Render
+
 }
 
 impl Master
 {
     pub fn new() -> Master
     {
-        Master {
+        let mut m = Master {
             window : None,
             tree : None,
             property : None,
-            scene : None
-        }
+            scene : None,
+            render : render::Render::new()
+        };
+
+        m.scene = Some(m.render.scene.clone());
+
+        m
     }
 }
 
@@ -233,7 +240,7 @@ pub extern fn init_cb(master: *mut Master) -> () {
         let w = window_new();
         window_callback_set(
             w,
-            ptr::null(),
+            mem::transmute(master), //ptr::null(),//TODO
             mouse_down,
             mouse_up,
             mouse_move,
@@ -310,7 +317,7 @@ pub extern fn mouse_down(
     timestamp : c_int
     )
 {
-    println!("rust mouse down button {}, pos: {}, {}", button, x, y);
+    //println!("rust mouse down button {}, pos: {}, {}", button, x, y);
 }
 
 pub extern fn mouse_up(
@@ -322,7 +329,10 @@ pub extern fn mouse_up(
     timestamp : c_int
     )
 {
-    println!("rust mouse up button {}, pos: {}, {}", button, x, y);
+    let m : &Master = unsafe {mem::transmute(data)};
+    //println!("rust mouse up button {}, pos: {}, {}", button, x, y);
+    let r = m.render.camera.borrow().ray_from_screen(x as f64, y as f64, 1000f64);
+    println!("ray : {} ", r);
 }
 
 pub extern fn mouse_move(
@@ -336,7 +346,7 @@ pub extern fn mouse_move(
     timestamp : c_int
     )
 {
-    println!("rust mouse move");
+    //println!("rust mouse move");
 }
 
 pub extern fn mouse_wheel(

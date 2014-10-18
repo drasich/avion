@@ -17,7 +17,7 @@ pub struct Vec4
     pub w : f64
 }
 
-#[deriving(Decodable, Encodable)]
+#[deriving(Decodable, Encodable, Clone)]
 pub struct Quat
 {
     pub x : f64,
@@ -80,6 +80,24 @@ impl Vec3
         }
     }
 
+    pub fn forward() -> Vec3
+    {
+        Vec3 {
+            x : 0f64,
+            y : 0f64,
+            z : -1f64
+        }
+    }
+
+    pub fn up() -> Vec3
+    {
+        Vec3 {
+            x : 0f64,
+            y : 1f64,
+            z : 0f64
+        }
+    }
+
     pub fn length(&self) -> f64
     {
         self.length2().sqrt()
@@ -88,6 +106,11 @@ impl Vec3
     pub fn length2(&self) -> f64
     {
         self.x*self.x + self.y*self.y + self.z*self.z
+    }
+
+    pub fn normalized(&self) -> Vec3
+    {
+        self * (1f64/ self.length())
     }
 }
 
@@ -130,11 +153,72 @@ impl Quat
             w : cos_half_angle
         }
     }
+
+    pub fn rotate_vec3(&self, v : &Vec3) -> Vec3
+    {
+        let qvec = Vec3::new(self.x, self.y, self.z);
+        let uv = qvec^*v;
+        let uuv = qvec^uv;
+        let uv = uv * (2f64* self.w);
+        let uuv = uuv * 2f64;
+
+        v + uv + uuv
+    }
 }
+
+impl fmt::Show for Vec3
+{
+    fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "({}, {}, {})", self.x, self.y, self.z)
+    }
+}
+
 
 impl fmt::Show for Quat
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "{}, {}, {}, {}", self.x, self.y, self.z, self.w)
     }
+}
+
+impl BitXor<Vec3, Vec3> for Vec3 {
+    fn bitxor(&self, other: &Vec3) -> Vec3 {
+        Vec3::new(
+            self.y * other.z - self.z*other.y,
+            self.z * other.x - self.x*other.z,
+            self.x * other.y - self.y*other.x,
+            )
+    }
+}
+
+impl Add<Vec3, Vec3> for Vec3 {
+    fn add(&self, other: &Vec3) -> Vec3 {
+        Vec3::new(
+            self.x + other.x,
+            self.y + other.y,
+            self.z + other.z)
+    }
+}
+
+impl Sub<Vec3, Vec3> for Vec3 {
+    fn sub(&self, other: &Vec3) -> Vec3 {
+        Vec3::new(
+            self.x - other.x,
+            self.y - other.y,
+            self.z - other.z)
+    }
+}
+
+
+
+impl Mul<f64, Vec3> for Vec3 {
+    fn mul(&self, f: &f64) -> Vec3 {
+        Vec3::new(self.x**f, self.y**f, self.z**f)
+    }
+}
+
+#[test]
+fn test_quat_rotate() {
+    //TODO
+    assert_eq!(1i, 1i);
 }

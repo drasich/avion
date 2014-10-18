@@ -12,6 +12,8 @@ use std::mem;
 use std::collections::{DList,HashMap};
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use sync::{RWLock, Arc};
+use std::cell::RefCell;
+use std::rc::Rc;
 use std::c_str::CString;
 use std::ptr;
 use property::TProperty;
@@ -30,6 +32,7 @@ mod scene;
 mod texture;
 mod ui;
 mod property;
+mod geometry;
 
 
 fn main() {
@@ -63,24 +66,10 @@ name = "image/base_skeleton_col.png"
     let mattt = shader::Material::new_toml(matoml);
     */
 
-
     //let mat = Arc::new(RWLock::new(shader::Material::new_from_file("material/simple.mat")));
     //mat.read().save();
 
     //let cam = camera::Camera::new();
-
-    let scene_path = "scene/simple.scene";
-    //let mut scene = scene::Scene::new_from_file(scene_path);
-
-    let mut r = box render::Render { 
-        passes : HashMap::new(),
-        mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
-        shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
-        texture_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
-        material_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
-        //scene : box scene::Scene::new_from_file(scene_path)
-        scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path)))
-    };
 
     /*
     let oo = r.scene.read().object_find("yep");
@@ -138,16 +127,12 @@ name = "image/base_skeleton_col.png"
         //scene.save();
 
     let mut m = box ui::Master::new();
-    m.scene = Some(r.scene.clone());
 
     unsafe {
-        render::draw_callback_set(render::draw_cb, &*r);
+        render::draw_callback_set(render::draw_cb, &m.render);
         ui::init_callback_set(ui::init_cb, &*m);
     }
 
-    r.init();
-
-    
     unsafe { 
         ui::elm_simple_window_main();
     };
