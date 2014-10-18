@@ -1,4 +1,4 @@
-use libc::{c_char, c_void};
+use libc::{c_char, c_void, c_int};
 use render;
 use object;
 use std::collections::{DList};
@@ -40,6 +40,52 @@ extern {
     fn window_tree_new(window : *const Window) -> *const Tree;
     fn window_button_new(window : *const Window);
     fn window_property_new(window : *const Window) -> *const JkProperty;
+    fn window_callback_set(
+        window : *const Window,
+        data: *const c_void,
+        mouse_down : extern fn(
+            data : *const c_void,
+            modifier : *const c_char,
+            button : c_int,
+            x : c_int, 
+            y : c_int,
+            timestamp : c_int
+            ),
+        mouse_up : extern fn(
+            data : *const c_void,
+            modifier : *const c_char,
+            button : c_int,
+            x : c_int, 
+            y : c_int,
+            timestamp : c_int
+            ),
+        mouse_move : extern fn(
+            data : *const c_void,
+            modifier : *const c_char,
+            button : c_int,
+            curx : c_int, 
+            cury : c_int,
+            prevx : c_int, 
+            prevy : c_int,
+            timestamp : c_int
+            ),
+        mouse_wheel : extern fn(
+            data : *const c_void,
+            modifier : *const c_char,
+            direction : c_int,
+            z : c_int, 
+            x : c_int, 
+            y : c_int,
+            timestamp : c_int
+            ),
+        key_down : extern fn(
+            data : *const c_void,
+            modifier : *const c_char,
+            keyname : *mut c_char,
+            key : *const c_char,
+            timestamp : c_int
+            ),
+        );
 
     pub fn init_callback_set(
         cb: extern fn(*mut Master) -> (),
@@ -185,6 +231,16 @@ pub extern fn changed(object : *const c_void, data : *const c_void) {
 pub extern fn init_cb(master: *mut Master) -> () {
     unsafe {
         let w = window_new();
+        window_callback_set(
+            w,
+            ptr::null(),
+            mouse_down,
+            mouse_up,
+            mouse_move,
+            mouse_wheel,
+            key_down
+            );
+
         let t = window_tree_new(w);
         tree_register_cb(
             t,
@@ -245,3 +301,64 @@ impl PropertyShow for String
     }
 }
 
+pub extern fn mouse_down(
+    data : *const c_void,
+    modifier : *const c_char,
+    button : c_int,
+    x : c_int, 
+    y : c_int,
+    timestamp : c_int
+    )
+{
+    println!("rust mouse down button {}, pos: {}, {}", button, x, y);
+}
+
+pub extern fn mouse_up(
+    data : *const c_void,
+    modifier : *const c_char,
+    button : c_int,
+    x : c_int, 
+    y : c_int,
+    timestamp : c_int
+    )
+{
+    println!("rust mouse up button {}, pos: {}, {}", button, x, y);
+}
+
+pub extern fn mouse_move(
+    data : *const c_void,
+    modifier : *const c_char,
+    button : c_int,
+    curx : c_int, 
+    cury : c_int,
+    prevx : c_int, 
+    prevy : c_int,
+    timestamp : c_int
+    )
+{
+    println!("rust mouse move");
+}
+
+pub extern fn mouse_wheel(
+    data : *const c_void,
+    modifier : *const c_char,
+    direction : c_int,
+    z : c_int, 
+    x : c_int, 
+    y : c_int,
+    timestamp : c_int
+    )
+{
+    println!("move wheel");
+}
+
+pub extern fn key_down(
+    data : *const c_void,
+    modifier : *const c_char,
+    keyname : *mut c_char,
+    key : *const c_char,
+    timestamp : c_int
+    )
+{
+    println!("rust key_down");
+}
