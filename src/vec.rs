@@ -108,9 +108,23 @@ impl Vec3
         self.x*self.x + self.y*self.y + self.z*self.z
     }
 
+    pub fn mul(&self, other : &Vec3) -> Vec3
+    {
+        Vec3::new(
+            self.x*other.x,
+            self.y*other.y,
+            self.z*other.z
+            )
+    }
+
     pub fn normalized(&self) -> Vec3
     {
         self * (1f64/ self.length())
+    }
+
+    pub fn dot(&self, other : &Vec3) -> f64
+    {
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 }
 
@@ -164,6 +178,16 @@ impl Quat
 
         v + uv + uuv
     }
+    
+    pub fn conj(&self) -> Quat
+    {
+        Quat {
+            x : -self.x,
+            y : -self.y,
+            z : -self.z,
+            w : self.w,
+        }
+    }
 }
 
 impl fmt::Show for Vec3
@@ -209,13 +233,24 @@ impl Sub<Vec3, Vec3> for Vec3 {
     }
 }
 
-
-
 impl Mul<f64, Vec3> for Vec3 {
     fn mul(&self, f: &f64) -> Vec3 {
         Vec3::new(self.x**f, self.y**f, self.z**f)
     }
 }
+
+impl Mul<Quat, Quat> for Quat {
+    fn mul(&self, other: &Quat) -> Quat {
+        Quat {
+            x : self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y,
+            y : self.w * other.y + self.y * other.w + self.z * other.x - self.x * other.z,
+            z : self.w * other.z + self.z * other.w + self.x * other.y - self.y * other.x,
+            w : self.w * other.w - self.x * other.x - self.y * other.y - self.z * other.z,
+        }
+    }
+}
+
+
 
 #[test]
 fn test_quat_rotate() {

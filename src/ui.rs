@@ -10,6 +10,7 @@ use std::ptr;
 use scene;
 use property::TProperty;
 use property;
+use intersection;
 
 #[repr(C)]
 pub struct Tree;
@@ -333,6 +334,13 @@ pub extern fn mouse_up(
     //println!("rust mouse up button {}, pos: {}, {}", button, x, y);
     let r = m.render.camera.borrow().ray_from_screen(x as f64, y as f64, 1000f64);
     println!("ray : {} ", r);
+
+    for o in m.render.scene.read().objects.iter() {
+        let ir = intersection::ray_object(r, &*o.read());
+        if ir.hit {
+            println!(" I hit object {} ", o.read().name);
+        }
+    }
 }
 
 pub extern fn mouse_move(

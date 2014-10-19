@@ -7,6 +7,17 @@ pub struct Ray
     pub direction : Vec3
 }
 
+impl Ray
+{
+    pub fn new(start : Vec3, direction : Vec3) -> Ray
+    {
+        Ray {
+            start : start,
+            direction : direction
+        }
+    }
+}
+
 pub struct Plane
 {
     pub point : Vec3,
@@ -25,11 +36,47 @@ pub struct Repere
     pub rotation : Quat
 }
 
+impl Repere {
+    pub fn new(origin : Vec3, rotation : Quat) -> Repere
+    {
+        Repere {
+            origin : origin,
+            rotation : rotation
+        }
+    }
+
+    pub fn world_to_local(&self, v : &Vec3) -> Vec3
+    {
+        let iq = self.rotation.conj();
+        let out = iq.rotate_vec3(&(v - self.origin));
+        out
+    }
+
+    pub fn local_to_world(&self, v : &Vec3) -> Vec3
+    {
+        let iq = self.rotation.conj();
+        let out = self.rotation.rotate_vec3(v) + self.origin;
+        out
+    }
+}
+
 pub struct Triangle
 {
     pub v0 : Vec3,
     pub v1 : Vec3,
     pub v2 : Vec3
+}
+
+impl Triangle
+{
+    pub fn new(v0 : Vec3, v1 : Vec3, v2 : Vec3) -> Triangle
+    {
+        Triangle {
+            v0 : v0,
+            v1 : v1,
+            v2 : v2
+        }
+    }
 }
 
 pub struct Frustum

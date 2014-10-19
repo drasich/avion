@@ -28,7 +28,17 @@ impl Scene
         let file = File::open(&Path::new(file_path)).read_to_string().unwrap();
         let scene : Scene = json::decode(file.as_slice()).unwrap();
 
+        scene.post_read_parent_set();
+
         scene
+    }
+
+    fn post_read_parent_set(&self)
+    {
+        for o in self.objects.iter()
+        {
+            post_read_parent_set(o.clone());
+        }
     }
 
     pub fn save(&self)
@@ -93,5 +103,14 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Scene {
         })
     })
   }
+}
+
+pub fn post_read_parent_set(o : Arc<RWLock<object::Object>>)
+{
+    for c in o.read().children.iter()
+    {
+        c.write().parent = Some(o.clone());
+        post_read_parent_set(c.clone());
+    }
 }
 

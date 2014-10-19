@@ -13,7 +13,8 @@ pub struct Object
     pub position : vec::Vec3,
     pub orientation : vec::Quat,
     pub scale : vec::Vec3,
-    pub children : DList<Arc<RWLock<Object>>>
+    pub children : DList<Arc<RWLock<Object>>>,
+    pub parent : Option<Arc<RWLock<Object>>>
 }
 
 impl Object
@@ -26,7 +27,8 @@ impl Object
             position : vec::Vec3::zero(),
             orientation : vec::Quat::identity(),
             scale : vec::Vec3::one(),
-            children : DList::new()
+            children : DList::new(),
+            parent : None
         }
     }
 
@@ -52,11 +54,54 @@ impl Object
         mt * mq * ms
     }
 
+    /*
     pub fn child_add(&mut self, child : Arc<RWLock<Object>>)
     {
         self.children.push(child);
+        child.write().parent = Some(self.clone());
+    }
+    */
+
+
+    pub fn world_position(&self) -> vec::Vec3
+    {
+        match self.parent {
+            None => return self.position,
+            Some(ref parent) => {
+                let wo = parent.read().world_orientation();
+                let p = wo.rotate_vec3(&self.position);
+                return p + parent.read().world_position();
+            }
+        }
+    }
+
+    pub fn world_orientation(&self) -> vec::Quat
+    {
+        match self.parent {
+            None => return self.orientation,
+            Some(ref p) => {
+                return p.read().world_orientation() * self.orientation;
+            }
+        }
+    }
+
+    pub fn world_scale(&self) -> vec::Vec3
+    {
+        match self.parent {
+            None => return self.scale,
+            Some(ref p) => {
+                return self.scale.mul(& p.read().world_scale());
+            }
+        }
     }
 }
+
+pub fn child_add(parent : Arc<RWLock<Object>>, child : Arc<RWLock<Object>>)
+{
+    parent.write().children.push(child.clone());
+    child.write().parent = Some(parent.clone());
+}
+
 
 /*
 impl PropertyShow for Object

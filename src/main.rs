@@ -33,6 +33,7 @@ mod texture;
 mod ui;
 mod property;
 mod geometry;
+mod intersection;
 
 
 fn main() {

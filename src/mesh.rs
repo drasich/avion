@@ -62,7 +62,7 @@ pub trait BufferSend
     fn send(&mut self) -> ();
     fn utilise(&self, att : *const shader::CglShaderAttribute) ->();
     fn size_get(&self) -> uint;
-    fn buffer_get(&self) -> Option<*const CglBuffer>;
+    fn cgl_buffer_get(&self) -> Option<*const CglBuffer>;
 }
 
 impl<T> BufferSend for Buffer<T> {
@@ -107,7 +107,7 @@ impl<T> BufferSend for Buffer<T> {
         return self.data.len();
     }
 
-    fn buffer_get(&self) -> Option<*const CglBuffer>
+    fn cgl_buffer_get(&self) -> Option<*const CglBuffer>
     {
         return self.cgl_buffer;
     }
@@ -118,6 +118,8 @@ pub struct Mesh
     pub name : String,
     pub state : i32,
     pub buffers : HashMap<String, Box<BufferSend+'static+Send+Sync>>, //TODO check
+    pub buffers_f32 : HashMap<String, Box<Buffer<f32>>>, //TODO check
+    pub buffers_u32 : HashMap<String, Box<Buffer<u32>>>, //TODO check
 }
 
 impl Mesh
@@ -128,6 +130,8 @@ impl Mesh
            name : String::from_str("mesh_new"),
            state : 0,
            buffers : HashMap::new(),
+           buffers_f32 : HashMap::new(),
+           buffers_u32 : HashMap::new(),
        };
 
        /*
@@ -149,6 +153,8 @@ impl Mesh
            name : String::from_str(path),
            state : 0,
            buffers : HashMap::new(),
+           buffers_f32 : HashMap::new(),
+           buffers_u32 : HashMap::new(),
        };
         
        m
@@ -196,7 +202,13 @@ impl Mesh
 
            let bufname = String::from_str("position");
 
+           /*
            self.buffers.insert(bufname.clone(), box Buffer::new(
+                   bufname.clone(),
+                   vvv,
+                   Vertex));
+                   */
+           self.buffers_f32.insert(bufname.clone(), box Buffer::new(
                    bufname.clone(),
                    vvv,
                    Vertex));
@@ -216,7 +228,13 @@ impl Mesh
 
            let bufname = String::from_str("faces");
 
+           /*
            self.buffers.insert(bufname.clone(), box Buffer::new(
+                   bufname.clone(),
+                   fff,
+                   Index));
+                   */
+           self.buffers_u32.insert(bufname.clone(), box Buffer::new(
                    bufname.clone(),
                    fff,
                    Index));
@@ -296,7 +314,43 @@ impl Mesh
             for (_,b) in self.buffers.iter_mut() {
                 Some(b.send());
             }
+            for (_,b) in self.buffers_u32.iter_mut() {
+                Some(b.send());
+            }
+            for (_,b) in self.buffers_f32.iter_mut() {
+                Some(b.send());
+            }
             self.state = 11;
+        }
+    }
+
+    pub fn buffer_f32_get(&self, name : &str) -> Option<&Box<Buffer<f32>>>
+    {
+        let s = String::from_str(name);
+
+        match self.buffers_f32.find(&s) {
+            Some(b) => return Some(b),
+            None => None,
+        }
+    }
+
+    pub fn buffer_u32_get(&self, name : &str) -> Option<&Box<Buffer<u32>>>
+    {
+        let s = String::from_str(name);
+
+        match self.buffers_u32.find(&s) {
+            Some(b) => return Some(b),
+            None => None,
+        }
+    }
+
+    pub fn buffer_get(&self, name : &str) -> Option<&Box<BufferSend+Send+Sync>>
+    {
+        let s = String::from_str(name);
+
+        match self.buffers.find(&s) {
+            Some(b) => return Some(b),
+            None => None,
         }
     }
 
@@ -334,7 +388,9 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Mesh {
          Ok(Mesh{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
            state : 0,
-           buffers : HashMap::new()
+           buffers : HashMap::new(),
+           buffers_f32 : HashMap::new(),
+           buffers_u32 : HashMap::new()
         })
     })
   }

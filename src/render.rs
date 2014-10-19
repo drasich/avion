@@ -16,6 +16,8 @@ use matrix;
 use texture;
 use scene;
 
+use mesh::BufferSend;
+
 #[link(name = "cypher")]
 extern {
     pub fn draw_callback_set(
@@ -208,13 +210,35 @@ impl RenderPass
                 let mut can_render = true;
                 let mut vertex_data_count = 0;
                 for (name, cgl_att) in shader.attributes.iter() {
-                    let cgl_buf = mb.buffers.find(name);
-                    match cgl_buf {
+                    match mb.buffer_get(name.as_slice()){
                         Some(ref cb) => {
                             cb.utilise(*cgl_att);
                             if name.as_slice() == "position" {
                                 vertex_data_count = cb.size_get();
                             }
+                            continue;
+                        },
+                        None => ()
+                    }
+
+                    match mb.buffer_f32_get(name.as_slice()){
+                        Some(ref cb) => {
+                            cb.utilise(*cgl_att);
+                            if name.as_slice() == "position" {
+                                vertex_data_count = cb.size_get();
+                            }
+                            continue;
+                        },
+                        None => (),
+                    }
+
+                    match mb.buffer_u32_get(name.as_slice()){
+                        Some(ref cb) => {
+                            cb.utilise(*cgl_att);
+                            if name.as_slice() == "position" {
+                                vertex_data_count = cb.size_get();
+                            }
+                            continue;
                         },
                         None => {
                             println!("while sending attributes, this mesh does not have the '{}' buffer, not rendering", name);
@@ -229,10 +253,11 @@ impl RenderPass
                     let m = matrix * object ;
                     shader.uniform_set("matrix", &m);
 
-                    match mb.buffers.find(&String::from_str("faces")) {
-                        Some(ref bind) =>
+                    match mb.buffer_u32_get("faces") {
+                        //Some(ref bind) =>
+                        Some(bind) =>
                             unsafe{
-                                match bind.buffer_get() {
+                                match (**bind).cgl_buffer_get() {
                                     Some(b) => {
                                         let faces_data_count = bind.size_get();
                                         cgl_draw_faces(b, faces_data_count as c_uint);
