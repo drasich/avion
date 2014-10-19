@@ -85,6 +85,8 @@ impl Camera
         let aspect : f64 = width / height;
         let vh = vl * aspect;
 
+        println!("w,h {},{}, {}", width, height, aspect);
+
         let up = up * vl;
         let h = h * vh;
 
