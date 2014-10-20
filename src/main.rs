@@ -130,7 +130,7 @@ name = "image/base_skeleton_col.png"
     let mut m = box ui::Master::new();
 
     unsafe {
-        render::draw_callback_set(render::draw_cb, &m.render);
+        render::draw_callback_set(render::draw_cb, render::resize_cb, &m.render);
         ui::init_callback_set(ui::init_cb, &*m);
     }
 

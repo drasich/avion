@@ -2,7 +2,7 @@
 use std::collections::{DList};
 use std::rc::Rc;
 use std::cell::RefCell;
-use libc::{c_uint};
+use libc::{c_uint, c_int};
 use sync::{RWLock, Arc,RWLockReadGuard};
 use std::collections::HashMap;
 use std::collections::hashmap::{Occupied,Vacant};
@@ -21,7 +21,8 @@ use mesh::BufferSend;
 #[link(name = "cypher")]
 extern {
     pub fn draw_callback_set(
-        cb: extern fn(*mut Render) -> (),
+        draw_cb: extern fn(*mut Render) -> (),
+        resize_cb: extern fn(*mut Render, w : c_int, h : c_int) -> (),
         render: *const Render
         ) -> ();
 
@@ -35,6 +36,13 @@ pub extern fn draw_cb(r : *mut Render) -> () {
         return (*r).draw_frame();
     }
 }
+
+pub extern fn resize_cb(r : *mut Render, w : c_int, h : c_int) -> () {
+    unsafe {
+        return (*r).resize(w, h);
+    }
+}
+
 
 
 pub struct RenderPass
@@ -312,11 +320,13 @@ impl Render {
     }
     */
 
-    /*
-    pub fn draw(&mut self)
+    pub fn resize(&mut self, w : c_int, h : c_int)
     {
+        println!("resize !!!! {}, {}", w, h);
+        let mut cam = self.camera.borrow_mut();
+
+        cam.resolution_set(w, h);
     }
-    */
 
     pub fn draw_frame(&mut self) -> ()
     {

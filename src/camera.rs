@@ -16,7 +16,7 @@ pub struct CameraData
     pub far : f64,
     pub aspect : f64,
     pub width : f64,
-    height : f64,
+    pub height : f64,
     pub height_base : i32,
     pub yaw : f64,
     pub pitch : f64,
@@ -43,7 +43,7 @@ impl Camera
             fovy : consts::PI/8.0f64,
             fovy_base : consts::PI/8.0f64,
             near : 1f64,
-            far : 1000f64,
+            far : 10000f64,
             aspect : 1.6f64,
             width : 800f64,
             height : 500f64,
@@ -65,8 +65,8 @@ impl Camera
     pub fn perspective_get(&self) -> matrix::Matrix4
     {
         //TODO
-        matrix::Matrix4::perspective(0.4f64,1f64,1f64,10000f64)
-        //matrix::Matrix4::perspective(fovy,1f64, near, far)
+        //matrix::Matrix4::perspective(0.4f64,1f64,1f64,10000f64)
+        matrix::Matrix4::perspective(self.data.fovy, self.data.aspect, self.data.near, self.data.far)
     }
 
     pub fn ray_from_screen(&self, x : f64, y : f64, length: f64) -> geometry::Ray
@@ -85,7 +85,8 @@ impl Camera
         let aspect : f64 = width / height;
         let vh = vl * aspect;
 
-        println!("w,h {},{}, {}", width, height, aspect);
+        //println!("ray from screen : w,h {},{}, {}", width, height, aspect);
+        println!("ray from screen : camz, up, h {},{}, {}", camz, up, aspect);
 
         let up = up * vl;
         let h = h * vh;
@@ -106,5 +107,29 @@ impl Camera
             direction : dir
         }
     }
+
+    pub fn resolution_set(&mut self, w : i32, h : i32)
+    {
+        //self.data.width = w as f64;
+        //cam.data.height = h as f64;
+        //cam.data.height_base = h;
+
+
+        if w as f64 != self.data.width || h as f64 != self.data.height {
+            self.data.width = w as f64;
+            self.data.height = h as f64;
+            self.update_projection();
+            //cam.update_orthographic(c);
+        }
+    }
+
+    pub fn update_projection(&mut self)
+    {
+        println!("update proj");
+        self.data.aspect = self.data.width/ self.data.height;
+        self.data.fovy = self.data.fovy_base * self.data.height/ (self.data.height_base as f64);
+        //mat4_set_perspective(c->projection, c->fovy, c->aspect , c->near, c->far);
+    }
+
 }
 

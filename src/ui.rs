@@ -332,8 +332,8 @@ pub extern fn mouse_up(
 {
     let m : &Master = unsafe {mem::transmute(data)};
     //println!("rust mouse up button {}, pos: {}, {}", button, x, y);
-    let r = m.render.camera.borrow().ray_from_screen(x as f64, y as f64, 1000f64);
-    println!("ray : {} ", r);
+    let r = m.render.camera.borrow().ray_from_screen(x as f64, y as f64, 10000f64);
+    //println!("ray : {} ", r);
 
     for o in m.render.scene.read().objects.iter() {
         let ir = intersection::ray_object(r, &*o.read());
