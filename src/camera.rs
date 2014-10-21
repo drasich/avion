@@ -86,7 +86,8 @@ impl Camera
         let vh = vl * aspect;
 
         //println!("ray from screen : w,h {},{}, {}", width, height, aspect);
-        println!("ray from screen : camz, up, h {},{}, {}", camz, up, aspect);
+        //println!("ray from screen : camz, up, h {},{}, {}", camz, up, aspect);
+        //println!("ray from screen : x, y, {},{}", x, y);
 
         let up = up * vl;
         let h = h * vh;
@@ -97,11 +98,13 @@ impl Camera
         let x : f64 = x / (width /2.0f64);
         let y : f64 = y / (height /2.0f64);
 
+
         let pos = o.position + (camz * near) + ( (h * x) + (up * -y));
         let dir = pos - o.position;
         let dir = dir.normalized();
         let dir = dir * length;
 
+        println!(" pos, dir : {}, {}", pos, dir);
         geometry::Ray {
             start : pos,
             direction : dir

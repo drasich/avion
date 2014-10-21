@@ -41,6 +41,7 @@ pub fn ray_object(ray : geometry::Ray, o : &object::Object) -> IntersectionRay
                     let wp = o.world_position();
                     let wq = o.world_orientation();
                     let ws = o.world_scale();
+                    println!("object {} : {}, {}, {}", o.name, wp, wq, ws);
 
                     //TODO
                     //let ir_box = ray_box(ray, .... 

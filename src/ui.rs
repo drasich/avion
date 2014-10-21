@@ -249,14 +249,6 @@ pub extern fn init_cb(master: *mut Master) -> () {
             key_down
             );
 
-        let t = window_tree_new(w);
-        tree_register_cb(
-            t,
-            name_get,
-            select,
-            can_expand,
-            expand);
-
         let p = window_property_new(w);
         
         property_register_cb(
@@ -264,11 +256,21 @@ pub extern fn init_cb(master: *mut Master) -> () {
             changed,
             name_get
             ); 
-    
+
+        /*
+        let t = window_tree_new(w);
+        (*master).tree = Some(t);
+        tree_register_cb(
+            t,
+            name_get,
+            select,
+            can_expand,
+            expand);
+
         match (*master).scene {
             Some(ref s) => {
                 for o in s.read().objects.iter() {
-                    tree_object_add(t, mem::transmute(box o.clone()), ptr::null());
+                    //tree_object_add(t, mem::transmute(box o.clone()), ptr::null());
                 }
 
                 let oo = s.read().object_find("yepyoyo");
@@ -281,12 +283,12 @@ pub extern fn init_cb(master: *mut Master) -> () {
             }
             None => {}
         };
+        */
 
 
         //window_button_new(w);
 
         (*master).window = Some(w);
-        (*master).tree = Some(t);
         (*master).property = Some(p);
     }
 }
