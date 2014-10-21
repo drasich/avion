@@ -21,6 +21,14 @@ impl MeshRender
             material : resource::ResTT::new(material)
         }
     }
+
+    pub fn new_with_mesh(mesh : resource::ResTT<mesh::Mesh>, material : &str) -> MeshRender
+    {
+        MeshRender {
+            mesh : mesh,
+            material : resource::ResTT::new(material)
+        }
+    }
 }
 
 

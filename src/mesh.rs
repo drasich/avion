@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::hashmap::{Occupied,Vacant};
 use std::io::File;
 use serialize::{Encodable, Encoder, Decoder, Decodable};
 
@@ -7,6 +8,8 @@ use libc::{c_uint, c_void};
 use std::mem;
 use resource;
 use shader;
+use geometry;
+use vec;
 
 #[repr(C)]
 pub struct CglBuffer;
@@ -352,6 +355,34 @@ impl Mesh
             Some(b) => return Some(b),
             None => None,
         }
+    }
+
+    pub fn add_line(&mut self, s : geometry::Segment, color : vec::Vec4)
+    {
+        let name = String::from_str("position");
+        let count = 6;
+        let mut vvv : Vec<f32> = Vec::with_capacity(count);
+        vvv.push(s.p0.x as f32);
+        vvv.push(s.p0.y as f32);
+        vvv.push(s.p0.z as f32);
+        vvv.push(s.p1.x as f32);
+        vvv.push(s.p1.y as f32);
+        vvv.push(s.p1.z as f32);
+
+        let buffer = box Buffer::new(
+            name.clone(),
+            vvv,
+            Vertex);
+
+        match self.buffers_f32.entry(name) {
+            Vacant(entry) => {entry.set(buffer);},
+            Occupied(mut entry) => {
+                let yo = entry.into_mut();
+                *yo = buffer;
+            }
+        };
+
+        self.state = 1;
     }
 
 }

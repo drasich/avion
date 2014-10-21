@@ -15,6 +15,7 @@ use camera;
 use matrix;
 use texture;
 use scene;
+use mesh_render;
 
 use mesh::BufferSend;
 
@@ -128,11 +129,12 @@ impl RenderPass
                 Some(ref mut s) => {
                     yep = resource_get(&mut *shader_manager.write(), s);
                     match yep.clone() {
-                        None => {},
+                        None => {println!("no shader yet {}", s.name);},
                         Some(yy) => {
                             let mut yoyo = yy.write();
                             if yoyo.state == 0 {
                                 yoyo.read();
+                                println!("find shader!!! {}", s.name);
                             }
                         }
                     }
@@ -147,7 +149,7 @@ impl RenderPass
         match yep
         {
             None => {
-                println!("something wrong with the shader ");
+                println!("shader not yet available");
                 return;},
             Some(ref sh) => {
                 c = sh.clone();
@@ -293,6 +295,7 @@ pub struct Render
     pub material_manager : Arc<RWLock<resource::ResourceManager<shader::Material>>>,
     pub scene : Arc<RWLock<scene::Scene>>,
     pub camera : Rc<RefCell<camera::Camera>>,
+    pub line : Arc<RWLock<object::Object>>,
 }
 
 impl Render {
@@ -300,7 +303,7 @@ impl Render {
     pub fn new() -> Render
     {
         let scene_path = "scene/simple.scene";
-        let r = Render { 
+        let mut r = Render { 
             passes : HashMap::new(),
             mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
             shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
@@ -309,7 +312,14 @@ impl Render {
             //scene : box scene::Scene::new_from_file(scene_path)
             scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path))),
             camera : Rc::new(RefCell::new(camera::Camera::new())),
+            line : Arc::new(RWLock::new(object::Object::new("line"))),
         };
+
+        let m = Arc::new(RWLock::new(mesh::Mesh::new()));
+        let rs = resource::ResData(m);
+        let mr = resource::ResTT::new_with_res("yep", rs);
+
+        r.line.write().mesh_render = Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
 
         r
     }
@@ -359,6 +369,12 @@ impl Render {
                 self.material_manager.clone(),
                 self.camera.clone());
         }
+
+        prepare_passes_object(
+            self.line.clone(),
+            &mut self.passes,
+            self.material_manager.clone(),
+            self.camera.clone());
     }
 }
 

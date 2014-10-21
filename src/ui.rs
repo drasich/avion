@@ -11,6 +11,9 @@ use scene;
 use property::TProperty;
 use property;
 use intersection;
+use resource;
+use geometry;
+use vec;
 
 #[repr(C)]
 pub struct Tree;
@@ -335,6 +338,17 @@ pub extern fn mouse_up(
     let m : &Master = unsafe {mem::transmute(data)};
     //println!("rust mouse up button {}, pos: {}, {}", button, x, y);
     let r = m.render.camera.borrow().ray_from_screen(x as f64, y as f64, 10000f64);
+    //TODO
+    match m.render.line.write().mesh_render {
+        Some (ref mr) => {
+            match mr.mesh.resource {
+                resource::ResData(ref mesh) => { mesh.write().add_line(geometry::Segment::new(r.start, r.direction - r.start), vec::Vec4::zero()); },
+                _ => {}
+            }
+        },
+        None => {}
+    }
+    //    add_line(r.start, r.direction - r.start);
     //println!("ray : {} ", r);
 
     for o in m.render.scene.read().objects.iter() {

@@ -50,6 +50,14 @@ impl<T> ResTT<T>
             resource : ResNone
         }
     }
+
+    pub fn new_with_res(name : &str, res : ResTest<T>) -> ResTT<T>
+    {
+        ResTT {
+            name : String::from_str(name),
+            resource : res
+        }
+    }
 }
 
 pub trait Create

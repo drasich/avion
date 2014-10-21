@@ -126,6 +126,18 @@ pub struct Segment
     pub p1 : Vec3
 }
 
+impl Segment
+{
+    pub fn new(p0 : Vec3, p1 : Vec3) -> Segment
+    {
+        Segment {
+            p0 : p0,
+            p1 : p1,
+        }
+    }
+
+}
+
 impl fmt::Show for Ray
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
