@@ -116,6 +116,13 @@ impl<T> BufferSend for Buffer<T> {
     }
 }
 
+pub enum DrawType
+{
+    Faces,
+    Vertices,
+    Lines
+}
+
 pub struct Mesh
 {
     pub name : String,
@@ -123,6 +130,7 @@ pub struct Mesh
     pub buffers : HashMap<String, Box<BufferSend+'static+Send+Sync>>, //TODO check
     pub buffers_f32 : HashMap<String, Box<Buffer<f32>>>, //TODO check
     pub buffers_u32 : HashMap<String, Box<Buffer<u32>>>, //TODO check
+    pub draw_type : DrawType
 }
 
 impl Mesh
@@ -135,6 +143,7 @@ impl Mesh
            buffers : HashMap::new(),
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
+           draw_type : Faces
        };
 
        /*
@@ -158,6 +167,7 @@ impl Mesh
            buffers : HashMap::new(),
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
+           draw_type : Faces
        };
         
        m
@@ -321,6 +331,7 @@ impl Mesh
                 Some(b.send());
             }
             for (_,b) in self.buffers_f32.iter_mut() {
+                println!("vec data before send : {} ", b.data);
                 Some(b.send());
             }
             self.state = 11;
@@ -359,15 +370,68 @@ impl Mesh
 
     pub fn add_line(&mut self, s : geometry::Segment, color : vec::Vec4)
     {
+        println!("add line :::::::: {} ", s);
         let name = String::from_str("position");
         let count = 6;
         let mut vvv : Vec<f32> = Vec::with_capacity(count);
+        let p0x : f32 = s.p0.x as f32;
+        let p0y : f32 = s.p0.y as f32;
+        let p0z : f32 = s.p0.z as f32;
+        let p1x : f32 = s.p1.x as f32;
+        let p1y : f32 = s.p1.y as f32;
+        let p1z : f32 = s.p1.z as f32;
+        /*
         vvv.push(s.p0.x as f32);
         vvv.push(s.p0.y as f32);
         vvv.push(s.p0.z as f32);
         vvv.push(s.p1.x as f32);
         vvv.push(s.p1.y as f32);
         vvv.push(s.p1.z as f32);
+        */
+
+        vvv.push(p0x);
+        vvv.push(p0y);
+        vvv.push(p0z);
+
+        /*
+        vvv.push(p1x);
+        vvv.push(p1y);
+        vvv.push(p1z);
+        */
+
+        /*
+        vvv.push(0f32);//0.09368f32);
+        vvv.push(0f32);//0.090505f32);
+        vvv.push(-1f32);
+        */
+        vvv.push(1293.499535f32);
+        vvv.push(-917.208761f32);
+        vvv.push(-9874.504762f32);
+        /*
+        vvv.push(929.050555f32);
+        vvv.push(897.557312f32);
+        vvv.push(-9917.228741f32);
+        */
+        /*
+        vvv.push(-10f32);
+        vvv.push(0f32);
+        vvv.push(-500f32);
+        vvv.push(50f32);
+        vvv.push(50f32);
+        vvv.push(-500f32);
+        */
+        
+        println!("vec : {} ", vvv);
+
+        /*
+        vvv.push(0f32);
+        vvv.push(0f32);
+        vvv.push(-1f32);
+        vvv.push(800f32);
+        vvv.push(755f32);
+        vvv.push(-10000f32);
+        */
+
 
         let buffer = box Buffer::new(
             name.clone(),
@@ -381,6 +445,8 @@ impl Mesh
                 *yo = buffer;
             }
         };
+
+        self.draw_type = Lines;
 
         self.state = 1;
     }
@@ -421,7 +487,8 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Mesh {
            state : 0,
            buffers : HashMap::new(),
            buffers_f32 : HashMap::new(),
-           buffers_u32 : HashMap::new()
+           buffers_u32 : HashMap::new(),
+           draw_type : Faces
         })
     })
   }

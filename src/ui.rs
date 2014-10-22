@@ -342,7 +342,7 @@ pub extern fn mouse_up(
     match m.render.line.write().mesh_render {
         Some (ref mr) => {
             match mr.mesh.resource {
-                resource::ResData(ref mesh) => { mesh.write().add_line(geometry::Segment::new(r.start, r.direction - r.start), vec::Vec4::zero()); },
+                resource::ResData(ref mesh) => { mesh.write().add_line(geometry::Segment::new(r.start, r.start + r.direction), vec::Vec4::zero()); },
                 _ => {}
             }
         },

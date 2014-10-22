@@ -137,6 +137,13 @@ impl Segment
     }
 
 }
+impl fmt::Show for Segment
+{
+    fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}; {}", self.p0, self.p1)
+    }
+}
+
 
 impl fmt::Show for Ray
 {

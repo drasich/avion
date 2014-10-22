@@ -28,6 +28,7 @@ extern {
         ) -> ();
 
     pub fn cgl_draw(vertex_count : c_uint) -> ();
+    pub fn cgl_draw_lines(vertex_count : c_uint) -> ();
     pub fn cgl_draw_faces(buffer : *const mesh::CglBuffer, index_count : c_uint) -> ();
     pub fn cgl_draw_end() -> ();
 }
@@ -276,8 +277,20 @@ impl RenderPass
                                     None => ()
                                 }
                             },
-                            None => unsafe {
-                                cgl_draw(vertex_data_count as c_uint);
+                            None => {
+                                match mb.draw_type {
+                                    mesh::Lines => {
+                                        let vc : uint = vertex_data_count/3;
+                                        unsafe {
+                                            cgl_draw_lines(vc as c_uint);
+                                        }
+                                    },
+                                    _ => {
+                                        unsafe {
+                                            cgl_draw(vertex_data_count as c_uint);
+                                        }
+                                    }
+                                }
                             }
                     }
                 }
