@@ -108,7 +108,6 @@ impl Camera
         let dir = dir.normalized();
         let dir = dir * length;
 
-        println!(" pos, dir : {}, {}", pos, dir);
         geometry::Ray {
             start : pos,
             direction : dir

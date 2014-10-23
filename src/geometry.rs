@@ -152,3 +152,17 @@ impl fmt::Show for Ray
     }
 }
 
+impl fmt::Show for Triangle
+{
+    fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{} ; {} ; {}", self.v0, self.v1, self.v2)
+    }
+}
+
+impl fmt::Show for Repere
+{
+    fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{} ; {}", self.origin, self.rotation)
+    }
+}
+

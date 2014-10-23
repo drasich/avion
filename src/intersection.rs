@@ -29,7 +29,7 @@ impl IntersectionRay
     }
 }
 
-pub fn ray_object(ray : geometry::Ray, o : &object::Object) -> IntersectionRay
+pub fn ray_object(ray : &geometry::Ray, o : &object::Object) -> IntersectionRay
 {
     let mut out = IntersectionRay::new();
 
@@ -41,7 +41,6 @@ pub fn ray_object(ray : geometry::Ray, o : &object::Object) -> IntersectionRay
                     let wp = o.world_position();
                     let wq = o.world_orientation();
                     let ws = o.world_scale();
-                    println!("object {} : {}, {}, {}", o.name, wp, wq, ws);
 
                     //TODO
                     //let ir_box = ray_box(ray, .... 
@@ -56,7 +55,7 @@ pub fn ray_object(ray : geometry::Ray, o : &object::Object) -> IntersectionRay
 }
 
 pub fn ray_mesh(
-    ray : geometry::Ray,
+    ray : &geometry::Ray,
     m : &mesh::Mesh,
     position : &Vec3,
     rotation : &Quat,
@@ -88,7 +87,6 @@ pub fn ray_mesh(
     match m.buffer_u32_get("faces"){
         None => return out,
         Some(ref b) => {
-            //for i in b.data.iter() {
             for i in range_step(0, b.data.len(), 3) {
                 let index = b.data[i] as uint;
                 let v0 = get_vertex(&vertices.data, index).mul(scale);
@@ -98,7 +96,7 @@ pub fn ray_mesh(
                 let v2 = get_vertex(&vertices.data, index).mul(scale);
 
                 let tri = geometry::Triangle::new(v0,v1,v2);
-                //TODhttps://www.asiatorrents.me/index.php?page=torrentsO
+
                 out = ray_triangle(&newray, &tri, 1.0);
                 if out.hit {
                     out.position = r.local_to_world(&out.position);
@@ -177,7 +175,7 @@ pub fn ray_triangle(r : &geometry::Ray, t : &geometry::Triangle, min : f64) -> I
         }
     }
 
-    let temp = a1*a2 - b1*a2;
+    let temp = a1*b2 - b1*a2;
 
     if !(temp != 0f64) {
         return out;

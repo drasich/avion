@@ -349,15 +349,12 @@ fn _rotate_camera(master : &mut Master, x : f64, y : f64)
   //if vec::Vec3::up().dot(&c.orientation.rotate_vec3(&vec::Vec3::up())) <0f64 {
   if vec::Vec3::up().dot(&cori.rotate_vec3(&vec::Vec3::up())) <0f64 {
       cam.yaw = cam.yaw + 0.005*x;
-    println!("cam yaw ++");
   }
   else {
-    println!("cam yaw --");
       cam.yaw = cam.yaw - 0.005*x;
   }
 
   //cam.pitch -= 0.005f*y;
-  println!("cam yaw {}", cam.yaw);
 
   //TODO angles
   let qy = vec::Quat::new_axis_angle(vec::Vec3::up(), cam.yaw);
@@ -426,7 +423,7 @@ pub extern fn mouse_up(
     //println!("ray : {} ", r);
 
     for o in m.render.scene.read().objects.iter() {
-        let ir = intersection::ray_object(r, &*o.read());
+        let ir = intersection::ray_object(&r, &*o.read());
         if ir.hit {
             println!(" I hit object {} ", o.read().name);
         }
@@ -476,7 +473,7 @@ pub extern fn key_down(
     timestamp : c_int
     )
 {
-    println!("rust key_down");
+    //println!("rust key_down");
     let m : &mut Master = unsafe {mem::transmute(data)};
     let mut camera = m.render.camera.borrow_mut();
 
@@ -490,16 +487,16 @@ pub extern fn key_down(
     let mut t = vec::Vec3::zero();
 
     if yep == "e" {
-        t.z = -0.1f64;
+        t.z = -1.1f64;
     }
     else if yep == "d" {
-        t.z = 0.1f64;
+        t.z = 1.1f64;
     }
     else if yep == "f" {
-        t.x = 0.1f64;
+        t.x = 1.1f64;
     }
     else if yep == "s" {
-        t.x = -0.1f64;
+        t.x = -1.1f64;
     }
 
     let p = camera.object.read().position;
@@ -508,6 +505,6 @@ pub extern fn key_down(
 
     let ob = camera.object.read();
 
-    println!("pos {}, rot {}, scale {} ", ob.position, ob.orientation, ob.scale);
+    //println!("pos {}, rot {}, scale {} ", ob.position, ob.orientation, ob.scale);
 
 }

@@ -6,7 +6,7 @@
   "state": 0,
   "textures": [
     {
-      "name": "image/test.png"
+      "name": "image/tex_ground.png"
     }
   ],
   "uniforms": {

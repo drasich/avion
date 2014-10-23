@@ -248,7 +248,7 @@ impl RenderPass
                             continue;
                         },
                         None => {
-                            println!("while sending attributes, this mesh does not have the '{}' buffer, not rendering", name);
+                            //println!("while sending attributes, this mesh does not have the '{}' buffer, not rendering", name);
                             can_render = false;
                             break;
                         }
