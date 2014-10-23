@@ -231,14 +231,17 @@ impl Matrix4
         let m01 = m[4];
         let m02 = m[8];
         let m03 = m[12];
+
         let m10 = m[1];
         let m11 = m[5];
         let m12 = m[9];
         let m13 = m[13];
+
         let m20 = m[2];
         let m21 = m[6];
         let m22 = m[10];
         let m23 = m[14];
+
         let m30 = m[3];
         let m31 = m[7];
         let m32 = m[11];
@@ -293,10 +296,10 @@ impl Matrix4
         let d33 = (v3 * m00 - v1 * m01 + v0 * m02) * inv_det;
 
         Matrix4 { data : [
-            d00, d01, d02, d03,
-            d10, d11, d12, d13,
-            d20, d21, d22, d23,
-            d30, d31, d32, d33]
+            d00, d10, d20, d30,
+            d01, d11, d21, d31,
+            d02, d12, d22, d32,
+            d03, d13, d23, d33]
         }
     }
 
@@ -340,7 +343,10 @@ impl fmt::Show for Matrix4
 
         for i in range(0u,4) 
         {
-            let line = format!("{}, {}, {}, {} \n", self.data[4*i], self.data[4*i + 1], self.data[4*i + 2], self.data[4*i + 3]);
+            //let line = format!("{}, {}, {}, {} \n", self.data[4*i], self.data[4*i + 1], self.data[4*i + 2], self.data[4*i + 3]);
+            let line = format!("{}, {}, {}, {} \n", self.data[i], self.data[i + 4], self.data[i + 8], self.data[i + 12]);
+            //printf("  %f %f %f %f\n", m[i], m[i+4], m[i+8], m[i+12]);
+
             yep.push_str(line.as_slice());
         }
 

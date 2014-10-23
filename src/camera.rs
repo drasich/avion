@@ -39,7 +39,7 @@ impl Camera
 {
     pub fn new() -> Camera
     {
-        Camera { data : CameraData {
+        let c = Camera { data : CameraData {
             fovy : consts::PI/8.0f64,
             fovy_base : consts::PI/8.0f64,
             near : 1f64,
@@ -59,7 +59,11 @@ impl Camera
             clear_color : vec::Vec4::zero()  
         },
         object : Arc::new(RWLock::new(object::Object::new("camera")))
-        }
+        };
+
+        c.object.write().position = vec::Vec3::new(0.1f64, 0f64, 0f64);
+
+        c
     }
 
     pub fn perspective_get(&self) -> matrix::Matrix4
@@ -133,6 +137,6 @@ impl Camera
         self.data.fovy = self.data.fovy_base * self.data.height/ (self.data.height_base as f64);
         //mat4_set_perspective(c->projection, c->fovy, c->aspect , c->near, c->far);
     }
-
+    
 }
 

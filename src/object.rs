@@ -12,6 +12,7 @@ pub struct Object
     pub mesh_render : Option<mesh_render::MeshRender>,
     pub position : vec::Vec3,
     pub orientation : vec::Quat,
+    //pub angles : vec::Vec3,
     pub scale : vec::Vec3,
     pub children : DList<Arc<RWLock<Object>>>,
     pub parent : Option<Arc<RWLock<Object>>>
@@ -26,6 +27,7 @@ impl Object
             mesh_render : None,
             position : vec::Vec3::zero(),
             orientation : vec::Quat::identity(),
+            //angles : vec::Vec3::zero(),
             scale : vec::Vec3::one(),
             children : DList::new(),
             parent : None

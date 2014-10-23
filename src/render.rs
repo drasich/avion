@@ -82,14 +82,10 @@ impl RenderPass
         material : Arc<RWLock<shader::Material>>,
         camera : Rc<RefCell<camera::Camera>>) -> RenderPass
     {
-        //TODO 
-        //let cam = camera::Camera::new();
-
         RenderPass {
                   name : String::from_str("passtest"),
                   material : material.clone(),
                   objects : DList::new(),
-                  //camera : Rc::new(RefCell::new(cam)),
                   camera : camera,
               }
     }

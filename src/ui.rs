@@ -7,6 +7,7 @@ use std::mem;
 use sync::{RWLock, Arc};
 use std::c_str::CString;
 use std::ptr;
+use std::f64::consts;
 use scene;
 use property::TProperty;
 use property;
@@ -127,6 +128,12 @@ extern {
         );
 }
 
+enum MasterState
+{
+    Idle,
+    CameraRotation
+}
+
 pub struct Master
 {
     //windows : DList<Window>
@@ -134,7 +141,8 @@ pub struct Master
     pub tree : Option<*const Tree>,
     pub property : Option<*const JkProperty>,
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
-    pub render : render::Render
+    pub render : render::Render,
+    pub state : MasterState
 
 }
 
@@ -147,7 +155,8 @@ impl Master
             tree : None,
             property : None,
             scene : None,
-            render : render::Render::new()
+            render : render::Render::new(),
+            state : Idle
         };
 
         m.scene = Some(m.render.scene.clone());
@@ -326,6 +335,61 @@ pub extern fn mouse_down(
     //println!("rust mouse down button {}, pos: {}, {}", button, x, y);
 }
 
+fn _rotate_camera(master : &mut Master, x : f64, y : f64)
+{
+  let mut camera = master.render.camera.borrow_mut();
+  let cori = {
+      camera.object.read().orientation
+  };
+
+
+  let result = {
+  let mut cam = &mut camera.data;
+
+  //if vec::Vec3::up().dot(&c.orientation.rotate_vec3(&vec::Vec3::up())) <0f64 {
+  if vec::Vec3::up().dot(&cori.rotate_vec3(&vec::Vec3::up())) <0f64 {
+      cam.yaw = cam.yaw + 0.005*x;
+    println!("cam yaw ++");
+  }
+  else {
+    println!("cam yaw --");
+      cam.yaw = cam.yaw - 0.005*x;
+  }
+
+  //cam.pitch -= 0.005f*y;
+  println!("cam yaw {}", cam.yaw);
+
+  //TODO angles
+  let qy = vec::Quat::new_axis_angle(vec::Vec3::up(), cam.yaw);
+  //let qp = vec::Quat::new_axis_angle(vec::Vec3::right(), cam.pitch);
+  //TODO
+  //let result = qy;// * qp; 
+  qy
+  };
+
+  let mut c = camera.object.write();
+  (*c).orientation = result;
+
+  master.state = CameraRotation;
+
+  //c.angles.x = cam.pitch/M_PI*180.0;
+  //(*c).angles.y = cam.yaw/consts::PI*180.0;
+
+  /*
+  Eina_List* objects = context_objects_get(v->context);
+
+  if (eina_list_count(objects) > 0) {
+    Vec3 objs_center = _objects_center(objects);
+    if (!vec3_equal(objs_center, cam->center)) {
+       cam->center = objs_center;
+      camera_recalculate_origin(v->camera);
+    }
+  }
+  */
+
+  //camera_rotate_around(v->camera, result, cam->center);
+}
+
 pub extern fn mouse_up(
     data : *const c_void,
     modifier : *const c_char,
@@ -335,7 +399,17 @@ pub extern fn mouse_up(
     timestamp : c_int
     )
 {
-    let m : &Master = unsafe {mem::transmute(data)};
+
+    let m : &mut Master = unsafe {mem::transmute(data)};
+
+    match m.state {
+        CameraRotation => {
+            m.state = Idle;
+            return;
+        },
+        _ => {}
+    }
+
     //println!("rust mouse up button {}, pos: {}, {}", button, x, y);
     let r = m.render.camera.borrow().ray_from_screen(x as f64, y as f64, 10000f64);
     //TODO
@@ -357,6 +431,7 @@ pub extern fn mouse_up(
             println!(" I hit object {} ", o.read().name);
         }
     }
+
 }
 
 pub extern fn mouse_move(
@@ -370,7 +445,14 @@ pub extern fn mouse_move(
     timestamp : c_int
     )
 {
+    if button == 0 {
+        return;
+    }
     //println!("rust mouse move");
+    let m : &mut Master = unsafe {mem::transmute(data)};
+    let x : f64 = curx as f64 - prevx as f64;
+    let y : f64 = cury as f64 - prevy as f64;
+    _rotate_camera(m, x, y);
 }
 
 pub extern fn mouse_wheel(
@@ -395,4 +477,37 @@ pub extern fn key_down(
     )
 {
     println!("rust key_down");
+    let m : &mut Master = unsafe {mem::transmute(data)};
+    let mut camera = m.render.camera.borrow_mut();
+
+    let s = unsafe {CString::new(key as *const i8, false) };
+
+    let yep = match s.as_str() {
+        Some(ss) => ss,
+        _ => return
+    };
+
+    let mut t = vec::Vec3::zero();
+
+    if yep == "e" {
+        t.z = -0.1f64;
+    }
+    else if yep == "d" {
+        t.z = 0.1f64;
+    }
+    else if yep == "f" {
+        t.x = 0.1f64;
+    }
+    else if yep == "s" {
+        t.x = -0.1f64;
+    }
+
+    let p = camera.object.read().position;
+
+    camera.object.write().position = p + t;
+
+    let ob = camera.object.read();
+
+    println!("pos {}, rot {}, scale {} ", ob.position, ob.orientation, ob.scale);
+
 }

@@ -380,18 +380,20 @@ impl Mesh
         let p1x : f32 = s.p1.x as f32;
         let p1y : f32 = s.p1.y as f32;
         let p1z : f32 = s.p1.z as f32;
-        /*
+        //*
         vvv.push(s.p0.x as f32);
         vvv.push(s.p0.y as f32);
         vvv.push(s.p0.z as f32);
         vvv.push(s.p1.x as f32);
         vvv.push(s.p1.y as f32);
         vvv.push(s.p1.z as f32);
-        */
+        //*/
 
+        /*
         vvv.push(p0x);
         vvv.push(p0y);
         vvv.push(p0z);
+        */
 
         /*
         vvv.push(p1x);
@@ -404,9 +406,11 @@ impl Mesh
         vvv.push(0f32);//0.090505f32);
         vvv.push(-1f32);
         */
+        /*
         vvv.push(1293.499535f32);
         vvv.push(-917.208761f32);
         vvv.push(-9874.504762f32);
+        */
         /*
         vvv.push(929.050555f32);
         vvv.push(897.557312f32);
@@ -423,14 +427,14 @@ impl Mesh
         
         println!("vec : {} ", vvv);
 
-        /*
+        //*
         vvv.push(0f32);
         vvv.push(0f32);
         vvv.push(-1f32);
-        vvv.push(800f32);
-        vvv.push(755f32);
-        vvv.push(-10000f32);
-        */
+        vvv.push(0f32);
+        vvv.push(10f32);
+        vvv.push(-1000f32);
+        //*/
 
 
         let buffer = box Buffer::new(
