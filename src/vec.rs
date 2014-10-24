@@ -80,6 +80,15 @@ impl Vec3
         }
     }
 
+    pub fn right() -> Vec3
+    {
+        Vec3 {
+            x : 1f64,
+            y : 0f64,
+            z : 0f64
+        }
+    }
+
     pub fn forward() -> Vec3
     {
         Vec3 {

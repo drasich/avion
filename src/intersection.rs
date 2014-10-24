@@ -1,6 +1,5 @@
 use object;
 use geometry;
-use mesh_render;
 use mesh;
 use resource;
 use std::iter::range_step;
@@ -31,7 +30,7 @@ impl IntersectionRay
 
 pub fn ray_object(ray : &geometry::Ray, o : &object::Object) -> IntersectionRay
 {
-    let mut out = IntersectionRay::new();
+    let out = IntersectionRay::new();
 
     match o.mesh_render {
         None => return out,
@@ -50,8 +49,6 @@ pub fn ray_object(ray : &geometry::Ray, o : &object::Object) -> IntersectionRay
             }
         }
     }
-
-    out
 }
 
 pub fn ray_mesh(

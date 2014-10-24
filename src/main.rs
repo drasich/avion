@@ -1,4 +1,12 @@
 #![feature(macro_rules)]
+#![feature(log_syntax)]
+#![feature(trace_macros)]
+
+//TODO remove
+#![allow(unused_variable)]
+#![allow(dead_code)]
+//#![allow(ctypes)]
+
 //#![feature(globs)]
 extern crate serialize;
 extern crate libc;
@@ -7,16 +15,7 @@ extern crate png;
 extern crate toml;
 extern crate debug;
 
-use libc::{c_char, c_void};
-use std::mem;
-use std::collections::{DList,HashMap};
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
-use sync::{RWLock, Arc};
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::c_str::CString;
-use std::ptr;
-use property::TProperty;
 
 mod resource;
 mod shader;
@@ -127,7 +126,7 @@ name = "image/base_skeleton_col.png"
 
         //scene.save();
 
-    let mut m = box ui::Master::new();
+    let m = box ui::Master::new();
 
     unsafe {
         render::draw_callback_set(render::draw_cb, render::resize_cb, &m.render);

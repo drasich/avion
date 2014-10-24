@@ -386,9 +386,9 @@ impl Mesh
 
         match self.buffers_f32.entry(name) {
             Vacant(entry) => {entry.set(buffer);},
-            Occupied(mut entry) => {
-                let yo = entry.into_mut();
-                *yo = buffer;
+            Occupied(entry) => {
+                let en = entry.into_mut();
+                *en = buffer;
             }
         };
 

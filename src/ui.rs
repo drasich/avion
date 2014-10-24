@@ -1,13 +1,10 @@
 use libc::{c_char, c_void, c_int};
 use render;
 use object;
-use std::collections::{DList};
 
 use std::mem;
 use sync::{RWLock, Arc};
 use std::c_str::CString;
-use std::ptr;
-use std::f64::consts;
 use scene;
 use property::TProperty;
 use property;
@@ -338,13 +335,11 @@ pub extern fn mouse_down(
 fn _rotate_camera(master : &mut Master, x : f64, y : f64)
 {
   let mut camera = master.render.camera.borrow_mut();
-  let cori = {
-      camera.object.read().orientation
-  };
+  let cori = camera.object.read().orientation;
 
 
   let result = {
-  let mut cam = &mut camera.data;
+  let cam = &mut camera.data;
 
   //if vec::Vec3::up().dot(&c.orientation.rotate_vec3(&vec::Vec3::up())) <0f64 {
   if vec::Vec3::up().dot(&cori.rotate_vec3(&vec::Vec3::up())) <0f64 {
@@ -354,14 +349,13 @@ fn _rotate_camera(master : &mut Master, x : f64, y : f64)
       cam.yaw = cam.yaw - 0.005*x;
   }
 
-  //cam.pitch -= 0.005f*y;
+  cam.pitch -= 0.005*y;
 
   //TODO angles
   let qy = vec::Quat::new_axis_angle(vec::Vec3::up(), cam.yaw);
-  //let qp = vec::Quat::new_axis_angle(vec::Vec3::right(), cam.pitch);
+  let qp = vec::Quat::new_axis_angle(vec::Vec3::right(), cam.pitch);
   //TODO
-  //let result = qy;// * qp; 
-  qy
+  qy * qp
   };
 
   let mut c = camera.object.write();
@@ -473,7 +467,6 @@ pub extern fn key_down(
     timestamp : c_int
     )
 {
-    //println!("rust key_down");
     let m : &mut Master = unsafe {mem::transmute(data)};
     let mut camera = m.render.camera.borrow_mut();
 
@@ -486,25 +479,14 @@ pub extern fn key_down(
 
     let mut t = vec::Vec3::zero();
 
-    if yep == "e" {
-        t.z = -1.1f64;
-    }
-    else if yep == "d" {
-        t.z = 1.1f64;
-    }
-    else if yep == "f" {
-        t.x = 1.1f64;
-    }
-    else if yep == "s" {
-        t.x = -1.1f64;
+    match yep {
+        "e" => t.z = -50f64,
+        "d" => t.z = 50f64,
+        "f" => t.x = 50f64,
+        "s" => t.x = -50f64,
+        _ => {}
     }
 
     let p = camera.object.read().position;
-
     camera.object.write().position = p + t;
-
-    let ob = camera.object.read();
-
-    //println!("pos {}, rot {}, scale {} ", ob.position, ob.orientation, ob.scale);
-
 }

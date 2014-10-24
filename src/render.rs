@@ -312,7 +312,7 @@ impl Render {
     pub fn new() -> Render
     {
         let scene_path = "scene/simple.scene";
-        let mut r = Render { 
+        let r = Render { 
             passes : HashMap::new(),
             mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
             shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),

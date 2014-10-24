@@ -1,14 +1,10 @@
-#![feature(macro_rules)]
-#![feature(log_syntax)]
-#![feature(trace_macros)]
-
 //extern crate libc;
 //extern crate serialize;
 //use libc::size_t;
 //use std::f64;
 //use std::io;
 //use serialize::{json, Encodable, Decodable};
-use std::str;
+//use std::str;
 use object;
 
 //log_syntax!()
@@ -38,7 +34,7 @@ pub enum PropertyType {
 
 macro_rules! new_test(
   ($yo:ident, $member:ident, SString) => (
-    $yo.$member.to_owned()
+    $yo.$member.to_string()
     );
   ($yo:ident, $member:ident, Struct) => (
     $yo.$member.clone()
@@ -52,7 +48,7 @@ macro_rules! new_test_set(
   ($sself:ident, $member:ident, SString, $value:ident, $name:ident) => (
     match $value {
     &SString(ref s) => {
-    $sself.$member = s.to_owned()
+    $sself.$member = s.to_string()
     }
     _ => {
       println!("cant set {:?} to {}, because it is a String", $value, $name);
@@ -83,23 +79,6 @@ macro_rules! new_test_set(
     )
   )
 
-/*
-      &Float(f) => {
-        if name == "speed" {
-          self.speed = f;
-        }
-      },
-      &String(ref s) => {
-          self.name = s.to_owned();
-      }
-      
-      &Struct(ref s) => {
-        if name == "position" {
-          println!("pos {:?} ", s)
-            for p in s.fields().iter() {
-              self.position.set_property(p.to_owned(),& s.get_property(p.to_owned()));
-            }
-            */
 
 
 pub macro_rules! property_impl(
@@ -110,14 +89,11 @@ pub macro_rules! property_impl(
       {
         fn fields(&self) -> Box<[String]>
         {
-          //return box ["xaa".to_owned(), "y".to_owned(), "z".to_owned()];
-          //*
           return box[
           $(
-            stringify!($member).to_owned(),
+            stringify!($member).to_string(),
            )+
           ];
-          //*/
 
         }
 

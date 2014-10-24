@@ -1,9 +1,9 @@
-use std::rc::Rc;
+//use std::rc::Rc;
 use sync::{RWLock, Arc};
 use std::f64::consts;
 
 use vec;
-use vec::{Vec3, Quat};
+use vec::{Vec3};//, Quat};
 use object;
 use matrix;
 use geometry;
