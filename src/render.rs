@@ -116,7 +116,7 @@ impl RenderPass
         {
             let mut matm = self.material.write();
 
-            for t in matm.textures.iter_mut() {
+            for (_,t) in matm.textures.iter_mut() {
                 let yep = resource_get(&mut *texture_manager.write(), t);
                 match yep.clone() {
                     None => {},
@@ -179,7 +179,7 @@ impl RenderPass
             let mut material = self.material.write();
 
             let mut i = 0u32;
-            for t in material.textures.iter_mut() {
+            for (_,t) in material.textures.iter_mut() {
                 let yep = resource_get(&mut *texture_manager.write(), t);
                 match yep {
                     Some(yoyo) => {

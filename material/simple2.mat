@@ -4,11 +4,11 @@
     "name": "shader/simple.sh"
   },
   "state": 0,
-  "textures": [
-    {
+  "textures": {
+    "texture": {
       "name": "image/tex_ground.png"
     }
-  ],
+  },
   "uniforms": {
     "unitest": { "variant": "Float", "fields" : [5.6] }
   }

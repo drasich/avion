@@ -16,6 +16,8 @@ extern crate toml;
 extern crate debug;
 
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use std::collections::HashMap;
+use sync::{RWLock, Arc};
 
 mod resource;
 mod shader;
@@ -40,20 +42,20 @@ fn main() {
 
     //spawn(proc() {
     /*
-       let mut mattt = Arc::new(RWLock::new( shader::Material {
+       let mut mattt = Arc::new(RWLock::new( material::Material {
             name : String::from_str("material/my_mat"),
             //shader : Some(shader::Shader::new("shader/simple.sh")),
             shader : Some(resource::ResTT::new("shader/simple.sh")),
             state : 0,
             //texture : Some(t)
-            textures : Vec::new(),
+            textures : HashMap::new(),
             uniforms : HashMap::new(),
         }));
-            mattt.write().textures.push(resource::ResTT::new("image/base_skeleton_col.png"));
-            mattt.write().uniforms.insert(String::from_str("unitest"), shader::Float(5.6f32));
+       mattt.write().textures.insert(String::from_str("texnametest"), resource::ResTT::new("image/base_skeleton_col.png"));
+       mattt.write().uniforms.insert(String::from_str("unitest"), box shader::Float(5.6f32));
     //mattt.read().savetoml();
     mattt.read().save();
-     */
+    */
 
     /*
     let matoml = r#"name = "material/my_mat"

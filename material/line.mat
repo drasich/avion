@@ -3,7 +3,7 @@
   "shader": {
     "name": "shader/line.sh"
   },
-  "textures": [
-  ],
+  "textures": {
+  },
   "uniforms": {}
 }

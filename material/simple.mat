@@ -3,10 +3,10 @@
   "shader": {
     "name": "shader/simple.sh"
   },
-  "textures": [
-    {
+  "textures": {
+    "texture": {
       "name": "image/base_skeleton_col.png"
     }
-  ],
+  },
   "uniforms": {}
 }

@@ -21,7 +21,7 @@ pub struct Material
     pub name : String,
     pub shader: Option<resource::ResTT<shader::Shader>>,
     pub state : i32,
-    pub textures : Vec<resource::ResTT<texture::Texture>>,
+    pub textures : HashMap<String, resource::ResTT<texture::Texture>>,
     //pub uniforms : HashMap<String, Box<UniformSend+'static>>,
     pub uniforms : HashMap<String, Box<shader::UniformData>>,
 }
@@ -50,7 +50,7 @@ impl Material
             name : String::from_str(name),
             shader : None,
             state : 0,
-            textures : Vec::new(),
+            textures : HashMap::new(),
             uniforms : HashMap::new(),
         }
     }
@@ -85,10 +85,17 @@ impl Material
             None => self.shader = None
         }
 
+        for (k,v) in mat.textures.iter()
+        {
+            self.textures.insert(k.clone(), resource::ResTT::new(v.name.as_slice()));
+        }
+
+        /*
         for t in mat.textures.iter()
         {
             self.textures.push(resource::ResTT::new(t.name.as_slice()));
         }
+        */
     }
 
     pub fn save(&self)
