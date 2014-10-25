@@ -1,6 +1,7 @@
 use mesh;
 use texture;
 use shader;
+use fbo;
 use material;
 use serialize::{Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
@@ -125,6 +126,19 @@ impl Create for texture::Texture
     }
 }
 
+impl Create for fbo::Fbo
+{
+    fn create(name : &str) -> fbo::Fbo
+    {
+        fbo::Fbo::new(name)
+    }
+
+    fn inittt(&mut self)
+    {
+        //TODO
+    }
+}
+
 
 
 
@@ -200,6 +214,32 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
             ResWait => {
                 return ResWait;
             }
+        }
+    }
+
+    pub fn request_use_no_proc(&mut self, name : &str) -> Arc<RWLock<T>>
+    {
+        let ms1 = self.resources.clone();
+        let mut ms1w = ms1.write();
+
+        let v : &mut ResTest<T> = match ms1w.entry(String::from_str(name)) {
+            Vacant(entry) => entry.set(ResNone),
+            Occupied(entry) => entry.into_mut(),
+        };
+
+        match *v 
+        {
+            ResNone | ResWait => {
+                let mt : T = Create::create(name);
+                let m = Arc::new(RWLock::new(mt));
+                m.write().inittt();
+
+                *v = ResData(m.clone());
+                return m.clone();
+            },
+            ResData(ref yep) => {
+                return yep.clone();
+            },
         }
     }
 }

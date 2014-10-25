@@ -1,0 +1,17 @@
+{
+  "name": "material/fbo.mat",
+  "shader": {
+    "name": "shader/simple.sh"
+  },
+  "textures": {
+    "texture": {
+      "variant": "SamplerFbo",
+      "fields": [
+        {
+          "name": "fbo_all"
+        }
+      ]
+    }
+  },
+  "uniforms": {}
+}

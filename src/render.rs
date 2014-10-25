@@ -103,7 +103,8 @@ impl RenderPass
     pub fn draw_frame(&self,
                       mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
                       shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
-                      texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>
+                      texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
+                      fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>
                      ) -> ()
     {
         {
@@ -123,7 +124,7 @@ impl RenderPass
                             }
                         }
                     },
-                    _ => { println!("todo fbo");}
+                    _ => {}
                 }
 
             }
@@ -190,7 +191,18 @@ impl RenderPass
                             None => {}
                         }
                     },
-                    _ => {println!("todo fbo"); }
+                    material::SamplerFbo(ref mut fbo) => {
+                        let yep = resource_get(&mut *fbo_manager.write(), fbo);
+                        match yep {
+                            Some(yoyo) => {
+                                //println!("come here ? ");
+                                shader.texture_set("texture", & *yoyo.read(),i);
+                                i = i +1;
+                            },
+                            None => {}
+                        }
+                    },
+                    //_ => {println!("todo fbo"); }
                 }
             }
 
@@ -323,11 +335,12 @@ pub struct Render
     pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
     pub texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
     pub material_manager : Arc<RWLock<resource::ResourceManager<material::Material>>>,
+    pub fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>,
     pub scene : Arc<RWLock<scene::Scene>>,
     pub camera : Rc<RefCell<camera::Camera>>,
     pub line : Arc<RWLock<object::Object>>,
-    pub fbo_all : Option<*const fbo::CglFbo>,
-    pub fbo_selected : Option<*const fbo::CglFbo>,
+    pub fbo_all : Arc<RWLock<fbo::Fbo>>,
+    pub fbo_selected : Arc<RWLock<fbo::Fbo>>,
 }
 
 impl Render {
@@ -335,18 +348,23 @@ impl Render {
     pub fn new() -> Render
     {
         let scene_path = "scene/simple.scene";
+        let fbo_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
+        let fbo_all = fbo_manager.write().request_use_no_proc("fbo_all");
+        let fbo_selected = fbo_manager.write().request_use_no_proc("fbo_selected");
+
         let r = Render { 
             passes : HashMap::new(),
             mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
             shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
             texture_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
             material_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+            fbo_manager : fbo_manager.clone(),
             //scene : box scene::Scene::new_from_file(scene_path)
             scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path))),
             camera : Rc::new(RefCell::new(camera::Camera::new())),
             line : Arc::new(RWLock::new(object::Object::new("line"))),
-            fbo_all : None,
-            fbo_selected : None
+            fbo_all : fbo_all,
+            fbo_selected : fbo_selected
         };
 
         let m = Arc::new(RWLock::new(mesh::Mesh::new()));
@@ -360,8 +378,8 @@ impl Render {
 
     pub fn init(&mut self)
     {
-        self.fbo_all = unsafe {Some(fbo::cgl_create_fbo()) };
-        self.fbo_selected = unsafe {Some(fbo::cgl_create_fbo())};
+        self.fbo_all.write().cgl_create();
+        self.fbo_selected.write().cgl_create();
     }
 
     pub fn resize(&mut self, w : c_int, h : c_int)
@@ -371,15 +389,8 @@ impl Render {
 
         cam.resolution_set(w, h);
 
-        match self.fbo_all {
-            Some(f) => unsafe { fbo::cgl_fbo_resize(f, w, h); },
-            _ => {}
-        }
-
-        match self.fbo_selected {
-            Some(f) => unsafe { fbo::cgl_fbo_resize(f, w, h); },
-            _ => {}
-        }
+        self.fbo_all.write().cgl_resize(w, h);
+        self.fbo_selected.write().cgl_resize(w, h);
     }
 
     pub fn draw_frame(&mut self) -> ()
@@ -387,12 +398,25 @@ impl Render {
         self.prepare_passes();
         //self.request_manager.handle_requests();
         //return (*self.pass).draw_frame();
+        self.fbo_all.read().cgl_use();
         for p in self.passes.values()
         {
             p.draw_frame(
                 self.mesh_manager.clone(),
                 self.shader_manager.clone(),
                 self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+        fbo::Fbo::cgl_use_end();
+
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
                 );
         }
     }

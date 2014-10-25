@@ -11,8 +11,8 @@ use shader;
 //use matrix;
 use resource;
 //use uniform;
-use uniform::UniformSend;
-use uniform::TextureSend;
+//use uniform::UniformSend;
+//use uniform::TextureSend;
 use texture;
 use fbo;
 //#[deriving(Decodable, Encodable, Default)]

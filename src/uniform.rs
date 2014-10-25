@@ -5,6 +5,7 @@ use shader;
 use matrix;
 use vec;
 use texture;
+use fbo;
 
 #[link(name = "cypher")]
 extern {
@@ -27,6 +28,12 @@ extern {
     pub fn cgl_shader_uniform_texture_set(
         uniform : *const shader::CglShaderUniform,
         tex : *const texture::CglTexture,
+        index : c_uint
+        ) -> ();
+
+    pub fn cgl_shader_uniform_fbo_set(
+        uniform : *const shader::CglShaderUniform,
+        fbo : *const fbo::CglFbo,
         index : c_uint
         ) -> ();
 }
@@ -102,3 +109,16 @@ impl TextureSend for texture::Texture {
     }
 }
 
+impl TextureSend for fbo::Fbo {
+
+    fn uniform_send(&self, uni : *const shader::CglShaderUniform, index : u32) ->()
+    {
+        match self.cgl_fbo {
+            None => {},
+            Some(f) => unsafe {
+                //TODO just one tex for now
+                cgl_shader_uniform_fbo_set(uni, f, index);
+            }
+        }
+    }
+}
