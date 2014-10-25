@@ -23,6 +23,7 @@ pub struct Texture
     pub image : Option<png::Image>,
     pub cgl_texture: Option<*const CglTexture>,
 } 
+
 impl Texture
 {
     pub fn new(name :&str) -> Texture

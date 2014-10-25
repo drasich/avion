@@ -6,7 +6,12 @@
   "state": 0,
   "textures": {
     "texture": {
-      "name": "image/tex_ground.png"
+      "variant": "SamplerImageFile",
+      "fields": [
+        {
+          "name": "image/tex_ground.png"
+        }
+      ]
     }
   },
   "uniforms": {

@@ -14,14 +14,39 @@ use resource;
 use uniform::UniformSend;
 use uniform::TextureSend;
 use texture;
+use fbo;
 //#[deriving(Decodable, Encodable, Default)]
 //#[deriving(Encodable, Default)]
+
+#[deriving(Decodable, Encodable)]
+pub enum Sampler
+{
+    SamplerImageFile(resource::ResTT<texture::Texture>),
+    SamplerFbo(resource::ResTT<fbo::Fbo>)
+}
+
+impl Sampler
+{
+    pub fn name(&self) -> &str
+    {
+        match *self {
+            SamplerImageFile(ref img) => {
+                img.name.as_slice()
+            },
+            SamplerFbo(ref f) => {
+                f.name.as_slice()
+            }
+        }
+    }
+}
+
 pub struct Material
 {
     pub name : String,
     pub shader: Option<resource::ResTT<shader::Shader>>,
     pub state : i32,
-    pub textures : HashMap<String, resource::ResTT<texture::Texture>>,
+    //pub textures : HashMap<String, resource::ResTT<texture::Texture>>,
+    pub textures : HashMap<String, Sampler>,
     //pub uniforms : HashMap<String, Box<UniformSend+'static>>,
     pub uniforms : HashMap<String, Box<shader::UniformData>>,
 }
@@ -87,7 +112,14 @@ impl Material
 
         for (k,v) in mat.textures.iter()
         {
-            self.textures.insert(k.clone(), resource::ResTT::new(v.name.as_slice()));
+            match *v {
+                SamplerImageFile(ref img) => {
+                    self.textures.insert(k.clone(), SamplerImageFile(resource::ResTT::new(img.name.as_slice())));
+                },
+                SamplerFbo(ref f) => {
+                    self.textures.insert(k.clone(), SamplerFbo(resource::ResTT::new(f.name.as_slice())));
+                }
+            }
         }
 
         /*

@@ -5,7 +5,12 @@
   },
   "textures": {
     "texture": {
-      "name": "image/base_skeleton_col.png"
+      "variant": "SamplerImageFile",
+      "fields": [
+        {
+          "name": "image/base_skeleton_col.png"
+        }
+      ]
     }
   },
   "uniforms": {}

@@ -17,11 +17,10 @@ use matrix;
 use texture;
 use scene;
 use mesh_render;
+use fbo;
 
 use mesh::BufferSend;
 
-#[repr(C)]
-pub struct CglFbo;
 
 #[link(name = "cypher")]
 extern {
@@ -36,12 +35,6 @@ extern {
     pub fn cgl_draw_lines(vertex_count : c_uint) -> ();
     pub fn cgl_draw_faces(buffer : *const mesh::CglBuffer, index_count : c_uint) -> ();
     pub fn cgl_draw_end() -> ();
-
-    pub fn cgl_create_fbo() -> *const CglFbo;
-    pub fn cgl_fbo_use(fbo : *const CglFbo);
-    pub fn cgl_fbo_use_end();
-    pub fn cgl_fbo_resize(fbo : *const CglFbo, w : c_int, h : c_int);
-    pub fn cgl_fbo_destroy(fbo : *const CglFbo);
 }
 
 pub extern fn init_cb(r : *mut Render) -> () {
@@ -117,16 +110,22 @@ impl RenderPass
             let mut matm = self.material.write();
 
             for (_,t) in matm.textures.iter_mut() {
-                let yep = resource_get(&mut *texture_manager.write(), t);
-                match yep.clone() {
-                    None => {},
-                    Some(yy) => {
-                        let mut yoyo = yy.write();
-                        if yoyo.state == 1 {
-                            yoyo.init();
+                match *t {
+                    material::SamplerImageFile(ref mut img) => {
+                        let yep = resource_get(&mut *texture_manager.write(), img);
+                        match yep.clone() {
+                            None => {},
+                            Some(yy) => {
+                                let mut yoyo = yy.write();
+                                if yoyo.state == 1 {
+                                    yoyo.init();
+                                }
+                            }
                         }
-                    }
+                    },
+                    _ => { println!("todo fbo");}
                 }
+
             }
         }
 
@@ -180,13 +179,18 @@ impl RenderPass
 
             let mut i = 0u32;
             for (_,t) in material.textures.iter_mut() {
-                let yep = resource_get(&mut *texture_manager.write(), t);
-                match yep {
-                    Some(yoyo) => {
-                        shader.texture_set("texture", & *yoyo.read(),i);
-                        i = i +1;
+                match *t {
+                    material::SamplerImageFile(ref mut img) => {
+                        let yep = resource_get(&mut *texture_manager.write(), img);
+                        match yep {
+                            Some(yoyo) => {
+                                shader.texture_set("texture", & *yoyo.read(),i);
+                                i = i +1;
+                            },
+                            None => {}
+                        }
                     },
-                    None => {}
+                    _ => {println!("todo fbo"); }
                 }
             }
 
@@ -322,8 +326,8 @@ pub struct Render
     pub scene : Arc<RWLock<scene::Scene>>,
     pub camera : Rc<RefCell<camera::Camera>>,
     pub line : Arc<RWLock<object::Object>>,
-    pub fbo_all : Option<*const CglFbo>,
-    pub fbo_selected : Option<*const CglFbo>,
+    pub fbo_all : Option<*const fbo::CglFbo>,
+    pub fbo_selected : Option<*const fbo::CglFbo>,
 }
 
 impl Render {
@@ -356,8 +360,8 @@ impl Render {
 
     pub fn init(&mut self)
     {
-        self.fbo_all = unsafe {Some(cgl_create_fbo()) };
-        self.fbo_selected = unsafe {Some(cgl_create_fbo())};
+        self.fbo_all = unsafe {Some(fbo::cgl_create_fbo()) };
+        self.fbo_selected = unsafe {Some(fbo::cgl_create_fbo())};
     }
 
     pub fn resize(&mut self, w : c_int, h : c_int)
@@ -368,12 +372,12 @@ impl Render {
         cam.resolution_set(w, h);
 
         match self.fbo_all {
-            Some(f) => unsafe { cgl_fbo_resize(f, w, h); },
+            Some(f) => unsafe { fbo::cgl_fbo_resize(f, w, h); },
             _ => {}
         }
 
         match self.fbo_selected {
-            Some(f) => unsafe { cgl_fbo_resize(f, w, h); },
+            Some(f) => unsafe { fbo::cgl_fbo_resize(f, w, h); },
             _ => {}
         }
     }
