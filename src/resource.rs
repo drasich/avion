@@ -1,6 +1,7 @@
 use mesh;
 use texture;
 use shader;
+use material;
 use serialize::{Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
 use std::collections::hashmap::{Occupied,Vacant};
@@ -82,11 +83,11 @@ impl Create for mesh::Mesh
     }
 }
 
-impl Create for shader::Material
+impl Create for material::Material
 {
-    fn create(name : &str) -> shader::Material
+    fn create(name : &str) -> material::Material
     {
-        shader::Material::new(name)
+        material::Material::new(name)
     }
 
     fn inittt(&mut self)

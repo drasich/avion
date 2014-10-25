@@ -1,6 +1,7 @@
 use shader;
 use mesh;
 use resource;
+use material;
 
 #[deriving(Decodable, Encodable)]
 pub struct MeshRender
@@ -8,7 +9,7 @@ pub struct MeshRender
     pub mesh : resource::ResTT<mesh::Mesh>,
     //pub material : shader::Material
     //pub material : Rc<RefCell<shader::Material>>
-    pub material : resource::ResTT<shader::Material>
+    pub material : resource::ResTT<material::Material>
 }
 
 impl MeshRender

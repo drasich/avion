@@ -140,7 +140,6 @@ pub struct Master
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
     pub render : render::Render,
     pub state : MasterState
-
 }
 
 impl Master

@@ -9,6 +9,7 @@ use std::collections::hashmap::{Occupied,Vacant};
 
 use resource;
 use shader;
+use material;
 use mesh;
 use object;
 use camera;
@@ -19,9 +20,13 @@ use mesh_render;
 
 use mesh::BufferSend;
 
+#[repr(C)]
+pub struct CglFbo;
+
 #[link(name = "cypher")]
 extern {
     pub fn draw_callback_set(
+        init_cb: extern fn(*mut Render) -> (),
         draw_cb: extern fn(*mut Render) -> (),
         resize_cb: extern fn(*mut Render, w : c_int, h : c_int) -> (),
         render: *const Render
@@ -31,6 +36,18 @@ extern {
     pub fn cgl_draw_lines(vertex_count : c_uint) -> ();
     pub fn cgl_draw_faces(buffer : *const mesh::CglBuffer, index_count : c_uint) -> ();
     pub fn cgl_draw_end() -> ();
+
+    pub fn cgl_create_fbo() -> *const CglFbo;
+    pub fn cgl_fbo_use(fbo : *const CglFbo);
+    pub fn cgl_fbo_use_end();
+    pub fn cgl_fbo_resize(fbo : *const CglFbo, w : c_int, h : c_int);
+    pub fn cgl_fbo_destroy(fbo : *const CglFbo);
+}
+
+pub extern fn init_cb(r : *mut Render) -> () {
+    unsafe {
+        return (*r).init();
+    }
 }
 
 pub extern fn draw_cb(r : *mut Render) -> () {
@@ -50,7 +67,7 @@ pub extern fn resize_cb(r : *mut Render, w : c_int, h : c_int) -> () {
 pub struct RenderPass
 {
     pub name : String,
-    pub material : Arc<RWLock<shader::Material>>,
+    pub material : Arc<RWLock<material::Material>>,
     pub objects : DList<Arc<RWLock<object::Object>>>,
     pub camera : Rc<RefCell<camera::Camera>>,
 }
@@ -79,7 +96,7 @@ fn resource_get<T:'static+resource::Create+Send+Sync>(
 impl RenderPass
 {
     pub fn new(
-        material : Arc<RWLock<shader::Material>>,
+        material : Arc<RWLock<material::Material>>,
         camera : Rc<RefCell<camera::Camera>>) -> RenderPass
     {
         RenderPass {
@@ -301,10 +318,12 @@ pub struct Render
     pub mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
     pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
     pub texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
-    pub material_manager : Arc<RWLock<resource::ResourceManager<shader::Material>>>,
+    pub material_manager : Arc<RWLock<resource::ResourceManager<material::Material>>>,
     pub scene : Arc<RWLock<scene::Scene>>,
     pub camera : Rc<RefCell<camera::Camera>>,
     pub line : Arc<RWLock<object::Object>>,
+    pub fbo_all : Option<*const CglFbo>,
+    pub fbo_selected : Option<*const CglFbo>,
 }
 
 impl Render {
@@ -322,6 +341,8 @@ impl Render {
             scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path))),
             camera : Rc::new(RefCell::new(camera::Camera::new())),
             line : Arc::new(RWLock::new(object::Object::new("line"))),
+            fbo_all : None,
+            fbo_selected : None
         };
 
         let m = Arc::new(RWLock::new(mesh::Mesh::new()));
@@ -333,11 +354,11 @@ impl Render {
         r
     }
 
-    /*
     pub fn init(&mut self)
     {
+        self.fbo_all = unsafe {Some(cgl_create_fbo()) };
+        self.fbo_selected = unsafe {Some(cgl_create_fbo())};
     }
-    */
 
     pub fn resize(&mut self, w : c_int, h : c_int)
     {
@@ -345,6 +366,16 @@ impl Render {
         let mut cam = self.camera.borrow_mut();
 
         cam.resolution_set(w, h);
+
+        match self.fbo_all {
+            Some(f) => unsafe { cgl_fbo_resize(f, w, h); },
+            _ => {}
+        }
+
+        match self.fbo_selected {
+            Some(f) => unsafe { cgl_fbo_resize(f, w, h); },
+            _ => {}
+        }
     }
 
     pub fn draw_frame(&mut self) -> ()
@@ -390,7 +421,7 @@ impl Render {
 fn prepare_passes_object(
     o : Arc<RWLock<object::Object>>,
     passes : &mut HashMap<String, Box<RenderPass>>, 
-    material_manager : Arc<RWLock<resource::ResourceManager<shader::Material>>>,
+    material_manager : Arc<RWLock<resource::ResourceManager<material::Material>>>,
     camera : Rc<RefCell<camera::Camera>>
     )
 {

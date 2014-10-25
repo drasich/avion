@@ -19,6 +19,7 @@ extern crate debug;
 
 mod resource;
 mod shader;
+mod material;
 mod mesh;
 mod mesh_render;
 mod render;
@@ -129,7 +130,7 @@ name = "image/base_skeleton_col.png"
     let m = box ui::Master::new();
 
     unsafe {
-        render::draw_callback_set(render::draw_cb, render::resize_cb, &m.render);
+        render::draw_callback_set(render::init_cb, render::draw_cb, render::resize_cb, &m.render);
         ui::init_callback_set(ui::init_cb, &*m);
     }
 
