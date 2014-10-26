@@ -54,7 +54,7 @@ fn main() {
         }));
        //mattt.write().textures.insert(String::from_str("texnametest"), material::SamplerImageFile(resource::ResTT::new("image/base_skeleton_col.png")));
        mattt.write().textures.insert(String::from_str("texnametest"), material::SamplerFbo(resource::ResTT::new("fbo_all")));
-       mattt.write().uniforms.insert(String::from_str("unitest"), box shader::Float(5.6f32));
+       mattt.write().uniforms.insert(String::from_str("unitest"), box shader::Vec2(vec::Vec2::new(5.6f64, 1.2f64)));
     //mattt.read().savetoml();
     mattt.read().save();
     */

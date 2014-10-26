@@ -9,6 +9,13 @@ pub struct Vec3
 }
 
 #[deriving(Decodable, Encodable)]
+pub struct Vec2
+{
+    pub x : f64,
+    pub y : f64,
+}
+
+#[deriving(Decodable, Encodable)]
 pub struct Vec4
 {
     pub x : f64,
@@ -49,6 +56,26 @@ impl Vec4
         }
     }
 }
+
+impl Vec2
+{
+    pub fn zero() -> Vec2
+    {
+        Vec2 {
+            x : 0f64,
+            y : 0f64,
+        }
+    }
+
+    pub fn new(x : f64, y : f64) -> Vec2
+    {
+        Vec2 {
+            x : x,
+            y : y,
+        }
+    }
+}
+
 
 
 impl Vec3

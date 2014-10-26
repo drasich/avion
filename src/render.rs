@@ -419,21 +419,51 @@ impl Render {
         self.fbo_selected.write().cgl_create();
     }
 
+    fn resolution_set(&mut self, w : c_int, h : c_int)
+    {
+        let oc = self.quad_outline.clone();
+        let render = &mut oc.write().mesh_render;
+        let mesh_render_material = match *render {
+            Some(ref mut mr) => &mut mr.material,
+            None => return
+        };
+
+        let material = resource_get(&mut *self.material_manager.write(), mesh_render_material);
+
+        let mat = match material.clone() {
+            None => return,
+            Some(mat) => mat
+        };
+
+        let shaderop = &mut mat.write().shader;
+        let shader = match *shaderop {
+            Some(ref mut s) => s,
+            None => return
+        };
+
+        match shader.resource {
+            resource::ResData(ref mut ss) => {
+                ss.write().uniform_set("resolution", &vec::Vec2::new(w as f64,h as f64));
+            },
+            _ => {}
+        }
+
+    }
+
     pub fn resize(&mut self, w : c_int, h : c_int)
     {
-        println!("resize !!!! {}, {}", w, h);
-        let mut cam = self.camera.borrow_mut();
-        cam.resolution_set(w, h);
+        {
+            let mut cam = self.camera.borrow_mut();
+            cam.resolution_set(w, h);
 
-        let mut cam_ortho = self.camera_ortho.borrow_mut();
-        cam_ortho.resolution_set(w, h);
+            let mut cam_ortho = self.camera_ortho.borrow_mut();
+            cam_ortho.resolution_set(w, h);
 
-        self.quad_outline.write().scale = vec::Vec3::new(w as f64, h as f64, 1f64);
+            self.fbo_all.write().cgl_resize(w, h);
+            self.fbo_selected.write().cgl_resize(w, h);
+        }
 
-        self.fbo_all.write().cgl_resize(w, h);
-        self.fbo_selected.write().cgl_resize(w, h);
-
-        //TODO self.quat_outline.resize(fdfdf
+        self.resolution_set(w,h);
     }
 
     pub fn draw_frame(&mut self) -> ()

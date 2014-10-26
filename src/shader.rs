@@ -220,6 +220,8 @@ pub enum UniformData
 {
     Int(i32),
     Float(f32),
+    Vec2(vec::Vec2),
+    Vec3(vec::Vec3),
     Color(vec::Vec4),
 }
 

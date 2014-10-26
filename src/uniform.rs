@@ -21,6 +21,12 @@ extern {
         w : c_float
         ) -> ();
 
+    pub fn cgl_shader_uniform_vec2_set(
+        uniform : *const shader::CglShaderUniform,
+        x : c_float,
+        y : c_float,
+        ) -> ();
+
     pub fn cgl_shader_uniform_mat4_set(
         uniform : *const shader::CglShaderUniform,
         x : *const c_float) -> ();
@@ -52,6 +58,17 @@ impl UniformSend for f32 {
         }
     }
 }
+
+impl UniformSend for vec::Vec2 {
+
+    fn uniform_send(&self, uni : *const shader::CglShaderUniform) ->()
+    {
+        unsafe {
+            cgl_shader_uniform_vec2_set(uni, self.x as f32, self.y as f32);
+        }
+    }
+}
+
 
 impl UniformSend for vec::Vec4 {
 
