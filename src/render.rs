@@ -453,6 +453,9 @@ impl Render {
     pub fn resize(&mut self, w : c_int, h : c_int)
     {
         {
+            self.quad_outline.write().scale = 
+                vec::Vec3::new(w as f64, h as f64, 1f64);
+
             let mut cam = self.camera.borrow_mut();
             cam.resolution_set(w, h);
 
