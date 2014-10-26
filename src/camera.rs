@@ -154,7 +154,6 @@ impl Camera
 
     pub fn update_projection(&mut self)
     {
-        println!("update proj");
         self.data.aspect = self.data.width/ self.data.height;
         self.data.fovy = self.data.fovy_base * self.data.height/ (self.data.height_base as f64);
         //mat4_set_perspective(c->projection, c->fovy, c->aspect , c->near, c->far);

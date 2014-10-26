@@ -76,7 +76,9 @@ impl Shader
     {
         match self.uniforms.find(&String::from_str(name)) {
             Some(uni) => value.uniform_send(*uni),
-            None => println!("ERR!!!! : could not find such uniform '{}'",name)
+            None => {
+                println!("ERR!!!! : could not find such uniform '{}'",name)
+            }
         }
     }
 
@@ -84,7 +86,7 @@ impl Shader
     {
         match self.uniforms.find(&String::from_str(name)) {
             Some(uni) => value.uniform_send(*uni, index),
-            None => println!("ERR!!!! : could not find such uniform '{}'",name)
+            None => {}//println!("ERR!!!! : could not find such uniform '{}'",name)
         }
     }
 

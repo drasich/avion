@@ -443,7 +443,8 @@ impl Render {
 
         match shader.resource {
             resource::ResData(ref mut ss) => {
-                ss.write().uniform_set("resolution", &vec::Vec2::new(w as f64,h as f64));
+                {ss.write().utilise();}
+                ss.write().uniform_set("resolution", &vec::Vec2::new(w as f64, h as f64));
             },
             _ => {}
         }

@@ -5,3 +5,4 @@ att,texcoord,2,float
 uni,matrix,mat4,0
 uni,texture,tex,0
 uni,texture_all,tex,0
+uni,resolution,vec2,0

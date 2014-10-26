@@ -64,7 +64,7 @@ impl UniformSend for vec::Vec2 {
     fn uniform_send(&self, uni : *const shader::CglShaderUniform) ->()
     {
         unsafe {
-            cgl_shader_uniform_vec2_set(uni, self.x as f32, self.y as f32);
+            cgl_shader_uniform_vec2_set(uni, self.x as c_float, self.y as c_float);
         }
     }
 }
