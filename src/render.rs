@@ -18,6 +18,7 @@ use texture;
 use scene;
 use mesh_render;
 use fbo;
+use vec;
 
 use mesh::BufferSend;
 
@@ -124,7 +125,7 @@ impl RenderPass
                             }
                         }
                     },
-                    _ => {}
+                    _ => {} //fbo so nothing to do
                 }
 
             }
@@ -195,7 +196,6 @@ impl RenderPass
                         let yep = resource_get(&mut *fbo_manager.write(), fbo);
                         match yep {
                             Some(yoyo) => {
-                                //println!("come here ? ");
                                 shader.texture_set("texture", & *yoyo.read(),i);
                                 i = i +1;
                             },
@@ -338,6 +338,7 @@ pub struct Render
     pub fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>,
     pub scene : Arc<RWLock<scene::Scene>>,
     pub camera : Rc<RefCell<camera::Camera>>,
+    pub camera_ortho : Rc<RefCell<camera::Camera>>,
     pub line : Arc<RWLock<object::Object>>,
     pub fbo_all : Arc<RWLock<fbo::Fbo>>,
     pub fbo_selected : Arc<RWLock<fbo::Fbo>>,
@@ -356,6 +357,12 @@ impl Render {
         let fbo_selected = fbo_manager.write().request_use_no_proc("fbo_selected");
 
         let camera = Rc::new(RefCell::new(camera::Camera::new()));
+        let camera_ortho = Rc::new(RefCell::new(camera::Camera::new()));
+        {
+            let mut cam = camera_ortho.borrow_mut();
+            cam.data.projection = camera::Orthographic;
+            cam.object.write().position = vec::Vec3::new(0f64,0f64,1500f64);
+        }
         let material_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
         /*
         let default_mat = material_manager.write().request_use_no_proc("material/simple.mat");
@@ -373,6 +380,7 @@ impl Render {
             //scene : box scene::Scene::new_from_file(scene_path)
             scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path))),
             camera : camera,
+            camera_ortho : camera_ortho,
             line : Arc::new(RWLock::new(object::Object::new("line"))),
             fbo_all : fbo_all,
             fbo_selected : fbo_selected,
@@ -391,7 +399,7 @@ impl Render {
 
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
-            m.write().add_quad(100f32, 100f32);
+            m.write().add_quad(1f32, 1f32);
             let rs = resource::ResData(m);
             let mr = resource::ResTT::new_with_res("quad", rs);
 
@@ -415,8 +423,12 @@ impl Render {
     {
         println!("resize !!!! {}, {}", w, h);
         let mut cam = self.camera.borrow_mut();
-
         cam.resolution_set(w, h);
+
+        let mut cam_ortho = self.camera_ortho.borrow_mut();
+        cam_ortho.resolution_set(w, h);
+
+        self.quad_outline.write().scale = vec::Vec3::new(w as f64, h as f64, 1f64);
 
         self.fbo_all.write().cgl_resize(w, h);
         self.fbo_selected.write().cgl_resize(w, h);
@@ -454,6 +466,7 @@ impl Render {
         }
 
         self.prepare_passes_quad_outline();
+        //TODO draw with ortho
 
         for p in self.passes.values()
         {
@@ -518,7 +531,7 @@ impl Render {
             self.quad_outline.clone(),
             &mut self.passes,
             self.material_manager.clone(),
-            self.camera.clone());
+            self.camera_ortho.clone());
     }
 }
 

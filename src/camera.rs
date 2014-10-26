@@ -8,6 +8,13 @@ use object;
 use matrix;
 use geometry;
 
+pub enum Projection
+{
+    Perspective,
+    Orthographic
+}
+
+
 pub struct CameraData
 {
     fovy : f64,
@@ -22,11 +29,12 @@ pub struct CameraData
     pub pitch : f64,
     pub roll : f64,
 
+    pub clear_color : vec::Vec4,
+    pub projection : Projection,
+
     origin : vec::Vec3,
     local_offset : vec::Vec3,
     center : vec::Vec3,
-
-    clear_color : vec::Vec4,
 }
 
 pub struct Camera
@@ -56,7 +64,9 @@ impl Camera
             local_offset : vec::Vec3::zero(),
             center : vec::Vec3::zero(),
 
-            clear_color : vec::Vec4::zero()  
+            clear_color : vec::Vec4::zero(),
+
+            projection : Perspective
         },
         object : Arc::new(RWLock::new(object::Object::new("camera")))
         };
@@ -70,7 +80,20 @@ impl Camera
     {
         //TODO
         //matrix::Matrix4::perspective(0.4f64,1f64,1f64,10000f64)
-        matrix::Matrix4::perspective(self.data.fovy, self.data.aspect, self.data.near, self.data.far)
+        match self.data.projection {
+            Perspective =>
+                matrix::Matrix4::perspective(
+                    self.data.fovy,
+                    self.data.aspect,
+                    self.data.near,
+                    self.data.far),
+            Orthographic => 
+                matrix::Matrix4::orthographic(
+                    (self.data.width / 2f64) as u32,
+                    (self.data.height / 2f64) as u32,
+                    self.data.near,
+                    self.data.far)
+        }
     }
 
     pub fn ray_from_screen(&self, x : f64, y : f64, length: f64) -> geometry::Ray
