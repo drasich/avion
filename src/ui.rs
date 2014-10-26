@@ -5,6 +5,7 @@ use object;
 use std::mem;
 use sync::{RWLock, Arc};
 use std::c_str::CString;
+use std::collections::{DList};
 use scene;
 use property::TProperty;
 use property;
@@ -139,7 +140,8 @@ pub struct Master
     pub property : Option<*const JkProperty>,
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
     pub render : render::Render,
-    pub state : MasterState
+    pub state : MasterState,
+    pub objects : DList<Arc<RWLock<object::Object>>> 
 }
 
 impl Master
@@ -152,7 +154,8 @@ impl Master
             property : None,
             scene : None,
             render : render::Render::new(),
-            state : Idle
+            state : Idle,
+            objects : DList::new()
         };
 
         m.scene = Some(m.render.scene.clone());
@@ -415,10 +418,13 @@ pub extern fn mouse_up(
     //    add_line(r.start, r.direction - r.start);
     //println!("ray : {} ", r);
 
+    m.render.objects_selected.clear();
+
     for o in m.render.scene.read().objects.iter() {
         let ir = intersection::ray_object(&r, &*o.read());
         if ir.hit {
             println!(" I hit object {} ", o.read().name);
+            m.render.objects_selected.push(o.clone());
         }
     }
 

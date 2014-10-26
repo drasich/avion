@@ -397,6 +397,100 @@ impl Mesh
         self.state = 1;
     }
 
+    pub fn add_quad(&mut self, w : f32, h : f32)
+    {
+        {
+        let name = String::from_str("position");
+        let hw = w/2f32;
+        let hh = h/2f32;
+        let mut vvv : Vec<f32> = Vec::with_capacity(4*3);
+        vvv.push(-hw);
+        vvv.push(-hh);
+        vvv.push(0f32);
+
+        vvv.push(hw);
+        vvv.push(-hh);
+        vvv.push(0f32);
+
+        vvv.push(-hw);
+        vvv.push(hh);
+        vvv.push(0f32);
+
+        vvv.push(hw);
+        vvv.push(hh);
+        vvv.push(0f32);
+
+
+        let buffer = box Buffer::new(
+            name.clone(),
+            vvv,
+            Vertex);
+
+        match self.buffers_f32.entry(name) {
+            Vacant(entry) => {entry.set(buffer);},
+            Occupied(entry) => {
+                let en = entry.into_mut();
+                *en = buffer;
+            }
+        };
+        }
+
+        {
+        let name = String::from_str("faces");
+        let mut fff : Vec<u32> = Vec::with_capacity(6);
+        fff.push(0u32);
+        fff.push(1u32);
+        fff.push(3u32);
+        fff.push(0u32);
+        fff.push(3u32);
+        fff.push(2u32);
+
+        let buffer = box Buffer::new(
+            name.clone(),
+            fff,
+            Index);
+
+        match self.buffers_u32.entry(name) {
+            Vacant(entry) => {entry.set(buffer);},
+            Occupied(entry) => {
+                let en = entry.into_mut();
+                *en = buffer;
+            }
+        };
+        }
+
+        {
+            let name = String::from_str("texcoord");
+            let mut uuu : Vec<f32> = Vec::with_capacity(4*2);
+            uuu.push(0f32);
+            uuu.push(0f32);
+
+            uuu.push(1f32);
+            uuu.push(0f32);
+
+            uuu.push(0f32);
+            uuu.push(1f32);
+
+            uuu.push(1f32);
+            uuu.push(1f32);
+
+            let buffer = box Buffer::new(
+                name.clone(),
+                uuu,
+                Uv);
+
+            match self.buffers_f32.entry(name) {
+                Vacant(entry) => { entry.set(buffer); },
+                Occupied(entry) => {
+                    let en = entry.into_mut();
+                    *en = buffer;
+                }
+            };
+        }
+
+        self.state = 1;
+    }
+
 }
 
 impl resource::ResourceT for Mesh

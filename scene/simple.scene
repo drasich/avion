@@ -86,11 +86,11 @@
           "name": "model/plane_xy.mesh"
         },
         "material": {
-          "name": "material/fbo.mat"
+          "name": "material/simple2.mat"
         }
       },
       "position": {
-        "x": 10,
+        "x": 250,
         "y": 0,
         "z": -2000
       },

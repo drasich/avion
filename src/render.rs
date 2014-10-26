@@ -341,6 +341,8 @@ pub struct Render
     pub line : Arc<RWLock<object::Object>>,
     pub fbo_all : Arc<RWLock<fbo::Fbo>>,
     pub fbo_selected : Arc<RWLock<fbo::Fbo>>,
+    pub objects_selected : DList<Arc<RWLock<object::Object>>>,
+    pub quad_outline : Arc<RWLock<object::Object>>
 }
 
 impl Render {
@@ -348,30 +350,57 @@ impl Render {
     pub fn new() -> Render
     {
         let scene_path = "scene/simple.scene";
+
         let fbo_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
         let fbo_all = fbo_manager.write().request_use_no_proc("fbo_all");
         let fbo_selected = fbo_manager.write().request_use_no_proc("fbo_selected");
+
+        let camera = Rc::new(RefCell::new(camera::Camera::new()));
+        let material_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
+        /*
+        let default_mat = material_manager.write().request_use_no_proc("material/simple.mat");
+        let pass_selected = box RenderPass::new(default_mat, camera.clone());
+        */
+
 
         let r = Render { 
             passes : HashMap::new(),
             mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
             shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
             texture_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
-            material_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+            material_manager : material_manager.clone(),
             fbo_manager : fbo_manager.clone(),
             //scene : box scene::Scene::new_from_file(scene_path)
             scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path))),
-            camera : Rc::new(RefCell::new(camera::Camera::new())),
+            camera : camera,
             line : Arc::new(RWLock::new(object::Object::new("line"))),
             fbo_all : fbo_all,
-            fbo_selected : fbo_selected
+            fbo_selected : fbo_selected,
+            objects_selected : DList::new(),
+            quad_outline : Arc::new(RWLock::new(object::Object::new("quad_outline")))
         };
 
-        let m = Arc::new(RWLock::new(mesh::Mesh::new()));
-        let rs = resource::ResData(m);
-        let mr = resource::ResTT::new_with_res("yep", rs);
+        {
+            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
+            let rs = resource::ResData(m);
+            let mr = resource::ResTT::new_with_res("line", rs);
 
-        r.line.write().mesh_render = Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
+            r.line.write().mesh_render =
+                Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
+        }
+
+        {
+            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
+            m.write().add_quad(100f32, 100f32);
+            let rs = resource::ResData(m);
+            let mr = resource::ResTT::new_with_res("quad", rs);
+
+
+            r.quad_outline.write().mesh_render = Some(
+                mesh_render::MeshRender::new_with_mesh(
+                    mr,
+                    "material/outline.mat"));
+        }
 
         r
     }
@@ -391,14 +420,14 @@ impl Render {
 
         self.fbo_all.write().cgl_resize(w, h);
         self.fbo_selected.write().cgl_resize(w, h);
+
+        //TODO self.quat_outline.resize(fdfdf
     }
 
     pub fn draw_frame(&mut self) -> ()
     {
-        self.prepare_passes();
-        //self.request_manager.handle_requests();
-        //return (*self.pass).draw_frame();
-        self.fbo_all.read().cgl_use();
+        self.prepare_passes_selected();
+        self.fbo_selected.read().cgl_use();
         for p in self.passes.values()
         {
             p.draw_frame(
@@ -410,6 +439,22 @@ impl Render {
         }
         fbo::Fbo::cgl_use_end();
 
+        self.prepare_passes();
+        //self.request_manager.handle_requests();
+        //return (*self.pass).draw_frame();
+
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+
+        self.prepare_passes_quad_outline();
+
         for p in self.passes.values()
         {
             p.draw_frame(
@@ -421,7 +466,7 @@ impl Render {
         }
     }
 
-    pub fn prepare_passes(&mut self)
+    fn prepare_passes(&mut self)
     {
         for (_,p) in self.passes.iter_mut()
         {
@@ -440,6 +485,37 @@ impl Render {
 
         prepare_passes_object(
             self.line.clone(),
+            &mut self.passes,
+            self.material_manager.clone(),
+            self.camera.clone());
+    }
+
+    fn prepare_passes_selected(&mut self)
+    {
+        for (_,p) in self.passes.iter_mut()
+        {
+            p.objects.clear();
+        }
+
+        let objects = &self.objects_selected;
+        for o in objects.iter() {
+            prepare_passes_object(
+                o.clone(),
+                &mut self.passes,
+                self.material_manager.clone(),
+                self.camera.clone());
+        }
+    }
+
+    fn prepare_passes_quad_outline(&mut self)
+    {
+        for (_,p) in self.passes.iter_mut()
+        {
+            p.objects.clear();
+        }
+
+        prepare_passes_object(
+            self.quad_outline.clone(),
             &mut self.passes,
             self.material_manager.clone(),
             self.camera.clone());

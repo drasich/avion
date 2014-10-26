@@ -1,14 +1,14 @@
 {
-  "name": "material/fbo.mat",
+  "name": "material/outline.mat",
   "shader": {
     "name": "shader/simple.sh"
   },
   "textures": {
     "texture": {
-      "variant": "SamplerFbo",
+      "variant": "SamplerImageFile",
       "fields": [
         {
-          "name": "fbo_selected"
+          "name": "image/test.png"
         }
       ]
     }
