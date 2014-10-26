@@ -180,13 +180,13 @@ impl RenderPass
             let mut material = self.material.write();
 
             let mut i = 0u32;
-            for (_,t) in material.textures.iter_mut() {
+            for (name,t) in material.textures.iter_mut() {
                 match *t {
                     material::SamplerImageFile(ref mut img) => {
                         let yep = resource_get(&mut *texture_manager.write(), img);
                         match yep {
                             Some(yoyo) => {
-                                shader.texture_set("texture", & *yoyo.read(),i);
+                                shader.texture_set(name.as_slice(), & *yoyo.read(),i);
                                 i = i +1;
                             },
                             None => {}
@@ -196,7 +196,7 @@ impl RenderPass
                         let yep = resource_get(&mut *fbo_manager.write(), fbo);
                         match yep {
                             Some(yoyo) => {
-                                shader.texture_set("texture", & *yoyo.read(),i);
+                                shader.texture_set(name.as_slice(), & *yoyo.read(),i);
                                 i = i +1;
                             },
                             None => {}
@@ -452,6 +452,19 @@ impl Render {
         fbo::Fbo::cgl_use_end();
 
         self.prepare_passes();
+
+        self.fbo_all.read().cgl_use();
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+        fbo::Fbo::cgl_use_end();
+
         //self.request_manager.handle_requests();
         //return (*self.pass).draw_frame();
 

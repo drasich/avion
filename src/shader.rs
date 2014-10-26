@@ -13,6 +13,7 @@ use resource;
 use uniform::UniformSend;
 use uniform::TextureSend;
 use texture;
+use std::ptr;
 
 use libc::{c_char, c_uint};
 
@@ -47,7 +48,9 @@ impl Shader
             Some(cs) =>
                 unsafe {
                     let cgl_att = cgl_shader_attribute_new(cs, attc.as_ptr(), size);
-                    self.attributes.insert(String::from_str(name), cgl_att);
+                    if cgl_att != ptr::null() {
+                        self.attributes.insert(String::from_str(name), cgl_att);
+                    }
                 }
         }
 
@@ -62,7 +65,9 @@ impl Shader
             Some(cs) =>
                 unsafe {
                     let cgl_uni = cgl_shader_uniform_new(cs, unic.as_ptr());
-                    self.uniforms.insert(String::from_str(name), cgl_uni);
+                    if cgl_uni != ptr::null() {
+                        self.uniforms.insert(String::from_str(name), cgl_uni);
+                    }
                 }
         }
     }

@@ -11,6 +11,14 @@
           "name": "fbo_selected"
         }
       ]
+    },
+    "texture_all": {
+      "variant": "SamplerFbo",
+      "fields": [
+        {
+          "name": "fbo_all"
+        }
+      ]
     }
   },
   "uniforms": {}
