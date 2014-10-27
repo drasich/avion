@@ -30,6 +30,14 @@ impl MeshRender
             material : resource::ResTT::new(material)
         }
     }
+
+    pub fn new_with_mesh_and_mat(mesh : resource::ResTT<mesh::Mesh>, material : resource::ResTT<material::Material>) -> MeshRender
+    {
+        MeshRender {
+            mesh : mesh,
+            material : material
+        }
+    }
 }
 
 

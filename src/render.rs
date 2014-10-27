@@ -331,19 +331,23 @@ impl RenderPass
 pub struct Render
 {
     pub passes : HashMap<String, Box<RenderPass>>, //TODO check
+
     pub mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
     pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
     pub texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
     pub material_manager : Arc<RWLock<resource::ResourceManager<material::Material>>>,
     pub fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>,
+
     pub scene : Arc<RWLock<scene::Scene>>,
     pub camera : Rc<RefCell<camera::Camera>>,
     pub camera_ortho : Rc<RefCell<camera::Camera>>,
-    pub line : Arc<RWLock<object::Object>>,
+
     pub fbo_all : Arc<RWLock<fbo::Fbo>>,
     pub fbo_selected : Arc<RWLock<fbo::Fbo>>,
+
     pub objects_selected : DList<Arc<RWLock<object::Object>>>,
-    pub quad_outline : Arc<RWLock<object::Object>>
+    pub quad_outline : Arc<RWLock<object::Object>>,
+    pub line : Arc<RWLock<object::Object>>,
 }
 
 impl Render {
@@ -361,13 +365,10 @@ impl Render {
         {
             let mut cam = camera_ortho.borrow_mut();
             cam.data.projection = camera::Orthographic;
-            cam.object.write().position = vec::Vec3::new(0f64,0f64,1500f64);
+            cam.object.write().position = vec::Vec3::new(0f64,0f64,10f64);
         }
+
         let material_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
-        /*
-        let default_mat = material_manager.write().request_use_no_proc("material/simple.mat");
-        let pass_selected = box RenderPass::new(default_mat, camera.clone());
-        */
 
 
         let r = Render { 
@@ -403,11 +404,13 @@ impl Render {
             let rs = resource::ResData(m);
             let mr = resource::ResTT::new_with_res("quad", rs);
 
+            let outline_mat = material_manager.write().request_use_no_proc("material/outline.mat");
+            let outline_res = resource::ResTT::new_with_res("material/outline.mat", resource::ResData(outline_mat));
 
             r.quad_outline.write().mesh_render = Some(
-                mesh_render::MeshRender::new_with_mesh(
+                mesh_render::MeshRender::new_with_mesh_and_mat(
                     mr,
-                    "material/outline.mat"));
+                    outline_res));
         }
 
         r
