@@ -1,9 +1,9 @@
-//use std::rc::Rc;
 use sync::{RWLock, Arc};
 use std::f64::consts;
+use std::default::Default;
 
 use vec;
-use vec::{Vec3};//, Quat};
+use vec::{Vec3};
 use object;
 use matrix;
 use geometry;
@@ -13,7 +13,6 @@ pub enum Projection
     Perspective,
     Orthographic
 }
-
 
 pub struct CameraData
 {
@@ -37,17 +36,11 @@ pub struct CameraData
     center : vec::Vec3,
 }
 
-pub struct Camera
+impl Default for CameraData
 {
-    pub data : CameraData,
-    pub object : Arc<RWLock<object::Object>>
-}
-
-impl Camera
-{
-    pub fn new() -> Camera
+    fn default() -> CameraData
     {
-        let c = Camera { data : CameraData {
+        CameraData {
             fovy : consts::PI/8.0f64,
             fovy_base : consts::PI/8.0f64,
             near : 1f64,
@@ -67,8 +60,23 @@ impl Camera
             clear_color : vec::Vec4::zero(),
 
             projection : Perspective
-        },
-        object : Arc::new(RWLock::new(object::Object::new("camera")))
+        }
+    }
+}
+
+pub struct Camera
+{
+    pub data : CameraData,
+    pub object : Arc<RWLock<object::Object>>,
+}
+
+impl Camera
+{
+    pub fn new() -> Camera
+    {
+        let c = Camera {
+            data : Default::default(),
+            object : Arc::new(RWLock::new(object::Object::new("camera")))
         };
 
         c.object.write().position = vec::Vec3::new(0.1f64, 0f64, 0f64);
@@ -112,10 +120,6 @@ impl Camera
         let aspect : f64 = width / height;
         let vh = vl * aspect;
 
-        //println!("ray from screen : w,h {},{}, {}", width, height, aspect);
-        //println!("ray from screen : camz, up, h {},{}, {}", camz, up, aspect);
-        //println!("ray from screen : x, y, {},{}", x, y);
-
         let up = up * vl;
         let h = h * vh;
 
@@ -139,11 +143,6 @@ impl Camera
 
     pub fn resolution_set(&mut self, w : i32, h : i32)
     {
-        //self.data.width = w as f64;
-        //cam.data.height = h as f64;
-        //cam.data.height_base = h;
-
-
         if w as f64 != self.data.width || h as f64 != self.data.height {
             self.data.width = w as f64;
             self.data.height = h as f64;
@@ -158,6 +157,5 @@ impl Camera
         self.data.fovy = self.data.fovy_base * self.data.height/ (self.data.height_base as f64);
         //mat4_set_perspective(c->projection, c->fovy, c->aspect , c->near, c->far);
     }
-    
 }
 

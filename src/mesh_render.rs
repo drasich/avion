@@ -7,8 +7,6 @@ use material;
 pub struct MeshRender
 {
     pub mesh : resource::ResTT<mesh::Mesh>,
-    //pub material : shader::Material
-    //pub material : Rc<RefCell<shader::Material>>
     pub material : resource::ResTT<material::Material>
 }
 
@@ -18,7 +16,6 @@ impl MeshRender
     {
         MeshRender {
             mesh : resource::ResTT::new(mesh),
-            //material : shader::Material::new_from_file(material)
             material : resource::ResTT::new(material)
         }
     }
