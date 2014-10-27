@@ -69,7 +69,6 @@ impl UniformSend for vec::Vec2 {
     }
 }
 
-
 impl UniformSend for vec::Vec4 {
 
     fn uniform_send(&self, uni : *const shader::CglShaderUniform) ->()
@@ -91,22 +90,6 @@ impl UniformSend for matrix::Matrix4 {
     }
 }
 
-/*
-impl UniformSend for texture::Texture {
-
-    fn uniform_send(&self, uni : *const shader::CglShaderUniform) ->()
-    {
-        match self.cgl_texture {
-            None => {},
-            Some(t) => unsafe {
-                //TODO just one tex for now
-                cgl_shader_uniform_texture_set(uni, t);
-            }
-        }
-    }
-}
-*/
-
 pub trait TextureSend
 {
     fn uniform_send(&self, uni : *const shader::CglShaderUniform, index : u32) ->();
@@ -119,7 +102,6 @@ impl TextureSend for texture::Texture {
         match self.cgl_texture {
             None => {},
             Some(t) => unsafe {
-                //TODO just one tex for now
                 cgl_shader_uniform_texture_set(uni, t, index);
             }
         }
@@ -133,9 +115,10 @@ impl TextureSend for fbo::Fbo {
         match self.cgl_fbo {
             None => {},
             Some(f) => unsafe {
-                //TODO just one tex for now
+                //TODO just depth for now
                 cgl_shader_uniform_fbo_set(uni, f, index);
             }
         }
     }
 }
+

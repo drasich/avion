@@ -2,20 +2,16 @@ use std::collections::HashMap;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::File;
 use std::io::BufferedReader;
+use libc::{c_char, c_uint};
+use std::ptr;
 //use std::default::Default;
-use toml;
-
+//use toml;
 
 use vec;
-//use matrix;
 use resource;
-//use uniform;
 use uniform::UniformSend;
 use uniform::TextureSend;
 use texture;
-use std::ptr;
-
-use libc::{c_char, c_uint};
 
 #[repr(C)]
 pub struct CglShader;
@@ -29,12 +25,12 @@ pub struct Shader
     pub name : String,
     pub attributes : HashMap<String, *const CglShaderAttribute>,
     pub uniforms : HashMap<String, *const CglShaderUniform>,
+    pub state : int,
 
     vert : Option<String>,
     frag : Option<String>,
 
     cgl_shader : Option<*const CglShader>, 
-    pub state : int,
 }
 
 impl Shader
