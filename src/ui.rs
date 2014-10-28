@@ -5,7 +5,7 @@ use object;
 use std::mem;
 use sync::{RWLock, Arc};
 use std::c_str::CString;
-use std::collections::{DList};
+use std::collections::{DList,Deque};
 use scene;
 use property::TProperty;
 use property;
@@ -409,14 +409,15 @@ pub extern fn mouse_up(
     match m.render.line.write().mesh_render {
         Some (ref mr) => {
             match mr.mesh.resource {
-                resource::ResData(ref mesh) => { mesh.write().add_line(geometry::Segment::new(r.start, r.start + r.direction), vec::Vec4::zero()); },
+                resource::ResData(ref mesh) => {
+                    mesh.write().add_line(
+                        geometry::Segment::new(r.start, r.start + r.direction),
+                        vec::Vec4::zero()); },
                 _ => {}
             }
         },
         None => {}
     }
-    //    add_line(r.start, r.direction - r.start);
-    //println!("ray : {} ", r);
 
     m.render.objects_selected.clear();
 
@@ -425,6 +426,16 @@ pub extern fn mouse_up(
         if ir.hit {
             println!(" I hit object {} ", o.read().name);
             m.render.objects_selected.push(o.clone());
+        }
+    }
+
+    if m.render.objects_selected.len() == 1 {
+        //TODO select tree
+        match (m.render.objects_selected.front(), m.property) {
+            (Some(o), Some(p)) => unsafe {
+                property_data_set(p, mem::transmute(box o.clone()));
+            },
+            _ => {},
         }
     }
 
