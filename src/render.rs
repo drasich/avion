@@ -66,27 +66,6 @@ pub struct RenderPass
     pub camera : Rc<RefCell<camera::Camera>>,
 }
 
-fn resource_get<T:'static+resource::Create+Send+Sync>(
-    manager : &mut resource::ResourceManager<T>,
-    res: &mut resource::ResTT<T>) 
-    -> Option<Arc<RWLock<T>>>
-{
-    let mut the_res : Option<Arc<RWLock<T>>> = None;
-    match res.resource{
-        resource::ResNone => {
-            res.resource = manager.request_use(res.name.as_slice());
-        },
-        resource::ResData(ref data) => {
-            the_res = Some(data.clone());
-        },
-        resource::ResWait => {
-            res.resource = manager.request_use(res.name.as_slice());
-        }
-    }
-
-    the_res
-}
-
 impl RenderPass
 {
     pub fn new(
@@ -114,7 +93,7 @@ impl RenderPass
             for (_,t) in matm.textures.iter_mut() {
                 match *t {
                     material::SamplerImageFile(ref mut img) => {
-                        let yep = resource_get(&mut *texture_manager.write(), img);
+                        let yep = resource::resource_get(&mut *texture_manager.write(), img);
                         match yep.clone() {
                             None => {},
                             Some(yy) => {
@@ -142,7 +121,7 @@ impl RenderPass
             match *shaderres  {
                 None => {},
                 Some(ref mut s) => {
-                    yep = resource_get(&mut *shader_manager.write(), s);
+                    yep = resource::resource_get(&mut *shader_manager.write(), s);
                     match yep.clone() {
                         None => {println!("no shader yet {}", s.name);},
                         Some(yy) => {
@@ -183,7 +162,7 @@ impl RenderPass
             for (name,t) in material.textures.iter_mut() {
                 match *t {
                     material::SamplerImageFile(ref mut img) => {
-                        let yep = resource_get(&mut *texture_manager.write(), img);
+                        let yep = resource::resource_get(&mut *texture_manager.write(), img);
                         match yep {
                             Some(yoyo) => {
                                 shader.texture_set(name.as_slice(), & *yoyo.read(),i);
@@ -193,7 +172,7 @@ impl RenderPass
                         }
                     },
                     material::SamplerFbo(ref mut fbo) => {
-                        let yep = resource_get(&mut *fbo_manager.write(), fbo);
+                        let yep = resource::resource_get(&mut *fbo_manager.write(), fbo);
                         match yep {
                             Some(yoyo) => {
                                 shader.texture_set(name.as_slice(), & *yoyo.read(),i);
@@ -231,7 +210,7 @@ impl RenderPass
         )
     {
         let themesh = match ob.mesh_render {
-            Some(ref mut mr) => resource_get(&mut *mesh_manager.write(), &mut mr.mesh),
+            Some(ref mut mr) => resource::resource_get(&mut *mesh_manager.write(), &mut mr.mesh),
             None => {
                 println!("no mesh render");
                 return;
@@ -369,12 +348,13 @@ impl Render {
         }
 
         let material_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
+        let shader_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
 
 
         let r = Render { 
             passes : HashMap::new(),
             mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
-            shader_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+            shader_manager : shader_manager.clone(),
             texture_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
             material_manager : material_manager.clone(),
             fbo_manager : fbo_manager.clone(),
@@ -404,6 +384,7 @@ impl Render {
             let rs = resource::ResData(m);
             let mr = resource::ResTT::new_with_res("quad", rs);
 
+            shader_manager.write().request_use_no_proc("shader/outline.sh");
             let outline_mat = material_manager.write().request_use_no_proc("material/outline.mat");
             let outline_res = resource::ResTT::new_with_res("material/outline.mat", resource::ResData(outline_mat));
 
@@ -431,7 +412,7 @@ impl Render {
             None => return
         };
 
-        let material = resource_get(&mut *self.material_manager.write(), mesh_render_material);
+        let material = resource::resource_get(&mut *self.material_manager.write(), mesh_render_material);
 
         let mat = match material.clone() {
             None => return,
@@ -600,7 +581,7 @@ fn prepare_passes_object(
             None => return
         };
 
-        let material = resource_get(&mut *material_manager.write(), mesh_render_material);
+        let material = resource::resource_get(&mut *material_manager.write(), mesh_render_material);
 
         let mat = match material.clone() {
             None => return,

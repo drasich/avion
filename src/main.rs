@@ -7,7 +7,7 @@
 #![allow(dead_code)]
 //#![allow(ctypes)]
 
-//#![feature(globs)]
+#![feature(globs)]
 extern crate serialize;
 extern crate libc;
 extern crate sync;

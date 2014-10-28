@@ -1,11 +1,10 @@
 use libc::{c_char, c_void, c_int};
-use render;
-use object;
-
 use std::mem;
 use sync::{RWLock, Arc};
 use std::c_str::CString;
 use std::collections::{DList,Deque};
+use std::ptr;
+
 use scene;
 use property::TProperty;
 use property;
@@ -13,9 +12,15 @@ use intersection;
 use resource;
 use geometry;
 use vec;
+use render;
+use object;
+use ui::Tree;
+
+//use tree;
+//pub use Tree;
 
 #[repr(C)]
-pub struct Tree;
+pub struct JkTree;
 #[repr(C)]
 pub struct JkProperty;
 #[repr(C)]
@@ -25,22 +30,22 @@ pub struct Window;
 extern {
     //fn simple_window_init();
     pub fn elm_simple_window_main();
-    fn tree_widget_new() -> *const Tree;
+    fn tree_widget_new() -> *const JkTree;
     fn tree_register_cb(
-        tree : *const Tree,
+        tree : *const JkTree,
         name_get : extern fn(data : *const c_void) -> *const c_char,
         select : extern fn(data : *const c_void) -> (),
         can_expand : extern fn(data : *const c_void) -> bool,
-        expand : extern fn(tree: *const Tree, data : *const c_void, parent: *const c_void) -> (),
+        expand : extern fn(tree: *const JkTree, data : *const c_void, parent: *const c_void) -> (),
         );
 
     fn tree_object_add(
-        tree : *const Tree,
+        tree : *const JkTree,
         object : *const c_void,
         parent : *const c_void,
         );
     fn window_new() -> *const Window;
-    fn window_tree_new(window : *const Window) -> *const Tree;
+    fn window_tree_new(window : *const Window) -> *const JkTree;
     fn window_button_new(window : *const Window);
     fn window_property_new(window : *const Window) -> *const JkProperty;
     fn window_callback_set(
@@ -136,12 +141,12 @@ pub struct Master
 {
     //windows : DList<Window>
     pub window : Option<*const Window>,
-    pub tree : Option<*const Tree>,
+    pub tree : Option<*const JkTree>,
     pub property : Option<*const JkProperty>,
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
     pub render : render::Render,
     pub state : MasterState,
-    pub objects : DList<Arc<RWLock<object::Object>>> 
+    pub objects : DList<Arc<RWLock<object::Object>>>,
 }
 
 impl Master
@@ -195,7 +200,7 @@ pub extern fn can_expand(data : *const c_void) -> bool {
     return !o.read().children.is_empty();
 }
 
-pub extern fn expand(tree: *const Tree, data : *const c_void, parent : *const c_void) -> () {
+pub extern fn expand(tree: *const JkTree, data : *const c_void, parent : *const c_void) -> () {
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
@@ -268,7 +273,7 @@ pub extern fn init_cb(master: *mut Master) -> () {
             name_get
             ); 
 
-        /*
+        //*
         let t = window_tree_new(w);
         (*master).tree = Some(t);
         tree_register_cb(
@@ -281,7 +286,7 @@ pub extern fn init_cb(master: *mut Master) -> () {
         match (*master).scene {
             Some(ref s) => {
                 for o in s.read().objects.iter() {
-                    //tree_object_add(t, mem::transmute(box o.clone()), ptr::null());
+                    tree_object_add(t, mem::transmute(box o.clone()), ptr::null());
                 }
 
                 let oo = s.read().object_find("yepyoyo");
@@ -294,7 +299,7 @@ pub extern fn init_cb(master: *mut Master) -> () {
             }
             None => {}
         };
-        */
+        //*/
 
 
         //window_button_new(w);

@@ -276,4 +276,27 @@ impl<S: Decoder<E>, E, T> Decodable<S, E> for ResTT<T> {
   }
 }
 
+pub fn resource_get<T:'static+Create+Send+Sync>(
+    manager : &mut ResourceManager<T>,
+    res: &mut ResTT<T>) 
+    -> Option<Arc<RWLock<T>>>
+{
+    let mut the_res : Option<Arc<RWLock<T>>> = None;
+    match res.resource{
+        ResNone | ResWait => {
+            res.resource = manager.request_use(res.name.as_slice());
+            match res.resource {
+                ResData(ref data) => {
+                    the_res = Some(data.clone());
+                }
+                _ => {}
+            }
+        },
+        ResData(ref data) => {
+            the_res = Some(data.clone());
+        },
+    }
+
+    the_res
+}
 
