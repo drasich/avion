@@ -15,7 +15,7 @@ pub struct Object
     //pub angles : vec::Vec3,
     pub scale : vec::Vec3,
     pub children : DList<Arc<RWLock<Object>>>,
-    pub parent : Option<Arc<RWLock<Object>>>
+    pub parent : Option<Arc<RWLock<Object>>>,
 }
 
 impl Object

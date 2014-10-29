@@ -14,13 +14,12 @@ use geometry;
 use vec;
 use render;
 use object;
-use ui::Tree;
+use ui::{Tree,JkTree};
+use ui;
 
 //use tree;
 //pub use Tree;
 
-#[repr(C)]
-pub struct JkTree;
 #[repr(C)]
 pub struct JkProperty;
 #[repr(C)]
@@ -30,22 +29,7 @@ pub struct Window;
 extern {
     //fn simple_window_init();
     pub fn elm_simple_window_main();
-    fn tree_widget_new() -> *const JkTree;
-    fn tree_register_cb(
-        tree : *const JkTree,
-        name_get : extern fn(data : *const c_void) -> *const c_char,
-        select : extern fn(data : *const c_void) -> (),
-        can_expand : extern fn(data : *const c_void) -> bool,
-        expand : extern fn(tree: *const JkTree, data : *const c_void, parent: *const c_void) -> (),
-        );
-
-    fn tree_object_add(
-        tree : *const JkTree,
-        object : *const c_void,
-        parent : *const c_void,
-        );
     fn window_new() -> *const Window;
-    fn window_tree_new(window : *const Window) -> *const JkTree;
     fn window_button_new(window : *const Window);
     fn window_property_new(window : *const Window) -> *const JkProperty;
     fn window_callback_set(
@@ -141,7 +125,7 @@ pub struct Master
 {
     //windows : DList<Window>
     pub window : Option<*const Window>,
-    pub tree : Option<*const JkTree>,
+    pub tree : Option<Box<Tree>>,
     pub property : Option<*const JkProperty>,
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
     pub render : render::Render,
@@ -184,36 +168,6 @@ pub extern fn name_get(data : *const c_void) -> *const c_char {
     }
 }
 
-pub extern fn select(data : *const c_void) -> () {
-    let o : &Arc<RWLock<object::Object>> = unsafe {
-        mem::transmute(data)
-    };
-    println!("select ! {} ", o.read().name);
-}
-
-pub extern fn can_expand(data : *const c_void) -> bool {
-    let o : &Arc<RWLock<object::Object>> = unsafe {
-        mem::transmute(data)
-    };
-
-    println!("can expand :{}", o.read().children.is_empty());
-    return !o.read().children.is_empty();
-}
-
-pub extern fn expand(tree: *const JkTree, data : *const c_void, parent : *const c_void) -> () {
-    let o : &Arc<RWLock<object::Object>> = unsafe {
-        mem::transmute(data)
-    };
-
-    println!("expanding ! {} ", o.read().name);
-
-    for c in o.read().children.iter() {
-        println!("expanding ! with child {} ", (*c).read().name);
-        unsafe {
-            tree_object_add(tree, mem::transmute(c), parent);
-        }
-    }
-}
 
 struct PropertySet
 {
@@ -274,21 +228,12 @@ pub extern fn init_cb(master: *mut Master) -> () {
             ); 
 
         //*
-        let t = window_tree_new(w);
-        (*master).tree = Some(t);
-        tree_register_cb(
-            t,
-            name_get,
-            select,
-            can_expand,
-            expand);
+        let mut t = ui::Tree::new(w);
+
 
         match (*master).scene {
             Some(ref s) => {
-                for o in s.read().objects.iter() {
-                    tree_object_add(t, mem::transmute(box o.clone()), ptr::null());
-                }
-
+                t.set_scene(&*s.read());
                 let oo = s.read().object_find("yepyoyo");
                 match oo {
                     Some(o) => { 
@@ -296,11 +241,12 @@ pub extern fn init_cb(master: *mut Master) -> () {
                     }
                     None => {}
                 };
-            }
+            },
             None => {}
         };
         //*/
 
+        (*master).tree = Some(box t);
 
         //window_button_new(w);
 

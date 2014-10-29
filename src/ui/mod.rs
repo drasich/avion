@@ -1,5 +1,5 @@
-pub use self::def::{Master,init_cb,init_callback_set,elm_simple_window_main};
-pub use self::tree::Tree;
+pub use self::def::{Master,init_cb,init_callback_set,elm_simple_window_main,Window};
+pub use self::tree::{Tree, JkTree, tree_object_add, tree_register_cb,window_tree_new};
 
 mod tree;
 mod def;
