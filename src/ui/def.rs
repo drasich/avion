@@ -245,7 +245,7 @@ pub extern fn init_cb(master: *mut Master) -> () {
         };
         //*/
 
-        (*master).tree = Some(box t);
+        (*master).tree = Some(t);
 
         //window_button_new(w);
 
@@ -345,6 +345,11 @@ pub extern fn mouse_up(
 
     let m : &mut Master = unsafe {mem::transmute(data)};
 
+    match m.tree {
+        Some(ref yep) => {},
+        _ => {}
+    }
+
     match m.state {
         CameraRotation => {
             m.state = Idle;
@@ -386,6 +391,18 @@ pub extern fn mouse_up(
                 property_data_set(p, mem::transmute(box o.clone()));
             },
             _ => {},
+        }
+
+        match m.render.objects_selected.front() {
+            Some(o) => {
+                match m.tree {
+                    Some(ref t) => {
+                        t.select(&o.read().name);
+                    }
+                    _ => {}
+                }
+            },
+            _ => {}
         }
     }
 

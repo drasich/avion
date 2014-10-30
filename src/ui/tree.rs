@@ -21,10 +21,12 @@ extern {
     fn tree_widget_new() -> *const JkTree;
     pub fn tree_register_cb(
         tree : *const JkTree,
+        data : *const Tree,
         name_get : extern fn(data : *const c_void) -> *const c_char,
-        select : extern fn(data : *const c_void) -> (),
+        selected : extern fn(data : *const c_void) -> (),
         can_expand : extern fn(data : *const c_void) -> bool,
-        expand : extern fn(tree: *const JkTree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        //expand : extern fn(tree: *const JkTree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        expand : extern fn(tree: *const Tree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         );
 
     pub fn tree_object_add(
@@ -32,6 +34,8 @@ extern {
         object : *const c_void,
         parent : *const Elm_Object_Item,
         ) -> *const Elm_Object_Item;
+
+    pub fn tree_item_select(tree : *const JkTree, item : *const Elm_Object_Item);
 }
 
 pub struct Tree
@@ -46,9 +50,9 @@ pub struct Tree
 
 impl Tree
 {
-    pub fn new(window : *const Window) -> Tree
+    pub fn new(window : *const Window) -> Box<Tree>
     {
-        let t = Tree {
+        let t = box Tree {
             name : String::from_str("caca"),
             objects : HashMap::new(),
             jk_tree : unsafe {window_tree_new(window)}
@@ -57,8 +61,9 @@ impl Tree
         unsafe {
             tree_register_cb(
                 t.jk_tree,
+                &*t,
                 name_get,
-                select,
+                selected,
                 can_expand,
                 expand);
         }
@@ -78,10 +83,19 @@ impl Tree
         let eoi = unsafe {
             match object.read().parent {
                 Some(ref p) =>  {
-                    tree_object_add(
-                        self.jk_tree,
-                        mem::transmute(box object.clone()),
-                        mem::transmute(box p.clone()))
+                    match self.objects.find(&p.read().name) {
+                        Some(item) => {
+                            tree_object_add(
+                                self.jk_tree,
+                                mem::transmute(box object.clone()),
+                                *item)
+                        },
+                        None => {
+                            println!("problem with tree, could not find parent item");
+                            ptr::null()
+                        }
+                    }
+
                 },
                 None => {
                     tree_object_add(
@@ -92,7 +106,20 @@ impl Tree
             }
         };
 
-        self.objects.insert(object.read().name.clone(), eoi);
+        if eoi != ptr::null() {
+            self.objects.insert(object.read().name.clone(), eoi);
+        }
+    }
+
+    pub fn select(&self, name: &String)
+    {
+        match self.objects.find(name) {
+            Some(item) => {
+                unsafe {tree_item_select(self.jk_tree, *item);}
+            }
+            _ => {}
+        }
+
     }
 }
 
@@ -111,11 +138,11 @@ extern fn name_get(data : *const c_void) -> *const c_char {
     }
 }
 
-extern fn select(data : *const c_void) -> () {
+extern fn selected(data : *const c_void) -> () {
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
-    println!("select ! {} ", o.read().name);
+    println!("selected ! {} ", o.read().name);
 }
 
 extern fn can_expand(data : *const c_void) -> bool {
@@ -127,18 +154,22 @@ extern fn can_expand(data : *const c_void) -> bool {
     return !o.read().children.is_empty();
 }
 
-extern fn expand(tree: *const JkTree, data : *const c_void, parent : *const Elm_Object_Item) -> () {
+//extern fn expand(tree: *const JkTree, data : *const c_void, parent : *const Elm_Object_Item) -> () {
+extern fn expand(tree: *const Tree, data : *const c_void, parent : *const Elm_Object_Item) -> () {
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
 
+    let mut t : &mut Tree = unsafe {mem::transmute(tree)};
+
     println!("expanding ! {} ", o.read().name);
+    println!("expanding ! tree name {} ", t.name);
 
     for c in o.read().children.iter() {
         println!("expanding ! with child {} ", (*c).read().name);
         unsafe {
-            let eoi = tree_object_add(tree, mem::transmute(c), parent);
-            //objects.insert(c.read().name.clone(), eoi);
+            let eoi = tree_object_add(t.jk_tree, mem::transmute(c), parent);
+            t.objects.insert(c.read().name.clone(), eoi);
         }
     }
 }
