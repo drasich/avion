@@ -35,7 +35,9 @@ extern {
         parent : *const Elm_Object_Item,
         ) -> *const Elm_Object_Item;
 
-    pub fn tree_item_select(tree : *const JkTree, item : *const Elm_Object_Item);
+    pub fn tree_item_select(item : *const Elm_Object_Item);
+    pub fn tree_item_expand(item : *const Elm_Object_Item);
+    pub fn tree_deselect_all(item : *const JkTree);
 }
 
 pub struct Tree
@@ -113,9 +115,11 @@ impl Tree
 
     pub fn select(&self, name: &String)
     {
+        unsafe { tree_deselect_all(self.jk_tree); }
+
         match self.objects.find(name) {
             Some(item) => {
-                unsafe {tree_item_select(self.jk_tree, *item);}
+                unsafe {tree_item_select(*item);}
             }
             _ => {}
         }
