@@ -137,7 +137,8 @@ extern fn expand(tree: *const JkTree, data : *const c_void, parent : *const Elm_
     for c in o.read().children.iter() {
         println!("expanding ! with child {} ", (*c).read().name);
         unsafe {
-            tree_object_add(tree, mem::transmute(c), parent);
+            let eoi = tree_object_add(tree, mem::transmute(c), parent);
+            //objects.insert(c.read().name.clone(), eoi);
         }
     }
 }

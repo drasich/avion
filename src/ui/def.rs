@@ -230,7 +230,6 @@ pub extern fn init_cb(master: *mut Master) -> () {
         //*
         let mut t = ui::Tree::new(w);
 
-
         match (*master).scene {
             Some(ref s) => {
                 t.set_scene(&*s.read());
