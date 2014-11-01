@@ -4,6 +4,8 @@ use sync::{RWLock, Arc};
 use std::c_str::CString;
 use std::collections::{DList,Deque};
 use std::ptr;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 use scene;
 use property::TProperty;
@@ -80,8 +82,10 @@ extern {
         );
 
     pub fn init_callback_set(
-        cb: extern fn(*mut Master) -> (),
-        master: *const Master 
+        //cb: extern fn(*mut Rc<RefCell<Master>>) -> (),
+        //master: *const Rc<RefCell<Master>>
+        cb: extern fn(*mut c_void) -> (),
+        master: *const c_void
         ) -> ();
 
     /*
@@ -151,6 +155,90 @@ impl Master
 
         m
     }
+
+    pub fn mouse_up(
+            &mut self, 
+            button : i32,
+            x : i32, 
+            y : i32,
+            timestamp : i32)
+    {
+        let mut m = self;
+        match m.tree {
+            Some(ref yep) => {},
+            _ => {}
+        }
+
+        match m.state {
+            CameraRotation => {
+                m.state = Idle;
+                return;
+            },
+            _ => {}
+        }
+
+        //println!("rust mouse up button {}, pos: {}, {}", button, x, y);
+        let r = m.render.camera.borrow().ray_from_screen(x as f64, y as f64, 10000f64);
+        //TODO
+        match m.render.line.write().mesh_render {
+            Some (ref mr) => {
+                match mr.mesh.resource {
+                    resource::ResData(ref mesh) => {
+                        mesh.write().add_line(
+                            geometry::Segment::new(r.start, r.start + r.direction),
+                            vec::Vec4::zero()); },
+                            _ => {}
+                }
+            },
+            None => {}
+        }
+
+        m.render.objects_selected.clear();
+
+        for o in m.render.scene.read().objects.iter() {
+            let ir = intersection::ray_object(&r, &*o.read());
+            if ir.hit {
+                println!(" I hit object {} ", o.read().name);
+                m.render.objects_selected.push(o.clone());
+            }
+        }
+
+        if m.render.objects_selected.len() == 1 {
+            //TODO select tree
+            match (m.render.objects_selected.front(), m.property) {
+                (Some(o), Some(p)) => unsafe {
+                    property_data_set(p, mem::transmute(box o.clone()));
+                },
+                _ => {},
+            }
+
+            match m.render.objects_selected.front() {
+                Some(o) => {
+                    match m.tree {
+                        Some(ref t) => {
+                            t.select(&o.read().name);
+                        }
+                        _ => {}
+                    }
+                },
+                _ => {}
+            }
+        }
+    }
+
+    pub fn select(&mut self, name : &String)
+    {
+        println!("select is called : {} ", name);
+        self.render.objects_selected.clear();
+
+        for o in self.render.scene.read().objects.iter() {
+            if o.read().name == *name {
+                self.render.objects_selected.push(o.clone());
+                break;
+            }
+        }
+
+    }
 }
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
@@ -206,12 +294,14 @@ pub extern fn changed(object : *const c_void, data : *const c_void) {
 }
 
 
-pub extern fn init_cb(master: *mut Master) -> () {
+//pub extern fn init_cb(master_rc: *mut Rc<RefCell<Master>>) -> () {
+pub extern fn init_cb(data: *mut c_void) -> () {
     unsafe {
+        let master_rc : &Rc<RefCell<Master>> = mem::transmute(data);
         let w = window_new();
         window_callback_set(
             w,
-            mem::transmute(master), //ptr::null(),//TODO
+            mem::transmute(box master_rc.clone()), //ptr::null(),//TODO
             mouse_down,
             mouse_up,
             mouse_move,
@@ -228,7 +318,9 @@ pub extern fn init_cb(master: *mut Master) -> () {
             ); 
 
         //*
-        let mut t = ui::Tree::new(w);
+        let mut t = ui::Tree::new(w, master_rc.clone().downgrade());
+
+        let mut master = master_rc.borrow_mut();
 
         match (*master).scene {
             Some(ref s) => {
@@ -245,7 +337,7 @@ pub extern fn init_cb(master: *mut Master) -> () {
         };
         //*/
 
-        (*master).tree = Some(t);
+        master.tree = Some(t);
 
         //window_button_new(w);
 
@@ -342,9 +434,13 @@ pub extern fn mouse_up(
     timestamp : c_int
     )
 {
+    let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
 
-    let m : &mut Master = unsafe {mem::transmute(data)};
+    //let m : &mut Master = unsafe {mem::transmute(data)};
+    let mut m = master_rc.borrow_mut();
+    m.mouse_up(button,x,y,timestamp);
 
+    /*
     match m.tree {
         Some(ref yep) => {},
         _ => {}
@@ -405,6 +501,7 @@ pub extern fn mouse_up(
             _ => {}
         }
     }
+    */
 
 }
 
@@ -423,10 +520,13 @@ pub extern fn mouse_move(
         return;
     }
     //println!("rust mouse move");
-    let m : &mut Master = unsafe {mem::transmute(data)};
+    //let m : &mut Master = unsafe {mem::transmute(data)};
+    let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
+    let mut m = master_rc.borrow_mut();
+
     let x : f64 = curx as f64 - prevx as f64;
     let y : f64 = cury as f64 - prevy as f64;
-    _rotate_camera(m, x, y);
+    _rotate_camera(&mut *m, x, y);
 }
 
 pub extern fn mouse_wheel(
@@ -450,7 +550,9 @@ pub extern fn key_down(
     timestamp : c_int
     )
 {
-    let m : &mut Master = unsafe {mem::transmute(data)};
+    //let m : &mut Master = unsafe {mem::transmute(data)};
+    let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
+    let mut m = master_rc.borrow_mut();
     let mut camera = m.render.camera.borrow_mut();
 
     let s = unsafe {CString::new(key as *const i8, false) };

@@ -18,6 +18,9 @@ extern crate debug;
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
 use sync::{RWLock, Arc};
+use std::rc::Rc;
+use std::cell::RefCell;
+use std::mem;
 
 mod resource;
 mod shader;
@@ -131,11 +134,20 @@ name = "image/base_skeleton_col.png"
 
         //scene.save();
 
-    let m = box ui::Master::new();
+    //let m = box ui::Master::new();
+    let m = Rc::new(RefCell::new(ui::Master::new()));
 
     unsafe {
-        render::draw_callback_set(render::init_cb, render::draw_cb, render::resize_cb, &m.render);
-        ui::init_callback_set(ui::init_cb, &*m);
+        //render::draw_callback_set(render::init_cb, render::draw_cb, render::resize_cb, &m.render);
+        //ui::init_callback_set(ui::init_cb, &*m);
+        render::draw_callback_set(
+            render::init_cb,
+            render::draw_cb,
+            render::resize_cb,
+            //&m.render);
+            &m.borrow().render);
+
+        ui::init_callback_set(ui::init_cb, mem::transmute(box m.clone()));
     }
 
     unsafe { 

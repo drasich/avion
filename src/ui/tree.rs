@@ -5,10 +5,14 @@ use std::mem;
 use std::c_str::CString;
 //use std::collections::{DList,Deque};
 use std::ptr;
+use std::cell::RefCell;
+use std::rc::Weak;
 
 use scene;
 use object;
 use ui::Window;
+use ui::Master;
+use ui;
 
 #[repr(C)]
 pub struct Elm_Object_Item;
@@ -27,6 +31,7 @@ extern {
         can_expand : extern fn(data : *const c_void) -> bool,
         //expand : extern fn(tree: *const JkTree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         expand : extern fn(tree: *const Tree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        sel : extern fn(tree: *const Tree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         );
 
     pub fn tree_object_add(
@@ -46,18 +51,21 @@ pub struct Tree
     //TODO change the key
     //objects : HashMap<Arc<RWLock<object::Object>>, *const Elm_Object_Item >
     objects : HashMap<String, *const Elm_Object_Item>,
-    jk_tree : *const JkTree
-
+    jk_tree : *const JkTree,
+    master : Weak<RefCell<ui::Master>>
 }
 
 impl Tree
 {
-    pub fn new(window : *const Window) -> Box<Tree>
+    pub fn new(
+        window : *const Window,
+        master : Weak<RefCell<ui::Master>>) -> Box<Tree>
     {
         let t = box Tree {
             name : String::from_str("caca"),
             objects : HashMap::new(),
-            jk_tree : unsafe {window_tree_new(window)}
+            jk_tree : unsafe {window_tree_new(window)},
+            master : master
         };
 
         unsafe {
@@ -67,7 +75,8 @@ impl Tree
                 name_get,
                 selected,
                 can_expand,
-                expand);
+                expand,
+                sel);
         }
 
         t
@@ -124,6 +133,7 @@ impl Tree
             _ => {}
         }
 
+        println!("tree select_________________");
     }
 }
 
@@ -176,5 +186,29 @@ extern fn expand(tree: *const Tree, data : *const c_void, parent : *const Elm_Ob
             t.objects.insert(c.read().name.clone(), eoi);
         }
     }
+}
+
+extern fn sel(tree: *const Tree, data : *const c_void, parent : *const Elm_Object_Item) -> () {
+    let o : &Arc<RWLock<object::Object>> = unsafe {
+        mem::transmute(data)
+    };
+
+    let mut t : &mut Tree = unsafe {mem::transmute(tree)};
+
+    println!("sel ! {} ", o.read().name);
+    println!("sel ! tree name {} ", t.name);
+
+    match t.master.upgrade() {
+        Some(m) => { 
+            match m.try_borrow_mut() {
+                Some(ref mut mm) => {
+                mm.select(&o.read().name);
+                },
+                _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
+            }
+        },
+        None => {}
+    }
+
 }
 
