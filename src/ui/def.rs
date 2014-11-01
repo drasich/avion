@@ -16,7 +16,7 @@ use geometry;
 use vec;
 use render;
 use object;
-use ui::{Tree,JkTree};
+use ui::{Tree};
 use ui;
 
 //use tree;
@@ -215,7 +215,7 @@ impl Master
             match m.render.objects_selected.front() {
                 Some(o) => {
                     match m.tree {
-                        Some(ref t) => {
+                        Some(ref mut t) => {
                             t.select(&o.read().name);
                         }
                         _ => {}

@@ -23,26 +23,25 @@ pub struct JkTree;
 extern {
     pub fn window_tree_new(window : *const Window) -> *const JkTree;
     fn tree_widget_new() -> *const JkTree;
-    pub fn tree_register_cb(
+    fn tree_register_cb(
         tree : *const JkTree,
         data : *const Tree,
         name_get : extern fn(data : *const c_void) -> *const c_char,
         selected : extern fn(data : *const c_void) -> (),
         can_expand : extern fn(data : *const c_void) -> bool,
-        //expand : extern fn(tree: *const JkTree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         expand : extern fn(tree: *const Tree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         sel : extern fn(tree: *const Tree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         );
 
-    pub fn tree_object_add(
+    fn tree_object_add(
         tree : *const JkTree,
         object : *const c_void,
         parent : *const Elm_Object_Item,
         ) -> *const Elm_Object_Item;
 
     pub fn tree_item_select(item : *const Elm_Object_Item);
-    pub fn tree_item_expand(item : *const Elm_Object_Item);
-    pub fn tree_deselect_all(item : *const JkTree);
+    fn tree_item_expand(item : *const Elm_Object_Item);
+    fn tree_deselect_all(item : *const JkTree);
 }
 
 pub struct Tree
@@ -52,7 +51,8 @@ pub struct Tree
     //objects : HashMap<Arc<RWLock<object::Object>>, *const Elm_Object_Item >
     objects : HashMap<String, *const Elm_Object_Item>,
     jk_tree : *const JkTree,
-    master : Weak<RefCell<ui::Master>>
+    master : Weak<RefCell<ui::Master>>,
+    dont_forward_signal : bool
 }
 
 impl Tree
@@ -62,10 +62,11 @@ impl Tree
         master : Weak<RefCell<ui::Master>>) -> Box<Tree>
     {
         let t = box Tree {
-            name : String::from_str("caca"),
+            name : String::from_str("tree_name"),
             objects : HashMap::new(),
             jk_tree : unsafe {window_tree_new(window)},
-            master : master
+            master : master,
+            dont_forward_signal : false
         };
 
         unsafe {
@@ -122,10 +123,12 @@ impl Tree
         }
     }
 
-    pub fn select(&self, name: &String)
+    pub fn select(&mut self, name: &String)
     {
         unsafe { tree_deselect_all(self.jk_tree); }
 
+        println!("select from tree");
+        self.dont_forward_signal = true;
         match self.objects.find(name) {
             Some(item) => {
                 unsafe {tree_item_select(*item);}
@@ -133,12 +136,13 @@ impl Tree
             _ => {}
         }
 
-        println!("tree select_________________");
+        self.dont_forward_signal = false;
+        println!("select from tree end");
     }
 }
 
-extern fn name_get(data : *const c_void) -> *const c_char {
-
+extern fn name_get(data : *const c_void) -> *const c_char
+{
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
@@ -152,14 +156,16 @@ extern fn name_get(data : *const c_void) -> *const c_char {
     }
 }
 
-extern fn selected(data : *const c_void) -> () {
+extern fn selected(data : *const c_void) -> ()
+{
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
     println!("selected ! {} ", o.read().name);
 }
 
-extern fn can_expand(data : *const c_void) -> bool {
+extern fn can_expand(data : *const c_void) -> bool
+{
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
@@ -168,8 +174,11 @@ extern fn can_expand(data : *const c_void) -> bool {
     return !o.read().children.is_empty();
 }
 
-//extern fn expand(tree: *const JkTree, data : *const c_void, parent : *const Elm_Object_Item) -> () {
-extern fn expand(tree: *const Tree, data : *const c_void, parent : *const Elm_Object_Item) -> () {
+extern fn expand(
+    tree: *const Tree,
+    data : *const c_void,
+    parent : *const Elm_Object_Item) -> ()
+{
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
@@ -188,7 +197,11 @@ extern fn expand(tree: *const Tree, data : *const c_void, parent : *const Elm_Ob
     }
 }
 
-extern fn sel(tree: *const Tree, data : *const c_void, parent : *const Elm_Object_Item) -> () {
+extern fn sel(
+    tree: *const Tree,
+    data : *const c_void,
+    parent : *const Elm_Object_Item) -> ()
+{
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
@@ -198,11 +211,15 @@ extern fn sel(tree: *const Tree, data : *const c_void, parent : *const Elm_Objec
     println!("sel ! {} ", o.read().name);
     println!("sel ! tree name {} ", t.name);
 
+    if t.dont_forward_signal {
+        return;
+    }
+
     match t.master.upgrade() {
         Some(m) => { 
             match m.try_borrow_mut() {
                 Some(ref mut mm) => {
-                mm.select(&o.read().name);
+                    mm.select(&o.read().name);
                 },
                 _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
             }
