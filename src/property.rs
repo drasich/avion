@@ -429,12 +429,12 @@ pub fn print_pt(pt : PropertyType)
 }
 
 macro_rules! match_get(
-  ($yo:ident, $member:ident, Box<$yep:ty>) => (
+  ($yo:ident, $member:ident, $yep:ty, Plain) => (
+      box $yo.$member as Box<Any>
+    );
+  ($yo:ident, $member:ident, $yep:ty, Boxed) => (
       box $yo.$member.clone() as Box<Any>
       );
-  ($yo:ident, $member:ident, $yep:ty) => (
-      box $yo.$member as Box<Any>
-    )
   )
 
 macro_rules! match_hier_get(
@@ -444,15 +444,15 @@ macro_rules! match_hier_get(
   )
 
 macro_rules! match_set(
-  ($yo:ident, $member:ident, $my_type:ty, $value:ident) => (
+  ($yo:ident, $member:ident, $my_type:ty, $value:ident, Boxed) => (
       match $value.downcast_ref::<$my_type>() {
-          Some(v) => $yo.$member = *v,
+          Some(v) => *$yo.$member = *v,
           None => {}
       }
       );
-  ($yo:ident, $member:ident, Box<$my_type:ty>, $value:ident) => (
+  ($yo:ident, $member:ident, $my_type:ty, $value:ident, Plain) => (
       match $value.downcast_ref::<$my_type>() {
-          Some(v) => *$yo.$member = *v,
+          Some(v) => $yo.$member = *v,
           None => {}
       }
       );
@@ -464,9 +464,14 @@ macro_rules! match_hier_set(
     )
   )
 
+pub enum AllocStyle
+{
+    Plain,
+    Boxed
+}
 
 pub macro_rules! chris_property_impl(
-    ($my_type:ty, [ $($member:ident,$mytype:ty)|+ ]) => ( 
+    ($my_type:ty, [ $($member:ident,$mytype:ty,$alloctype:ident)|+ ]) => ( 
 
       impl ChrisProperty for $my_type
       {
@@ -484,7 +489,7 @@ pub macro_rules! chris_property_impl(
         {
             let v : Box<Any> = match name {
           $(
-            stringify!($member) => match_get!(self, $member, $mytype),
+            stringify!($member) => match_get!(self, $member, $mytype, $alloctype),
            )+
               _ => return None
             };
@@ -498,7 +503,7 @@ pub macro_rules! chris_property_impl(
           $(
               //TODO
             stringify!($member) => {
-              match_set!(self, $member, $mytype, value)
+              match_set!(self, $member, $mytype, value, $alloctype)
             },
 
            )+
@@ -548,7 +553,12 @@ pub macro_rules! chris_property_impl(
   );
 )
 
-//chris_property_impl!(Chris, [x,f64|y,f64|z,f64|position,vec::Vec3|boxpos,Box<vec::Vec3>])
-chris_property_impl!(Chris, [x,f64|y,f64|z,f64|position,vec::Vec3])
+chris_property_impl!(Chris,
+                     [x,f64,Plain|
+                     y,f64,Plain|
+                     z,f64,Plain|
+                     position,vec::Vec3,Plain|
+                     boxpos,vec::Vec3,Boxed])
+//chris_property_impl!(Chris, [x,f64,Plain|y,f64,Plain|z,f64,Plain|position,vec::Vec3,Plain])
 //chris_property_impl!(Chris, [x,f64|y,f64|z,f64])
 
