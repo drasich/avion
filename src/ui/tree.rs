@@ -74,10 +74,10 @@ impl Tree
                 t.jk_tree,
                 &*t,
                 name_get,
-                selected,
+                item_selected,
                 can_expand,
                 expand,
-                sel);
+                selected);
         }
 
         t
@@ -156,7 +156,7 @@ extern fn name_get(data : *const c_void) -> *const c_char
     }
 }
 
-extern fn selected(data : *const c_void) -> ()
+extern fn item_selected(data : *const c_void) -> ()
 {
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(data)
@@ -197,7 +197,7 @@ extern fn expand(
     }
 }
 
-extern fn sel(
+extern fn selected(
     tree: *const Tree,
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
@@ -224,7 +224,7 @@ extern fn sel(
                 _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
             }
         },
-        None => {}
+        None => { println!("the master of the tree doesn't exist anymore");}
     }
 
 }
