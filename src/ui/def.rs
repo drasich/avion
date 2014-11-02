@@ -8,22 +8,18 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 use scene;
-use property::TProperty;
-use property;
 use intersection;
 use resource;
 use geometry;
 use vec;
 use render;
 use object;
-use ui::{Tree};
+use ui::{Tree,Property};
 use ui;
 
 //use tree;
 //pub use Tree;
 
-#[repr(C)]
-pub struct JkProperty;
 #[repr(C)]
 pub struct Window;
 
@@ -33,7 +29,6 @@ extern {
     pub fn elm_simple_window_main();
     fn window_new() -> *const Window;
     fn window_button_new(window : *const Window);
-    fn window_property_new(window : *const Window) -> *const JkProperty;
     fn window_callback_set(
         window : *const Window,
         data: *const c_void,
@@ -107,16 +102,6 @@ extern {
         );
         */
 
-    fn property_register_cb(
-        property : *const JkProperty,
-        changed : extern fn(object : *const c_void, data : *const c_void),
-        get : extern fn(data : *const c_void) -> *const c_char
-        );
-
-    fn property_data_set(
-        property : *const JkProperty,
-        data : *const c_void
-        );
 }
 
 enum MasterState
@@ -130,7 +115,8 @@ pub struct Master
     //windows : DList<Window>
     pub window : Option<*const Window>,
     pub tree : Option<Box<Tree>>,
-    pub property : Option<*const JkProperty>,
+    //pub property : Option<*const JkProperty>,
+    pub property : Option<Box<Property>>,
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
     pub render : render::Render,
     pub state : MasterState,
@@ -205,9 +191,15 @@ impl Master
 
         if m.render.objects_selected.len() == 1 {
             //TODO select tree
-            match (m.render.objects_selected.front(), m.property) {
-                (Some(o), Some(p)) => unsafe {
-                    property_data_set(p, mem::transmute(box o.clone()));
+            match (m.render.objects_selected.front()) {
+                Some(o) => {
+                    match m.property {
+                        Some(ref mut p) => unsafe {
+                            //property_data_set(p, mem::transmute(box o.clone()));
+                            p.data_set(mem::transmute(box o.clone()));
+                        },
+                        None => {}
+                    }
                 },
                 _ => {},
             }
@@ -234,25 +226,14 @@ impl Master
         for o in self.render.scene.read().objects.iter() {
             if o.read().name == *name {
                 self.render.objects_selected.push(o.clone());
+                match self.property {
+                    Some(ref p) => p.data_set(unsafe {mem::transmute(box o.clone())}),
+                    None => {}
+                }
                 break;
             }
         }
 
-    }
-}
-
-pub extern fn name_get(data : *const c_void) -> *const c_char {
-
-    let o : &Arc<RWLock<object::Object>> = unsafe {
-        mem::transmute(data)
-    };
-
-    //println!("name get {:?}", o);
-
-    let cs = o.read().name.to_c_str();
-
-    unsafe {
-        cs.unwrap()
     }
 }
 
@@ -276,24 +257,6 @@ impl PropertyTest for int
     }
 }
 
-pub extern fn changed(object : *const c_void, data : *const c_void) {
-    let o : &Arc<RWLock<object::Object>> = unsafe {
-        mem::transmute(object)
-    };
-
-    let s = unsafe {CString::new(data as *const i8, false) };
-
-    match s.as_str() {
-        Some(ss) => {
-            let sss = property::SString(String::from_str(ss));
-            o.clone().write().set_property("name", &sss);
-        },
-        _ => ()
-    }
-
-}
-
-
 //pub extern fn init_cb(master_rc: *mut Rc<RefCell<Master>>) -> () {
 pub extern fn init_cb(data: *mut c_void) -> () {
     unsafe {
@@ -309,6 +272,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
             key_down
             );
 
+        /*
         let p = window_property_new(w);
         
         property_register_cb(
@@ -316,6 +280,9 @@ pub extern fn init_cb(data: *mut c_void) -> () {
             changed,
             name_get
             ); 
+            */
+
+        let p = ui::Property::new(w, master_rc.clone().downgrade());
 
         //*
         let mut t = ui::Tree::new(w, master_rc.clone().downgrade());
@@ -328,7 +295,8 @@ pub extern fn init_cb(data: *mut c_void) -> () {
                 let oo = s.read().object_find("yepyoyo");
                 match oo {
                     Some(o) => { 
-                        property_data_set(p, mem::transmute(box o.clone()));
+                        //property_data_set(p, mem::transmute(box o.clone()));
+                        p.data_set(mem::transmute(box o.clone()));
                     }
                     None => {}
                 };
@@ -346,6 +314,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     }
 }
 
+/*
 pub struct PropertyWidget {
     name : String,
 }
@@ -363,6 +332,7 @@ impl PropertyShow for String
         let c = unsafe { window_property_new(window) };
     }
 }
+*/
 
 pub extern fn mouse_down(
     data : *const c_void,
