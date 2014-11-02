@@ -1,6 +1,6 @@
 use std::fmt;
 
-#[deriving(Decodable, Encodable)]
+#[deriving(Decodable, Encodable, Clone)]
 pub struct Vec3
 {
     pub x : f64,

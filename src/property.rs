@@ -6,6 +6,8 @@
 //use serialize::{json, Encodable, Decodable};
 //use std::str;
 use object;
+use vec;
+use std::any::{Any, AnyRefExt};
 
 //log_syntax!()
 //trace_macros!(true)
@@ -24,11 +26,245 @@ pub trait TProperty {
   fn set_easy(&mut self, name: &str, value: &PropertyYep);
 }
 
+pub enum ChrisEnum
+{
+    cInt,
+    cFloat,
+    cStruct,
+    cBox,
+    cVec,
+    cHashMap,
+    cList
+}
+
+pub trait ChrisProperty {
+  //fn cfields(&self) -> Box<[String]>;
+  fn cfields(&self) -> Box<[String]>
+  {
+      return box [];
+  }
+
+  fn cget_property(&self, name: &str) -> Option<Box<Any>>
+  //fn cget_property(&self, name: &str) -> Option<(Box<Any>, ChrisEnum)>
+  {
+      return None;
+  }
+  fn cget_property_hier(&self, name: Vec<String>) -> Option<Box<Any>>
+  {
+      match name.len() {
+          0 => None,
+          _ => self.cget_property(name[0].as_slice())
+      }
+  }
+  fn cset_property(&mut self, name: &str, value: &Any)
+  {
+  }
+  fn cset_property_hier(&mut self, name: Vec<String>, value: &Any)
+  {
+      match name.len() {
+          0 => {},
+          _ => self.cset_property(name[0].as_slice(), value)
+      };
+  }
+}
+
+/*
+impl<T: 'static> ChrisProperty for T {
+  fn cfields(&self) -> Box<[String]>
+  {
+      return box [];
+  }
+}
+*/
+impl ChrisProperty for f64 {
+}
+
+
+#[deriving(Decodable, Encodable, Clone)]
+pub struct Chris
+{
+    pub x : f64,
+    pub y : f64,
+    pub z : f64,
+    pub position : vec::Vec3,
+    pub boxpos : Box<vec::Vec3>
+}
+
+impl Chris
+{
+    pub fn new()-> Chris
+    {
+        Chris {
+            x : 0f64,
+            y : 0f64,
+            z : 0f64,
+            position : vec::Vec3::new(6f64,7f64,8f64),
+            boxpos : box vec::Vec3::new(6f64,7f64,8f64)}
+    }
+}
+
+
+impl ChrisProperty for vec::Vec3
+{
+  fn cfields(&self) -> Box<[String]> 
+  {
+      return box[
+          String::from_str("x"),
+          String::from_str("y"),
+          String::from_str("z"),
+      ];
+  }
+
+  fn cget_property(&self, name: &str) -> Option<Box<Any>>
+  {
+      let v = match name {
+          "x" => box self.x,// as Box<Any>,
+          "y" => box self.y,// as Box<Any>,
+          "z" => box self.z,// as Box<Any>,
+          _ => return None
+      };
+
+      Some(v as Box<Any>)
+  }
+
+  fn cset_property(&mut self, name: &str, value: &Any)
+  {
+      match name {
+          "x" => {
+              //if self.x.get_type_id() == value.get_type_id {
+              //}
+              match value.downcast_ref::<f64>() {
+                  Some(v) => self.x = *v,
+                  None => {}
+
+              }
+          },
+          "y" => {
+              match value.downcast_ref::<f64>() {
+                  Some(v) => self.y = *v,
+                  None => {}
+              }
+          },
+          "z" => {
+              match value.downcast_ref::<f64>() {
+                  Some(v) => self.z = *v,
+                  None => {}
+              }
+          }
+          _ => {}
+      }
+  }
+}
+
+/*
+impl ChrisProperty for Chris
+{
+  fn cfields(&self) -> Box<[String]> 
+  {
+      return box[
+          String::from_str("x"),
+          String::from_str("y"),
+          String::from_str("z"),
+          String::from_str("position"),
+      ];
+  }
+
+  fn cget_property(&self, name: &str) -> Option<Box<Any>>
+  {
+      let v : Box<Any> = match name {
+          "x" => box self.x as Box<Any>,
+          "y" => box self.y as Box<Any>,
+          "z" => box self.z as Box<Any>,
+          "position" => box self.position as Box<Any>,
+          "boxpos" => box self.boxpos.clone() as Box<Any>,
+          _ => return None
+      };
+
+      Some(v)
+  }
+
+  fn cget_property_hier(&self, names: Vec<String>) -> Option<Box<Any>>
+  {
+      match names.len() {
+          0 => return None,
+          1 => return self.cget_property(names[0].as_slice()),
+          _ => {
+              let yep = names.tail().to_vec();
+              match names[0].as_slice() {
+                  "position" => { return self.position.cget_property_hier(yep);},
+                  "boxpos" => { return self.boxpos.cget_property_hier(yep);},
+                  _ => {}
+              }
+          }
+      }
+
+      return None;
+  }
+
+  fn cset_property(&mut self, name: &str, value: &Any)
+  {
+      match name {
+          "x" => {
+              match value.downcast_ref::<f64>() {
+                  Some(v) => self.x = *v,
+                  None => {}
+              }
+          },
+          "y" => {
+              match value.downcast_ref::<f64>() {
+                  Some(v) => self.y = *v,
+                  None => {}
+              }
+          },
+          "z" => {
+              match value.downcast_ref::<f64>() {
+                  Some(v) => self.z = *v,
+                  None => {}
+              }
+          },
+          "position" => {
+              match value.downcast_ref::<vec::Vec3>() {
+                  Some(v) => self.position = *v,
+                  None => {}
+              }
+          },
+          "boxpos" => {
+              match value.downcast_ref::<vec::Vec3>() {
+                  Some(v) => *self.boxpos = *v,
+                  None => {}
+              }
+          }
+          _ => {}
+      }
+
+  }
+
+  fn cset_property_hier(&mut self, names: Vec<String>, value: &Any)
+  {
+      match names.len() {
+          0 => return,
+          1 => self.cset_property(names[0].as_slice(),value),
+          _ => {
+              let yep = names.tail().to_vec();
+              match names[0].as_slice() {
+                  "position" => { self.position.cset_property_hier(yep, value);},
+                  "boxpos" => { self.boxpos.cset_property_hier(yep, value);},
+                  _ => {}
+              }
+          }
+      }
+    }
+}
+*/
+
+
 pub enum PropertyType {
   Int(i32),
   Float(f64),
   SString(String),
   Struct(Box<TProperty +'static>),
+  //AnyStruct(Any),
+  //NormalStruct(&'static TProperty+'static),
 }
 
 
@@ -145,6 +381,7 @@ pub macro_rules! property_impl(
 )
 
 
+    /*
 #[deriving(Clone)]
 pub struct Vec3
 {
@@ -164,9 +401,12 @@ pub struct Quat
   v : Box<Vec3>,
   txt : String
 }
+*/
 
-property_impl!(Vec3, [x,Float|y,Float|z,Float])
-property_impl!(Quat, [x,Float|y,Float|z,Float|t,Int|txt,SString|v,Struct])
+//property_impl!(Vec3, [x,Float|y,Float|z,Float])
+property_impl!(vec::Vec3, [x,Float|y,Float|z,Float])
+//property_impl!(Quat, [x,Float|y,Float|z,Float|t,Int|txt,SString|v,Struct])
+//property_impl!(object::Object, [name,SString|position,NormalStruct])
 property_impl!(object::Object, [name,SString])
 
 pub fn print_pt(pt : PropertyType)
@@ -188,5 +428,127 @@ pub fn print_pt(pt : PropertyType)
   }
 }
 
+macro_rules! match_get(
+  ($yo:ident, $member:ident, Box<$yep:ty>) => (
+      box $yo.$member.clone() as Box<Any>
+      );
+  ($yo:ident, $member:ident, $yep:ty) => (
+      box $yo.$member as Box<Any>
+    )
+  )
 
+macro_rules! match_hier_get(
+  ($yo:ident, $member:ident, $yep:ident) => (
+      return $yo.$member.cget_property_hier($yep)
+    )
+  )
+
+macro_rules! match_set(
+  ($yo:ident, $member:ident, $my_type:ty, $value:ident) => (
+      match $value.downcast_ref::<$my_type>() {
+          Some(v) => $yo.$member = *v,
+          None => {}
+      }
+      );
+  ($yo:ident, $member:ident, Box<$my_type:ty>, $value:ident) => (
+      match $value.downcast_ref::<$my_type>() {
+          Some(v) => *$yo.$member = *v,
+          None => {}
+      }
+      );
+  )
+
+macro_rules! match_hier_set(
+  ($yo:ident, $member:ident, $yep:ident, $value:ident) => (
+      $yo.$member.cset_property_hier($yep, $value)
+    )
+  )
+
+
+pub macro_rules! chris_property_impl(
+    ($my_type:ty, [ $($member:ident,$mytype:ty)|+ ]) => ( 
+
+      impl ChrisProperty for $my_type
+      {
+        fn cfields(&self) -> Box<[String]>
+        {
+          return box[
+          $(
+            stringify!($member).to_string(),
+           )+
+          ];
+
+        }
+
+        fn cget_property(&self, name: &str) -> Option<Box<Any>>
+        {
+            let v : Box<Any> = match name {
+          $(
+            stringify!($member) => match_get!(self, $member, $mytype),
+           )+
+              _ => return None
+            };
+
+            Some(v)
+        }
+
+        fn cset_property(&mut self, name: &str, value: &Any)
+        {
+            match name {
+          $(
+              //TODO
+            stringify!($member) => {
+              match_set!(self, $member, $mytype, value)
+            },
+
+           )+
+            _ => {}
+            }
+        }
+
+        fn cget_property_hier(&self, names: Vec<String>) -> Option<Box<Any>>
+        {
+            match names.len() {
+                0 => return None,
+                1 => return self.cget_property(names[0].as_slice()),
+                _ => {
+                    let yep = names.tail().to_vec();
+                    match names[0].as_slice() {
+                        $(
+                            stringify!($member) => match_hier_get!(self, $member, yep),
+                        )+
+                        _ => {}
+                    }
+                }
+            }
+
+            return None;
+        }
+
+        fn cset_property_hier(&mut self, names: Vec<String>, value: &Any)
+        {
+            match names.len() {
+                0 => return,
+                1 => self.cset_property(names[0].as_slice(),value),
+                _ => {
+                    let yep = names.tail().to_vec();
+                    match names[0].as_slice() {
+                        //"position" => { self.position.cset_property_hier(yep, value);},
+                        //"boxpos" => { self.boxpos.cset_property_hier(yep, value);},
+                        $(
+                            stringify!($member) => match_hier_set!(self, $member, yep, value),
+                        )+
+                        _ => {}
+                    }
+                }
+            }
+        }
+
+     }
+  );
+)
+
+//chris_property_impl!(Chris, [x,f64|y,f64|z,f64|position,vec::Vec3|boxpos,Box<vec::Vec3>])
+chris_property_impl!(Chris, [x,f64|y,f64|z,f64|position,vec::Vec3])
+//chris_property_impl!(Chris, [x,f64|y,f64|z,f64])
 

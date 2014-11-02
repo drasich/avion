@@ -1,6 +1,7 @@
 #![feature(macro_rules)]
 #![feature(log_syntax)]
 #![feature(trace_macros)]
+#![feature(slicing_syntax)]
 
 //TODO remove
 #![allow(unused_variable)]
@@ -21,6 +22,8 @@ use sync::{RWLock, Arc};
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::mem;
+use property::ChrisProperty;
+use std::any::{Any, AnyRefExt};
 
 mod resource;
 mod shader;
@@ -43,6 +46,26 @@ mod fbo;
 
 
 fn main() {
+    let mut c = property::Chris::new();
+    //let yep  = c.cget_property("x");
+    c.cset_property_hier(
+        [String::from_str("boxpos"),String::from_str("x")].to_vec(),
+        &555f64);
+    c.cset_property_hier(
+        [String::from_str("boxpos")].to_vec(),
+        &vec::Vec3::new(111f64,-9f64,-33f64));
+    let yep  = c.cget_property_hier(
+        [String::from_str("boxpos"),String::from_str("x")].to_vec());
+    match yep {
+        Some(v) => {
+            match v.downcast_ref::<f64>() {
+                Some(vv) => println!("I found the value {}", *vv ),
+                None => {}
+            }
+        },
+        None => {}
+    }
+
 
     //spawn(proc() {
     /*
