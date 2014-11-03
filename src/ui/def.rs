@@ -197,6 +197,7 @@ impl Master
                         Some(ref mut p) => unsafe {
                             //property_data_set(p, mem::transmute(box o.clone()));
                             p.data_set(mem::transmute(box o.clone()));
+                            p.set_object(&*o.read());
                         },
                         None => {}
                     }
@@ -227,7 +228,10 @@ impl Master
             if o.read().name == *name {
                 self.render.objects_selected.push(o.clone());
                 match self.property {
-                    Some(ref p) => p.data_set(unsafe {mem::transmute(box o.clone())}),
+                    Some(ref p) => {
+                        p.data_set(unsafe {mem::transmute(box o.clone())});
+                        p.set_object(&*o.read());
+                    },
                     None => {}
                 }
                 break;
@@ -238,6 +242,7 @@ impl Master
 }
 
 
+/*
 struct PropertySet
 {
     name : String
@@ -256,6 +261,7 @@ impl PropertyTest for int
         let test = value;
     }
 }
+*/
 
 //pub extern fn init_cb(master_rc: *mut Rc<RefCell<Master>>) -> () {
 pub extern fn init_cb(data: *mut c_void) -> () {
@@ -297,6 +303,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
                     Some(o) => { 
                         //property_data_set(p, mem::transmute(box o.clone()));
                         p.data_set(mem::transmute(box o.clone()));
+                        p.set_object(&*o.read());
                     }
                     None => {}
                 };

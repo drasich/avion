@@ -79,6 +79,10 @@ impl<T: 'static> ChrisProperty for T {
 impl ChrisProperty for f64 {
 }
 
+impl ChrisProperty for String {
+}
+
+
 
 #[deriving(Decodable, Encodable, Clone)]
 pub struct Chris
@@ -429,6 +433,9 @@ pub fn print_pt(pt : PropertyType)
 }
 
 macro_rules! match_get(
+  ($yo:ident, $member:ident, $yep:ty, PlainString) => (
+      box $yo.$member.clone() as Box<Any>
+    );
   ($yo:ident, $member:ident, $yep:ty, Plain) => (
       box $yo.$member as Box<Any>
     );
@@ -456,6 +463,12 @@ macro_rules! match_set(
           None => {}
       }
       );
+  ($yo:ident, $member:ident, $my_type:ty, $value:ident, PlainString) => (
+      match $value.downcast_ref::<$my_type>() {
+          Some(v) => $yo.$member = v.clone(),
+          None => {}
+      }
+      );
   )
 
 macro_rules! match_hier_set(
@@ -467,7 +480,8 @@ macro_rules! match_hier_set(
 pub enum AllocStyle
 {
     Plain,
-    Boxed
+    Boxed,
+    PlainString
 }
 
 pub macro_rules! chris_property_impl(
@@ -562,3 +576,6 @@ chris_property_impl!(Chris,
 //chris_property_impl!(Chris, [x,f64,Plain|y,f64,Plain|z,f64,Plain|position,vec::Vec3,Plain])
 //chris_property_impl!(Chris, [x,f64|y,f64|z,f64])
 
+chris_property_impl!(object::Object,
+                     [name,String,PlainString])
+                     //position,vec::Vec3,Plain])
