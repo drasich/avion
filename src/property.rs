@@ -37,6 +37,14 @@ pub enum ChrisEnum
     cList
 }
 
+pub enum ChrisValue
+{
+    ChrisNone,
+    BoxAny(Box<Any>),
+    BoxChrisProperty(Box<ChrisProperty+'static>)
+}
+
+
 pub trait ChrisProperty {
   //fn cfields(&self) -> Box<[String]>;
   fn cfields(&self) -> Box<[String]>
@@ -44,15 +52,15 @@ pub trait ChrisProperty {
       return box [];
   }
 
-  fn cget_property(&self, name: &str) -> Option<Box<Any>>
+  fn cget_property(&self, name: &str) -> ChrisValue
   //fn cget_property(&self, name: &str) -> Option<(Box<Any>, ChrisEnum)>
   {
-      return None;
+      return ChrisNone;
   }
-  fn cget_property_hier(&self, name: Vec<String>) -> Option<Box<Any>>
+  fn cget_property_hier(&self, name: Vec<String>) -> ChrisValue
   {
       match name.len() {
-          0 => None,
+          0 => ChrisNone,
           _ => self.cget_property(name[0].as_slice())
       }
   }
@@ -119,16 +127,16 @@ impl ChrisProperty for vec::Vec3
       ];
   }
 
-  fn cget_property(&self, name: &str) -> Option<Box<Any>>
+  fn cget_property(&self, name: &str) -> ChrisValue
   {
       let v = match name {
           "x" => box self.x,// as Box<Any>,
           "y" => box self.y,// as Box<Any>,
           "z" => box self.z,// as Box<Any>,
-          _ => return None
+          _ => return ChrisNone
       };
 
-      Some(v as Box<Any>)
+      BoxAny(v as Box<Any>)
   }
 
   fn cset_property(&mut self, name: &str, value: &Any)
@@ -434,13 +442,16 @@ pub fn print_pt(pt : PropertyType)
 
 macro_rules! match_get(
   ($yo:ident, $member:ident, $yep:ty, PlainString) => (
-      box $yo.$member.clone() as Box<Any>
+      return BoxAny(box $yo.$member.clone() as Box<Any>)
+    );
+  ($yo:ident, $member:ident, $yep:ty, PlainStruct) => (
+      return BoxChrisProperty(box $yo.$member.clone())
     );
   ($yo:ident, $member:ident, $yep:ty, Plain) => (
-      box $yo.$member as Box<Any>
+      return BoxAny(box $yo.$member as Box<Any>)
     );
   ($yo:ident, $member:ident, $yep:ty, Boxed) => (
-      box $yo.$member.clone() as Box<Any>
+      return BoxAny(box $yo.$member.clone() as Box<Any>)
       );
   )
 
@@ -458,6 +469,12 @@ macro_rules! match_set(
       }
       );
   ($yo:ident, $member:ident, $my_type:ty, $value:ident, Plain) => (
+      match $value.downcast_ref::<$my_type>() {
+          Some(v) => $yo.$member = *v,
+          None => {}
+      }
+      );
+  ($yo:ident, $member:ident, $my_type:ty, $value:ident, PlainStruct) => (
       match $value.downcast_ref::<$my_type>() {
           Some(v) => $yo.$member = *v,
           None => {}
@@ -481,7 +498,8 @@ pub enum AllocStyle
 {
     Plain,
     Boxed,
-    PlainString
+    PlainString,
+    PlainStruct
 }
 
 pub macro_rules! chris_property_impl(
@@ -499,16 +517,14 @@ pub macro_rules! chris_property_impl(
 
         }
 
-        fn cget_property(&self, name: &str) -> Option<Box<Any>>
+        fn cget_property(&self, name: &str) -> ChrisValue
         {
             let v : Box<Any> = match name {
           $(
             stringify!($member) => match_get!(self, $member, $mytype, $alloctype),
            )+
-              _ => return None
+              _ => return ChrisNone
             };
-
-            Some(v)
         }
 
         fn cset_property(&mut self, name: &str, value: &Any)
@@ -525,10 +541,10 @@ pub macro_rules! chris_property_impl(
             }
         }
 
-        fn cget_property_hier(&self, names: Vec<String>) -> Option<Box<Any>>
+        fn cget_property_hier(&self, names: Vec<String>) -> ChrisValue
         {
             match names.len() {
-                0 => return None,
+                0 => return ChrisNone,
                 1 => return self.cget_property(names[0].as_slice()),
                 _ => {
                     let yep = names.tail().to_vec();
@@ -541,7 +557,7 @@ pub macro_rules! chris_property_impl(
                 }
             }
 
-            return None;
+            return ChrisNone;
         }
 
         fn cset_property_hier(&mut self, names: Vec<String>, value: &Any)
@@ -576,6 +592,15 @@ chris_property_impl!(Chris,
 //chris_property_impl!(Chris, [x,f64,Plain|y,f64,Plain|z,f64,Plain|position,vec::Vec3,Plain])
 //chris_property_impl!(Chris, [x,f64|y,f64|z,f64])
 
+chris_property_impl!(vec::Quat,
+                     [x,f64,Plain|
+                     y,f64,Plain|
+                     z,f64,Plain|
+                     w,f64,Plain])
+
 chris_property_impl!(object::Object,
-                     [name,String,PlainString])
-                     //position,vec::Vec3,Plain])
+                     [name,String,PlainString
+                     |position,vec::Vec3,PlainStruct
+                     |orientation,vec::Quat,PlainStruct
+                     |scale,vec::Vec3,PlainStruct
+                     ])

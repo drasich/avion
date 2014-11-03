@@ -1,6 +1,6 @@
 use sync::{RWLock, Arc};
 use std::collections::HashMap;
-use libc::{c_char, c_void, c_int};
+use libc::{c_char, c_void, c_int, c_float};
 use std::mem;
 use std::c_str::CString;
 //use std::collections::{DList,Deque};
@@ -44,6 +44,12 @@ extern {
         ps : *const JkPropertySet,
         name : *const c_char,
         value : *const c_char
+        );
+
+    fn property_set_float_add(
+        ps : *const JkPropertySet,
+        name : *const c_char,
+        value : c_float
         );
 
     fn property_set_clear(
@@ -90,33 +96,49 @@ impl Property
     {
         unsafe { property_set_clear(self.jk_property_set); }
 
-        for field in o.cfields().iter()
+        fn create_entries(property: &Property, o : &ChrisProperty)
         {
-            match o.cget_property(field.as_slice()) {
-                Some(p) => {
-                    let f = field.to_c_str();
-                    match p.downcast_ref::<String>() {
-                        Some(s) => {
-                            let v = s.to_c_str();
-                            unsafe {
-                                property_set_string_add(
-                                    self.jk_property_set,
-                                    f.unwrap(),
-                                    v.unwrap());
-                            }
-                        },
-                        None => {}
-                    }
-                    //TODO cannot downcast to known type =>
-                    //match p.downcast_ref::<ChrisProperty>() {
-                    //    Some(cp) => {},
-                    //    None => {}
-                    //}
-                },
-                None => {}
-            }
+            for field in o.cfields().iter()
+            {
+                match o.cget_property(field.as_slice()) {
+                    property::BoxAny(p) => {
+                        match p.downcast_ref::<String>() {
+                            Some(s) => {
+                                let v = s.to_c_str();
+                                let f = field.to_c_str();
+                                unsafe {
+                                    property_set_string_add(
+                                        property.jk_property_set,
+                                        f.unwrap(),
+                                        v.unwrap());
+                                }
+                            },
+                            None => {}
+                        }
+                        match p.downcast_ref::<f64>() {
+                            Some(v) => {
+                                let f = field.to_c_str();
+                                unsafe {
+                                    property_set_float_add(
+                                        property.jk_property_set,
+                                        f.unwrap(),
+                                        *v as c_float);
+                                }
+                            },
+                            None => {}
+                        }
+                        //TODO other type
+                    },
+                    property::BoxChrisProperty(p) => {
+                        create_entries(property, &*p);
+                    },
+                    property::ChrisNone => {}
+                }
 
+            }
         }
+
+        create_entries(self, o);
     }
 
     pub fn data_set(&self, data : *const c_void)
@@ -124,7 +146,6 @@ impl Property
         //TODO
         //unsafe { property_data_set(self.jk_property, data); }
     }
-
 }
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {

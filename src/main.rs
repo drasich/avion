@@ -57,13 +57,13 @@ fn main() {
     let yep  = c.cget_property_hier(
         [String::from_str("boxpos"),String::from_str("x")].to_vec());
     match yep {
-        Some(v) => {
+        property::BoxAny(v) => {
             match v.downcast_ref::<f64>() {
                 Some(vv) => println!("I found the value {}", *vv ),
                 None => {}
             }
         },
-        None => {}
+        _ => {}
     }
 
 
