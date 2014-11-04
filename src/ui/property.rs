@@ -60,6 +60,11 @@ extern {
         value : c_float
         );
 
+    fn property_set_node_add(
+        ps : *const JkPropertySet,
+        name : *const c_char
+        );
+
     fn property_set_clear(
         ps : *const JkPropertySet);
 }
@@ -111,14 +116,43 @@ impl Property
     {
         unsafe { property_set_clear(self.jk_property_set); }
 
-        fn create_entries(property: &Property, o : &ChrisProperty)
+        fn get_node_path(path : &Vec<String>) -> String
         {
+            let mut s = String::new();
+            let mut first = true;
+            for v in path.iter() {
+                if !first {
+                    s.push('/');
+                }
+                s.push_str(v.as_slice());
+                first = false;
+            }
+
+            s
+        }
+
+        fn create_node_path(path : &Vec<String>, field : &str) -> String
+        {
+            let mut s = get_node_path(path);
+            if !path.is_empty(){
+                s.push('/');
+            }
+            s.push_str(field);
+
+            s
+        }
+    
+
+        fn create_entries(property: &Property, o : &ChrisProperty, path : Vec<String>)
+        {
+            println!("entries!!! {}", path);
             for field in o.cfields().iter()
             {
                 match o.cget_property(field.as_slice()) {
                     property::BoxAny(p) => {
                         match p.downcast_ref::<String>() {
                             Some(s) => {
+                                let field = create_node_path(&path, field.as_slice());
                                 let v = s.to_c_str();
                                 let f = field.to_c_str();
                                 unsafe {
@@ -132,6 +166,7 @@ impl Property
                         }
                         match p.downcast_ref::<f64>() {
                             Some(v) => {
+                                let field = create_node_path(&path, field.as_slice());
                                 let f = field.to_c_str();
                                 unsafe {
                                     property_set_float_add(
@@ -145,7 +180,17 @@ impl Property
                         //TODO other type
                     },
                     property::BoxChrisProperty(p) => {
-                        create_entries(property, &*p);
+                        let field = create_node_path(&path, field.as_slice());
+                        println!("I come here and field is : {}", field);
+                        let f = field.to_c_str();
+                        unsafe {
+                        property_set_node_add(
+                            property.jk_property_set,
+                            f.unwrap());
+                        }
+                        let mut yep = path.clone();
+                        yep.push(field.clone());
+                        create_entries(property, &*p, yep);
                     },
                     property::ChrisNone => {}
                 }
@@ -153,7 +198,7 @@ impl Property
             }
         }
 
-        create_entries(self, o);
+        create_entries(self, o, Vec::new());
     }
 
     pub fn data_set(&self, data : *const c_void)
