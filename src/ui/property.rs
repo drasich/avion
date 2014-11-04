@@ -40,6 +40,14 @@ extern {
     fn jk_property_set_new(window : *const Window) -> *const JkPropertySet;
     fn jk_property_set_data_set(set : *const JkPropertySet, data : *const c_void);
 
+    fn jk_property_set_register_cb(
+        property : *const JkPropertySet,
+        data : *const c_void,
+        changed : extern fn(
+            object : *const c_void,
+            name : *const c_char,
+            data : *const c_void));
+
     fn property_set_string_add(
         ps : *const JkPropertySet,
         name : *const c_char,
@@ -88,6 +96,13 @@ impl Property
                 ); 
         }
         */
+        unsafe {
+            jk_property_set_register_cb(
+                p.jk_property_set,
+                ptr::null(),
+                changed_set,
+                ); 
+        }
 
         p
     }
@@ -178,6 +193,26 @@ pub extern fn changed(object : *const c_void, data : *const c_void) {
         },
         _ => ()
     }
-
 }
+
+pub extern fn changed_set(object : *const c_void, name : *const c_char, data : *const c_void) {
+    let s = unsafe {CString::new(name as *const i8, false) };
+    println!("I changed the value {} ", s);
+    /*
+    let o : &Arc<RWLock<object::Object>> = unsafe {
+        mem::transmute(object)
+    };
+
+    let s = unsafe {CString::new(data as *const i8, false) };
+
+    match s.as_str() {
+        Some(ss) => {
+            let sss = property::SString(String::from_str(ss));
+            o.clone().write().set_property("name", &sss);
+        },
+        _ => ()
+    }
+    */
+}
+
 
