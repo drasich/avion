@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use libc::{c_char, c_void, c_int, c_float};
 use std::mem;
 use std::c_str::CString;
-//use std::collections::{DList,Deque};
+use std::collections::{DList,Deque};
 use std::ptr;
 use std::cell::RefCell;
 use std::rc::Weak;
@@ -18,10 +18,16 @@ use property;
 use property::TProperty;
 use property::ChrisProperty;
 
+type ChangedFunc = fn( object : *const c_void);
+    //name : *const c_char,
+    //data : *const c_void);
+
 #[repr(C)]
 pub struct JkProperty;
 #[repr(C)]
 pub struct JkPropertySet;
+
+
 
 #[link(name = "joker")]
 extern {
@@ -42,11 +48,12 @@ extern {
 
     fn jk_property_set_register_cb(
         property : *const JkPropertySet,
-        data : *const c_void,
-        changed : extern fn(
+        data : *const Property,
+        //changed : ChangeFunc );
+    changed :extern fn(
             object : *const c_void,
             name : *const c_char,
-            data : *const c_void));
+           data : *const c_void));
 
     fn property_set_string_add(
         ps : *const JkPropertySet,
@@ -78,6 +85,12 @@ pub struct Property
     master : Weak<RefCell<ui::Master>>,
 }
 
+
+pub struct yep
+{
+    f : ChangedFunc
+}
+
 impl Property
 {
     pub fn new(
@@ -104,8 +117,8 @@ impl Property
         unsafe {
             jk_property_set_register_cb(
                 p.jk_property_set,
-                ptr::null(),
-                changed_set,
+                &*p, //ptr::null(),
+                changed_set_float,
                 ); 
         }
 
@@ -240,24 +253,59 @@ pub extern fn changed(object : *const c_void, data : *const c_void) {
     }
 }
 
-pub extern fn changed_set(object : *const c_void, name : *const c_char, data : *const c_void) {
-    let s = unsafe {CString::new(name as *const i8, false) };
-    println!("I changed the value {} ", s);
-    /*
-    let o : &Arc<RWLock<object::Object>> = unsafe {
-        mem::transmute(object)
-    };
+pub extern fn changed_set_float(property : *const c_void, name : *const c_char, data : *const c_void) {
+
+    let f : & f64 = unsafe {mem::transmute(data)};
+    changed_set(property, name, f);
+}
+
+pub extern fn changed_set_string(property : *const c_void, name : *const c_char, data : *const c_void) {
 
     let s = unsafe {CString::new(data as *const i8, false) };
+    let ss = match s.as_str() {
+        Some(sss) => sss.to_string(),
+        None => return
+    };
+    changed_set(property, name, &ss);
+}
 
-    match s.as_str() {
-        Some(ss) => {
-            let sss = property::SString(String::from_str(ss));
-            o.clone().write().set_property("name", &sss);
-        },
-        _ => ()
+
+fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
+    let s = unsafe {CString::new(name as *const i8, false) };
+    println!("I changed the value {} ", s);
+
+    let path = match s.as_str() {
+        Some(pp) => pp,
+        None => return
+    };
+
+    let v: Vec<&str> = path.split('/').collect();
+
+    let mut vs = Vec::new();
+    for i in v.iter()
+    {
+        vs.push(i.to_string());
     }
-    */
+
+
+    let p : & Property = unsafe {mem::transmute(property)};
+
+    match p.master.upgrade() {
+        Some(m) => { 
+            match m.try_borrow() {
+                Some(ref mm) => {
+                    match mm.render.objects_selected.front() {
+                        Some(o) => {
+                            o.write().cset_property_hier(vs, data);
+                        },
+                        None => {}
+                    }
+                },
+                _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
+            }
+        },
+        None => { println!("the master of the property doesn't exist anymore");}
+    }
 }
 
 
