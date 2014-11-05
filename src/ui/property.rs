@@ -18,15 +18,15 @@ use property;
 use property::TProperty;
 use property::ChrisProperty;
 
-type ChangedFunc = fn( object : *const c_void);
-    //name : *const c_char,
-    //data : *const c_void);
+pub type ChangedFunc = extern fn(
+    object : *const c_void,
+    name : *const c_char,
+    data : *const c_void);
 
 #[repr(C)]
 pub struct JkProperty;
 #[repr(C)]
 pub struct JkPropertySet;
-
 
 
 #[link(name = "joker")]
@@ -46,14 +46,14 @@ extern {
     fn jk_property_set_new(window : *const Window) -> *const JkPropertySet;
     fn jk_property_set_data_set(set : *const JkPropertySet, data : *const c_void);
 
+    fn chris_test(changed : ChangedFunc);
+
     fn jk_property_set_register_cb(
         property : *const JkPropertySet,
         data : *const Property,
-        //changed : ChangeFunc );
-    changed :extern fn(
-            object : *const c_void,
-            name : *const c_char,
-           data : *const c_void));
+        changed_float : ChangedFunc,
+        changed_string : ChangedFunc,
+        );
 
     fn property_set_string_add(
         ps : *const JkPropertySet,
@@ -119,6 +119,7 @@ impl Property
                 p.jk_property_set,
                 &*p, //ptr::null(),
                 changed_set_float,
+                changed_set_string,
                 ); 
         }
 
@@ -266,6 +267,7 @@ pub extern fn changed_set_string(property : *const c_void, name : *const c_char,
         Some(sss) => sss.to_string(),
         None => return
     };
+    //println!("the string is {}", ss);
     changed_set(property, name, &ss);
 }
 
