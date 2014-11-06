@@ -271,7 +271,6 @@ pub extern fn changed_set_string(property : *const c_void, name : *const c_char,
     changed_set(property, name, &ss);
 }
 
-
 fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
     let s = unsafe {CString::new(name as *const i8, false) };
     println!("I changed the value {} ", s);

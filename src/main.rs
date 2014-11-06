@@ -24,7 +24,6 @@ use std::cell::RefCell;
 use std::mem;
 use property::ChrisProperty;
 use std::any::{Any, AnyRefExt};
-use libc::{c_void};
 
 mod resource;
 mod shader;
@@ -44,14 +43,6 @@ mod property;
 mod geometry;
 mod intersection;
 mod fbo;
-
-type ChrisFunc = fn( object : *const c_void);
-
-extern {
-    fn property_register_cb(
-        fff : ChrisFunc);
-}
-
 
 fn main() {
     let mut c = property::Chris::new();
