@@ -27,6 +27,8 @@ pub type ChangedFunc = extern fn(
 pub struct JkProperty;
 #[repr(C)]
 pub struct JkPropertySet;
+#[repr(C)]
+pub struct JkPropertyList;
 
 
 #[link(name = "joker")]
@@ -74,6 +76,8 @@ extern {
 
     fn property_set_clear(
         ps : *const JkPropertySet);
+
+    fn jk_property_list_new(window : *const Window) -> *const JkPropertyList;
 }
 
 pub struct Property
@@ -82,6 +86,7 @@ pub struct Property
     //TODO change the key
     //jk_property : *const JkProperty,
     jk_property_set : *const JkPropertySet,
+    jk_property_list : *const JkPropertyList,
     master : Weak<RefCell<ui::Master>>,
 }
 
@@ -101,6 +106,7 @@ impl Property
             name : String::from_str("property_name"),
             //jk_property : unsafe {window_property_new(window)},
             jk_property_set : unsafe {jk_property_set_new(window)},
+            jk_property_list : unsafe {jk_property_list_new(window)},
             master : master,
         };
 
