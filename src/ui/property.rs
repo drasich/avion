@@ -84,6 +84,12 @@ extern {
         pl : *const JkPropertyList,
         name : *const c_char
         );
+
+    fn property_list_float_add(
+        ps : *const JkPropertyList,
+        name : *const c_char,
+        value : c_float
+        );
 }
 
 pub struct Property
@@ -202,9 +208,17 @@ impl Property
                                     &path,
                                     field.as_slice());
                                 let f = field.to_c_str();
+                                /*
                                 unsafe {
                                     property_set_float_add(
                                         property.jk_property_set,
+                                        f.unwrap(),
+                                        *v as c_float);
+                                }
+                                */
+                                unsafe {
+                                    property_list_float_add(
+                                        property.jk_property_list,
                                         f.unwrap(),
                                         *v as c_float);
                                 }
