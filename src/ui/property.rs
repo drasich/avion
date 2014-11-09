@@ -78,6 +78,12 @@ extern {
         ps : *const JkPropertySet);
 
     fn jk_property_list_new(window : *const Window) -> *const JkPropertyList;
+    fn property_list_clear(pl : *const JkPropertyList);
+
+    fn property_list_node_add(
+        pl : *const JkPropertyList,
+        name : *const c_char
+        );
 }
 
 pub struct Property
@@ -135,6 +141,7 @@ impl Property
     pub fn set_object(&self, o : &object::Object)
     {
         unsafe { property_set_clear(self.jk_property_set); }
+        unsafe { property_list_clear(self.jk_property_list); }
 
         fn get_node_path(path : &Vec<String>) -> String
         {
@@ -162,8 +169,11 @@ impl Property
             s
         }
     
-
-        fn create_entries(property: &Property, o : &ChrisProperty, path : Vec<String>)
+        //TODO this function for jk_property_list
+        fn create_entries(
+            property: &Property,
+            o : &ChrisProperty,
+            path : Vec<String>)
         {
             println!("entries!!! {}", path);
             for field in o.cfields().iter()
@@ -172,7 +182,9 @@ impl Property
                     property::BoxAny(p) => {
                         match p.downcast_ref::<String>() {
                             Some(s) => {
-                                let field = create_node_path(&path, field.as_slice());
+                                let field = create_node_path(
+                                    &path,
+                                    field.as_slice());
                                 let v = s.to_c_str();
                                 let f = field.to_c_str();
                                 unsafe {
@@ -186,7 +198,9 @@ impl Property
                         }
                         match p.downcast_ref::<f64>() {
                             Some(v) => {
-                                let field = create_node_path(&path, field.as_slice());
+                                let field = create_node_path(
+                                    &path,
+                                    field.as_slice());
                                 let f = field.to_c_str();
                                 unsafe {
                                     property_set_float_add(
@@ -203,9 +217,16 @@ impl Property
                         let field = create_node_path(&path, field.as_slice());
                         println!("I come here and field is : {}", field);
                         let f = field.to_c_str();
+                        /*
                         unsafe {
                         property_set_node_add(
                             property.jk_property_set,
+                            f.unwrap());
+                        }
+                        */
+                        unsafe {
+                        property_list_node_add(
+                            property.jk_property_list,
                             f.unwrap());
                         }
                         let mut yep = path.clone();
