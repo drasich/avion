@@ -79,6 +79,12 @@ extern {
 
     fn jk_property_list_new(window : *const Window) -> *const JkPropertyList;
     fn property_list_clear(pl : *const JkPropertyList);
+    fn jk_property_list_register_cb(
+        property : *const JkPropertyList,
+        data : *const Property,
+        changed_float : ChangedFunc,
+        changed_string : ChangedFunc,
+        );
 
     fn property_list_node_add(
         pl : *const JkPropertyList,
@@ -135,6 +141,15 @@ impl Property
         unsafe {
             jk_property_set_register_cb(
                 p.jk_property_set,
+                &*p, //ptr::null(),
+                changed_set_float,
+                changed_set_string,
+                ); 
+        }
+
+        unsafe {
+            jk_property_list_register_cb(
+                p.jk_property_list,
                 &*p, //ptr::null(),
                 changed_set_float,
                 changed_set_string,
@@ -318,7 +333,9 @@ fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
 
     let path = match s.as_str() {
         Some(pp) => pp,
-        None => return
+        None => {
+            println!("problem with the path");
+            return;}
     };
 
     let v: Vec<&str> = path.split('/').collect();
@@ -340,7 +357,9 @@ fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
                         Some(o) => {
                             o.write().cset_property_hier(vs, data);
                         },
-                        None => {}
+                        None => {
+                            println!("no objetcs selected");
+                        }
                     }
                 },
                 _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
