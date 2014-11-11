@@ -176,25 +176,49 @@ impl Property
         self.create_entries(o, Vec::new());
     }
 
-    /*
-    fn find_property(p : &ChrisProperty, path : Vec<String>) -> Option<&ChrisProperty>
+    //*
+    //fn find_property<'s>(p : &'s ChrisProperty, path : Vec<String>) 
+    fn find_property(p : &ChrisProperty, path : Vec<String>) 
+        -> Option<Box<ChrisProperty>>
+        //-> Option<Box<ChrisProperty+'static>>
+    //fn find_property(p : &ChrisProperty, path : Vec<String>)
     {
+        /*
         if path.is_empty() {
             return Some(p);
+            //return;
         }
-
+        */
+        
+        /*
         for field in p.cfields().iter() {
             match p.cget_property(field.as_slice()) {
-                property::ChrisNone => return None,
-                property::BoxChrisProperty(bp) => return Property::find_property(&*bp, path.tail().to_vec()),
+                property::ChrisNone => {return None;},
+                property::BoxChrisProperty(bp) => 
+                {
+                    return
+                    Property::find_property(&*bp, path.tail().to_vec());
+                },
                 _ => {}
             }
 
         }
+        */
+
+        match p.cget_property_hier(path) {
+            property::ChrisNone => {return None;},
+            property::BoxChrisProperty(bp) => 
+            {
+                return Some(bp);
+            },
+            _ => {
+                println!("find prop, must be box any...");
+            }
+        }
 
         return None;
     }
-    */
+    //*/
 
     fn create_entries(
             &self,
@@ -438,7 +462,13 @@ extern fn expand(
                     match mm.render.objects_selected.front() {
                         Some(o) => {
                             //TODO
-                            p.create_entries(&*o.read(), vs);
+                            match Property::find_property(&*o.read(), vs.clone()) {
+                                Some(ppp) => {
+                                    //p.create_entries(&*o.read(), vs);
+                                    p.create_entries(&*ppp, vs.clone());
+                                },
+                                None => {}
+                            }
                         },
                         None => {
                             println!("no objetcs selected");
