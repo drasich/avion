@@ -18,10 +18,18 @@ use property;
 use property::TProperty;
 use property::ChrisProperty;
 
+#[repr(C)]
+pub struct Elm_Object_Item;
+
 pub type ChangedFunc = extern fn(
     object : *const c_void,
     name : *const c_char,
     data : *const c_void);
+
+pub type PropertyTreeExpandFunc = extern fn(
+    property : *const Property,
+    object : *const c_void,
+    parent : *const Elm_Object_Item);
 
 #[repr(C)]
 pub struct JkProperty;
@@ -84,6 +92,7 @@ extern {
         data : *const Property,
         changed_float : ChangedFunc,
         changed_string : ChangedFunc,
+        expand : PropertyTreeExpandFunc
         );
 
     fn property_list_node_add(
@@ -153,6 +162,7 @@ impl Property
                 &*p, //ptr::null(),
                 changed_set_float,
                 changed_set_string,
+                expand
                 ); 
         }
 
@@ -163,6 +173,34 @@ impl Property
     {
         unsafe { property_set_clear(self.jk_property_set); }
         unsafe { property_list_clear(self.jk_property_list); }
+        self.create_entries(o, Vec::new());
+    }
+
+    /*
+    fn find_property(p : &ChrisProperty, path : Vec<String>) -> Option<&ChrisProperty>
+    {
+        if path.is_empty() {
+            return Some(p);
+        }
+
+        for field in p.cfields().iter() {
+            match p.cget_property(field.as_slice()) {
+                property::ChrisNone => return None,
+                property::BoxChrisProperty(bp) => return Property::find_property(&*bp, path.tail().to_vec()),
+                _ => {}
+            }
+
+        }
+
+        return None;
+    }
+    */
+
+    fn create_entries(
+            &self,
+            o : &ChrisProperty,
+            path : Vec<String>)
+        {
 
         fn get_node_path(path : &Vec<String>) -> String
         {
@@ -189,13 +227,8 @@ impl Property
 
             s
         }
-    
+
         //TODO this function for jk_property_list
-        fn create_entries(
-            property: &Property,
-            o : &ChrisProperty,
-            path : Vec<String>)
-        {
             println!("entries!!! {}", path);
             for field in o.cfields().iter()
             {
@@ -210,7 +243,7 @@ impl Property
                                 let f = field.to_c_str();
                                 unsafe {
                                     property_set_string_add(
-                                        property.jk_property_set,
+                                        self.jk_property_set,
                                         f.unwrap(),
                                         v.unwrap());
                                 }
@@ -226,14 +259,14 @@ impl Property
                                 /*
                                 unsafe {
                                     property_set_float_add(
-                                        property.jk_property_set,
+                                        self.jk_property_set,
                                         f.unwrap(),
                                         *v as c_float);
                                 }
                                 */
                                 unsafe {
                                     property_list_float_add(
-                                        property.jk_property_list,
+                                        self.jk_property_list,
                                         f.unwrap(),
                                         *v as c_float);
                                 }
@@ -249,18 +282,20 @@ impl Property
                         /*
                         unsafe {
                         property_set_node_add(
-                            property.jk_property_set,
+                            self.jk_property_set,
                             f.unwrap());
                         }
                         */
                         unsafe {
                         property_list_node_add(
-                            property.jk_property_list,
+                            self.jk_property_list,
                             f.unwrap());
                         }
+                        /*
                         let mut yep = path.clone();
                         yep.push(field.clone());
-                        create_entries(property, &*p, yep);
+                        self.create_entries(&*p, yep);
+                        */
                     },
                     property::ChrisNone => {}
                 }
@@ -268,8 +303,6 @@ impl Property
             }
         }
 
-        create_entries(self, o, Vec::new());
-    }
 
     pub fn data_set(&self, data : *const c_void)
     {
@@ -346,7 +379,6 @@ fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
         vs.push(i.to_string());
     }
 
-
     let p : & Property = unsafe {mem::transmute(property)};
 
     match p.master.upgrade() {
@@ -369,4 +401,54 @@ fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
     }
 }
 
+
+extern fn expand(
+    property: *const Property,
+    data : *const c_void,
+    parent : *const Elm_Object_Item) -> ()
+{
+    let s = unsafe {CString::new(data as *const i8, false) };
+    let mut p : &mut Property = unsafe {mem::transmute(property)};
+
+    println!("expanding ! property name {} ", p.name);
+
+    let s = unsafe {CString::new(data as *const i8, false) };
+    println!("I changed the value {} ", s);
+
+    let path = match s.as_str() {
+        Some(pp) => pp,
+        None => {
+            println!("problem with the path");
+            return;}
+    };
+
+    let v: Vec<&str> = path.split('/').collect();
+
+    let mut vs = Vec::new();
+    for i in v.iter()
+    {
+        vs.push(i.to_string());
+        println!("pushing {}", i);
+    }
+
+    match p.master.upgrade() {
+        Some(m) => { 
+            match m.try_borrow() {
+                Some(ref mm) => {
+                    match mm.render.objects_selected.front() {
+                        Some(o) => {
+                            //TODO
+                            p.create_entries(&*o.read(), vs);
+                        },
+                        None => {
+                            println!("no objetcs selected");
+                        }
+                    }
+                },
+                _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
+            }
+        },
+        None => { println!("the master of the property doesn't exist anymore");}
+    }
+}
 
