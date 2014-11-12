@@ -51,8 +51,8 @@ collections {
             type: SWALLOW;
             description {
                state: "default" 0.0;
-               min: 250 150;
-               max: 250 -1;
+               min: 150 150;
+               max: 150 -1;
                //color: 255 0 255 0; /* blue */
                //rel1.relative: 0.7 0.0;
                //rel2.relative: 1.0 1.0;

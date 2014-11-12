@@ -110,6 +110,12 @@ extern {
         name : *const c_char,
         value : c_float
         );
+
+    fn property_list_string_add(
+        ps : *const JkPropertyList,
+        name : *const c_char,
+        value : *const c_char
+        );
 }
 
 pub struct Property
@@ -279,8 +285,14 @@ impl Property
                                 let v = s.to_c_str();
                                 let f = field.to_c_str();
                                 unsafe {
+                                    /*
                                     property_set_string_add(
                                         self.jk_property_set,
+                                        f.unwrap(),
+                                        v.unwrap());
+                                        */
+                                    property_list_string_add(
+                                        self.jk_property_list,
                                         f.unwrap(),
                                         v.unwrap());
                                 }
@@ -431,6 +443,14 @@ fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
                         None => {
                             println!("no objetcs selected");
                         }
+                    };
+                    match mm.tree {
+                        Some(ref t) => { 
+                            t.update();
+                            println!("todo call this only when the name or object representation has changed...");
+                            println!("... or do the object references in ui stuff /see todo file");
+                    },
+                        None => {}
                     }
                 },
                 _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}

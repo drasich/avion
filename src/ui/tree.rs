@@ -42,6 +42,7 @@ extern {
     pub fn tree_item_select(item : *const Elm_Object_Item);
     fn tree_item_expand(item : *const Elm_Object_Item);
     fn tree_deselect_all(item : *const JkTree);
+    fn tree_update(tree : *const JkTree);
 }
 
 pub struct Tree
@@ -138,6 +139,11 @@ impl Tree
 
         self.dont_forward_signal = false;
         println!("select from tree end");
+    }
+
+    pub fn update(&self)
+    {
+        unsafe { tree_update(self.jk_tree); }
     }
 }
 
