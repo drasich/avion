@@ -100,6 +100,11 @@ extern {
         name : *const c_char
         );
 
+    fn property_list_group_add(
+        pl : *const JkPropertyList,
+        name : *const c_char
+        );
+
     fn property_list_float_add(
         ps : *const JkPropertyList,
         name : *const c_char,
@@ -173,7 +178,15 @@ impl Property
     {
         unsafe { property_set_clear(self.jk_property_set); }
         unsafe { property_list_clear(self.jk_property_list); }
-        self.create_entries(o, Vec::new());
+
+        unsafe {
+            property_list_group_add(
+                self.jk_property_list,
+                "object".to_c_str().unwrap());
+        }
+        let mut v = Vec::new();
+        v.push("object".to_string());
+        self.create_entries(o, v);//Vec::new());
     }
 
     //*
@@ -403,6 +416,8 @@ fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
         vs.push(i.to_string());
     }
 
+    let vs = vs.tail().to_vec();
+
     let p : & Property = unsafe {mem::transmute(property)};
 
     match p.master.upgrade() {
@@ -455,6 +470,8 @@ extern fn expand(
         println!("pushing {}", i);
     }
 
+    let yep = vs.tail().to_vec();
+
     match p.master.upgrade() {
         Some(m) => { 
             match m.try_borrow() {
@@ -462,12 +479,15 @@ extern fn expand(
                     match mm.render.objects_selected.front() {
                         Some(o) => {
                             //TODO
-                            match Property::find_property(&*o.read(), vs.clone()) {
+                            //match Property::find_property(&*o.read(), vs.clone()) {
+                            match Property::find_property(&*o.read(), yep.clone()) {
                                 Some(ppp) => {
                                     //p.create_entries(&*o.read(), vs);
                                     p.create_entries(&*ppp, vs.clone());
                                 },
-                                None => {}
+                                None => {
+                                    println!("could not find property {} ", vs);
+                                }
                             }
                         },
                         None => {
