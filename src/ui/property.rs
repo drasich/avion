@@ -41,6 +41,7 @@ pub struct JkPropertyList;
 
 #[link(name = "joker")]
 extern {
+    /*
     fn window_property_new(window : *const Window) -> *const JkProperty;
     fn property_register_cb(
         property : *const JkProperty,
@@ -55,8 +56,6 @@ extern {
 
     fn jk_property_set_new(window : *const Window) -> *const JkPropertySet;
     fn jk_property_set_data_set(set : *const JkPropertySet, data : *const c_void);
-
-    fn chris_test(changed : ChangedFunc);
 
     fn jk_property_set_register_cb(
         property : *const JkPropertySet,
@@ -84,9 +83,12 @@ extern {
 
     fn property_set_clear(
         ps : *const JkPropertySet);
+        */
 
     fn jk_property_list_new(window : *const Window) -> *const JkPropertyList;
+
     fn property_list_clear(pl : *const JkPropertyList);
+
     fn jk_property_list_register_cb(
         property : *const JkPropertyList,
         data : *const Property,
@@ -95,12 +97,12 @@ extern {
         expand : PropertyTreeExpandFunc
         );
 
-    fn property_list_node_add(
+    fn property_list_group_add(
         pl : *const JkPropertyList,
         name : *const c_char
         );
 
-    fn property_list_group_add(
+    fn property_list_node_add(
         pl : *const JkPropertyList,
         name : *const c_char
         );
@@ -121,9 +123,6 @@ extern {
 pub struct Property
 {
     pub name : String,
-    //TODO change the key
-    //jk_property : *const JkProperty,
-    jk_property_set : *const JkPropertySet,
     jk_property_list : *const JkPropertyList,
     master : Weak<RefCell<ui::Master>>,
 }
@@ -142,30 +141,9 @@ impl Property
     {
         let p = box Property {
             name : String::from_str("property_name"),
-            //jk_property : unsafe {window_property_new(window)},
-            jk_property_set : unsafe {jk_property_set_new(window)},
             jk_property_list : unsafe {jk_property_list_new(window)},
             master : master,
         };
-
-        //TODO
-        /*
-        unsafe {
-            property_register_cb(
-                p.jk_property,
-                changed,
-                name_get
-                ); 
-        }
-        */
-        unsafe {
-            jk_property_set_register_cb(
-                p.jk_property_set,
-                &*p, //ptr::null(),
-                changed_set_float,
-                changed_set_string,
-                ); 
-        }
 
         unsafe {
             jk_property_list_register_cb(
@@ -182,7 +160,6 @@ impl Property
 
     pub fn set_object(&self, o : &object::Object)
     {
-        unsafe { property_set_clear(self.jk_property_set); }
         unsafe { property_list_clear(self.jk_property_list); }
 
         unsafe {
@@ -195,35 +172,9 @@ impl Property
         self.create_entries(o, v);//Vec::new());
     }
 
-    //*
-    //fn find_property<'s>(p : &'s ChrisProperty, path : Vec<String>) 
-    fn find_property(p : &ChrisProperty, path : Vec<String>) 
-        -> Option<Box<ChrisProperty>>
-        //-> Option<Box<ChrisProperty+'static>>
-    //fn find_property(p : &ChrisProperty, path : Vec<String>)
+    fn find_property(p : &ChrisProperty, path : Vec<String>) -> 
+        Option<Box<ChrisProperty>>
     {
-        /*
-        if path.is_empty() {
-            return Some(p);
-            //return;
-        }
-        */
-        
-        /*
-        for field in p.cfields().iter() {
-            match p.cget_property(field.as_slice()) {
-                property::ChrisNone => {return None;},
-                property::BoxChrisProperty(bp) => 
-                {
-                    return
-                    Property::find_property(&*bp, path.tail().to_vec());
-                },
-                _ => {}
-            }
-
-        }
-        */
-
         match p.cget_property_hier(path) {
             property::ChrisNone => {return None;},
             property::BoxChrisProperty(bp) => 
@@ -237,7 +188,6 @@ impl Property
 
         return None;
     }
-    //*/
 
     fn create_entries(
             &self,
@@ -285,12 +235,6 @@ impl Property
                                 let v = s.to_c_str();
                                 let f = field.to_c_str();
                                 unsafe {
-                                    /*
-                                    property_set_string_add(
-                                        self.jk_property_set,
-                                        f.unwrap(),
-                                        v.unwrap());
-                                        */
                                     property_list_string_add(
                                         self.jk_property_list,
                                         f.unwrap(),
@@ -305,14 +249,6 @@ impl Property
                                     &path,
                                     field.as_slice());
                                 let f = field.to_c_str();
-                                /*
-                                unsafe {
-                                    property_set_float_add(
-                                        self.jk_property_set,
-                                        f.unwrap(),
-                                        *v as c_float);
-                                }
-                                */
                                 unsafe {
                                     property_list_float_add(
                                         self.jk_property_list,
@@ -328,17 +264,10 @@ impl Property
                         let field = create_node_path(&path, field.as_slice());
                         println!("I come here and field is : {}", field);
                         let f = field.to_c_str();
-                        /*
                         unsafe {
-                        property_set_node_add(
-                            self.jk_property_set,
-                            f.unwrap());
-                        }
-                        */
-                        unsafe {
-                        property_list_node_add(
-                            self.jk_property_list,
-                            f.unwrap());
+                            property_list_node_add(
+                                self.jk_property_list,
+                                f.unwrap());
                         }
                         /*
                         let mut yep = path.clone();
