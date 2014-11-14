@@ -1,4 +1,13 @@
+DONE?
 uniforms in material
 
-for each objects of the scene, keep a list of references of ui objects that use
-this objects, so when the objects changed we can update the ui.
+TODO
+- id system
+  - for each objects of the scene, keep a list of references of ui objects that use
+  this objects, so when the objects changed we can update the ui.
+
+- operation system
+  - undo/redo
+  - dragger
+
+- component system

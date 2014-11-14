@@ -127,12 +127,6 @@ pub struct Property
     master : Weak<RefCell<ui::Master>>,
 }
 
-
-pub struct yep
-{
-    f : ChangedFunc
-}
-
 impl Property
 {
     pub fn new(
