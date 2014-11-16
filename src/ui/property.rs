@@ -360,6 +360,7 @@ fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
         Some(m) => { 
             match m.try_borrow() {
                 Some(ref mm) => {
+                    //TODO add operation
                     match mm.render.objects_selected.front() {
                         Some(o) => {
                             o.write().cset_property_hier(vs, data);

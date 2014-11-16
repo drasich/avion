@@ -7,6 +7,8 @@ use std::ptr;
 use std::rc::Rc;
 use std::cell::RefCell;
 
+use uuid::Uuid;
+
 use scene;
 use intersection;
 use resource;
@@ -17,7 +19,7 @@ use object;
 use ui::{Tree,Property};
 use ui;
 use factory;
-use uuid::Uuid;
+use operation;
 
 //use tree;
 //pub use Tree;
@@ -123,7 +125,8 @@ pub struct Master
     pub factory : factory::Factory,
     pub render : render::Render,
     pub state : MasterState,
-    pub objects : DList<Arc<RWLock<object::Object>>>,
+    //pub objects : DList<Arc<RWLock<object::Object>>>,
+    pub operation_mgr : operation::OperationManager
 }
 
 impl Master
@@ -134,6 +137,7 @@ impl Master
         //let scene = factory.create_scene("scene/test.scene");
         //scene.save();
         let render = render::Render::new(&mut factory);
+        let op_mgr = operation::OperationManager::new();
 
         let mut m = Master {
             window : None,
@@ -143,7 +147,8 @@ impl Master
             factory : factory,
             render : render,
             state : Idle,
-            objects : DList::new()
+            //objects : DList::new(),
+            operation_mgr : op_mgr
         };
 
         m.scene = Some(m.render.scene.clone());

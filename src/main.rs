@@ -45,6 +45,7 @@ mod geometry;
 mod intersection;
 mod fbo;
 mod factory;
+mod operation;
 
 fn main() {
     /*
