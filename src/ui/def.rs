@@ -17,6 +17,7 @@ use object;
 use ui::{Tree,Property};
 use ui;
 use factory;
+use uuid::Uuid;
 
 //use tree;
 //pub use Tree;
@@ -227,13 +228,13 @@ impl Master
         }
     }
 
-    pub fn select(&mut self, name : &String)
+    pub fn select(&mut self, id : &Uuid)
     {
-        println!("select is called : {} ", name);
+        println!(".................select is called : {} ", id);
         self.render.objects_selected.clear();
 
         for o in self.render.scene.read().objects.iter() {
-            if o.read().name == *name {
+            if o.read().id == *id {
                 self.render.objects_selected.push(o.clone());
                 match self.property {
                     Some(ref p) => {

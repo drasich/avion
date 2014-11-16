@@ -227,7 +227,7 @@ extern fn selected(
         Some(m) => { 
             match m.try_borrow_mut() {
                 Some(ref mut mm) => {
-                    mm.select(&o.read().name);
+                    mm.select(&o.read().id);
                 },
                 _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
             }
