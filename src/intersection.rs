@@ -3,7 +3,7 @@ use geometry;
 use mesh;
 use resource;
 use std::iter::range_step;
-use std::num::abs;
+use std::num::Float;
 
 use vec::{Vec3, Quat};
 
@@ -134,8 +134,8 @@ pub fn ray_triangle(r : &geometry::Ray, t : &geometry::Triangle, min : f64) -> I
     let mut b1;
     let mut b2;
 
-    if abs(n.x) > abs(n.y) {
-        if abs(n.x) > abs(n.z) {
+    if n.x.abs() > n.y.abs() {
+        if n.x.abs() > n.z.abs() {
             a0 = p.y - t.v0.y;
             a1 = t.v1.y - t.v0.y;
             a2 = t.v2.y - t.v0.y;
@@ -153,7 +153,7 @@ pub fn ray_triangle(r : &geometry::Ray, t : &geometry::Triangle, min : f64) -> I
             b2 = t.v2.y - t.v0.y;
         }
     } else {
-        if abs(n.y) > abs(n.z) {
+        if n.y.abs() > n.z.abs() {
             a0 = p.x - t.v0.x;
             a1 = t.v1.x - t.v0.x;
             a2 = t.v2.x - t.v0.x;

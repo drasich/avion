@@ -3,15 +3,18 @@ use std::collections::{DList};
 use sync::{RWLock, Arc};
 use std::io::File;
 use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use uuid::Uuid;
 
 pub struct Scene
 {
     pub name : String,
+    pub id : Uuid,
     pub objects : DList<Arc<RWLock<object::Object>>>
 }
 
 impl Scene
 {
+    /*
     pub fn new(name : &str) -> Scene
     {
         Scene {
@@ -19,6 +22,7 @@ impl Scene
             objects : DList::new(),
         }
     }
+    */
 
     pub fn new_from_file(file_path : &str) -> Scene
     {
@@ -65,24 +69,28 @@ impl Scene
 
 }
 
-impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RWLock<object::Object>> {
+//impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RWLock<object::Object>> {
+impl <S: Encoder<E>, E> Encodable<S, E> for RWLock<object::Object> {
   fn encode(&self, encoder: &mut S) -> Result<(), E> {
       self.read().encode(encoder)
   }
 }
 
-impl<S: Decoder<E>, E> Decodable<S, E> for Arc<RWLock<object::Object>> {
-  fn decode(decoder: &mut S) -> Result<Arc<RWLock<object::Object>>, E> {
-      Ok(Arc::new(RWLock::new(try!(Decodable::decode(decoder)))))
+//impl<S: Decoder<E>, E> Decodable<S, E> for Arc<RWLock<object::Object>> {
+//fn decode(decoder: &mut S) -> Result<Arc<RWLock<object::Object>>, E> {
+impl<S: Decoder<E>, E> Decodable<S, E> for RWLock<object::Object> {
+  fn decode(decoder: &mut S) -> Result<RWLock<object::Object>, E> {
+      //Ok(Arc::new(RWLock::new(try!(Decodable::decode(decoder)))))
+      Ok(RWLock::new(try!(Decodable::decode(decoder))))
   }
 }
-
 
 impl <S: Encoder<E>, E> Encodable<S, E> for Scene {
   fn encode(&self, encoder: &mut S) -> Result<(), E> {
       encoder.emit_struct("Scene", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
-          try!(encoder.emit_struct_field( "objects", 1u, |encoder| self.objects.encode(encoder)));
+          try!(encoder.emit_struct_field( "id", 1u, |encoder| self.id.encode(encoder)));
+          try!(encoder.emit_struct_field( "objects", 2u, |encoder| self.objects.encode(encoder)));
           Ok(())
       })
   }
@@ -93,6 +101,8 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Scene {
     decoder.read_struct("root", 0, |decoder| {
          Ok(Scene{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
+          id: try!(decoder.read_struct_field("id", 0, |decoder| Decodable::decode(decoder))),
+         //id : Uuid::new_v4(),
           //objects: DList::new(),
           objects: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
           //tests: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),

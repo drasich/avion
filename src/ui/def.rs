@@ -2,7 +2,7 @@ use libc::{c_char, c_void, c_int};
 use std::mem;
 use sync::{RWLock, Arc};
 use std::c_str::CString;
-use std::collections::{DList,Deque};
+use std::collections::{DList};
 use std::ptr;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -16,6 +16,7 @@ use render;
 use object;
 use ui::{Tree,Property};
 use ui;
+use factory;
 
 //use tree;
 //pub use Tree;
@@ -118,6 +119,7 @@ pub struct Master
     //pub property : Option<*const JkProperty>,
     pub property : Option<Box<Property>>,
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
+    pub factory : factory::Factory,
     pub render : render::Render,
     pub state : MasterState,
     pub objects : DList<Arc<RWLock<object::Object>>>,
@@ -127,12 +129,18 @@ impl Master
 {
     pub fn new() -> Master
     {
+        let mut factory = factory::Factory::new();
+        //let scene = factory.create_scene("scene/test.scene");
+        //scene.save();
+        let render = render::Render::new(&mut factory);
+
         let mut m = Master {
             window : None,
             tree : None,
             property : None,
             scene : None,
-            render : render::Render::new(),
+            factory : factory,
+            render : render,
             state : Idle,
             objects : DList::new()
         };

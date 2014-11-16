@@ -4,11 +4,17 @@ use mesh_render;
 
 use std::collections::{DList};
 use sync::{RWLock, Arc};//,RWLockReadGuard};
+use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use uuid;
+use uuid::Uuid;
 
-#[deriving(Decodable, Encodable)]
+//#[deriving(Decodable, Encodable)]
+//#[deriving(Encodable)]
 pub struct Object
 {
     pub name : String,
+    //pub id : u32,
+    pub id : uuid::Uuid,
     pub mesh_render : Option<mesh_render::MeshRender>,
     pub position : vec::Vec3,
     pub orientation : vec::Quat,
@@ -20,10 +26,12 @@ pub struct Object
 
 impl Object
 {
+    /*
     pub fn new(name : &str) -> Object
     {
         Object {
             name : String::from_str(name),
+            id : 0,
             mesh_render : None,
             position : vec::Vec3::zero(),
             orientation : vec::Quat::identity(),
@@ -33,19 +41,7 @@ impl Object
             parent : None
         }
     }
-
-    /*
-    pub fn new_ref(name : &str) -> Rc<RefCell<Object>>
-    {
-        Rc::new(RefCell::new(Object::new(name)))
-    }
     */
-
-
-    pub fn empty() -> Object
-    {
-        Object::new("empty")
-    }
 
     pub fn matrix_get(&self) -> matrix::Matrix4
     {
@@ -114,4 +110,40 @@ impl PropertyShow for Object
     }
 }
 */
+
+impl<S: Decoder<E>, E> Decodable<S, E> for Object {
+  fn decode(decoder: &mut S) -> Result<Object, E> {
+    decoder.read_struct("root", 0, |decoder| {
+         Ok(Object{
+          name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
+          id: try!(decoder.read_struct_field("id", 0, |decoder| Decodable::decode(decoder))),
+          //id : Uuid::new_v4(),
+          mesh_render: try!(decoder.read_struct_field("mesh_render", 0, |decoder| Decodable::decode(decoder))),
+          position: try!(decoder.read_struct_field("position", 0, |decoder| Decodable::decode(decoder))),
+          orientation: try!(decoder.read_struct_field("orientation", 0, |decoder| Decodable::decode(decoder))),
+          scale: try!(decoder.read_struct_field("scale", 0, |decoder| Decodable::decode(decoder))),
+          children: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
+          //parent: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
+          parent: None
+        })
+    })
+  }
+}
+
+
+impl <S: Encoder<E>, E> Encodable<S, E> for Object {
+  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+      encoder.emit_struct("Object", 1, |encoder| {
+          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
+          try!(encoder.emit_struct_field( "id", 1u, |encoder| self.id.encode(encoder)));
+          try!(encoder.emit_struct_field( "mesh_render", 2u, |encoder| self.mesh_render.encode(encoder)));
+          try!(encoder.emit_struct_field( "position", 3u, |encoder| self.position.encode(encoder)));
+          try!(encoder.emit_struct_field( "orientation", 4u, |encoder| self.orientation.encode(encoder)));
+          try!(encoder.emit_struct_field( "scale", 5u, |encoder| self.scale.encode(encoder)));
+          try!(encoder.emit_struct_field( "children", 6u, |encoder| self.children.encode(encoder)));
+          //try!(encoder.emit_struct_field( "parent", 6u, |encoder| self.parent.encode(encoder)));
+          Ok(())
+      })
+  }
+}
 

@@ -1,6 +1,7 @@
 use sync::{RWLock, Arc};
 use std::f64::consts;
 use std::default::Default;
+use std::num::FloatMath;
 
 use vec;
 use vec::{Vec3};
@@ -72,6 +73,7 @@ pub struct Camera
 
 impl Camera
 {
+    /*
     pub fn new() -> Camera
     {
         let c = Camera {
@@ -83,6 +85,7 @@ impl Camera
 
         c
     }
+    */
 
     pub fn perspective_get(&self) -> matrix::Matrix4
     {

@@ -14,7 +14,8 @@ extern crate libc;
 extern crate sync;
 extern crate png;
 extern crate toml;
-extern crate debug;
+//extern crate debug;
+extern crate uuid;
 
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
@@ -43,8 +44,10 @@ mod property;
 mod geometry;
 mod intersection;
 mod fbo;
+mod factory;
 
 fn main() {
+    /*
     let mut c = property::Chris::new();
     //let yep  = c.cget_property("x");
     c.cset_property_hier(
@@ -64,6 +67,7 @@ fn main() {
         },
         _ => {}
     }
+    */
 
 
     //spawn(proc() {
@@ -176,7 +180,7 @@ name = "image/base_skeleton_col.png"
         ui::elm_simple_window_main();
     };
 
-    //r.scene.read().save();
+    //m.borrow().render.scene.read().save();
 }
 
 

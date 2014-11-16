@@ -1,6 +1,8 @@
 use vec;
 use std::num::Zero;
 use std::fmt;
+use std::num::FloatMath;
+use std::num::Float;
 
 pub struct Matrix4
 {

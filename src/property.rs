@@ -299,7 +299,8 @@ macro_rules! new_test_set(
     $sself.$member = s.to_string()
     }
     _ => {
-      println!("cant set {:?} to {}, because it is a String", $value, $name);
+      //println!("cant set {} to {}, because it is a String", $value, $name);
+      println!("cant set property(TODO) to {}, because it is a String", $name);
     }
     }
     );
@@ -321,7 +322,8 @@ macro_rules! new_test_set(
     $sself.$member = f;
     }
     _ => {
-      println!("cant set {:?} to {}, because it is a {}", $value, $name, stringify!($yep));
+      //println!("cant set {} to {}, because it is a {}", $value, $name, stringify!($yep));
+      println!("cant set property(TODO) to {}, because it is a {}", $name, stringify!($yep));
     }
     }
     )

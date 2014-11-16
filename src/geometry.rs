@@ -48,7 +48,7 @@ impl Repere {
     pub fn world_to_local(&self, v : &Vec3) -> Vec3
     {
         let iq = self.rotation.conj();
-        let out = iq.rotate_vec3(&(v - self.origin));
+        let out = iq.rotate_vec3(&(*v - self.origin));
         out
     }
 

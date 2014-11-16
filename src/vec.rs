@@ -1,4 +1,6 @@
 use std::fmt;
+use std::num::FloatMath;
+use std::num::Float;
 
 #[deriving(Decodable, Encodable, Clone)]
 pub struct Vec3
@@ -155,7 +157,7 @@ impl Vec3
 
     pub fn normalized(&self) -> Vec3
     {
-        self * (1f64/ self.length())
+        *self * (1f64/ self.length())
     }
 
     pub fn dot(&self, other : &Vec3) -> f64
@@ -212,7 +214,7 @@ impl Quat
         let uv = uv * (2f64* self.w);
         let uuv = uuv * 2f64;
 
-        v + uv + uuv
+        *v + uv + uuv
     }
     
     pub fn conj(&self) -> Quat

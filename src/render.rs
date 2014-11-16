@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use libc::{c_uint, c_int};
 use sync::{RWLock, Arc,RWLockReadGuard};
 use std::collections::HashMap;
-use std::collections::hashmap::{Occupied,Vacant};
+use std::collections::hash_map::{Occupied,Vacant};
 
 use resource;
 use shader;
@@ -19,6 +19,7 @@ use scene;
 use mesh_render;
 use fbo;
 use vec;
+use factory;
 
 use mesh::BufferSend;
 
@@ -269,7 +270,7 @@ impl RenderPass
 
                 if can_render {
                     let object = ob.matrix_get();
-                    let m = matrix * object ;
+                    let m = *matrix * object ;
                     shader.uniform_set("matrix", &m);
 
                     match mb.buffer_u32_get("faces") {
@@ -331,7 +332,7 @@ pub struct Render
 
 impl Render {
 
-    pub fn new() -> Render
+    pub fn new(factory: &mut factory::Factory) -> Render
     {
         let scene_path = "scene/simple.scene";
 
@@ -339,8 +340,8 @@ impl Render {
         let fbo_all = fbo_manager.write().request_use_no_proc("fbo_all");
         let fbo_selected = fbo_manager.write().request_use_no_proc("fbo_selected");
 
-        let camera = Rc::new(RefCell::new(camera::Camera::new()));
-        let camera_ortho = Rc::new(RefCell::new(camera::Camera::new()));
+        let camera = Rc::new(RefCell::new(factory.create_camera()));
+        let camera_ortho = Rc::new(RefCell::new(factory.create_camera()));
         {
             let mut cam = camera_ortho.borrow_mut();
             cam.data.projection = camera::Orthographic;
@@ -362,11 +363,13 @@ impl Render {
             scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path))),
             camera : camera,
             camera_ortho : camera_ortho,
-            line : Arc::new(RWLock::new(object::Object::new("line"))),
+            //line : Arc::new(RWLock::new(object::Object::new("line"))),
+            line : Arc::new(RWLock::new(factory.create_object("line"))),
             fbo_all : fbo_all,
             fbo_selected : fbo_selected,
             objects_selected : DList::new(),
-            quad_outline : Arc::new(RWLock::new(object::Object::new("quad_outline")))
+            //quad_outline : Arc::new(RWLock::new(object::Object::new("quad_outline")))
+            quad_outline : Arc::new(RWLock::new(factory.create_object("quad_outline")))
         };
 
         {

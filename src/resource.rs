@@ -5,7 +5,7 @@ use fbo;
 use material;
 use serialize::{Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
-use std::collections::hashmap::{Occupied,Vacant};
+use std::collections::hash_map::{Occupied,Vacant};
 use sync::{RWLock, Arc};
 //use std::io::timer::sleep;
 //use std::time::duration::Duration;
