@@ -217,7 +217,7 @@ impl Master
                 Some(o) => {
                     match m.tree {
                         Some(ref mut t) => {
-                            t.select(&o.read().name);
+                            t.select(&o.read().id);
                         }
                         _ => {}
                     }

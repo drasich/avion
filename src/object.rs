@@ -117,7 +117,6 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Object {
          Ok(Object{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
           id: try!(decoder.read_struct_field("id", 0, |decoder| Decodable::decode(decoder))),
-          //id : Uuid::new_v4(),
           mesh_render: try!(decoder.read_struct_field("mesh_render", 0, |decoder| Decodable::decode(decoder))),
           position: try!(decoder.read_struct_field("position", 0, |decoder| Decodable::decode(decoder))),
           orientation: try!(decoder.read_struct_field("orientation", 0, |decoder| Decodable::decode(decoder))),

@@ -7,6 +7,7 @@ use std::c_str::CString;
 use std::ptr;
 use std::cell::RefCell;
 use std::rc::Weak;
+use uuid::Uuid;
 
 use scene;
 use object;
@@ -50,7 +51,8 @@ pub struct Tree
     pub name : String,
     //TODO change the key
     //objects : HashMap<Arc<RWLock<object::Object>>, *const Elm_Object_Item >
-    objects : HashMap<String, *const Elm_Object_Item>,
+    //objects : HashMap<String, *const Elm_Object_Item>,
+    objects : HashMap<Uuid, *const Elm_Object_Item>,
     jk_tree : *const JkTree,
     master : Weak<RefCell<ui::Master>>,
     dont_forward_signal : bool
@@ -96,7 +98,7 @@ impl Tree
         let eoi = unsafe {
             match object.read().parent {
                 Some(ref p) =>  {
-                    match self.objects.find(&p.read().name) {
+                    match self.objects.find(&p.read().id) {
                         Some(item) => {
                             tree_object_add(
                                 self.jk_tree,
@@ -120,17 +122,17 @@ impl Tree
         };
 
         if eoi != ptr::null() {
-            self.objects.insert(object.read().name.clone(), eoi);
+            self.objects.insert(object.read().id, eoi);
         }
     }
 
-    pub fn select(&mut self, name: &String)
+    pub fn select(&mut self, id: &Uuid)
     {
         unsafe { tree_deselect_all(self.jk_tree); }
 
         println!("select from tree");
         self.dont_forward_signal = true;
-        match self.objects.find(name) {
+        match self.objects.find(id) {
             Some(item) => {
                 unsafe {tree_item_select(*item);}
             }
@@ -198,7 +200,7 @@ extern fn expand(
         println!("expanding ! with child {} ", (*c).read().name);
         unsafe {
             let eoi = tree_object_add(t.jk_tree, mem::transmute(c), parent);
-            t.objects.insert(c.read().name.clone(), eoi);
+            t.objects.insert(c.read().id, eoi);
         }
     }
 }

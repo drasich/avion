@@ -67,6 +67,18 @@ impl Scene
         None
     }
 
+    pub fn object_find_by_id(&self, id : &Uuid) -> Option<Arc<RWLock<object::Object>>>
+    {
+        for o in self.objects.iter()
+        {
+            if o.read().id == *id {
+                return Some(o.clone());
+            }
+        }
+
+        None
+    }
+
 }
 
 //impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RWLock<object::Object>> {
