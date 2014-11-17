@@ -18,6 +18,7 @@ use ui;
 use property;
 use property::TProperty;
 use property::ChrisProperty;
+use operation;
 
 #[repr(C)]
 pub struct Elm_Object_Item;
@@ -333,7 +334,8 @@ pub extern fn changed_set_string(property : *const c_void, name : *const c_char,
     changed_set(property, name, &ss);
 }
 
-fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
+//fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
+fn changed_set<T : Any+Clone>(property : *const c_void, name : *const c_char, data : &T) {
     let s = unsafe {CString::new(name as *const i8, false) };
     println!("I changed the value {} ", s);
 
@@ -354,6 +356,7 @@ fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
 
     let vs = vs.tail().to_vec();
 
+
     let p : & Property = unsafe {mem::transmute(property)};
 
     match p.master.upgrade() {
@@ -363,6 +366,16 @@ fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
                     //TODO add operation
                     match mm.render.objects_selected.front() {
                         Some(o) => {
+                            let old = match o.read().cget_property_hier(vs.clone()){
+                                property::ChrisValue::BoxAny(yep) => yep,
+                                _ => return
+                            };
+                        let op = operation::Operation::new(
+                            o.clone(), 
+                            path.to_string(),  
+                            old,//data, //o.write().cget_property_hier(vs),
+                            box data.clone()); //data);
+
                             o.write().cset_property_hier(vs, data);
                         },
                         None => {
