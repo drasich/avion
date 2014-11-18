@@ -28,6 +28,14 @@ pub type ChangedFunc = extern fn(
     name : *const c_char,
     data : *const c_void);
 
+pub type RegisterChangeFunc = extern fn(
+    object : *const c_void,
+    name : *const c_char,
+    old : *const c_void,
+    new : *const c_void,
+    action_type : c_int
+    );
+
 pub type PropertyTreeExpandFunc = extern fn(
     property : *const Property,
     object : *const c_void,
@@ -96,6 +104,7 @@ extern {
         data : *const Property,
         changed_float : ChangedFunc,
         changed_string : ChangedFunc,
+        register_change_string : RegisterChangeFunc,
         expand : PropertyTreeExpandFunc
         );
 
@@ -147,6 +156,7 @@ impl Property
                 &*p, //ptr::null(),
                 changed_set_float,
                 changed_set_string,
+                register_change_string,
                 expand
                 ); 
         }
@@ -333,6 +343,24 @@ pub extern fn changed_set_string(property : *const c_void, name : *const c_char,
     //println!("the string is {}", ss);
     changed_set(property, name, &ss);
 }
+
+pub extern fn register_change_string(
+    property : *const c_void,
+    name : *const c_char,
+    old : *const c_void,
+    new : *const c_void,
+    action_type : c_int
+    ) {
+
+    let s = unsafe {CString::new(new as *const i8, false) };
+    let ss = match s.as_str() {
+        Some(sss) => sss.to_string(),
+        None => return
+    };
+    //println!("the string is {}", ss);
+    changed_set(property, name, &ss);
+}
+
 
 //fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
 fn changed_set<T : Any+Clone>(property : *const c_void, name : *const c_char, data : &T) {
