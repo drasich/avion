@@ -361,33 +361,39 @@ fn changed_set<T : Any+Clone>(property : *const c_void, name : *const c_char, da
 
     match p.master.upgrade() {
         Some(m) => { 
-            match m.try_borrow() {
-                Some(ref mm) => {
+            match m.try_borrow_mut() {
+                Some(ref mut mm) => {
                     //TODO add operation
-                    match mm.render.objects_selected.front() {
-                        Some(o) => {
-                            let old = match o.read().cget_property_hier(vs.clone()){
-                                property::ChrisValue::BoxAny(yep) => yep,
-                                _ => return
-                            };
-                        let op = operation::Operation::new(
-                            o.clone(), 
-                            path.to_string(),  
-                            old,//data, //o.write().cget_property_hier(vs),
-                            box data.clone()); //data);
-
-                            o.write().cset_property_hier(vs, data);
-                        },
+                    let o = match mm.render.objects_selected.front() {
+                        Some(o) => o.clone(),
                         None => {
                             println!("no objetcs selected");
+                            return;
                         }
                     };
+
+                    let old = match o.read().cget_property_hier(vs.clone()){
+                        property::ChrisValue::BoxAny(yep) => yep,
+                        _ => return
+                    };
+
+                    let op = operation::Operation::new(
+                        o.clone(), 
+                        vs,//path.to_string(),  
+                        old,//data, //o.write().cget_property_hier(vs),
+                        box data.clone()); //data);
+
+                    op.apply();
+                    mm.operation_mgr.add(op);
+
+                    //o.write().cset_property_hier(vs, data);
+
                     match mm.tree {
                         Some(ref t) => { 
                             t.update();
                             println!("todo call this only when the name or object representation has changed...");
                             println!("... or do the object references in ui stuff /see todo file");
-                    },
+                        },
                         None => {}
                     }
                 },

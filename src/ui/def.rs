@@ -544,7 +544,6 @@ pub extern fn key_down(
     //let m : &mut Master = unsafe {mem::transmute(data)};
     let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
     let mut m = master_rc.borrow_mut();
-    let mut camera = m.render.camera.borrow_mut();
 
     let s = unsafe {CString::new(key as *const i8, false) };
 
@@ -560,9 +559,13 @@ pub extern fn key_down(
         "d" => t.z = 50f64,
         "f" => t.x = 50f64,
         "s" => t.x = -50f64,
+        "z" => m.operation_mgr.undo(),
         _ => {}
     }
 
+    {
+    let mut camera = m.render.camera.borrow_mut();
     let p = camera.object.read().position;
     camera.object.write().position = p + t;
+    }
 }
