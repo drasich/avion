@@ -330,7 +330,7 @@ pub extern fn changed(object : *const c_void, data : *const c_void) {
 pub extern fn changed_set_float(property : *const c_void, name : *const c_char, data : *const c_void) {
 
     let f : & f64 = unsafe {mem::transmute(data)};
-    changed_set(property, name, f);
+    changed_set(property, name, None, f, 0);
 }
 
 pub extern fn changed_set_string(property : *const c_void, name : *const c_char, data : *const c_void) {
@@ -341,7 +341,7 @@ pub extern fn changed_set_string(property : *const c_void, name : *const c_char,
         None => return
     };
     //println!("the string is {}", ss);
-    changed_set(property, name, &ss);
+    changed_set(property, name, None, &ss, 0);
 }
 
 pub extern fn register_change_string(
@@ -349,7 +349,7 @@ pub extern fn register_change_string(
     name : *const c_char,
     old : *const c_void,
     new : *const c_void,
-    action_type : c_int
+    action : c_int
     ) {
 
     let s = unsafe {CString::new(new as *const i8, false) };
@@ -358,12 +358,28 @@ pub extern fn register_change_string(
         None => return
     };
     //println!("the string is {}", ss);
-    changed_set(property, name, &ss);
+    if action == 1 && old != ptr::null() {
+        let so = unsafe {CString::new(old as *const i8, false) };
+        let sso = match so.as_str() {
+            Some(ssso) => ssso.to_string(),
+            None => return
+        };
+        changed_set(property, name, Some(&sso), &ss, action);
+    }
+    else {
+        changed_set(property, name, None, &ss, action);
+    }
 }
 
 
 //fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
-fn changed_set<T : Any+Clone>(property : *const c_void, name : *const c_char, data : &T) {
+fn changed_set<T : Any+Clone>(
+    property : *const c_void,
+    name : *const c_char,
+    old : Option<&T>,
+    new : &T,
+    action : c_int
+    ) {
     let s = unsafe {CString::new(name as *const i8, false) };
     println!("I changed the value {} ", s);
 
@@ -400,21 +416,30 @@ fn changed_set<T : Any+Clone>(property : *const c_void, name : *const c_char, da
                         }
                     };
 
+                    /*
                     let old = match o.read().cget_property_hier(vs.clone()){
                         property::ChrisValue::BoxAny(yep) => yep,
                         _ => return
                     };
+                    */
 
-                    let op = operation::Operation::new(
-                        o.clone(), 
-                        vs,//path.to_string(),  
-                        old,//data, //o.write().cget_property_hier(vs),
-                        box data.clone()); //data);
+                    match (old, action) {
+                        (Some(oldd), 1) => {
+                            let op = operation::Operation::new(
+                                o.clone(), 
+                                vs,//path.to_string(),  
+                                box oldd.clone(),//data, //o.write().cget_property_hier(vs),
+                                box new.clone()); //data);
 
-                    op.apply();
-                    mm.operation_mgr.add(op);
-
-                    //o.write().cset_property_hier(vs, data);
+                            op.apply();
+                            mm.operation_mgr.add(op);
+                            println!("adding operation!!");
+                        },
+                        _ => {
+                            o.write().cset_property_hier(vs, new);
+                            println!("changing data");
+                        }
+                    }
 
                     match mm.tree {
                         Some(ref t) => { 
