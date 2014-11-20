@@ -41,6 +41,10 @@ pub type PropertyTreeExpandFunc = extern fn(
     object : *const c_void,
     parent : *const Elm_Object_Item);
 
+pub type data_cast_fn = extern fn(
+    name : *const c_char,
+    data : *const c_void);
+
 #[repr(C)]
 pub struct JkProperty;
 #[repr(C)]
@@ -327,13 +331,19 @@ pub extern fn changed(object : *const c_void, data : *const c_void) {
     }
 }
 
-pub extern fn changed_set_float(property : *const c_void, name : *const c_char, data : *const c_void) {
+pub extern fn changed_set_float(
+    property : *const c_void,
+    name : *const c_char,
+    data : *const c_void) {
 
     let f : & f64 = unsafe {mem::transmute(data)};
     changed_set(property, name, None, f, 0);
 }
 
-pub extern fn changed_set_string(property : *const c_void, name : *const c_char, data : *const c_void) {
+pub extern fn changed_set_string(
+    property : *const c_void,
+    name : *const c_char,
+    data : *const c_void) {
 
     let s = unsafe {CString::new(data as *const i8, false) };
     let ss = match s.as_str() {
@@ -357,6 +367,7 @@ pub extern fn register_change_string(
         Some(sss) => sss.to_string(),
         None => return
     };
+
     //println!("the string is {}", ss);
     if action == 1 && old != ptr::null() {
         let so = unsafe {CString::new(old as *const i8, false) };
@@ -371,6 +382,24 @@ pub extern fn register_change_string(
     }
 }
 
+pub extern fn register_change_float(
+    property : *const c_void,
+    name : *const c_char,
+    old : *const c_void,
+    new : *const c_void,
+    action : c_int
+    ) {
+
+    let fnew : & f64 = unsafe {mem::transmute(new)};
+
+    if action == 1 && old != ptr::null() {
+        let fold : & f64 = unsafe {mem::transmute(old)};
+        changed_set(property, name, Some(fold), fnew, action);
+    }
+    else {
+        changed_set(property, name, None, fnew, action);
+    }
+}
 
 //fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
 fn changed_set<T : Any+Clone>(
