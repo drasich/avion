@@ -109,6 +109,7 @@ extern {
         changed_float : ChangedFunc,
         changed_string : ChangedFunc,
         register_change_string : RegisterChangeFunc,
+        register_change_float : RegisterChangeFunc,
         expand : PropertyTreeExpandFunc
         );
 
@@ -161,6 +162,7 @@ impl Property
                 changed_set_float,
                 changed_set_string,
                 register_change_string,
+                register_change_float,
                 expand
                 ); 
         }
