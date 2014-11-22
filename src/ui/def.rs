@@ -6,6 +6,8 @@ use std::collections::{DList};
 use std::ptr;
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::collections::HashMap;
+use std::any::{Any, AnyRefExt};
 
 use uuid::Uuid;
 
@@ -86,25 +88,6 @@ extern {
         cb: extern fn(*mut c_void) -> (),
         master: *const c_void
         ) -> ();
-
-    /*
-    fn property_object_set(
-        Property : *mut Property,
-        object : *const c_void
-        );
-
-    fn property_object_update(
-        Property : *mut Property
-        );
-        */
-
-    /*
-    fn property_set(
-        Property : *mut Property,
-        name : *const c_char,
-        value : *const c_char
-        );
-        */
 
 }
 
@@ -255,28 +238,6 @@ impl Master
     }
 }
 
-
-/*
-struct PropertySet
-{
-    name : String
-}
-
-trait PropertyTest
-{
-    fn set(property_set :&PropertySet, field : String, value : Self);
-    
-}
-
-impl PropertyTest for int
-{
-    fn set(property_set: &PropertySet, field : String, value : int)
-    {
-        let test = value;
-    }
-}
-*/
-
 //pub extern fn init_cb(master_rc: *mut Rc<RefCell<Master>>) -> () {
 pub extern fn init_cb(data: *mut c_void) -> () {
     unsafe {
@@ -291,16 +252,6 @@ pub extern fn init_cb(data: *mut c_void) -> () {
             mouse_wheel,
             key_down
             );
-
-        /*
-        let p = window_property_new(w);
-        
-        property_register_cb(
-            p,
-            changed,
-            name_get
-            ); 
-            */
 
         let p = ui::Property::new(w, master_rc.clone().downgrade());
 
@@ -334,26 +285,6 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         (*master).property = Some(p);
     }
 }
-
-/*
-pub struct PropertyWidget {
-    name : String,
-}
-
-trait PropertyShow
-{
-    //fn create_widget() -> Widget;
-    fn create_widget(window : &Window);
-}
-
-impl PropertyShow for String
-{
-    fn create_widget(window : &Window)
-    {
-        let c = unsafe { window_property_new(window) };
-    }
-}
-*/
 
 pub extern fn mouse_down(
     data : *const c_void,
@@ -568,4 +499,20 @@ pub extern fn key_down(
     let p = camera.object.read().position;
     camera.object.write().position = p + t;
     }
+}
+
+/*
+pub struct PropertyContainer
+{
+    pub yo : HashMap<Uuid, DList<&WidgetUpdate>>
+}
+*/
+
+pub trait WidgetUpdate {
+
+    fn changed<T : Any+Clone>(
+        &mut self,
+        name : &str,
+        //old : Option<&T>,
+        new : &T);
 }
