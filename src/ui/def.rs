@@ -195,15 +195,11 @@ impl Master
                             //property_data_set(p, mem::transmute(box o.clone()));
                             p.data_set(mem::transmute(box o.clone()));
                             p.set_object(&*o.read());
+                            //TODO chris
                         },
                         None => {}
-                    }
-                },
-                _ => {},
-            }
+                    };
 
-            match m.render.objects_selected.front() {
-                Some(o) => {
                     match m.tree {
                         Some(ref mut t) => {
                             t.select(&o.read().id);
@@ -211,7 +207,7 @@ impl Master
                         _ => {}
                     }
                 },
-                _ => {}
+                _ => {},
             }
         }
     }
@@ -501,12 +497,22 @@ pub extern fn key_down(
     }
 }
 
-/*
-pub struct PropertyContainer
+pub struct PropertyContainer<'a>
 {
-    pub yo : HashMap<Uuid, DList<&WidgetUpdate>>
+    pub yo : HashMap<Uuid, DList<&'a WidgetUpdate+'a>>
+    //pub yo : HashMap<Uuid, &'a WidgetUpdate+'a>
+    //pub yo : &'a WidgetUpdate+'a
 }
-*/
+
+impl<'a> PropertyContainer<'a>
+{
+    pub fn new() -> PropertyContainer<'a>
+    {
+        PropertyContainer {
+            yo : HashMap::new()
+        }
+    }
+}
 
 pub trait WidgetUpdate {
 
@@ -516,3 +522,4 @@ pub trait WidgetUpdate {
         //old : Option<&T>,
         new : &T);
 }
+
