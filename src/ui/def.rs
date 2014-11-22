@@ -109,7 +109,8 @@ pub struct Master
     pub render : render::Render,
     pub state : MasterState,
     //pub objects : DList<Arc<RWLock<object::Object>>>,
-    pub operation_mgr : operation::OperationManager
+    pub operation_mgr : operation::OperationManager,
+    pub cont : PropertyContainer<'static>
 }
 
 impl Master
@@ -131,7 +132,8 @@ impl Master
             render : render,
             state : Idle,
             //objects : DList::new(),
-            operation_mgr : op_mgr
+            operation_mgr : op_mgr,
+            cont : PropertyContainer::new()
         };
 
         m.scene = Some(m.render.scene.clone());
@@ -499,8 +501,8 @@ pub extern fn key_down(
 
 pub struct PropertyContainer<'a>
 {
-    pub yo : HashMap<Uuid, DList<&'a WidgetUpdate+'a>>
-    //pub yo : HashMap<Uuid, &'a WidgetUpdate+'a>
+    //pub yo : HashMap<Uuid, DList<&'a WidgetUpdate+'a>>
+    pub yo : HashMap<Uuid, &'a WidgetUpdate+'a>
     //pub yo : &'a WidgetUpdate+'a
 }
 
@@ -511,6 +513,13 @@ impl<'a> PropertyContainer<'a>
         PropertyContainer {
             yo : HashMap::new()
         }
+    }
+
+    //pub fn add(&mut self, w : &'a WidgetUpdate+'a)
+    //pub fn add(&mut self, w : &'a WidgetUpdate)
+    pub fn add(&mut self, w : &'a WidgetUpdate)
+    {
+        self.yo.insert(Uuid::new_v4(), w);
     }
 }
 
