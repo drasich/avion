@@ -51,6 +51,8 @@ pub struct JkProperty;
 pub struct JkPropertySet;
 #[repr(C)]
 pub struct JkPropertyList;
+#[repr(C)]
+pub struct PropertyValue;
 
 
 #[link(name = "joker")]
@@ -127,13 +129,13 @@ extern {
         ps : *const JkPropertyList,
         name : *const c_char,
         value : c_float
-        );
+        ) -> *const PropertyValue;
 
     fn property_list_string_add(
         ps : *const JkPropertyList,
         name : *const c_char,
         value : *const c_char
-        );
+        ) -> *const PropertyValue;
 }
 
 pub struct Property
@@ -141,6 +143,7 @@ pub struct Property
     pub name : String,
     jk_property_list : *const JkPropertyList,
     master : Weak<RefCell<ui::Master>>,
+    pv : HashMap<String, *const PropertyValue>
 }
 
 impl Property
@@ -153,6 +156,7 @@ impl Property
             name : String::from_str("property_name"),
             jk_property_list : unsafe {jk_property_list_new(window)},
             master : master,
+            pv : HashMap::new()
         };
 
         unsafe {
@@ -170,7 +174,7 @@ impl Property
         p
     }
 
-    pub fn set_object(&self, o : &object::Object)
+    pub fn set_object(&mut self, o : &object::Object)
     {
         unsafe { property_list_clear(self.jk_property_list); }
 
@@ -202,10 +206,11 @@ impl Property
     }
 
     fn create_entries(
-            &self,
+            &mut self,
             o : &ChrisProperty,
             path : Vec<String>)
         {
+        self.pv.clear();
 
         fn get_node_path(path : &Vec<String>) -> String
         {
@@ -247,10 +252,13 @@ impl Property
                                 let v = s.to_c_str();
                                 let f = field.to_c_str();
                                 unsafe {
-                                    property_list_string_add(
+                                    let pv = property_list_string_add(
                                         self.jk_property_list,
                                         f.unwrap(),
                                         v.unwrap());
+                                    if pv != ptr::null() {
+                                        self.pv.insert(field, pv);
+                                    }
                                 }
                             },
                             None => {}
@@ -262,10 +270,13 @@ impl Property
                                     field.as_slice());
                                 let f = field.to_c_str();
                                 unsafe {
-                                    property_list_float_add(
+                                    let pv = property_list_float_add(
                                         self.jk_property_list,
                                         f.unwrap(),
                                         *v as c_float);
+                                    if pv != ptr::null() {
+                                        self.pv.insert(field, pv);
+                                    }
                                 }
                             },
                             None => {}

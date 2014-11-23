@@ -110,12 +110,12 @@ pub struct Master
     pub state : MasterState,
     //pub objects : DList<Arc<RWLock<object::Object>>>,
     pub operation_mgr : operation::OperationManager,
-    pub cont : PropertyContainer<'static>
+    //pub cont : PropertyContainer<'static>
 }
 
 impl Master
 {
-    pub fn new() -> Master
+    fn _new() -> Master
     {
         let mut factory = factory::Factory::new();
         //let scene = factory.create_scene("scene/test.scene");
@@ -133,12 +133,32 @@ impl Master
             state : Idle,
             //objects : DList::new(),
             operation_mgr : op_mgr,
-            cont : PropertyContainer::new()
+            //cont : PropertyContainer::new()
         };
 
         m.scene = Some(m.render.scene.clone());
 
+        //m.operation_mgr.closure = Some( |name, new| { m.test2(name, new); });
+        //m.operation_mgr.closure = Some( |name| { println!("yep : {}",name); });
+
         m
+    }
+
+    pub fn new() -> Rc<RefCell<Master>>
+    {
+        let mut m = Master::_new();
+        let mrc = Rc::new(RefCell::new(m));
+
+        m.operation_mgr.master = Some(mrc.clone().downgrade());
+
+        mrc
+    }
+
+    fn test<T : Any+Clone>(
+        &mut self,
+        name : &str,
+        new : &T){
+         self.update_changed(name, new);
     }
 
     pub fn mouse_up(
@@ -223,8 +243,8 @@ impl Master
             if o.read().id == *id {
                 self.render.objects_selected.push(o.clone());
                 match self.property {
-                    Some(ref p) => {
-                        p.data_set(unsafe {mem::transmute(box o.clone())});
+                    Some(ref mut p) => {
+                        //p.data_set(unsafe {mem::transmute(box o.clone())});
                         p.set_object(&*o.read());
                     },
                     None => {}
@@ -236,11 +256,10 @@ impl Master
     }
 }
 
-//pub extern fn init_cb(master_rc: *mut Rc<RefCell<Master>>) -> () {
 pub extern fn init_cb(data: *mut c_void) -> () {
+    let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
+    let w = unsafe {window_new()};
     unsafe {
-        let master_rc : &Rc<RefCell<Master>> = mem::transmute(data);
-        let w = window_new();
         window_callback_set(
             w,
             mem::transmute(box master_rc.clone()), //ptr::null(),//TODO
@@ -250,38 +269,34 @@ pub extern fn init_cb(data: *mut c_void) -> () {
             mouse_wheel,
             key_down
             );
-
-        let p = ui::Property::new(w, master_rc.clone().downgrade());
-
-        //*
-        let mut t = ui::Tree::new(w, master_rc.clone().downgrade());
-
-        let mut master = master_rc.borrow_mut();
-
-        match (*master).scene {
-            Some(ref s) => {
-                t.set_scene(&*s.read());
-                let oo = s.read().object_find("yepyoyo");
-                match oo {
-                    Some(o) => { 
-                        //property_data_set(p, mem::transmute(box o.clone()));
-                        p.data_set(mem::transmute(box o.clone()));
-                        p.set_object(&*o.read());
-                    }
-                    None => {}
-                };
-            },
-            None => {}
-        };
-        //*/
-
-        master.tree = Some(t);
-
-        //window_button_new(w);
-
-        (*master).window = Some(w);
-        (*master).property = Some(p);
     }
+
+    let mut master = master_rc.borrow_mut();
+    master.window = Some(w);
+
+    let mut p = ui::Property::new(w, master_rc.clone().downgrade());
+    let mut t = ui::Tree::new(w, master_rc.clone().downgrade());
+
+    match (*master).scene {
+        Some(ref s) => {
+            t.set_scene(&*s.read());
+            /*
+               let oo = s.read().object_find("yepyoyo");
+               match oo {
+               Some(o) => { 
+            //property_data_set(p, mem::transmute(box o.clone()));
+            p.data_set(mem::transmute(box o.clone()));
+            p.set_object(&*o.read());
+            }
+            None => {}
+            };
+                */
+        },
+        None => {}
+    };
+
+    master.tree = Some(t);
+    master.property = Some(p);
 }
 
 pub extern fn mouse_down(
@@ -488,7 +503,9 @@ pub extern fn key_down(
         "d" => t.z = 50f64,
         "f" => t.x = 50f64,
         "s" => t.x = -50f64,
-        "z" => m.operation_mgr.undo(),
+        "z" => {
+            m.operation_mgr.undo();
+        },
         _ => {}
     }
 
@@ -525,10 +542,39 @@ impl<'a> PropertyContainer<'a>
 
 pub trait WidgetUpdate {
 
-    fn changed<T : Any+Clone>(
+    fn update_changed<T : Any+Clone>(
         &mut self,
         name : &str,
         //old : Option<&T>,
         new : &T);
 }
 
+impl WidgetUpdate for Master
+{
+    fn update_changed<T : Any+Clone>(
+        &mut self,
+        name : &str,
+        //old : Option<&T>,
+        new : &T)
+    {
+        /*
+        match m.property {
+            Some(ref mut p) => unsafe {
+                //property_data_set(p, mem::transmute(box o.clone()));
+                //p.data_set(mem::transmute(box o.clone()));
+                p.set_object(&*o.read());
+                //TODO chris
+            },
+            None => {}
+        };
+
+        match m.tree {
+            Some(ref mut t) => {
+                t.select(&o.read().id);
+            }
+            _ => {}
+        }
+        */
+    }
+
+}

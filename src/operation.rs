@@ -1,8 +1,12 @@
 use std::any::{Any, AnyRefExt};
 use sync::{RWLock, Arc};
+use std::cell::RefCell;
+use std::rc::Weak;
+
 use object;
 use property;
 use property::ChrisProperty;
+use ui;
 
 pub struct Operation
 {
@@ -65,24 +69,49 @@ impl Operation
     }
 }
 
+trait AnyClone: Any + Clone {
+}
+impl<T: Any + Clone> AnyClone for T {}
+
 pub struct OperationManager
 {
     pub undo : Vec<Operation>,
-    pub redo : Vec<Operation>
+    pub redo : Vec<Operation>,
+    //pub onUndo : Option<fn test
+    //pub closure: Option<|&str,Any+Clone|:'static -> ()>,
+    //pub closure: Option<|&str|:'static>,
+    //pub closure: Option<|&str, &AnyClone|:'static>
+    //pub closure: Option<|&str|:'static>
+    pub master : Option<Weak<RefCell<ui::Master>>>,
+    //pub master : Option<&'a ui::Master<'a>>
 }
 
 impl OperationManager
 {
-    pub fn new() -> OperationManager
+    pub fn new(
+        //master : Weak<RefCell<ui::Master>>
+        ) -> OperationManager
     {
         OperationManager {
             undo : Vec::new(),
-            redo : Vec::new()
+            redo : Vec::new(),
+            //closure : None
+            master: None
         }
     }
 
     pub fn add(&mut self, op : Operation)
     {
+        let captured_var = 10i;
+
+        let t = |t : &Any|  {};
+        //let t = |t : &Any+Clone|  {};
+        
+        //let closure_args = |arg: int,yep : &Any+Clone| -> int {
+        let closure_args = |arg: int| -> int {
+            println!("captured_var={}, arg={}", captured_var, arg);
+            arg // Note lack of semicolon after 'arg'
+        };
         self.undo.push(op);
     }
 
@@ -94,6 +123,21 @@ impl OperationManager
         };
 
         op.undo();
+
+        /*
+        match self.master.upgrade() {
+            Some(m) => { 
+                match m.try_borrow_mut() {
+                    Some(ref mut mm) => {
+                        mm.update_changed(op.name, *op.new);
+                    },
+                    _ => { println!("already borrowed : operation undo")}
+                }
+            },
+            None => { println!("the master of the operation doesn't exist anymore");}
+        }
+        */
+        
     }
 
     pub fn redo(&mut self)

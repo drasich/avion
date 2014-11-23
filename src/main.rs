@@ -162,7 +162,8 @@ name = "image/base_skeleton_col.png"
         //scene.save();
 
     //let m = box ui::Master::new();
-    let m = Rc::new(RefCell::new(ui::Master::new()));
+    //let m = Rc::new(RefCell::new(ui::Master::new()));
+    let m = ui::Master::new();
 
     unsafe {
         //render::draw_callback_set(render::init_cb, render::draw_cb, render::resize_cb, &m.render);
