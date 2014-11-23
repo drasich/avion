@@ -109,6 +109,7 @@ pub struct Master
     pub render : render::Render,
     pub state : MasterState,
     //pub objects : DList<Arc<RWLock<object::Object>>>,
+    //pub operation_mgr : Option<operation::OperationManager<'a>>,
     pub operation_mgr : operation::OperationManager,
     //pub cont : PropertyContainer<'static>
 }
@@ -132,7 +133,7 @@ impl Master
             render : render,
             state : Idle,
             //objects : DList::new(),
-            operation_mgr : op_mgr,
+            operation_mgr : op_mgr,//None,//op_mgr,
             //cont : PropertyContainer::new()
         };
 
@@ -147,17 +148,49 @@ impl Master
     pub fn new() -> Rc<RefCell<Master>>
     {
         let mut m = Master::_new();
+        let yep = |name : &str, new : &Any| {
+            println!("yep : {}",name);
+            //m.test(name, new);
+        };
+        //op_mgr.closure = Some( |name| { println!("yep : {}",name); });
+        //m.operation_mgr.closure = Some(yep);
+
         let mrc = Rc::new(RefCell::new(m));
 
-        m.operation_mgr.master = Some(mrc.clone().downgrade());
+        //let mut op_mgr = operation::OperationManager::new();
+
+        //hm.operation_mgr.closure = Some( |name, new| { m.test2(name, new); });
+        let yep = |name : &str, new : &Any| {
+            println!("yep : {}",name);
+            //mrc.borrow_mut().test(name, new);
+        };
+        //op_mgr.closure = Some( |name| { println!("yep : {}",name); });
+        //op_mgr.closure = Some(yep);
+
+        /*
+        op_mgr.master = Some(mrc.clone().downgrade());
+
+        match op_mgr.master {
+            Some(_) =>
+            {
+                println!("I set the master !!!!!!!!!");
+            },
+            None => {
+                println!("it is none???????");
+            }
+        }
+        */
+
+        //m.operation_mgr = Some(op_mgr);
+        //mrc.borrow_mut().operation_mgr = Some(op_mgr);
 
         mrc
     }
 
-    fn test<T : Any+Clone>(
+    fn test(
         &mut self,
         name : &str,
-        new : &T){
+        new : &Any){
          self.update_changed(name, new);
     }
 
@@ -254,6 +287,29 @@ impl Master
         }
 
     }
+
+    /*
+    pub fn operation_add(&mut self, op : operation::Operation )
+    {
+        match self.operation_mgr {
+            Some(ref mut opmgr) =>
+                opmgr.add(op),
+                None => {}
+        };
+    }
+
+    pub fn undo(&mut self)
+    {
+        match self.operation_mgr {
+            Some(ref mut opmgr) =>
+                opmgr.undo(),
+                None => {
+                    println!("no operation manager.............");
+                }
+        };
+
+    }
+    */
 }
 
 pub extern fn init_cb(data: *mut c_void) -> () {
@@ -542,32 +598,31 @@ impl<'a> PropertyContainer<'a>
 
 pub trait WidgetUpdate {
 
-    fn update_changed<T : Any+Clone>(
+    //fn update_changed<T : Any+Clone>(
+    fn update_changed(
         &mut self,
         name : &str,
         //old : Option<&T>,
-        new : &T);
+        new : &Any);
 }
 
 impl WidgetUpdate for Master
 {
-    fn update_changed<T : Any+Clone>(
+    //fn update_changed<T : Any+Clone>(
+    fn update_changed(
         &mut self,
         name : &str,
         //old : Option<&T>,
-        new : &T)
+        new : &Any)
     {
-        /*
-        match m.property {
-            Some(ref mut p) => unsafe {
-                //property_data_set(p, mem::transmute(box o.clone()));
-                //p.data_set(mem::transmute(box o.clone()));
-                p.set_object(&*o.read());
-                //TODO chris
+        match self.property {
+            Some(ref mut p) => {
+                p.update_changed(name, new);
             },
             None => {}
         };
 
+        /*
         match m.tree {
             Some(ref mut t) => {
                 t.select(&o.read().id);

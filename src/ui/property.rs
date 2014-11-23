@@ -136,6 +136,14 @@ extern {
         name : *const c_char,
         value : *const c_char
         ) -> *const PropertyValue;
+
+    fn property_list_string_update(
+        pv : *const PropertyValue,
+        value : *const c_char);
+
+    fn property_list_float_update(
+        pv : *const PropertyValue,
+        value : c_float);
 }
 
 pub struct Property
@@ -558,6 +566,36 @@ extern fn expand(
             }
         },
         None => { println!("the master of the property doesn't exist anymore");}
+    }
+}
+
+impl ui::WidgetUpdate for Property
+{
+    fn update_changed(
+        &mut self,
+        name : &str,
+        new : &Any)
+    {
+        let pv = match self.pv.find(&name.to_string()) {
+            Some(p) => p,
+            None => {
+                println!("could not find {}", name);
+                return;
+            }
+        };
+
+        println!("find {}", name);
+
+        match new.downcast_ref::<f64>() {
+            Some(v) => {
+                unsafe {
+                    property_list_float_update(
+                        *pv,
+                        *v as c_float);
+                }
+            },
+            None => {}
+        }
     }
 }
 

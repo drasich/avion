@@ -2,11 +2,13 @@ use std::any::{Any, AnyRefExt};
 use sync::{RWLock, Arc};
 use std::cell::RefCell;
 use std::rc::Weak;
+use std::fmt;
 
 use object;
 use property;
 use property::ChrisProperty;
 use ui;
+use ui::WidgetUpdate;
 
 pub struct Operation
 {
@@ -80,9 +82,10 @@ pub struct OperationManager
     //pub onUndo : Option<fn test
     //pub closure: Option<|&str,Any+Clone|:'static -> ()>,
     //pub closure: Option<|&str|:'static>,
-    //pub closure: Option<|&str, &AnyClone|:'static>
+    //pub closure: Option<|&str|:'a>
+    //pub closure: Option<|&str, &Any|:'a>
     //pub closure: Option<|&str|:'static>
-    pub master : Option<Weak<RefCell<ui::Master>>>,
+    //pub master : Option<Weak<RefCell<ui::Master>>>,
     //pub master : Option<&'a ui::Master<'a>>
 }
 
@@ -96,7 +99,7 @@ impl OperationManager
             undo : Vec::new(),
             redo : Vec::new(),
             //closure : None
-            master: None
+            //master: None
         }
     }
 
@@ -125,19 +128,27 @@ impl OperationManager
         op.undo();
 
         /*
-        match self.master.upgrade() {
-            Some(m) => { 
-                match m.try_borrow_mut() {
-                    Some(ref mut mm) => {
-                        mm.update_changed(op.name, *op.new);
+        match self.master {
+            Some(ref masterr) => {
+                match masterr.upgrade() {
+                    Some(m) => { 
+                        match m.try_borrow_mut() {
+                            Some(ref mut mm) => {
+                                let s = join_string(&op.name);
+                                mm.update_changed(s.as_slice(), &*op.new);
+                                //mm.update_changed(s.as_slice(), &1f32);
+                            },
+                            _ => { println!("already borrowed : operation undo")}
+                        }
                     },
-                    _ => { println!("already borrowed : operation undo")}
+                    None => { println!("the master of the operation doesn't exist anymore");}
                 }
             },
-            None => { println!("the master of the operation doesn't exist anymore");}
+            None => {
+                println!("no master !!!!!!!!");
+            }
         }
         */
-        
     }
 
     pub fn redo(&mut self)
@@ -149,4 +160,19 @@ impl OperationManager
 
         op.apply();
     }
+}
+
+fn join_string(path : &Vec<String>) -> String
+{
+    let mut s = String::new();
+    let mut first = true;
+    for v in path.iter() {
+        if !first {
+            s.push('/');
+        }
+        s.push_str(v.as_slice());
+        first = false;
+    }
+
+    s
 }
