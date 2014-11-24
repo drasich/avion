@@ -26,15 +26,11 @@ use operation;
 use camera;
 use property;
 
-//use tree;
-//pub use Tree;
-
 #[repr(C)]
 pub struct Window;
 
 #[link(name = "joker")]
 extern {
-    //fn simple_window_init();
     pub fn elm_simple_window_main();
     fn window_new() -> *const Window;
     fn window_button_new(window : *const Window);
@@ -105,15 +101,11 @@ pub struct Master
     //windows : DList<Window>
     pub window : Option<*const Window>,
     pub tree : Option<Box<Tree>>,
-    //pub property : Option<*const JkProperty>,
     pub property : Option<Rc<RefCell<Box<Property>>>>,
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
     pub factory : factory::Factory,
     pub render : render::Render,
     pub state : MasterState,
-    //pub objects : DList<Arc<RWLock<object::Object>>>,
-    //pub operation_mgr : Option<operation::OperationManager>,
-    //pub operation_mgr : Rc<RefCell<operation::OperationManager>>,
     pub control : Option<Rc<RefCell<Control>>>,
     //pub cont : PropertyContainer<'static>
 }
@@ -129,6 +121,16 @@ impl Master
         let render = render::Render::new(&mut factory, context.clone());
         //let op_mgr = operation::OperationManager::new();
 
+        let control = Rc::new(RefCell::new(
+                Control::new(
+                    render.camera.clone(),
+                    context
+                    )
+                )
+            );
+
+        control.borrow_mut().context.borrow_mut().scene = Some(render.scene.clone());
+
         let mut m = Master {
             window : None,
             tree : None,
@@ -137,27 +139,11 @@ impl Master
             factory : factory,
             render : render,
             state : Idle,
-            //objects : DList::new(),
-            //operation_mgr : Rc::new(RefCell::new(op_mgr)),//None,//op_mgr,
-            control : None, //Rc::new(RefCell::new(Control::new(render.camera.clone()))),
+            control : Some(control),
             //cont : PropertyContainer::new()
         };
 
         m.scene = Some(m.render.scene.clone());
-
-        let control = Rc::new(RefCell::new(
-                Control::new(
-                    m.render.camera.clone(),
-                    context
-                    )
-                )
-            );
-        control.borrow_mut().context.borrow_mut().scene = Some(m.render.scene.clone());
-        m.control = Some(control);
-
-
-        //m.operation_mgr.closure = Some( |name, new| { m.test2(name, new); });
-        //m.operation_mgr.closure = Some( |name| { println!("yep : {}",name); });
 
         m
     }
@@ -165,181 +151,9 @@ impl Master
     pub fn new() -> Rc<RefCell<Master>>
     {
         let mut m = Master::_new();
-        let yep = |name : &str, new : &Any| {
-            println!("yep : {}",name);
-            //m.test(name, new);
-        };
-        //op_mgr.closure = Some( |name| { println!("yep : {}",name); });
-        //m.operation_mgr.closure = Some(yep);
-
         let mrc = Rc::new(RefCell::new(m));
-
-        //let mut op_mgr = operation::OperationManager::new();
-
-        //hm.operation_mgr.closure = Some( |name, new| { m.test2(name, new); });
-        let yep = |name : &str, new : &Any| {
-            println!("yep : {}",name);
-            //mrc.borrow_mut().test(name, new);
-        };
-        //op_mgr.closure = Some( |name| { println!("yep : {}",name); });
-        //op_mgr.closure = Some(yep);
-
-        /*
-        op_mgr.master = Some(mrc.clone().downgrade());
-
-        match op_mgr.master {
-            Some(_) =>
-            {
-                println!("I set the master !!!!!!!!!");
-            },
-            None => {
-                println!("it is none???????");
-            }
-        }
-        */
-
-        //m.operation_mgr = Some(op_mgr);
-        //mrc.borrow_mut().operation_mgr = Some(op_mgr);
-
         mrc
     }
-
-    fn test(
-        &mut self,
-        name : &str,
-        new : &Any){
-         self.update_changed(name, new);
-    }
-
-    /*
-    pub fn mouse_up(
-            &mut self, 
-            button : i32,
-            x : i32, 
-            y : i32,
-            timestamp : i32)
-    {
-        let mut m = self;
-        match m.tree {
-            Some(ref yep) => {},
-            _ => {}
-        }
-
-        match m.state {
-            CameraRotation => {
-                m.state = Idle;
-                return;
-            },
-            _ => {}
-        }
-
-        //println!("rust mouse up button {}, pos: {}, {}", button, x, y);
-        let r = m.render.camera.borrow().ray_from_screen(x as f64, y as f64, 10000f64);
-        //TODO
-        match m.render.line.write().mesh_render {
-            Some (ref mr) => {
-                match mr.mesh.resource {
-                    resource::ResData(ref mesh) => {
-                        mesh.write().add_line(
-                            geometry::Segment::new(r.start, r.start + r.direction),
-                            vec::Vec4::zero()); },
-                            _ => {}
-                }
-            },
-            None => {}
-        }
-
-        m.render.objects_selected.clear();
-
-        for o in m.render.scene.read().objects.iter() {
-            let ir = intersection::ray_object(&r, &*o.read());
-            if ir.hit {
-                println!(" I hit object {} ", o.read().name);
-                m.render.objects_selected.push(o.clone());
-            }
-        }
-
-        if m.render.objects_selected.len() == 1 {
-            //TODO select tree
-            match (m.render.objects_selected.front()) {
-                Some(o) => {
-                    match m.property {
-                        Some(ref mut pp) => 
-                            match pp.try_borrow_mut() {
-                                Some(ref mut p) => 
-                                    unsafe {
-                                        //property_data_set(p, mem::transmute(box o.clone()));
-                                        p.data_set(mem::transmute(box o.clone()));
-                                        p.set_object(&*o.read());
-                                        //TODO chris
-                                    },
-                                None => {}
-                            },
-                        None => {}
-                    };
-
-                    match m.tree {
-                        Some(ref mut t) => {
-                            t.select(&o.read().id);
-                        }
-                        _ => {}
-                    }
-                },
-                _ => {},
-            }
-        }
-    }
-*/
-
-    /*
-    pub fn select(&mut self, id : &Uuid)
-    {
-        println!(".................select is called : {} ", id);
-        self.render.objects_selected.clear();
-
-        for o in self.render.scene.read().objects.iter() {
-            if o.read().id == *id {
-                self.render.objects_selected.push(o.clone());
-                match self.property {
-                    Some(ref mut pp) =>
-                        match pp.try_borrow_mut() {
-                            Some(ref mut p) => {
-                                //p.data_set(unsafe {mem::transmute(box o.clone())});
-                                p.set_object(&*o.read());
-                            },
-                            None=> {}
-                        },
-                    None => {}
-                }
-                break;
-            }
-        }
-
-    }
-    */
-
-    /*
-    pub fn operation_add(&mut self, op : operation::Operation )
-    {
-        match self.operation_mgr {
-            Some(ref mut opmgr) =>
-                opmgr.add(op),
-                None => {}
-        };
-    }
-
-    pub fn undo(&mut self)
-    {
-        match self.operation_mgr {
-            Some(ref mut opmgr) =>
-                opmgr.undo(),
-                None => {
-                    println!("no operation manager.............");
-                }
-        };
-
-    }
-    */
 }
 
 pub extern fn init_cb(data: *mut c_void) -> () {
@@ -355,8 +169,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     unsafe {
         window_callback_set(
             w,
-            //mem::transmute(box master_rc.clone()), //ptr::null(),//TODO
-            mem::transmute(box control.clone()), //ptr::null(),//TODO
+            mem::transmute(box control.clone()),
             mouse_down,
             mouse_up,
             mouse_move,
@@ -371,23 +184,12 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         w,
         master_rc.clone().downgrade(),
         control.clone())));
-    //let mut t = ui::Tree::new(w, master_rc.clone().downgrade());
+
     let mut t = ui::Tree::new(w, control.clone());
 
     match (*master).scene {
         Some(ref s) => {
             t.set_scene(&*s.read());
-            /*
-               let oo = s.read().object_find("yepyoyo");
-               match oo {
-               Some(o) => { 
-            //property_data_set(p, mem::transmute(box o.clone()));
-            p.data_set(mem::transmute(box o.clone()));
-            p.set_object(&*o.read());
-            }
-            None => {}
-            };
-                */
         },
         None => {}
     };
@@ -420,11 +222,9 @@ fn _rotate_camera(control : &mut Control, x : f64, y : f64)
   let mut camera = control.camera.borrow_mut();
   let cori = camera.object.read().orientation;
 
-
   let result = {
   let cam = &mut camera.data;
 
-  //if vec::Vec3::up().dot(&c.orientation.rotate_vec3(&vec::Vec3::up())) <0f64 {
   if vec::Vec3::up().dot(&cori.rotate_vec3(&vec::Vec3::up())) <0f64 {
       cam.yaw = cam.yaw + 0.005*x;
   }
@@ -474,76 +274,10 @@ pub extern fn mouse_up(
     )
 {
     println!("extern fn mouse up");
-    //let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
     let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
 
-    //let mut m = master_rc.borrow_mut();
     let mut c = control_rc.borrow_mut();
     c.mouse_up(button,x,y,timestamp);
-
-    /*
-    match m.tree {
-        Some(ref yep) => {},
-        _ => {}
-    }
-
-    match m.state {
-        CameraRotation => {
-            m.state = Idle;
-            return;
-        },
-        _ => {}
-    }
-
-    //println!("rust mouse up button {}, pos: {}, {}", button, x, y);
-    let r = m.render.camera.borrow().ray_from_screen(x as f64, y as f64, 10000f64);
-    //TODO
-    match m.render.line.write().mesh_render {
-        Some (ref mr) => {
-            match mr.mesh.resource {
-                resource::ResData(ref mesh) => {
-                    mesh.write().add_line(
-                        geometry::Segment::new(r.start, r.start + r.direction),
-                        vec::Vec4::zero()); },
-                _ => {}
-            }
-        },
-        None => {}
-    }
-
-    m.render.objects_selected.clear();
-
-    for o in m.render.scene.read().objects.iter() {
-        let ir = intersection::ray_object(&r, &*o.read());
-        if ir.hit {
-            println!(" I hit object {} ", o.read().name);
-            m.render.objects_selected.push(o.clone());
-        }
-    }
-
-    if m.render.objects_selected.len() == 1 {
-        //TODO select tree
-        match (m.render.objects_selected.front(), m.property) {
-            (Some(o), Some(p)) => unsafe {
-                property_data_set(p, mem::transmute(box o.clone()));
-            },
-            _ => {},
-        }
-
-        match m.render.objects_selected.front() {
-            Some(o) => {
-                match m.tree {
-                    Some(ref t) => {
-                        t.select(&o.read().name);
-                    }
-                    _ => {}
-                }
-            },
-            _ => {}
-        }
-    }
-    */
-
 }
 
 pub extern fn mouse_move(
@@ -560,9 +294,6 @@ pub extern fn mouse_move(
     if button == 0 {
         return;
     }
-    //println!("rust mouse move");
-    //let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
-    //let mut m = master_rc.borrow_mut();
 
     let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let mut c = control_rc.borrow_mut();
@@ -593,8 +324,6 @@ pub extern fn key_down(
     timestamp : c_int
     )
 {
-    //let m : &mut Master = unsafe {mem::transmute(data)};
-    //let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
     let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let mut c = control_rc.borrow_mut();
 
@@ -613,7 +342,6 @@ pub extern fn key_down(
         "f" => t.x = 50f64,
         "s" => t.x = -50f64,
         "z" => {
-            //TODO now
             c.undo();
         },
         _ => {}
@@ -713,7 +441,6 @@ pub struct Context
 
 impl Context
 {
-    //pub fn new(scene : Arc<RWLock<scene::Scene>>) -> Context
     pub fn new() -> Context
     {
         Context {
@@ -756,8 +483,6 @@ impl Control
             _ => {}
         }
 
-        println!("control fn mouse up 00");
-
         //println!("rust mouse up button {}, pos: {}, {}", button, x, y);
         let r = match self.camera.try_borrow(){
             Some(c) => {
@@ -765,8 +490,6 @@ impl Control
             },
             None => { println!("cannot borrow camera"); return; }
         };
-
-        println!("control fn mouse up 10");
 
         //TODO
         /*
@@ -796,8 +519,6 @@ impl Control
             None => return
         };
 
-        println!("control fn mouse up 50");
-
         for o in scene.read().objects.iter() {
             let ir = intersection::ray_object(&r, &*o.read());
             if ir.hit {
@@ -820,7 +541,7 @@ impl Control
                             };
                         },
                         None => {
-                            println!("control fn mouse up 100");
+                            println!("control no property");
                         }
                     }
 
@@ -834,7 +555,7 @@ impl Control
                             }
                         },
                         None => {
-                            println!("control fn mouse up 200");
+                            println!("control no tree");
                         }
                     }
                 },
@@ -883,7 +604,6 @@ impl Control
         old : Box<Any>,
         new : Box<Any>)
     {
-        println!("request operation : {}", name);
         let mut c = match self.context.try_borrow_mut(){
             Some(con) => con,
             None => { println!("cannot borrow context"); return; }
@@ -897,16 +617,11 @@ impl Control
             }
         };
 
-        //let mut name = name;//.clone();
-        //name.insert(0, "object".to_string());
-
-        println!("after request operation : {}", name);
-
         let op = operation::Operation::new(
             o.clone(), 
-            name,//path.to_string(),  
-            old,//data, //o.write().cget_property_hier(vs),
-            new); //data);
+            name,
+            old,
+            new); 
 
         op.apply();
 
@@ -1001,29 +716,6 @@ impl Control
                 },
                 None => {}
         };
-
-        /*
-        match self.master {
-            Some(ref masterr) => {
-                match masterr.upgrade() {
-                    Some(m) => { 
-                        match m.try_borrow_mut() {
-                            Some(ref mut mm) => {
-                                let s = join_string(&op.name);
-                                mm.update_changed(s.as_slice(), &*op.new);
-                                //mm.update_changed(s.as_slice(), &1f32);
-                            },
-                            _ => { println!("already borrowed : operation undo")}
-                        }
-                    },
-                    None => { println!("the master of the operation doesn't exist anymore");}
-                }
-            },
-            None => {
-                println!("no master !!!!!!!!");
-            }
-        }
-        */
     }
 }
 
