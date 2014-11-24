@@ -625,6 +625,8 @@ impl Control
 
         op.apply();
 
+        //TODO update the widget that has this object/property
+
         self.op_mgr.add(op);
     }
 
@@ -647,6 +649,8 @@ impl Control
         };
 
         let vs = name.tail().to_vec();
+
+        //TODO update the widget that has this object/property
 
         o.write().cset_property_hier(vs, new);
     }

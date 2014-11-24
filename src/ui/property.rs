@@ -201,26 +201,6 @@ impl Property
         self.create_entries(o, v);//Vec::new());
     }
 
-    //TODO remove
-    /*
-    fn find_property(p : &ChrisProperty, path : Vec<String>) -> 
-        Option<Box<ChrisProperty>>
-    {
-        match p.cget_property_hier(path) {
-            property::ChrisNone => {return None;},
-            property::BoxChrisProperty(bp) => 
-            {
-                return Some(bp);
-            },
-            _ => {
-                println!("find prop, must be box any...");
-            }
-        }
-
-        return None;
-    }
-    */
-
     pub fn create_entries(
         &mut self,
         o : &ChrisProperty,
@@ -461,59 +441,30 @@ fn changed_set<T : Any+Clone>(
 
     let p : & Property = unsafe {mem::transmute(property)};
 
+    let mut control = match p.control.try_borrow_mut() {
+        Some(c) => c,
+        None => { println!("cannot borrow control"); return; }
+    };
+
+    match (old, action) {
+        (Some(oldd), 1) => {
+            control.request_operation(
+                vs,
+                box oldd.clone(),
+                box new.clone());
+            println!(".....adding operation!!");
+        },
+        _ => {
+            control.request_direct_change(vs, new);
+        }
+    };
+
+    //TODO remove and put in control
+    // add widget origin uuid in request_operation and request_direct_change
     match p.master.upgrade() {
         Some(m) => { 
             match m.try_borrow_mut() {
                 Some(ref mut mm) => {
-                    //TODO remove and put the next todo in control
-                    /*
-                    let o = match mm.render.objects_selected.front() {
-                        Some(o) => o.clone(),
-                        None => {
-                            println!("no objetcs selected");
-                            return;
-                        }
-                    };
-                    */
-
-                    /*
-                    let old = match o.read().cget_property_hier(vs.clone()){
-                        property::ChrisValue::BoxAny(yep) => yep,
-                        _ => return
-                    };
-                    */
-
-                    let mut control = match p.control.try_borrow_mut() {
-                        Some(c) => c,
-                        None => { println!("cannot borrow control"); return; }
-                    };
-
-                    match (old, action) {
-                        (Some(oldd), 1) => {
-                            /*
-                            let op = operation::Operation::new(
-                                o.clone(), 
-                                vs,//path.to_string(),  
-                                box oldd.clone(),//data, //o.write().cget_property_hier(vs),
-                                box new.clone()); //data);
-
-                            op.apply();
-                            */
-                            //p.control.borrow_mut().op_mgr.add(op);
-                            control.request_operation(
-                                vs,
-                                box oldd.clone(),
-                                box new.clone());
-                            println!(".....adding operation!!");
-                        },
-                        _ => {
-                            //TODO put in control
-                            //o.write().cset_property_hier(vs, new);
-                            control.request_direct_change(vs, new);
-                            println!("changing data");
-                        }
-                    }
-
                     match mm.tree {
                         Some(ref t) => { 
                             t.update();
@@ -571,38 +522,6 @@ extern fn expand(
         },
         None => return
     };
-
-
-    /*
-    match p.master.upgrade() {
-        Some(m) => { 
-            match m.try_borrow() {
-                Some(ref mm) => {
-                    match mm.render.objects_selected.front() {
-                        Some(o) => {
-                            //TODO
-                            //match Property::find_property(&*o.read(), vs.clone()) {
-                            match Property::find_property(&*o.read(), yep.clone()) {
-                                Some(ppp) => {
-                                    //p.create_entries(&*o.read(), vs);
-                                    p.create_entries(&*ppp, vs.clone());
-                                },
-                                None => {
-                                    println!("could not find property {} ", vs);
-                                }
-                            }
-                        },
-                        None => {
-                            println!("no objetcs selected");
-                        }
-                    }
-                },
-                _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
-            }
-        },
-        None => { println!("the master of the property doesn't exist anymore");}
-    }
-    */
 }
 
 impl ui::WidgetUpdate for Property
@@ -615,15 +534,12 @@ impl ui::WidgetUpdate for Property
         println!("property update changed {}", name);
 
         let pv = match self.pv.find(&name.to_string()) {
-        //let pv = match self.pv.find(&yep.to_string()) {
             Some(p) => p,
             None => {
                 println!("widget update, could not find {}", name);
                 return;
             }
         };
-
-        println!("find {}", name);
 
         match new.downcast_ref::<f64>() {
             Some(v) => {

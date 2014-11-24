@@ -326,7 +326,6 @@ pub struct Render
     pub fbo_all : Arc<RWLock<fbo::Fbo>>,
     pub fbo_selected : Arc<RWLock<fbo::Fbo>>,
 
-    //pub objects_selected : DList<Arc<RWLock<object::Object>>>,
     pub quad_outline : Arc<RWLock<object::Object>>,
     pub line : Arc<RWLock<object::Object>>,
 
@@ -372,7 +371,6 @@ impl Render {
             line : Arc::new(RWLock::new(factory.create_object("line"))),
             fbo_all : fbo_all,
             fbo_selected : fbo_selected,
-            //objects_selected : DList::new(),
             //quad_outline : Arc::new(RWLock::new(object::Object::new("quad_outline")))
             quad_outline : Arc::new(RWLock::new(factory.create_object("quad_outline"))),
 

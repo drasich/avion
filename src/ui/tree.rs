@@ -55,7 +55,6 @@ pub struct Tree
     //objects : HashMap<String, *const Elm_Object_Item>,
     objects : HashMap<Uuid, *const Elm_Object_Item>,
     jk_tree : *const JkTree,
-    //master : Weak<RefCell<ui::Master>>,
     control : Rc<RefCell<ui::Control>>,
     dont_forward_signal : bool
 }
@@ -225,17 +224,11 @@ extern fn selected(
         return;
     }
 
-    //match t.master.upgrade() {
-    //    Some(m) => { 
-            match t.control.try_borrow_mut() {
-                Some(ref mut c) => {
-                    c.select(&o.read().id);
-                },
-                _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
-            }
-        //},
-        //None => { println!("the master of the tree doesn't exist anymore");}
-    //}
-
+    match t.control.try_borrow_mut() {
+        Some(ref mut c) => {
+            c.select(&o.read().id);
+        },
+        _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
+    }
 }
 
