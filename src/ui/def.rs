@@ -603,12 +603,16 @@ impl Control
         }
     }
 
-    pub fn request_operation(
+    pub fn request_operation<T : Any+PartialEq>(
         &mut self,  
         name : Vec<String>,
-        old : Box<Any>,
-        new : Box<Any>)
+        old : Box<T>,
+        new : Box<T>)
     {
+        if *old == *new {
+            return;
+        }
+
         let mut c = match self.context.try_borrow_mut(){
             Some(con) => con,
             None => { println!("cannot borrow context"); return; }

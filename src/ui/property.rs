@@ -412,7 +412,7 @@ pub extern fn register_change_float(
 }
 
 //fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
-fn changed_set<T : Any+Clone>(
+fn changed_set<T : Any+Clone+PartialEq>(
     property : *const c_void,
     name : *const c_char,
     old : Option<&T>,
@@ -547,12 +547,29 @@ impl ui::WidgetUpdate for Property
                     property_list_float_update(
                         *pv,
                         *v as c_float);
-                }
+                };
+                return;
             },
             None => {
                 println!("cannot downcast to f64");
             }
         }
+
+        match new.downcast_ref::<String>() {
+            Some(s) => {
+                let v = s.to_c_str();
+                unsafe {
+                    property_list_string_update(
+                        *pv,
+                        v.unwrap());
+                };
+                return;
+            },
+            None => {
+                println!("cannot downcast to string");
+            }
+        }
+
     }
 }
 
