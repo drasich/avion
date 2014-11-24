@@ -6,6 +6,7 @@ use std::c_str::CString;
 //use std::collections::{DList,Deque};
 use std::collections::{DList};
 use std::ptr;
+use std::rc::Rc;
 use std::cell::RefCell;
 use std::rc::Weak;
 use std::any::{Any, AnyRefExt};
@@ -151,20 +152,24 @@ pub struct Property
     pub name : String,
     jk_property_list : *const JkPropertyList,
     master : Weak<RefCell<ui::Master>>,
-    pv : HashMap<String, *const PropertyValue>
+    pv : HashMap<String, *const PropertyValue>,
+    control : Rc<RefCell<ui::Control>>
 }
 
 impl Property
 {
     pub fn new(
         window : *const Window,
-        master : Weak<RefCell<ui::Master>>) -> Box<Property>
+        master : Weak<RefCell<ui::Master>>,
+        control : Rc<RefCell<ui::Control>>
+        ) -> Box<Property>
     {
         let p = box Property {
             name : String::from_str("property_name"),
             jk_property_list : unsafe {jk_property_list_new(window)},
             master : master,
-            pv : HashMap::new()
+            pv : HashMap::new(),
+            control : control
         };
 
         unsafe {
@@ -196,6 +201,8 @@ impl Property
         self.create_entries(o, v);//Vec::new());
     }
 
+    //TODO remove
+    /*
     fn find_property(p : &ChrisProperty, path : Vec<String>) -> 
         Option<Box<ChrisProperty>>
     {
@@ -212,12 +219,13 @@ impl Property
 
         return None;
     }
+    */
 
-    fn create_entries(
-            &mut self,
-            o : &ChrisProperty,
-            path : Vec<String>)
-        {
+    pub fn create_entries(
+        &mut self,
+        o : &ChrisProperty,
+        path : Vec<String>)
+    {
         self.pv.clear();
 
         fn get_node_path(path : &Vec<String>) -> String
@@ -277,6 +285,7 @@ impl Property
                                     &path,
                                     field.as_slice());
                                 let f = field.to_c_str();
+                                println!("field : {}", field);
                                 unsafe {
                                     let pv = property_list_float_add(
                                         self.jk_property_list,
@@ -448,8 +457,7 @@ fn changed_set<T : Any+Clone>(
         vs.push(i.to_string());
     }
 
-    let vs = vs.tail().to_vec();
-
+    //let vs = vs.tail().to_vec();
 
     let p : & Property = unsafe {mem::transmute(property)};
 
@@ -457,7 +465,8 @@ fn changed_set<T : Any+Clone>(
         Some(m) => { 
             match m.try_borrow_mut() {
                 Some(ref mut mm) => {
-                    //TODO add operation
+                    //TODO remove and put the next todo in control
+                    /*
                     let o = match mm.render.objects_selected.front() {
                         Some(o) => o.clone(),
                         None => {
@@ -465,6 +474,7 @@ fn changed_set<T : Any+Clone>(
                             return;
                         }
                     };
+                    */
 
                     /*
                     let old = match o.read().cget_property_hier(vs.clone()){
@@ -473,8 +483,14 @@ fn changed_set<T : Any+Clone>(
                     };
                     */
 
+                    let mut control = match p.control.try_borrow_mut() {
+                        Some(c) => c,
+                        None => { println!("cannot borrow control"); return; }
+                    };
+
                     match (old, action) {
                         (Some(oldd), 1) => {
+                            /*
                             let op = operation::Operation::new(
                                 o.clone(), 
                                 vs,//path.to_string(),  
@@ -482,11 +498,18 @@ fn changed_set<T : Any+Clone>(
                                 box new.clone()); //data);
 
                             op.apply();
-                            mm.operation_mgr.add(op);
-                            println!("adding operation!!");
+                            */
+                            //p.control.borrow_mut().op_mgr.add(op);
+                            control.request_operation(
+                                vs,
+                                box oldd.clone(),
+                                box new.clone());
+                            println!(".....adding operation!!");
                         },
                         _ => {
-                            o.write().cset_property_hier(vs, new);
+                            //TODO put in control
+                            //o.write().cset_property_hier(vs, new);
+                            control.request_direct_change(vs, new);
                             println!("changing data");
                         }
                     }
@@ -537,8 +560,20 @@ extern fn expand(
         println!("pushing {}", i);
     }
 
-    let yep = vs.tail().to_vec();
+    //let yep = vs.tail().to_vec();
+    println!("expand : {}", vs);
 
+    match p.control.clone().try_borrow() {
+        Some(c) => {
+            c.request_display_property(
+                p,
+                vs);
+        },
+        None => return
+    };
+
+
+    /*
     match p.master.upgrade() {
         Some(m) => { 
             match m.try_borrow() {
@@ -567,6 +602,7 @@ extern fn expand(
         },
         None => { println!("the master of the property doesn't exist anymore");}
     }
+    */
 }
 
 impl ui::WidgetUpdate for Property
@@ -576,10 +612,13 @@ impl ui::WidgetUpdate for Property
         name : &str,
         new : &Any)
     {
+        println!("property update changed {}", name);
+
         let pv = match self.pv.find(&name.to_string()) {
+        //let pv = match self.pv.find(&yep.to_string()) {
             Some(p) => p,
             None => {
-                println!("could not find {}", name);
+                println!("widget update, could not find {}", name);
                 return;
             }
         };
@@ -594,7 +633,9 @@ impl ui::WidgetUpdate for Property
                         *v as c_float);
                 }
             },
-            None => {}
+            None => {
+                println!("cannot downcast to f64");
+            }
         }
     }
 }

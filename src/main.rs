@@ -175,7 +175,9 @@ name = "image/base_skeleton_col.png"
             //&m.render);
             &m.borrow().render);
 
-        ui::init_callback_set(ui::init_cb, mem::transmute(box m.clone()));
+        ui::init_callback_set(
+            ui::init_cb,
+            mem::transmute(box m.clone()));
     }
 
     unsafe { 

@@ -20,6 +20,7 @@ use mesh_render;
 use fbo;
 use vec;
 use factory;
+use ui; //TODO remove
 
 use mesh::BufferSend;
 
@@ -325,14 +326,18 @@ pub struct Render
     pub fbo_all : Arc<RWLock<fbo::Fbo>>,
     pub fbo_selected : Arc<RWLock<fbo::Fbo>>,
 
-    pub objects_selected : DList<Arc<RWLock<object::Object>>>,
+    //pub objects_selected : DList<Arc<RWLock<object::Object>>>,
     pub quad_outline : Arc<RWLock<object::Object>>,
     pub line : Arc<RWLock<object::Object>>,
+
+    pub context : Rc<RefCell<ui::Context>>
 }
 
 impl Render {
 
-    pub fn new(factory: &mut factory::Factory) -> Render
+    pub fn new(factory: &mut factory::Factory,
+               context: Rc<RefCell<ui::Context>>
+               ) -> Render
     {
         let scene_path = "scene/simple.scene";
 
@@ -367,9 +372,11 @@ impl Render {
             line : Arc::new(RWLock::new(factory.create_object("line"))),
             fbo_all : fbo_all,
             fbo_selected : fbo_selected,
-            objects_selected : DList::new(),
+            //objects_selected : DList::new(),
             //quad_outline : Arc::new(RWLock::new(object::Object::new("quad_outline")))
-            quad_outline : Arc::new(RWLock::new(factory.create_object("quad_outline")))
+            quad_outline : Arc::new(RWLock::new(factory.create_object("quad_outline"))),
+
+            context : context
         };
 
         {
@@ -544,7 +551,12 @@ impl Render {
             p.objects.clear();
         }
 
-        let objects = &self.objects_selected;
+        let context = match self.context.try_borrow() {
+            Some(c) => c,
+            None => {println!("cannot borrow context"); return;}
+        };
+        let objects = &context.selected;
+
         for o in objects.iter() {
             prepare_passes_object(
                 o.clone(),

@@ -606,3 +606,21 @@ chris_property_impl!(object::Object,
                      |orientation,vec::Quat,PlainStruct
                      |scale,vec::Vec3,PlainStruct
                      ])
+
+pub fn find_property(p : &ChrisProperty, path : Vec<String>) -> 
+Option<Box<ChrisProperty>>
+{
+    match p.cget_property_hier(path) {
+        ChrisNone => {return None;},
+        BoxChrisProperty(bp) => 
+        {
+            return Some(bp);
+        },
+        _ => {
+            println!("problem with find property : must be box any...");
+        }
+    }
+
+    return None;
+}
+

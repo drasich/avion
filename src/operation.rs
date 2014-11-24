@@ -13,9 +13,9 @@ use ui::WidgetUpdate;
 pub struct Operation
 {
     object : Arc<RWLock<object::Object>>,
-    name : Vec<String>,
-    old : Box<Any>,
-    new : Box<Any>,
+    pub name : Vec<String>,
+    pub old : Box<Any>,
+    pub new : Box<Any>,
 }
 
 impl Operation
@@ -67,7 +67,11 @@ impl Operation
             None => {}
         };
         let o = &self.object;
-        o.write().cset_property_hier(self.name.clone(), &*self.old);
+
+        let vs = self.name.tail().to_vec();
+
+        //o.write().cset_property_hier(self.name.clone(), &*self.old);
+        o.write().cset_property_hier(vs, &*self.old);
     }
 }
 
@@ -118,6 +122,11 @@ impl OperationManager
         self.undo.push(op);
     }
 
+    pub fn pop_undo(&mut self) -> Option<Operation>
+    {
+        self.undo.pop()
+    }
+
     pub fn undo(&mut self)
     {
         let op = match self.undo.pop() {
@@ -162,6 +171,7 @@ impl OperationManager
     }
 }
 
+/*
 fn join_string(path : &Vec<String>) -> String
 {
     let mut s = String::new();
@@ -176,3 +186,5 @@ fn join_string(path : &Vec<String>) -> String
 
     s
 }
+*/
+

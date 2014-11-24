@@ -7,6 +7,7 @@ use std::c_str::CString;
 use std::ptr;
 use std::cell::RefCell;
 use std::rc::Weak;
+use std::rc::Rc;
 use uuid::Uuid;
 
 use scene;
@@ -54,7 +55,8 @@ pub struct Tree
     //objects : HashMap<String, *const Elm_Object_Item>,
     objects : HashMap<Uuid, *const Elm_Object_Item>,
     jk_tree : *const JkTree,
-    master : Weak<RefCell<ui::Master>>,
+    //master : Weak<RefCell<ui::Master>>,
+    control : Rc<RefCell<ui::Control>>,
     dont_forward_signal : bool
 }
 
@@ -62,13 +64,13 @@ impl Tree
 {
     pub fn new(
         window : *const Window,
-        master : Weak<RefCell<ui::Master>>) -> Box<Tree>
+        control : Rc<RefCell<ui::Control>>) -> Box<Tree>
     {
         let t = box Tree {
             name : String::from_str("tree_name"),
             objects : HashMap::new(),
             jk_tree : unsafe {window_tree_new(window)},
-            master : master,
+            control : control,
             dont_forward_signal : false
         };
 
@@ -223,17 +225,17 @@ extern fn selected(
         return;
     }
 
-    match t.master.upgrade() {
-        Some(m) => { 
-            match m.try_borrow_mut() {
-                Some(ref mut mm) => {
-                    mm.select(&o.read().id);
+    //match t.master.upgrade() {
+    //    Some(m) => { 
+            match t.control.try_borrow_mut() {
+                Some(ref mut c) => {
+                    c.select(&o.read().id);
                 },
                 _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
             }
-        },
-        None => { println!("the master of the tree doesn't exist anymore");}
-    }
+        //},
+        //None => { println!("the master of the tree doesn't exist anymore");}
+    //}
 
 }
 
