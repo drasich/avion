@@ -100,7 +100,8 @@ pub struct Master
 {
     //windows : DList<Window>
     pub window : Option<*const Window>,
-    pub tree : Option<Box<Tree>>,
+    //pub tree : Option<Box<Tree>>,
+    pub tree : Option<Rc<RefCell<Box<Tree>>>>,
     pub property : Option<Rc<RefCell<Box<Property>>>>,
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
     pub factory : factory::Factory,
@@ -181,22 +182,25 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     master.window = Some(w);
 
     let mut p = Rc::new(RefCell::new(ui::Property::new(
-        w,
-        master_rc.clone().downgrade(),
-        control.clone())));
+                w,
+                master_rc.clone().downgrade(),
+                control.clone())));
 
-    let mut t = ui::Tree::new(w, control.clone());
+    let mut t = Rc::new(RefCell::new(ui::Tree::new(
+                w,
+                control.clone())));
 
     match (*master).scene {
         Some(ref s) => {
-            t.set_scene(&*s.read());
+            t.borrow_mut().set_scene(&*s.read());
         },
         None => {}
     };
 
     match control.try_borrow_mut() {
         Some(ref mut c) => {
-            c.property = Some(p.clone())
+            c.property = Some(p.clone());
+            c.tree = Some(t.clone());
         },
         None => {}
     };
@@ -429,8 +433,9 @@ pub struct Control
 
     //TODO control listener
     //pub property : Option<Rc<RefCell<ui::Property>>>, //TODO change to weak
+    //pub tree : Option<Rc<RefCell<ui::Tree>>>, //TODO change to weak
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>, //TODO change to weak
-    pub tree : Option<Rc<RefCell<ui::Tree>>>, //TODO change to weak
+    pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO change to weak
 }
 
 pub struct Context

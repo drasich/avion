@@ -467,7 +467,7 @@ fn changed_set<T : Any+Clone>(
                 Some(ref mut mm) => {
                     match mm.tree {
                         Some(ref t) => { 
-                            t.update();
+                            t.borrow_mut().update();
                             println!("todo call this only when the name or object representation has changed...");
                             println!("... or do the object references in ui stuff /see todo file");
                         },
