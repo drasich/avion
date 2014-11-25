@@ -47,6 +47,8 @@ mod fbo;
 mod factory;
 mod operation;
 
+mod context;
+
 fn main() {
     /*
     let mut c = property::Chris::new();

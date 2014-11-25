@@ -20,7 +20,7 @@ use mesh_render;
 use fbo;
 use vec;
 use factory;
-use ui; //TODO remove
+use context;
 
 use mesh::BufferSend;
 
@@ -329,13 +329,13 @@ pub struct Render
     pub quad_outline : Arc<RWLock<object::Object>>,
     pub line : Arc<RWLock<object::Object>>,
 
-    pub context : Rc<RefCell<ui::Context>>
+    pub context : Rc<RefCell<context::Context>>
 }
 
 impl Render {
 
     pub fn new(factory: &mut factory::Factory,
-               context: Rc<RefCell<ui::Context>>
+               context: Rc<RefCell<context::Context>>
                ) -> Render
     {
         let scene_path = "scene/simple.scene";

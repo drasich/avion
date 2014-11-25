@@ -25,6 +25,7 @@ use factory;
 use operation;
 use camera;
 use property;
+use context;
 
 #[repr(C)]
 pub struct Window;
@@ -116,7 +117,7 @@ impl Master
     fn _new() -> Master
     {
         let mut factory = factory::Factory::new();
-        let context = Rc::new(RefCell::new(Context::new()));
+        let context = Rc::new(RefCell::new(context::Context::new()));
         //let scene = factory.create_scene("scene/test.scene");
         //scene.save();
         let render = render::Render::new(&mut factory, context.clone());
@@ -429,7 +430,7 @@ pub struct Control
     pub op_mgr : operation::OperationManager,
     pub camera : Rc<RefCell<camera::Camera>>,
     pub state : MasterState,
-    pub context : Rc<RefCell<Context>>,
+    pub context : Rc<RefCell<context::Context>>,
 
     //TODO control listener
     //pub property : Option<Rc<RefCell<ui::Property>>>, //TODO change to weak
@@ -438,28 +439,11 @@ pub struct Control
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO change to weak
 }
 
-pub struct Context
-{
-    pub selected : DList<Arc<RWLock<object::Object>>>,
-    pub scene : Option<Arc<RWLock<scene::Scene>>>,
-}
-
-impl Context
-{
-    pub fn new() -> Context
-    {
-        Context {
-            selected: DList::new(),
-            scene : None
-        }
-    }
-}
-
 impl Control
 {
     pub fn new(
         camera : Rc<RefCell<camera::Camera>>,
-        context : Rc<RefCell<Context>>,
+        context : Rc<RefCell<context::Context>>,
         ) -> Control
     {
         Control {
