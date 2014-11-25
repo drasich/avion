@@ -15,6 +15,7 @@ use object;
 use ui::Window;
 use ui::Master;
 use ui;
+use control::Control;
 
 #[repr(C)]
 pub struct Elm_Object_Item;
@@ -55,7 +56,7 @@ pub struct Tree
     //objects : HashMap<String, *const Elm_Object_Item>,
     objects : HashMap<Uuid, *const Elm_Object_Item>,
     jk_tree : *const JkTree,
-    control : Rc<RefCell<ui::Control>>,
+    control : Rc<RefCell<Control>>,
     dont_forward_signal : bool
 }
 
@@ -63,7 +64,7 @@ impl Tree
 {
     pub fn new(
         window : *const Window,
-        control : Rc<RefCell<ui::Control>>) -> Box<Tree>
+        control : Rc<RefCell<Control>>) -> Box<Tree>
     {
         let t = box Tree {
             name : String::from_str("tree_name"),

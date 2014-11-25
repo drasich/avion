@@ -20,6 +20,8 @@ use property;
 use property::TProperty;
 use property::ChrisProperty;
 use operation;
+use control::Control;
+use control::WidgetUpdate;
 
 #[repr(C)]
 pub struct Elm_Object_Item;
@@ -153,7 +155,7 @@ pub struct Property
     jk_property_list : *const JkPropertyList,
     master : Weak<RefCell<ui::Master>>,
     pv : HashMap<String, *const PropertyValue>,
-    control : Rc<RefCell<ui::Control>>
+    control : Rc<RefCell<Control>>
 }
 
 impl Property
@@ -161,7 +163,7 @@ impl Property
     pub fn new(
         window : *const Window,
         master : Weak<RefCell<ui::Master>>,
-        control : Rc<RefCell<ui::Control>>
+        control : Rc<RefCell<Control>>
         ) -> Box<Property>
     {
         let p = box Property {
@@ -524,7 +526,7 @@ extern fn expand(
     };
 }
 
-impl ui::WidgetUpdate for Property
+impl WidgetUpdate for Property
 {
     fn update_changed(
         &mut self,

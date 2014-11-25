@@ -8,7 +8,7 @@ use object;
 use property;
 use property::ChrisProperty;
 use ui;
-use ui::WidgetUpdate;
+use control::WidgetUpdate;
 
 pub struct Operation
 {
