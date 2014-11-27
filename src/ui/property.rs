@@ -192,6 +192,7 @@ impl Property
     pub fn set_object(&mut self, o : &object::Object)
     {
         unsafe { property_list_clear(self.jk_property_list); }
+        self.pv.clear();
 
         unsafe {
             property_list_group_add(
@@ -208,8 +209,6 @@ impl Property
         o : &ChrisProperty,
         path : Vec<String>)
     {
-        self.pv.clear();
-
         fn get_node_path(path : &Vec<String>) -> String
         {
             let mut s = String::new();

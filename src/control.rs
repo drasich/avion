@@ -298,18 +298,28 @@ impl Control
 
         op.undo();
 
-        match self.property {
-            Some(ref mut pp) =>
-                match pp.try_borrow_mut() {
-                    Some(ref mut p) => {
-                        let s = join_string(&op.name);
-                        println!("join string : {}", s);
-                        p.update_changed(s.as_slice(), &*op.old);
-                    },
-                    None=> {}
-                },
-                None => {}
-        };
+        match self.get_selected_object() {
+            Some(o) => {
+                if op.object.read().id == o.read().id  {
+                    match self.property {
+                        Some(ref mut pp) =>
+                            match pp.try_borrow_mut() {
+                                Some(ref mut p) => {
+                                    let s = join_string(&op.name);
+                                    println!("join string : {}", s);
+                                    p.update_changed(s.as_slice(), &*op.old);
+                                },
+                                None=> {}
+                            },
+                            None => {}
+                    };
+                }
+            },
+            None => {
+            }
+        }
+
+
     }
 }
 

@@ -12,7 +12,7 @@ use control::WidgetUpdate;
 
 pub struct Operation
 {
-    object : Arc<RWLock<object::Object>>,
+    pub object : Arc<RWLock<object::Object>>,
     pub name : Vec<String>,
     pub old : Box<Any>,
     pub new : Box<Any>,
