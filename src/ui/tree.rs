@@ -24,7 +24,7 @@ pub struct JkTree;
 
 #[link(name = "joker")]
 extern {
-    pub fn window_tree_new(window : *const Window) -> *const JkTree;
+    fn window_tree_new(window : *const Window) -> *const JkTree;
     fn tree_widget_new() -> *const JkTree;
     fn tree_register_cb(
         tree : *const JkTree,
@@ -42,7 +42,8 @@ extern {
         parent : *const Elm_Object_Item,
         ) -> *const Elm_Object_Item;
 
-    pub fn tree_item_select(item : *const Elm_Object_Item);
+    fn tree_item_select(item : *const Elm_Object_Item);
+    fn tree_item_update(item : *const Elm_Object_Item);
     fn tree_item_expand(item : *const Elm_Object_Item);
     fn tree_deselect_all(item : *const JkTree);
     fn tree_update(tree : *const JkTree);
@@ -148,6 +149,16 @@ impl Tree
     pub fn update(&self)
     {
         unsafe { tree_update(self.jk_tree); }
+    }
+
+    pub fn update_object(&mut self, id: &Uuid)
+    {
+        match self.objects.find(id) {
+            Some(item) => {
+                unsafe {tree_item_update(*item);}
+            }
+            _ => {}
+        }
     }
 }
 

@@ -298,6 +298,8 @@ impl Control
 
         op.undo();
 
+        let s = join_string(&op.name);
+
         match self.get_selected_object() {
             Some(o) => {
                 if op.object.read().id == o.read().id  {
@@ -305,7 +307,6 @@ impl Control
                         Some(ref mut pp) =>
                             match pp.try_borrow_mut() {
                                 Some(ref mut p) => {
-                                    let s = join_string(&op.name);
                                     println!("join string : {}", s);
                                     p.update_changed(s.as_slice(), &*op.old);
                                 },
@@ -317,6 +318,19 @@ impl Control
             },
             None => {
             }
+        }
+
+        if s.as_slice() == "object/name" {
+            match self.tree {
+                Some(ref mut tt) =>
+                    match tt.try_borrow_mut() {
+                        Some(ref mut t) => {
+                            t.update_object(&op.object.read().id);
+                        },
+                        None=> {}
+                    },
+                    None => {}
+            };
         }
 
 
