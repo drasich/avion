@@ -217,53 +217,6 @@ pub extern fn mouse_down(
     //println!("rust mouse down button {}, pos: {}, {}", button, x, y);
 }
 
-fn _rotate_camera(control : &mut Control, x : f64, y : f64)
-{
-  let mut camera = control.camera.borrow_mut();
-  let cori = camera.object.read().orientation;
-
-  let result = {
-  let cam = &mut camera.data;
-
-  if vec::Vec3::up().dot(&cori.rotate_vec3(&vec::Vec3::up())) <0f64 {
-      cam.yaw = cam.yaw + 0.005*x;
-  }
-  else {
-      cam.yaw = cam.yaw - 0.005*x;
-  }
-
-  cam.pitch -= 0.005*y;
-
-  //TODO angles
-  let qy = vec::Quat::new_axis_angle(vec::Vec3::up(), cam.yaw);
-  let qp = vec::Quat::new_axis_angle(vec::Vec3::right(), cam.pitch);
-  //TODO
-  qy * qp
-  };
-
-  let mut c = camera.object.write();
-  (*c).orientation = result;
-
-  control.state = control::CameraRotation;
-
-  //c.angles.x = cam.pitch/M_PI*180.0;
-  //(*c).angles.y = cam.yaw/consts::PI*180.0;
-
-  /*
-  Eina_List* objects = context_objects_get(v->context);
-
-  if (eina_list_count(objects) > 0) {
-    Vec3 objs_center = _objects_center(objects);
-    if (!vec3_equal(objs_center, cam->center)) {
-       cam->center = objs_center;
-      camera_recalculate_origin(v->camera);
-    }
-  }
-  */
-
-  //camera_rotate_around(v->camera, result, cam->center);
-}
-
 pub extern fn mouse_up(
     data : *const c_void,
     modifier : *const c_char,
@@ -273,9 +226,7 @@ pub extern fn mouse_up(
     timestamp : c_int
     )
 {
-    println!("extern fn mouse up");
     let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
-
     let mut c = control_rc.borrow_mut();
     c.mouse_up(button,x,y,timestamp);
 }
@@ -291,16 +242,9 @@ pub extern fn mouse_move(
     timestamp : c_int
     )
 {
-    if button == 0 {
-        return;
-    }
-
     let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let mut c = control_rc.borrow_mut();
-
-    let x : f64 = curx as f64 - prevx as f64;
-    let y : f64 = cury as f64 - prevy as f64;
-    _rotate_camera(&mut *c, x, y);
+    c.mouse_move(button, curx, cury, prevx, prevy, timestamp);
 }
 
 pub extern fn mouse_wheel(
