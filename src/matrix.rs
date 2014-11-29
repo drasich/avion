@@ -155,7 +155,7 @@ impl Matrix4
 
         let length2 = q.length2_get();
 
-        if length2.abs().is_zero() {
+        if length2.abs() == Float::zero() {
             let mut mat = Matrix4 { data : m};
             mat.identity_set();
             return mat;
