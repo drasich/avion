@@ -393,6 +393,22 @@ impl Control
         }
     }
 
+    pub fn mouse_wheel(
+        &self,
+        modifier : i32,
+        direction : i32,
+        z : i32, 
+        x : i32, 
+        y : i32,
+        timestamp : i32
+        )
+    {
+        let mut axis = vec::Vec3::new(0f64, 0f64, z as f64);
+        axis = axis * 1.5f64;
+        let mut camera = self.camera.borrow_mut();
+        camera.pan(&axis);
+    }
+
 }
 
 fn join_string(path : &Vec<String>) -> String

@@ -43,7 +43,7 @@ extern {
         data: *const c_void,
         mouse_down : extern fn(
             data : *const c_void,
-            modifier : *const c_char,
+            modifier : c_int,
             button : c_int,
             x : c_int, 
             y : c_int,
@@ -51,7 +51,7 @@ extern {
             ),
         mouse_up : extern fn(
             data : *const c_void,
-            modifier : *const c_char,
+            modifier : c_int,
             button : c_int,
             x : c_int, 
             y : c_int,
@@ -59,7 +59,6 @@ extern {
             ),
         mouse_move : extern fn(
             data : *const c_void,
-            //modifier : *const c_char,
             modifier : c_int,
             button : c_int,
             curx : c_int, 
@@ -70,7 +69,7 @@ extern {
             ),
         mouse_wheel : extern fn(
             data : *const c_void,
-            modifier : *const c_char,
+            modifier : c_int,
             direction : c_int,
             z : c_int, 
             x : c_int, 
@@ -79,7 +78,7 @@ extern {
             ),
         key_down : extern fn(
             data : *const c_void,
-            modifier : *const c_char,
+            modifier : c_int,
             keyname : *mut c_char,
             key : *const c_char,
             timestamp : c_int
@@ -208,7 +207,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 
 pub extern fn mouse_down(
     data : *const c_void,
-    modifier : *const c_char,
+    modifier : c_int,
     button : c_int,
     x : c_int, 
     y : c_int,
@@ -220,7 +219,7 @@ pub extern fn mouse_down(
 
 pub extern fn mouse_up(
     data : *const c_void,
-    modifier : *const c_char,
+    modifier : c_int,
     button : c_int,
     x : c_int, 
     y : c_int,
@@ -251,7 +250,7 @@ pub extern fn mouse_move(
 
 pub extern fn mouse_wheel(
     data : *const c_void,
-    modifier : *const c_char,
+    modifiers_flag: c_int,
     direction : c_int,
     z : c_int, 
     x : c_int, 
@@ -259,12 +258,14 @@ pub extern fn mouse_wheel(
     timestamp : c_int
     )
 {
-    println!("move wheel");
+    let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
+    let mut c = control_rc.borrow_mut();
+    c.mouse_wheel(modifiers_flag, direction, z, x, y, timestamp);
 }
 
 pub extern fn key_down(
     data : *const c_void,
-    modifier : *const c_char,
+    modifier : c_int,
     keyname : *mut c_char,
     key : *const c_char,
     timestamp : c_int
