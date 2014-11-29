@@ -35,6 +35,8 @@ pub struct CameraData
     origin : vec::Vec3,
     local_offset : vec::Vec3,
     center : vec::Vec3,
+
+    //pub euler : vec::Vec3
 }
 
 impl Default for CameraData
@@ -60,7 +62,9 @@ impl Default for CameraData
 
             clear_color : vec::Vec4::zero(),
 
-            projection : Perspective
+            projection : Perspective,
+
+            //euler : vec::Vec3::zero(),
         }
     }
 }
@@ -160,5 +164,34 @@ impl Camera
         self.data.fovy = self.data.fovy_base * self.data.height/ (self.data.height_base as f64);
         //mat4_set_perspective(c->projection, c->fovy, c->aspect , c->near, c->far);
     }
+
+    pub fn rotate_around_center(&self, q : &vec::Quat)
+    {
+        let o = &self.object;
+        let c = &self.data;
+
+        let def = q.rotate_vec3_around(&c.origin, &c.center);
+        let doff = q.rotate_vec3(&c.local_offset);
+        o.write().position = def + doff;
+    }
+
+    fn recalculate_origin(&mut self)
+    {
+        let o = &self.object.read();
+        let c = &mut self.data;
+
+        let offset = o.orientation.rotate_vec3(&c.local_offset);
+        let origin = o.position - offset;
+        let qi = o.orientation.inverse();
+        c.origin = qi.rotate_vec3_around(&origin, &c.center);
+    }
+
+    pub fn set_center(&mut self, c : &Vec3)
+    {
+        self.data.center = *c;
+        self.recalculate_origin();
+    }
+
+
 }
 

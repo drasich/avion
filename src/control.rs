@@ -2,6 +2,8 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::any::{Any,AnyRefExt};
 use sync::{RWLock, Arc};
+use std::collections::DList;
+use std::f64::consts;
 
 use uuid::Uuid;
 
@@ -329,7 +331,7 @@ impl Control
         let mut camera = self.camera.borrow_mut();
         let cori = camera.object.read().orientation;
 
-        let result = {
+        let (result, angle_x, angle_y) = {
             let cam = &mut camera.data;
 
             if vec::Vec3::up().dot(&cori.rotate_vec3(&vec::Vec3::up())) <0f64 {
@@ -345,17 +347,22 @@ impl Control
             let qy = vec::Quat::new_axis_angle(vec::Vec3::up(), cam.yaw);
             let qp = vec::Quat::new_axis_angle(vec::Vec3::right(), cam.pitch);
             //TODO
-            qy * qp
+            (
+                qy * qp,
+                cam.pitch/consts::PI*180f64,
+                cam.yaw/consts::PI*180f64,
+                )
         };
-
-        let mut c = camera.object.write();
-        (*c).orientation = result;
-
-        self.state = CameraRotation;
 
         //c.angles.x = cam.pitch/M_PI*180.0;
         //(*c).angles.y = cam.yaw/consts::PI*180.0;
 
+        let context = self.context.borrow();
+        if self.context.borrow().selected.len() > 0 {
+            let center = objects_center(&context.selected);
+            //println!("center : {}", center);
+            camera.set_center(&center);
+        }
         /*
            Eina_List* objects = context_objects_get(v->context);
 
@@ -368,7 +375,15 @@ impl Control
            }
            */
 
-        //camera_rotate_around(v->camera, result, cam->center);
+        camera.rotate_around_center(&result);
+
+        //let angle_x = cam.pitch/consts::PI*180.0;
+        //let angle_y = cam.yaw/consts::PI*180.0;
+
+        let mut c = camera.object.write();
+        (*c).orientation = vec::Quat::new_yaw_pitch_roll_deg(angle_y, angle_x, 0f64);
+        //self.state = CameraRotation;
+
     }
 
     pub fn mouse_move(
@@ -404,6 +419,19 @@ fn join_string(path : &Vec<String>) -> String
     }
 
     s
+}
+
+fn objects_center(objects : &DList<Arc<RWLock<object::Object>>>) -> vec::Vec3
+{
+    let mut v = vec::Vec3::zero();
+    for o in objects.iter()
+    {
+        v = v + o.read().position;
+    }
+
+    v = v / objects.len() as f64;
+
+    v
 }
 
 pub trait WidgetUpdate {

@@ -153,7 +153,7 @@ impl Matrix4
     {
         let mut m : [f64, ..16] = [0f64, ..16];
 
-        let length2 = q.length2_get();
+        let length2 = q.length2();
 
         if length2.abs() == Float::zero() {
             let mut mat = Matrix4 { data : m};

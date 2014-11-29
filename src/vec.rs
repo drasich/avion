@@ -1,6 +1,7 @@
 use std::fmt;
 use std::num::FloatMath;
 use std::num::Float;
+use std::f64::consts;
 
 #[deriving(Decodable, Encodable, Clone)]
 pub struct Vec3
@@ -164,6 +165,7 @@ impl Vec3
     {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
+
 }
 
 impl Quat
@@ -178,7 +180,7 @@ impl Quat
         }
     }
 
-    pub fn length2_get(&self) -> f64
+    pub fn length2(&self) -> f64
     {
         self.x*self.x + self.y*self.y + self.z*self.z + self.w*self.w
     }
@@ -206,6 +208,27 @@ impl Quat
         }
     }
 
+    pub fn new_yaw_pitch_roll_rad(yaw : f64, pitch : f64, roll : f64) -> Quat
+    {
+        let qy = Quat::new_axis_angle(Vec3::new(0f64,1f64,0f64), yaw);
+        let qp = Quat::new_axis_angle(Vec3::new(1f64,0f64,0f64), pitch);
+        let qr = Quat::new_axis_angle(Vec3::new(0f64,0f64,1f64), roll);
+
+        let q1 = qy * qp;
+
+        q1 * qr
+    }
+
+    pub fn new_yaw_pitch_roll_deg(yaw : f64, pitch : f64, roll : f64) -> Quat
+    {
+        let r = consts::PI / 180f64;
+
+        Quat::new_yaw_pitch_roll_rad(
+            yaw*r,
+            pitch*r,
+            roll*r)
+    }
+
     pub fn rotate_vec3(&self, v : &Vec3) -> Vec3
     {
         let qvec = Vec3::new(self.x, self.y, self.z);
@@ -216,6 +239,15 @@ impl Quat
 
         *v + uv + uuv
     }
+
+    pub fn rotate_vec3_around(&self, v : &Vec3, pivot : &Vec3) -> Vec3
+    {
+        let mut p = *v - *pivot;
+        p = self.rotate_vec3(&p);
+        p = p + *pivot;
+        p
+    }
+
     
     pub fn conj(&self) -> Quat
     {
@@ -226,6 +258,18 @@ impl Quat
             w : self.w,
         }
     }
+
+    pub fn inverse(&self) -> Quat
+    {
+        let l = self.length2();
+        Quat {
+            x : -self.x/l,
+            y : -self.y/l,
+            z : -self.z/l,
+            w : self.w/l,
+        }
+    }
+
 }
 
 impl fmt::Show for Vec3
@@ -276,6 +320,13 @@ impl Mul<f64, Vec3> for Vec3 {
         Vec3::new(self.x**f, self.y**f, self.z**f)
     }
 }
+
+impl Div<f64, Vec3> for Vec3 {
+    fn div(&self, f: &f64) -> Vec3 {
+        Vec3::new(self.x/(*f), self.y/(*f), self.z/(*f))
+    }
+}
+
 
 impl Mul<Quat, Quat> for Quat {
     fn mul(&self, other: &Quat) -> Quat {
