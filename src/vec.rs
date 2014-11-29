@@ -137,6 +137,33 @@ impl Vec3
         }
     }
 
+    pub fn x() -> Vec3
+    {
+        Vec3 {
+            x : 1f64,
+            y : 0f64,
+            z : 0f64
+        }
+    }
+
+    pub fn y() -> Vec3
+    {
+        Vec3 {
+            x : 0f64,
+            y : 1f64,
+            z : 0f64
+        }
+    }
+
+    pub fn z() -> Vec3
+    {
+        Vec3 {
+            x : 0f64,
+            y : 0f64,
+            z : 1f64
+        }
+    }
+
     pub fn length(&self) -> f64
     {
         self.length2().sqrt()

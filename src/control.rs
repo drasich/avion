@@ -326,7 +326,7 @@ impl Control
         }
     }
 
-    fn _rotate_camera(&mut self, x : f64, y : f64)
+    fn rotate_camera(&mut self, x : f64, y : f64)
     {
         let mut camera = self.camera.borrow_mut();
         let cori = camera.object.read().orientation;
@@ -343,10 +343,9 @@ impl Control
 
             cam.pitch -= 0.005*y;
 
-            //TODO angles
             let qy = vec::Quat::new_axis_angle(vec::Vec3::up(), cam.yaw);
             let qp = vec::Quat::new_axis_angle(vec::Vec3::right(), cam.pitch);
-            //TODO
+
             (
                 qy * qp,
                 cam.pitch/consts::PI*180f64,
@@ -354,36 +353,17 @@ impl Control
                 )
         };
 
-        //c.angles.x = cam.pitch/M_PI*180.0;
-        //(*c).angles.y = cam.yaw/consts::PI*180.0;
-
         let context = self.context.borrow();
         if self.context.borrow().selected.len() > 0 {
             let center = objects_center(&context.selected);
-            //println!("center : {}", center);
             camera.set_center(&center);
         }
-        /*
-           Eina_List* objects = context_objects_get(v->context);
-
-           if (eina_list_count(objects) > 0) {
-           Vec3 objs_center = _objects_center(objects);
-           if (!vec3_equal(objs_center, cam->center)) {
-           cam->center = objs_center;
-           camera_recalculate_origin(v->camera);
-           }
-           }
-           */
 
         camera.rotate_around_center(&result);
-
-        //let angle_x = cam.pitch/consts::PI*180.0;
-        //let angle_y = cam.yaw/consts::PI*180.0;
 
         let mut c = camera.object.write();
         (*c).orientation = vec::Quat::new_yaw_pitch_roll_deg(angle_y, angle_x, 0f64);
         //self.state = CameraRotation;
-
     }
 
     pub fn mouse_move(
@@ -401,7 +381,7 @@ impl Control
 
         let x : f64 = curx as f64 - prevx as f64;
         let y : f64 = cury as f64 - prevy as f64;
-        self._rotate_camera(x, y);
+        self.rotate_camera(x, y);
     }
 
 }
