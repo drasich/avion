@@ -101,7 +101,7 @@ impl Tree
         let eoi = unsafe {
             match object.read().parent {
                 Some(ref p) =>  {
-                    match self.objects.find(&p.read().id) {
+                    match self.objects.get(&p.read().id) {
                         Some(item) => {
                             tree_object_add(
                                 self.jk_tree,
@@ -135,7 +135,7 @@ impl Tree
 
         println!("select from tree");
         self.dont_forward_signal = true;
-        match self.objects.find(id) {
+        match self.objects.get(id) {
             Some(item) => {
                 unsafe {tree_item_select(*item);}
             }
@@ -153,7 +153,7 @@ impl Tree
 
     pub fn update_object(&mut self, id: &Uuid)
     {
-        match self.objects.find(id) {
+        match self.objects.get(id) {
             Some(item) => {
                 unsafe {tree_item_update(*item);}
             }
@@ -227,7 +227,7 @@ extern fn selected(
         mem::transmute(data)
     };
 
-    let mut t : &mut Tree = unsafe {mem::transmute(tree)};
+    let t : &Tree = unsafe {mem::transmute(tree)};
 
     println!("sel ! {} ", o.read().name);
     println!("sel ! tree name {} ", t.name);

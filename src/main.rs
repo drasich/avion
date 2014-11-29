@@ -4,8 +4,9 @@
 #![feature(slicing_syntax)]
 
 //TODO remove
-#![allow(unused_variable)]
+#![allow(unused_variables)]
 #![allow(dead_code)]
+#![allow(unused_imports)]
 //#![allow(ctypes)]
 
 #![feature(globs)]
@@ -18,13 +19,13 @@ extern crate toml;
 extern crate uuid;
 
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
-use std::collections::HashMap;
-use sync::{RWLock, Arc};
-use std::rc::Rc;
-use std::cell::RefCell;
+//use std::collections::HashMap;
+//use sync::{RWLock, Arc};
+//use std::rc::Rc;
+//use std::cell::RefCell;
 use std::mem;
-use property::ChrisProperty;
-use std::any::{Any, AnyRefExt};
+//use property::ChrisProperty;
+//use std::any::{Any, AnyRefExt};
 
 mod resource;
 mod shader;

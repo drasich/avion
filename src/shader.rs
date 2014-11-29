@@ -70,7 +70,7 @@ impl Shader
 
     pub fn uniform_set(&self, name : &str, value : &UniformSend)
     {
-        match self.uniforms.find(&String::from_str(name)) {
+        match self.uniforms.get(&String::from_str(name)) {
             Some(uni) => value.uniform_send(*uni),
             None => {
                 println!("ERR!!!! : could not find such uniform '{}'",name)
@@ -80,7 +80,7 @@ impl Shader
 
     pub fn texture_set(&self, name : &str, value : &TextureSend, index : u32)
     {
-        match self.uniforms.find(&String::from_str(name)) {
+        match self.uniforms.get(&String::from_str(name)) {
             Some(uni) => value.uniform_send(*uni, index),
             None => {}//println!("ERR!!!! : could not find such uniform '{}'",name)
         }

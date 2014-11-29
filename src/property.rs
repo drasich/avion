@@ -26,17 +26,6 @@ pub trait TProperty {
   fn set_easy(&mut self, name: &str, value: &PropertyYep);
 }
 
-pub enum ChrisEnum
-{
-    cInt,
-    cFloat,
-    cStruct,
-    cBox,
-    cVec,
-    cHashMap,
-    cList
-}
-
 pub enum ChrisValue
 {
     ChrisNone,
@@ -53,7 +42,6 @@ pub trait ChrisProperty {
   }
 
   fn cget_property(&self, name: &str) -> ChrisValue
-  //fn cget_property(&self, name: &str) -> Option<(Box<Any>, ChrisEnum)>
   {
       return ChrisNone;
   }

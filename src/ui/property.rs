@@ -44,10 +44,6 @@ pub type PropertyTreeExpandFunc = extern fn(
     object : *const c_void,
     parent : *const Elm_Object_Item);
 
-pub type data_cast_fn = extern fn(
-    name : *const c_char,
-    data : *const c_void);
-
 #[repr(C)]
 pub struct JkProperty;
 #[repr(C)]
@@ -534,7 +530,7 @@ impl WidgetUpdate for Property
     {
         println!("property update changed {}", name);
 
-        let pv = match self.pv.find(&name.to_string()) {
+        let pv = match self.pv.get(&name.to_string()) {
             Some(p) => p,
             None => {
                 println!("widget update, could not find {}", name);

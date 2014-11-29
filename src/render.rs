@@ -607,7 +607,7 @@ fn prepare_passes_object(
                 Occupied(entry) => entry.into_mut(),
             };
 
-            rp.objects.push(o.clone());
+            rp.objects.push_back(o.clone());
         }
     }
 

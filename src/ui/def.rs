@@ -147,7 +147,7 @@ impl Master
 
     pub fn new() -> Rc<RefCell<Master>>
     {
-        let mut m = Master::_new();
+        let m = Master::_new();
         let mrc = Rc::new(RefCell::new(m));
         mrc
     }
@@ -177,12 +177,12 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 
     master.window = Some(w);
 
-    let mut p = Rc::new(RefCell::new(ui::Property::new(
+    let p = Rc::new(RefCell::new(ui::Property::new(
                 w,
                 master_rc.clone().downgrade(),
                 control.clone())));
 
-    let mut t = Rc::new(RefCell::new(ui::Tree::new(
+    let t = Rc::new(RefCell::new(ui::Tree::new(
                 w,
                 control.clone())));
 

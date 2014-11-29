@@ -344,7 +344,7 @@ impl Mesh
     {
         let s = String::from_str(name);
 
-        match self.buffers_f32.find(&s) {
+        match self.buffers_f32.get(&s) {
             Some(b) => return Some(b),
             None => None,
         }
@@ -354,7 +354,7 @@ impl Mesh
     {
         let s = String::from_str(name);
 
-        match self.buffers_u32.find(&s) {
+        match self.buffers_u32.get(&s) {
             Some(b) => return Some(b),
             None => None,
         }
@@ -364,7 +364,7 @@ impl Mesh
     {
         let s = String::from_str(name);
 
-        match self.buffers.find(&s) {
+        match self.buffers.get(&s) {
             Some(b) => return Some(b),
             None => None,
         }

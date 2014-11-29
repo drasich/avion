@@ -96,7 +96,7 @@ impl Object
 
 pub fn child_add(parent : Arc<RWLock<Object>>, child : Arc<RWLock<Object>>)
 {
-    parent.write().children.push(child.clone());
+    parent.write().children.push_back(child.clone());
     child.write().parent = Some(parent.clone());
 }
 

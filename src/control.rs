@@ -110,18 +110,18 @@ impl Control
             let ir = intersection::ray_object(&r, &*o.read());
             if ir.hit {
                 println!(" I hit object {} ", o.read().name);
-                c.selected.push(o.clone());
+                c.selected.push_back(o.clone());
             }
         }
 
         if c.selected.len() == 1 {
             //TODO select tree
-            match (c.selected.front()) {
+            match c.selected.front() {
                 Some(o) => {
                     match self.property {
                         Some(ref pp) => {
                             match pp.try_borrow_mut() {
-                                Some(ref mut p) => unsafe {
+                                Some(ref mut p) => {
                                     p.set_object(&*o.read());
                                 },
                                 None => {println!("cannot borrow property");}
@@ -169,7 +169,7 @@ impl Control
 
         for o in scene.read().objects.iter() {
             if o.read().id == *id {
-                c.selected.push(o.clone());
+                c.selected.push_back(o.clone());
                 match self.property {
                     Some(ref mut pp) =>
                         match pp.try_borrow_mut() {
@@ -195,12 +195,7 @@ impl Control
             return;
         }
 
-        let mut c = match self.context.try_borrow_mut(){
-            Some(con) => con,
-            None => { println!("cannot borrow context"); return; }
-        };
-
-        let o = match c.selected.front() {
+        let o = match self.get_selected_object() {
             Some(o) => o.clone(),
             None => {
                 println!("no objetcs selected");
@@ -226,15 +221,10 @@ impl Control
         name : Vec<String>,
         new : &Any)
     {
-        let mut c = match self.context.try_borrow_mut(){
-            Some(con) => con,
-            None => { println!("cannot borrow context"); return; }
-        };
-
-        let o = match c.selected.front() {
-            Some(o) => o.clone(),
+        let o = match self.get_selected_object() {
+            Some(ob) => ob,
             None => {
-                println!("no objetcs selected");
+                println!("direct change, no objetcs selected");
                 return;
             }
         };
@@ -248,7 +238,7 @@ impl Control
 
     pub fn get_selected_object(&self) -> Option<Arc<RWLock<object::Object>>>
     {
-        let mut c = match self.context.try_borrow_mut(){
+        let c = match self.context.try_borrow(){
             Some(con) => con,
             None => { println!("cannot borrow context"); return None; }
         };
@@ -260,7 +250,6 @@ impl Control
                 return None;
             }
         };
-
     }
 
     //TODO move this out of control?
