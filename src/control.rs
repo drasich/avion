@@ -409,6 +409,34 @@ impl Control
         camera.pan(&axis);
     }
 
+    pub fn key_down(
+        &mut self,
+        modifier : i32,
+        keyname : &str,
+        key : &str,
+        timestamp : i32
+        )
+    {
+        let mut t = vec::Vec3::zero();
+
+        match key {
+            "e" => t.z = -50f64,
+            "d" => t.z = 50f64,
+            "f" => t.x = 50f64,
+            "s" => t.x = -50f64,
+            "z" => {
+                self.undo();
+            },
+            _ => {}
+        }
+
+        {
+            let mut camera = self.camera.borrow_mut();
+            let p = camera.object.read().position;
+            camera.object.write().position = p + t;
+        }
+    }
+
 }
 
 fn join_string(path : &Vec<String>) -> String

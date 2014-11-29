@@ -274,31 +274,23 @@ pub extern fn key_down(
     let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let mut c = control_rc.borrow_mut();
 
-    let s = unsafe {CString::new(key as *const i8, false) };
-
-    let yep = match s.as_str() {
-        Some(ss) => ss,
-        _ => return
+    let key_str = {
+        let s = unsafe {CString::new(key as *const i8, false) };
+        match s.as_str() {
+            Some(ss) => ss.to_string(),
+            _ => return
+        }
     };
 
-    let mut t = vec::Vec3::zero();
+    let keyname_str = {
+        let s = unsafe {CString::new(keyname as *const i8, false) };
+        match s.as_str() {
+            Some(ss) => ss.to_string(),
+            _ => return
+        }
+    };
 
-    match yep {
-        "e" => t.z = -50f64,
-        "d" => t.z = 50f64,
-        "f" => t.x = 50f64,
-        "s" => t.x = -50f64,
-        "z" => {
-            c.undo();
-        },
-        _ => {}
-    }
-
-    {
-    let mut camera = c.camera.borrow_mut();
-    let p = camera.object.read().position;
-    camera.object.write().position = p + t;
-    }
+    c.key_down(modifier, keyname_str.as_slice(), key_str.as_slice(), timestamp);
 }
 
 pub struct PropertyContainer<'a>
