@@ -368,6 +368,7 @@ impl Control
 
     pub fn mouse_move(
         &mut self, 
+        mod_flag : i32,
         button : i32,
         curx : i32, 
         cury : i32,
@@ -381,7 +382,15 @@ impl Control
 
         let x : f64 = curx as f64 - prevx as f64;
         let y : f64 = cury as f64 - prevy as f64;
-        self.rotate_camera(x, y);
+
+        if (mod_flag & (1 << 0)) != 0 {
+            let t = vec::Vec3::new(-x*0.5f64, y*0.5f64, 0f64);
+            let mut camera = self.camera.borrow_mut();
+            camera.pan(&t);
+        }
+        else {
+            self.rotate_camera(x, y);
+        }
     }
 
 }

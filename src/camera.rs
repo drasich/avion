@@ -192,6 +192,16 @@ impl Camera
         self.recalculate_origin();
     }
 
+    pub fn pan(&mut self, t : &vec::Vec3)
+    {
+        let o = &mut self.object.write();
+        let c = &mut self.data;
+
+        c.local_offset = c.local_offset + *t;
+        let tt = o.orientation.rotate_vec3(t);
+        o.position = o.position + tt;
+    }
+
 
 }
 

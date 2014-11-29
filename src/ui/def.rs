@@ -59,7 +59,8 @@ extern {
             ),
         mouse_move : extern fn(
             data : *const c_void,
-            modifier : *const c_char,
+            //modifier : *const c_char,
+            modifier : c_int,
             button : c_int,
             curx : c_int, 
             cury : c_int,
@@ -233,7 +234,8 @@ pub extern fn mouse_up(
 
 pub extern fn mouse_move(
     data : *const c_void,
-    modifier : *const c_char,
+    //modifier : *const c_char,
+    modifiers_flag : c_int,
     button : c_int,
     curx : c_int, 
     cury : c_int,
@@ -244,7 +246,7 @@ pub extern fn mouse_move(
 {
     let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let mut c = control_rc.borrow_mut();
-    c.mouse_move(button, curx, cury, prevx, prevy, timestamp);
+    c.mouse_move(modifiers_flag, button, curx, cury, prevx, prevy, timestamp);
 }
 
 pub extern fn mouse_wheel(
