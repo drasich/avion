@@ -14,7 +14,6 @@ use std::any::{Any, AnyRefExt};
 use scene;
 use object;
 use ui::Window;
-use ui::Master;
 use ui;
 use property;
 use property::ChrisProperty;
@@ -148,7 +147,6 @@ pub struct Property
 {
     pub name : String,
     jk_property_list : *const JkPropertyList,
-    master : Weak<RefCell<ui::Master>>,
     pv : HashMap<String, *const PropertyValue>,
     control : Rc<RefCell<Control>>
 }
@@ -157,14 +155,12 @@ impl Property
 {
     pub fn new(
         window : *const Window,
-        master : Weak<RefCell<ui::Master>>,
         control : Rc<RefCell<Control>>
         ) -> Box<Property>
     {
         let p = box Property {
             name : String::from_str("property_name"),
             jk_property_list : unsafe {jk_property_list_new(window)},
-            master : master,
             pv : HashMap::new(),
             control : control
         };
@@ -234,7 +230,7 @@ impl Property
             println!("entries!!! {}", path);
             for field in o.fields().iter()
             {
-                match o.cget_property(field.as_slice()) {
+                match o.get_property(field.as_slice()) {
                     property::BoxAny(p) => {
                         match p.downcast_ref::<String>() {
                             Some(s) => {
@@ -437,27 +433,6 @@ fn changed_set<T : Any+Clone+PartialEq>(
             control.request_direct_change(vs, new);
         }
     };
-
-    //TODO remove and put in control
-    // add widget origin uuid in request_operation and request_direct_change
-    match p.master.upgrade() {
-        Some(m) => { 
-            match m.try_borrow_mut() {
-                Some(ref mut mm) => {
-                    match mm.tree {
-                        Some(ref t) => { 
-                            t.borrow_mut().update();
-                            println!("todo call this only when the name or object representation has changed...");
-                            println!("... or do the object references in ui stuff /see todo file");
-                        },
-                        None => {}
-                    }
-                },
-                _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
-            }
-        },
-        None => { println!("the master of the property doesn't exist anymore");}
-    }
 }
 
 

@@ -19,25 +19,25 @@ pub trait ChrisProperty {
       return box [];
   }
 
-  fn cget_property(&self, name: &str) -> ChrisValue
+  fn get_property(&self, name: &str) -> ChrisValue
   {
       return ChrisNone;
   }
-  fn cget_property_hier(&self, name: Vec<String>) -> ChrisValue
+  fn get_property_hier(&self, name: Vec<String>) -> ChrisValue
   {
       match name.len() {
           0 => ChrisNone,
-          _ => self.cget_property(name[0].as_slice())
+          _ => self.get_property(name[0].as_slice())
       }
   }
-  fn cset_property(&mut self, name: &str, value: &Any)
+  fn set_property(&mut self, name: &str, value: &Any)
   {
   }
-  fn cset_property_hier(&mut self, name: Vec<String>, value: &Any)
+  fn set_property_hier(&mut self, name: Vec<String>, value: &Any)
   {
       match name.len() {
           0 => {},
-          _ => self.cset_property(name[0].as_slice(), value)
+          _ => self.set_property(name[0].as_slice(), value)
       };
   }
 }
@@ -91,7 +91,7 @@ impl ChrisProperty for vec::Vec3
       ];
   }
 
-  fn cget_property(&self, name: &str) -> ChrisValue
+  fn get_property(&self, name: &str) -> ChrisValue
   {
       let v = match name {
           "x" => box self.x,// as Box<Any>,
@@ -103,7 +103,7 @@ impl ChrisProperty for vec::Vec3
       BoxAny(v as Box<Any>)
   }
 
-  fn cset_property(&mut self, name: &str, value: &Any)
+  fn set_property(&mut self, name: &str, value: &Any)
   {
       match name {
           "x" => {
@@ -198,7 +198,7 @@ macro_rules! match_get(
 
 macro_rules! match_hier_get(
   ($yo:ident, $member:ident, $yep:ident) => (
-      return $yo.$member.cget_property_hier($yep)
+      return $yo.$member.get_property_hier($yep)
     )
   )
 
@@ -231,7 +231,7 @@ macro_rules! match_set(
 
 macro_rules! match_hier_set(
   ($yo:ident, $member:ident, $yep:ident, $value:ident) => (
-      $yo.$member.cset_property_hier($yep, $value)
+      $yo.$member.set_property_hier($yep, $value)
     )
   )
 
@@ -258,7 +258,7 @@ pub macro_rules! chris_property_impl(
 
         }
 
-        fn cget_property(&self, name: &str) -> ChrisValue
+        fn get_property(&self, name: &str) -> ChrisValue
         {
             let v : Box<Any> = match name {
           $(
@@ -268,7 +268,7 @@ pub macro_rules! chris_property_impl(
             };
         }
 
-        fn cset_property(&mut self, name: &str, value: &Any)
+        fn set_property(&mut self, name: &str, value: &Any)
         {
             match name {
           $(
@@ -282,11 +282,11 @@ pub macro_rules! chris_property_impl(
             }
         }
 
-        fn cget_property_hier(&self, names: Vec<String>) -> ChrisValue
+        fn get_property_hier(&self, names: Vec<String>) -> ChrisValue
         {
             match names.len() {
                 0 => return ChrisNone,
-                1 => return self.cget_property(names[0].as_slice()),
+                1 => return self.get_property(names[0].as_slice()),
                 _ => {
                     let yep = names.tail().to_vec();
                     match names[0].as_slice() {
@@ -301,16 +301,16 @@ pub macro_rules! chris_property_impl(
             return ChrisNone;
         }
 
-        fn cset_property_hier(&mut self, names: Vec<String>, value: &Any)
+        fn set_property_hier(&mut self, names: Vec<String>, value: &Any)
         {
             match names.len() {
                 0 => return,
-                1 => self.cset_property(names[0].as_slice(),value),
+                1 => self.set_property(names[0].as_slice(),value),
                 _ => {
                     let yep = names.tail().to_vec();
                     match names[0].as_slice() {
-                        //"position" => { self.position.cset_property_hier(yep, value);},
-                        //"boxpos" => { self.boxpos.cset_property_hier(yep, value);},
+                        //"position" => { self.position.set_property_hier(yep, value);},
+                        //"boxpos" => { self.boxpos.set_property_hier(yep, value);},
                         $(
                             stringify!($member) => match_hier_set!(self, $member, yep, value),
                         )+
@@ -349,7 +349,7 @@ chris_property_impl!(object::Object,
 pub fn find_property(p : &ChrisProperty, path : Vec<String>) -> 
 Option<Box<ChrisProperty>>
 {
-    match p.cget_property_hier(path) {
+    match p.get_property_hier(path) {
         ChrisNone => {return None;},
         BoxChrisProperty(bp) => 
         {

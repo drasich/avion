@@ -179,7 +179,6 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 
     let p = Rc::new(RefCell::new(ui::Property::new(
                 w,
-                master_rc.clone().downgrade(),
                 control.clone())));
 
     let t = Rc::new(RefCell::new(ui::Tree::new(

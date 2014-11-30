@@ -233,9 +233,25 @@ impl Control
 
         let vs = name.tail().to_vec();
 
-        //TODO update the widget that has this object/property
+        o.write().set_property_hier(vs, new);
 
-        o.write().cset_property_hier(vs, new);
+        //TODO update the widget that has this object/property, but not the
+        // widget where the change came from
+        // add widget origin uuid in request_operation and request_direct_change
+
+        let s = join_string(&name);
+        if s.as_slice() == "object/name" {
+            match self.tree {
+                Some(ref mut tt) =>
+                    match tt.try_borrow_mut() {
+                        Some(ref mut t) => {
+                            t.update_object(&o.read().id);
+                        },
+                        None=> {}
+                    },
+                    None => {}
+            };
+        }
     }
 
     pub fn get_selected_object(&self) -> Option<Arc<RWLock<object::Object>>>

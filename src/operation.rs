@@ -49,9 +49,9 @@ impl Operation
         //let vs = vs.tail().to_vec();
         */
 
-        //o.write().cset_property_hier(vs, &*self.old);
+        //o.write().set_property_hier(vs, &*self.old);
         println!("apply {}, {}", self.name, self.new);
-        o.write().cset_property_hier(self.name.clone(), &*self.new);
+        o.write().set_property_hier(self.name.clone(), &*self.new);
         println!("applied {}", self.name);
 
         match self.new.downcast_ref::<String>() {
@@ -70,8 +70,8 @@ impl Operation
 
         let vs = self.name.tail().to_vec();
 
-        //o.write().cset_property_hier(self.name.clone(), &*self.old);
-        o.write().cset_property_hier(vs, &*self.old);
+        //o.write().set_property_hier(self.name.clone(), &*self.old);
+        o.write().set_property_hier(vs, &*self.old);
     }
 }
 
