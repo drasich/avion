@@ -404,7 +404,7 @@ impl Control
         )
     {
         let mut axis = vec::Vec3::new(0f64, 0f64, z as f64);
-        axis = axis * 1.5f64;
+        axis = axis * 10.5f64;
         let mut camera = self.camera.borrow_mut();
         camera.pan(&axis);
     }

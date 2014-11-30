@@ -1,30 +1,9 @@
-//extern crate libc;
-//extern crate serialize;
-//use libc::size_t;
-//use std::f64;
-//use std::io;
-//use serialize::{json, Encodable, Decodable};
-//use std::str;
 use object;
 use vec;
 use std::any::{Any, AnyRefExt};
 
 //log_syntax!()
 //trace_macros!(true)
-
-pub trait PropertyYep
-{
-    fn transform(&self) -> PropertyType;
-}
-
-pub trait TProperty {
-  //fn fields(&self) -> ~[u8];
-  fn fields(&self) -> Box<[String]>;
-  //fn get_type(&self, name: &[u8]) -> u8;
-  fn get_property(&self, name: &str) -> PropertyType;
-  fn set_property(&mut self, name: &str, value: &PropertyType);
-  fn set_easy(&mut self, name: &str, value: &PropertyYep);
-}
 
 pub enum ChrisValue
 {
@@ -35,7 +14,6 @@ pub enum ChrisValue
 
 
 pub trait ChrisProperty {
-  //fn cfields(&self) -> Box<[String]>;
   fn cfields(&self) -> Box<[String]>
   {
       return box [];
@@ -77,8 +55,6 @@ impl ChrisProperty for f64 {
 
 impl ChrisProperty for String {
 }
-
-
 
 #[deriving(Decodable, Encodable, Clone)]
 pub struct Chris
@@ -156,118 +132,6 @@ impl ChrisProperty for vec::Vec3
   }
 }
 
-/*
-impl ChrisProperty for Chris
-{
-  fn cfields(&self) -> Box<[String]> 
-  {
-      return box[
-          String::from_str("x"),
-          String::from_str("y"),
-          String::from_str("z"),
-          String::from_str("position"),
-      ];
-  }
-
-  fn cget_property(&self, name: &str) -> Option<Box<Any>>
-  {
-      let v : Box<Any> = match name {
-          "x" => box self.x as Box<Any>,
-          "y" => box self.y as Box<Any>,
-          "z" => box self.z as Box<Any>,
-          "position" => box self.position as Box<Any>,
-          "boxpos" => box self.boxpos.clone() as Box<Any>,
-          _ => return None
-      };
-
-      Some(v)
-  }
-
-  fn cget_property_hier(&self, names: Vec<String>) -> Option<Box<Any>>
-  {
-      match names.len() {
-          0 => return None,
-          1 => return self.cget_property(names[0].as_slice()),
-          _ => {
-              let yep = names.tail().to_vec();
-              match names[0].as_slice() {
-                  "position" => { return self.position.cget_property_hier(yep);},
-                  "boxpos" => { return self.boxpos.cget_property_hier(yep);},
-                  _ => {}
-              }
-          }
-      }
-
-      return None;
-  }
-
-  fn cset_property(&mut self, name: &str, value: &Any)
-  {
-      match name {
-          "x" => {
-              match value.downcast_ref::<f64>() {
-                  Some(v) => self.x = *v,
-                  None => {}
-              }
-          },
-          "y" => {
-              match value.downcast_ref::<f64>() {
-                  Some(v) => self.y = *v,
-                  None => {}
-              }
-          },
-          "z" => {
-              match value.downcast_ref::<f64>() {
-                  Some(v) => self.z = *v,
-                  None => {}
-              }
-          },
-          "position" => {
-              match value.downcast_ref::<vec::Vec3>() {
-                  Some(v) => self.position = *v,
-                  None => {}
-              }
-          },
-          "boxpos" => {
-              match value.downcast_ref::<vec::Vec3>() {
-                  Some(v) => *self.boxpos = *v,
-                  None => {}
-              }
-          }
-          _ => {}
-      }
-
-  }
-
-  fn cset_property_hier(&mut self, names: Vec<String>, value: &Any)
-  {
-      match names.len() {
-          0 => return,
-          1 => self.cset_property(names[0].as_slice(),value),
-          _ => {
-              let yep = names.tail().to_vec();
-              match names[0].as_slice() {
-                  "position" => { self.position.cset_property_hier(yep, value);},
-                  "boxpos" => { self.boxpos.cset_property_hier(yep, value);},
-                  _ => {}
-              }
-          }
-      }
-    }
-}
-*/
-
-
-pub enum PropertyType {
-  Int(i32),
-  Float(f64),
-  SString(String),
-  Struct(Box<TProperty +'static>),
-  //AnyStruct(Any),
-  //NormalStruct(&'static TProperty+'static),
-}
-
-
 macro_rules! new_test(
   ($yo:ident, $member:ident, SString) => (
     $yo.$member.to_string()
@@ -316,119 +180,6 @@ macro_rules! new_test_set(
     }
     )
   )
-
-
-
-pub macro_rules! property_impl(
-    //($my_type:ty, [ $($member:ident,$mytype:ty)|+ ]) => ( // invoke it like `(input_5 SpecialE)`
-    ($my_type:ty, [ $($member:ident,$mytype:ident)|+ ]) => ( // invoke it like `(input_5 SpecialE)`
-
-      impl TProperty for $my_type
-      {
-        fn fields(&self) -> Box<[String]>
-        {
-          return box[
-          $(
-            stringify!($member).to_string(),
-           )+
-          ];
-
-        }
-
-        fn get_property(&self, name: &str) -> PropertyType
-        {
-          $(
-            if name == stringify!($member)
-            {
-              //return $mytype(self.$member)
-              return $mytype(new_test!(self, $member, $mytype))
-            }
-           )+
-
-          else {
-            Float(0.0)
-          }
-        }
-
-        fn set_property(&mut self, name: &str, value: &PropertyType)
-        {
-          //*
-          $(
-            if name == stringify!($member)
-            {
-              new_test_set!(self, $member, $mytype, value, name)
-            /*
-              match value {
-                //&Float(v) => {
-                &$mytype(v) => {
-                  self.$member = v;
-                }
-                _ => {
-                  println!("cant set {:?} to {}, because it is a {}", value, name, stringify!($mytype));
-                }
-              }
-                */
-
-              return;
-            }
-           )+
-           //*/
-        }
-        fn set_easy(&mut self, name : &str, value: &PropertyYep)
-        {
-            self.set_property(name, &value.transform());
-        }
-     }
-  );
-)
-
-
-    /*
-#[deriving(Clone)]
-pub struct Vec3
-{
-  x : f64,
-  y : f64,
-  z : f64
-}
-
-#[deriving(Clone)]
-pub struct Quat
-{
-  x : f64,
-  y : f64,
-  z : f64,
-  w : f64,
-  t : i32,
-  v : Box<Vec3>,
-  txt : String
-}
-*/
-
-//property_impl!(Vec3, [x,Float|y,Float|z,Float])
-property_impl!(vec::Vec3, [x,Float|y,Float|z,Float])
-//property_impl!(Quat, [x,Float|y,Float|z,Float|t,Int|txt,SString|v,Struct])
-//property_impl!(object::Object, [name,SString|position,NormalStruct])
-property_impl!(object::Object, [name,SString])
-
-pub fn print_pt(pt : PropertyType)
-{
-  match pt {
-    Int(i) => println!("my int : {}", i),
-    SString(s) => println!("my string : {}", s),
-    Float(f) => println!("my float : {}", f),
-    Struct(ptt) => {
-      println!("yo man");
-      for f in ptt.fields().iter() {
-
-        //let p = t.get_property("name");
-        let p = ptt.get_property(f.as_slice());
-        print_pt(p);
-      }
-    },
-    //_ => {}
-  }
-}
 
 macro_rules! match_get(
   ($yo:ident, $member:ident, $yep:ty, PlainString) => (

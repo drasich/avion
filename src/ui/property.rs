@@ -17,7 +17,6 @@ use ui::Window;
 use ui::Master;
 use ui;
 use property;
-use property::TProperty;
 use property::ChrisProperty;
 use operation;
 use control::Control;
@@ -318,23 +317,6 @@ pub extern fn name_get(data : *const c_void) -> *const c_char {
 
     unsafe {
         cs.unwrap()
-    }
-}
-
-
-pub extern fn changed(object : *const c_void, data : *const c_void) {
-    let o : &Arc<RWLock<object::Object>> = unsafe {
-        mem::transmute(object)
-    };
-
-    let s = unsafe {CString::new(data as *const i8, false) };
-
-    match s.as_str() {
-        Some(ss) => {
-            let sss = property::SString(String::from_str(ss));
-            o.clone().write().set_property("name", &sss);
-        },
-        _ => ()
     }
 }
 
