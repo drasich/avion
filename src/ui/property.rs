@@ -232,7 +232,7 @@ impl Property
 
         //TODO this function for jk_property_list
             println!("entries!!! {}", path);
-            for field in o.cfields().iter()
+            for field in o.fields().iter()
             {
                 match o.cget_property(field.as_slice()) {
                     property::BoxAny(p) => {

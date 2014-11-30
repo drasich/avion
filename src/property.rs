@@ -14,7 +14,7 @@ pub enum ChrisValue
 
 
 pub trait ChrisProperty {
-  fn cfields(&self) -> Box<[String]>
+  fn fields(&self) -> Box<[String]>
   {
       return box [];
   }
@@ -44,7 +44,7 @@ pub trait ChrisProperty {
 
 /*
 impl<T: 'static> ChrisProperty for T {
-  fn cfields(&self) -> Box<[String]>
+  fn fields(&self) -> Box<[String]>
   {
       return box [];
   }
@@ -82,7 +82,7 @@ impl Chris
 
 impl ChrisProperty for vec::Vec3
 {
-  fn cfields(&self) -> Box<[String]> 
+  fn fields(&self) -> Box<[String]> 
   {
       return box[
           String::from_str("x"),
@@ -248,7 +248,7 @@ pub macro_rules! chris_property_impl(
 
       impl ChrisProperty for $my_type
       {
-        fn cfields(&self) -> Box<[String]>
+        fn fields(&self) -> Box<[String]>
         {
           return box[
           $(
