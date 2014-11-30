@@ -20,6 +20,7 @@ use property::ChrisProperty;
 use operation;
 use control::Control;
 use control::WidgetUpdate;
+use vec;
 
 #[repr(C)]
 pub struct Elm_Object_Item;
@@ -168,6 +169,7 @@ impl Property
         unsafe {
             jk_property_list_register_cb(
                 p.jk_property_list,
+                //mem::transmute(box p.control.clone()),
                 &*p, //ptr::null(),
                 changed_set_float,
                 changed_set_string,
@@ -200,6 +202,7 @@ impl Property
         o : &ChrisProperty,
         path : Vec<String>)
     {
+        //o.create_entries(self, path);
         fn get_node_path(path : &Vec<String>) -> String
         {
             let mut s = String::new();
@@ -415,8 +418,10 @@ fn changed_set<T : Any+Clone+PartialEq>(
     //let vs = vs.tail().to_vec();
 
     let p : & Property = unsafe {mem::transmute(property)};
+    //let control_rc : &Rc<RefCell<Control>>  = unsafe {mem::transmute(control_void)};
 
     let mut control = match p.control.try_borrow_mut() {
+    //let mut control = match control_rc.try_borrow_mut() {
         Some(c) => c,
         None => { println!("cannot borrow control"); return; }
     };
@@ -444,7 +449,7 @@ extern fn expand(
     let s = unsafe {CString::new(data as *const i8, false) };
     let mut p : &mut Property = unsafe {mem::transmute(property)};
 
-    println!("expanding ! property name {} ", p.name);
+    //println!("expanding ! property name {} ", p.name);
 
     let s = unsafe {CString::new(data as *const i8, false) };
     println!("I changed the value {} ", s);
@@ -465,17 +470,30 @@ extern fn expand(
         println!("pushing {}", i);
     }
 
-    //let yep = vs.tail().to_vec();
+    let yep = vs.tail().to_vec();
     println!("expand : {}", vs);
 
     match p.control.clone().try_borrow() {
+    //match control_rc.clone().try_borrow() {
         Some(c) => {
-            c.request_display_property(
-                p,
-                vs);
+
+            let o = match c.get_selected_object() {
+                Some(ob) => ob,
+                None => return
+            };
+
+            match property::find_property(&*o.read(), yep.clone()) {
+                Some(ppp) => {
+                    p.create_entries(&*ppp, vs.clone());
+                },
+                None => {
+                    println!("could not find property {} ", vs);
+                }
+            }
         },
         None => return
     };
+
 }
 
 impl WidgetUpdate for Property
@@ -485,6 +503,7 @@ impl WidgetUpdate for Property
         name : &str,
         new : &Any)
     {
+
         println!("property update changed {}", name);
 
         let pv = match self.pv.get(&name.to_string()) {
@@ -526,4 +545,47 @@ impl WidgetUpdate for Property
 
     }
 }
+
+pub trait PropertyShow
+{
+    fn create_entries(
+        &mut self,
+        property : &mut Property,
+        path : Vec<String>);
+    /*
+    {
+        for v in self.fields().iter()
+        {
+            println!("__________normal chris_______");
+        }
+    }
+    */
+}
+
+/*
+
+impl<T : ChrisProperty> PropertyShow for T {
+
+    fn create_entries(
+        &self,
+        property:&mut Property,
+        path : Vec<String>)
+    {
+    }
+
+}
+*/
+
+/*
+impl PropertyShow for vec::Quat {
+
+    fn create_entries(
+        &mut self,
+        property:&mut Property,
+        path : Vec<String>)
+    {
+        println!("quuuuuuuuuuuuuuuuaaaaaaaaaaaaaaaaaaaaaaat {} ", path);
+    }
+}
+*/
 

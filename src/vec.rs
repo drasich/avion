@@ -174,6 +174,7 @@ impl Vec3
         self.x*self.x + self.y*self.y + self.z*self.z
     }
 
+    /*
     pub fn mul(&self, other : &Vec3) -> Vec3
     {
         Vec3::new(
@@ -182,6 +183,7 @@ impl Vec3
             self.z*other.z
             )
     }
+    */
 
     pub fn normalized(&self) -> Vec3
     {
@@ -256,6 +258,23 @@ impl Quat
             roll*r)
     }
 
+    pub fn new_angles_rad(angles : &Vec3) -> Quat
+    {
+        let qx = Quat::new_axis_angle(Vec3::new(1f64,0f64,0f64), angles.x);
+        let qy = Quat::new_axis_angle(Vec3::new(0f64,1f64,0f64), angles.y);
+        let qz = Quat::new_axis_angle(Vec3::new(0f64,0f64,1f64), angles.z);
+
+        let q1 =  qx * qy;
+        q1 * qz
+    }
+
+    pub fn new_angles_deg(angles : &Vec3) -> Quat
+    {
+        let r = consts::PI / 180f64;
+
+        Quat::new_angles_rad(&(*angles * r))
+    }
+
     pub fn rotate_vec3(&self, v : &Vec3) -> Vec3
     {
         let qvec = Vec3::new(self.x, self.y, self.z);
@@ -295,6 +314,22 @@ impl Quat
             z : -self.z/l,
             w : self.w/l,
         }
+    }
+
+    pub fn to_euler_rad(&self) -> Vec3
+    {
+        Vec3 {
+            x : (2f64*(self.w*self.x + self.y*self.z)).atan2(1f64 - 2f64*(self.x*self.x + self.y*self.y)),
+            y : (2f64*(self.w*self.y - self.z*self.x)).asin(),
+            z : (2f64*(self.w*self.z + self.x*self.y)).atan2(1f64- 2f64*(self.y*self.y + self.z*self.z))
+        }
+    }
+
+    pub fn to_euler_deg(&self) -> Vec3
+    {
+        let mut v = self.to_euler_rad();
+        v = v * (180f64 / consts::PI);
+        v
     }
 
 }
@@ -347,6 +382,20 @@ impl Mul<f64, Vec3> for Vec3 {
         Vec3::new(self.x**f, self.y**f, self.z**f)
     }
 }
+
+impl Mul<Vec3, f64> for Vec3 {
+    fn mul(&self, v: &Vec3) -> f64 {
+        self.x*v.x + self.y*v.y + self.z*v.z
+    }
+}
+
+impl Mul<Vec3, Vec3> for Vec3 {
+    fn mul(&self, v: &Vec3) -> Vec3 {
+        Vec3::new(self.x*v.x, self.y*v.y, self.z*v.z)
+    }
+}
+
+
 
 impl Div<f64, Vec3> for Vec3 {
     fn div(&self, f: &f64) -> Vec3 {

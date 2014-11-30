@@ -1,6 +1,7 @@
 use object;
 use vec;
 use std::any::{Any, AnyRefExt};
+use std::f64::consts;
 
 //log_syntax!()
 //trace_macros!(true)
@@ -80,6 +81,7 @@ impl Chris
 }
 
 
+/*
 impl ChrisProperty for vec::Vec3
 {
   fn fields(&self) -> Box<[String]> 
@@ -131,6 +133,7 @@ impl ChrisProperty for vec::Vec3
       }
   }
 }
+*/
 
 macro_rules! new_test(
   ($yo:ident, $member:ident, SString) => (
@@ -260,7 +263,7 @@ pub macro_rules! chris_property_impl(
 
         fn get_property(&self, name: &str) -> ChrisValue
         {
-            let v : Box<Any> = match name {
+            match name {
           $(
             stringify!($member) => match_get!(self, $member, $mytype, $alloctype),
            )+
@@ -333,11 +336,18 @@ chris_property_impl!(Chris,
 //chris_property_impl!(Chris, [x,f64,Plain|y,f64,Plain|z,f64,Plain|position,vec::Vec3,Plain])
 //chris_property_impl!(Chris, [x,f64|y,f64|z,f64])
 
+/*
 chris_property_impl!(vec::Quat,
                      [x,f64,Plain|
                      y,f64,Plain|
                      z,f64,Plain|
                      w,f64,Plain])
+                     */
+
+chris_property_impl!(vec::Vec3,
+                     [x,f64,Plain|
+                     y,f64,Plain|
+                     z,f64,Plain])
 
 chris_property_impl!(object::Object,
                      [name,String,PlainString
@@ -363,3 +373,68 @@ Option<Box<ChrisProperty>>
     return None;
 }
 
+
+impl ChrisProperty for vec::Quat
+{
+  fn fields(&self) -> Box<[String]> 
+  {
+      return box[
+          String::from_str("x"),
+          String::from_str("y"),
+          String::from_str("z"),
+      ];
+  }
+
+  fn get_property(&self, name: &str) -> ChrisValue
+  {
+      let deg = self.to_euler_deg();
+      let v = match name {
+          "x" => box deg.x,// as Box<Any>,
+          "y" => box deg.y,// as Box<Any>,
+          "z" => box deg.z,// as Box<Any>,
+          _ => return ChrisNone
+      };
+
+      BoxAny(v as Box<Any>)
+  }
+
+  //TODO set_property return a vec of properties that were changed,
+  // execpt the one we sent...
+  fn set_property(&mut self, name: &str, value: &Any)
+  {
+      let mut deg = self.to_euler_deg();
+      println!("deg start : {}", deg);
+
+      let f = match value.downcast_ref::<f64>() {
+          Some(v) => v,
+          None => return
+      };
+
+
+      let mut q = match name {
+          "x" => {
+              //deg.x = *f;
+              let diff = *f - deg.x;
+              //println!("{} - {} = diff : {}", *f, deg.x, diff);
+              vec::Quat::new_angles_deg(&vec::Vec3::new(diff,0f64,0f64))
+          },
+          "y" => {
+              //deg.y = *f;
+              let diff = *f - deg.y;
+              vec::Quat::new_angles_deg(&vec::Vec3::new(0f64,diff,0f64))
+          },
+          "z" => {
+              //deg.z = *f;
+              let diff = *f - deg.z;
+              vec::Quat::new_angles_deg(&vec::Vec3::new(0f64,0f64,diff))
+          }
+          _ => return
+      };
+
+      //*self = vec::Quat::new_angles_deg(&deg);
+      *self = *self * q;
+
+      let mut deg = self.to_euler_deg();
+      println!("deg end : {}", deg);
+  }
+}

@@ -235,9 +235,15 @@ impl Control
 
         o.write().set_property_hier(vs, new);
 
+        //TODO it might do more than just update this property
+        // for example for quat, it updates other properties
+        // if you change angle x, angle y might also change...
+
         //TODO update the widget that has this object/property, but not the
         // widget where the change came from
         // add widget origin uuid in request_operation and request_direct_change
+
+        //PROBLEM -> property borrow -> control borrow -> property borrow
 
         let s = join_string(&name);
         if s.as_slice() == "object/name" {
@@ -270,10 +276,11 @@ impl Control
         };
     }
 
-    //TODO move this out of control?
+    /*
+    //TODO remove? WAS : move this out of control?
     pub fn request_display_property(
         &self,
-        property : &mut ui::Property,
+        //property : &mut ui::Property,
         name : Vec<String>,
         )
     {
@@ -293,9 +300,15 @@ impl Control
             },
             None => {
                 println!("no objetcs selected");
+                return None
             }
-        }
+        };
+
+        let yo = &*ob.read();
+
+        return property::find_property(yo, yep.clone());
     }
+    */
 
     pub fn undo(&mut self)
     {
