@@ -302,6 +302,47 @@ impl Property
         //TODO
         //unsafe { property_data_set(self.jk_property, data); }
     }
+
+    pub fn update_object(&mut self, object : &ChrisProperty, but : &str)
+    {
+        let path = vec!("object".to_string());
+        //let path = vec!();
+
+        fn _update_obj_rec(
+            prop :&mut Property,
+            object : &ChrisProperty,
+            child : &ChrisProperty,
+            path : &Vec<String>,
+            but : &str
+            )
+        {
+            for f in child.fields().iter() {
+                let mut yep = path.clone();
+                yep.push(f.clone());
+                //println!("try to find : {}", yep);
+                match object.get_property_hier(yep.tail().to_vec()) {
+                    property::BoxAny(a) => {
+                        let s = join_string(&yep);
+                        if s.as_slice() != but{
+                        prop.update_changed(
+                            s.as_slice(),
+                            &*a);
+                        }
+                    },
+                    property::BoxChrisProperty(cp) => {
+                        //_update_obj_rec(prop, &*cp, &yep);
+                        _update_obj_rec(prop, object, &*cp, &yep, but);
+                    }
+                    property::ChrisNone => {
+                        println!("its none : {}", yep);
+                    }
+                }
+            }
+        }
+
+        println!("updating object.......");
+        _update_obj_rec(self, object, object, &path, but);
+    }
 }
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
@@ -504,7 +545,7 @@ impl WidgetUpdate for Property
         new : &Any)
     {
 
-        println!("property update changed {}", name);
+        //println!("property update changed {}", name);
 
         let pv = match self.pv.get(&name.to_string()) {
             Some(p) => p,
@@ -588,4 +629,19 @@ impl PropertyShow for vec::Quat {
     }
 }
 */
+
+fn join_string(path : &Vec<String>) -> String
+{
+    let mut s = String::new();
+    let mut first = true;
+    for v in path.iter() {
+        if !first {
+            s.push('/');
+        }
+        s.push_str(v.as_slice());
+        first = false;
+    }
+
+    s
+}
 

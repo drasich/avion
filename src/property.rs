@@ -13,6 +13,17 @@ pub enum ChrisValue
     BoxChrisProperty(Box<ChrisProperty+'static>)
 }
 
+/*
+pub enum teststtst
+{
+    Yep,
+    Yop(f64, i32),
+    BoxAnytest(Box<Any>),
+    BoxChrisPropertytest(Box<ChrisProperty+'static>),
+    BoxCouple(Box<Any>, Box<ChrisProperty+'static>)
+}
+*/
+
 
 pub trait ChrisProperty {
   fn fields(&self) -> Box<[String]>

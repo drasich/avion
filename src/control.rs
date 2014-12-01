@@ -258,6 +258,17 @@ impl Control
                     None => {}
             };
         }
+            
+        match self.property {
+            Some(ref mut pp) =>
+                match pp.try_borrow_mut() {
+                    Some(ref mut p) => {
+                        p.update_object(&*o.read(), s.as_slice());
+                    },
+                    None=> {}
+                },
+                None => {}
+        };
     }
 
     pub fn get_selected_object(&self) -> Option<Arc<RWLock<object::Object>>>
