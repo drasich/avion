@@ -589,10 +589,10 @@ impl WidgetUpdate for Property
 
 pub trait PropertyShow
 {
-    fn create_entries(
-        &mut self,
+    fn create_widget(
+        &self,
         property : &mut Property,
-        path : Vec<String>);
+        field : &str);
     /*
     {
         for v in self.fields().iter()
@@ -629,6 +629,41 @@ impl PropertyShow for vec::Quat {
     }
 }
 */
+
+impl PropertyShow for f64 {
+
+    fn create_widget(&self, property : &mut Property, field : &str)
+    {
+        let f = field.to_c_str();
+        unsafe {
+            let pv = property_list_float_add(
+                property.jk_property_list,
+                f.unwrap(),
+                *self as c_float);
+            if pv != ptr::null() {
+                property.pv.insert(field.to_string(), pv);
+            }
+        }
+    }
+}
+
+impl PropertyShow for vec::Quat {
+
+    fn create_widget(&self, property : &mut Property, field : &str)
+    {
+        let f = field.to_c_str();
+        unsafe {
+            let pv = property_list_float_add(
+                property.jk_property_list,
+                f.unwrap(),
+                self.x as c_float);
+            if pv != ptr::null() {
+                property.pv.insert(field.to_string(), pv);
+            }
+        }
+    }
+}
+
 
 fn join_string(path : &Vec<String>) -> String
 {
