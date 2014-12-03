@@ -1,6 +1,7 @@
 use vec;
 use matrix;
 use mesh_render;
+use transform;
 
 use std::collections::{DList};
 use sync::{RWLock, Arc};//,RWLockReadGuard};
@@ -22,6 +23,7 @@ pub struct Object
     pub scale : vec::Vec3,
     pub children : DList<Arc<RWLock<Object>>>,
     pub parent : Option<Arc<RWLock<Object>>>,
+    pub transform : Box<transform::Transform>
 }
 
 impl Object
@@ -123,7 +125,8 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Object {
           scale: try!(decoder.read_struct_field("scale", 0, |decoder| Decodable::decode(decoder))),
           children: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
           //parent: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
-          parent: None
+          parent: None,
+          transform : box transform::Transform::new()
         })
     })
   }

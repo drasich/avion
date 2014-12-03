@@ -7,6 +7,7 @@ use object;
 use camera;
 use scene;
 use vec;
+use transform;
 
 #[deriving(Decodable, Encodable)]
 pub struct Factory
@@ -43,7 +44,8 @@ impl Factory {
             //angles : vec::Vec3::zero(),
             scale : vec::Vec3::one(),
             children : DList::new(),
-            parent : None
+            parent : None,
+            transform : box transform::Transform::new()
         }
     }
 

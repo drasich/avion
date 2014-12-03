@@ -2,6 +2,7 @@ use object;
 use vec;
 use std::any::{Any, AnyRefExt};
 use std::f64::consts;
+use transform;
 
 //log_syntax!()
 //trace_macros!(true)
@@ -10,7 +11,8 @@ pub enum ChrisValue
 {
     ChrisNone,
     BoxAny(Box<Any>),
-    BoxChrisProperty(Box<ChrisProperty+'static>)
+    BoxChrisProperty(Box<ChrisProperty+'static>),
+    //ChrisEnum(Box<ChrisValue>) 
 }
 
 /*
@@ -347,24 +349,28 @@ chris_property_impl!(Chris,
 //chris_property_impl!(Chris, [x,f64,Plain|y,f64,Plain|z,f64,Plain|position,vec::Vec3,Plain])
 //chris_property_impl!(Chris, [x,f64|y,f64|z,f64])
 
-/*
 chris_property_impl!(vec::Quat,
                      [x,f64,Plain|
                      y,f64,Plain|
                      z,f64,Plain|
                      w,f64,Plain])
-                     */
 
 chris_property_impl!(vec::Vec3,
                      [x,f64,Plain|
                      y,f64,Plain|
                      z,f64,Plain])
 
+chris_property_impl!(transform::Transform,
+                     [position,vec::Vec3,PlainStruct])
+                     //[position,vec::Vec3,PlainStruct|
+                     //orientation,transform::Orientation,PlainStruct])
+
 chris_property_impl!(object::Object,
                      [name,String,PlainString
                      |position,vec::Vec3,PlainStruct
                      |orientation,vec::Quat,PlainStruct
                      |scale,vec::Vec3,PlainStruct
+                     |transform,transform::Transform,Boxed
                      ])
 
 pub fn find_property(p : &ChrisProperty, path : Vec<String>) -> 
@@ -385,6 +391,7 @@ Option<Box<ChrisProperty>>
 }
 
 
+/*
 impl ChrisProperty for vec::Quat
 {
   fn fields(&self) -> Box<[String]> 
@@ -442,10 +449,12 @@ impl ChrisProperty for vec::Quat
           _ => return
       };
 
-      //*self = vec::Quat::new_angles_deg(&deg);
+      // *self = vec::Quat::new_angles_deg(&deg);
       *self = *self * q;
 
       let mut deg = self.to_euler_deg();
       println!("deg end : {}", deg);
   }
 }
+*/
+
