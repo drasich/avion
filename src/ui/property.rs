@@ -594,6 +594,11 @@ pub trait PropertyShow
         &self,
         property : &mut Property,
         field : &str);
+
+
+    fn update_widget(&self, pv : *const PropertyValue) {
+    }
+
     /*
     {
         for v in self.fields().iter()
@@ -646,6 +651,14 @@ impl PropertyShow for f64 {
                 property.pv.insert(field.to_string(), pv);
             }
         }
+    }
+
+    fn update_widget(&self, pv : *const PropertyValue) {
+        unsafe {
+            property_list_float_update(
+                pv,
+                *self as c_float);
+        };
     }
 }
 
