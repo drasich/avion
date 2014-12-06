@@ -287,40 +287,6 @@ impl Control
         };
     }
 
-    /*
-    //TODO remove? WAS : move this out of control?
-    pub fn request_display_property(
-        &self,
-        //property : &mut ui::Property,
-        name : Vec<String>,
-        )
-    {
-        //TODO remove property tail
-        let yep = name.tail().to_vec();
-
-        match self.get_selected_object() {
-            Some(o) => {
-                match property::find_property(&*o.read(), yep.clone()) {
-                    Some(ppp) => {
-                        property.create_entries(&*ppp, name.clone());
-                    },
-                    None => {
-                        println!("could not find property {} ", name);
-                    }
-                }
-            },
-            None => {
-                println!("no objetcs selected");
-                return None
-            }
-        };
-
-        let yo = &*ob.read();
-
-        return property::find_property(yo, yep.clone());
-    }
-    */
-
     pub fn undo(&mut self)
     {
         let op = match self.op_mgr.pop_undo() {

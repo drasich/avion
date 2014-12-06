@@ -143,6 +143,7 @@ impl <S: Encoder<E>, E> Encodable<S, E> for Object {
           try!(encoder.emit_struct_field( "orientation", 4u, |encoder| self.orientation.encode(encoder)));
           try!(encoder.emit_struct_field( "scale", 5u, |encoder| self.scale.encode(encoder)));
           try!(encoder.emit_struct_field( "children", 6u, |encoder| self.children.encode(encoder)));
+          //try!(encoder.emit_struct_field( "transform", 7u, |encoder| self.transform.encode(encoder)));
           //try!(encoder.emit_struct_field( "parent", 6u, |encoder| self.parent.encode(encoder)));
           Ok(())
       })

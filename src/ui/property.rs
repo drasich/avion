@@ -194,7 +194,8 @@ impl Property
         }
         let mut v = Vec::new();
         v.push("object".to_string());
-        self.create_entries(o, v);//Vec::new());
+        //self.create_entries(o, v);//Vec::new());
+        o.create_widget(self, "object");
     }
 
     pub fn create_entries(
@@ -634,6 +635,7 @@ impl PropertyShow for f64 {
 
     fn create_widget(&self, property : &mut Property, field : &str)
     {
+        println!("adding field : {}", field);
         let f = field.to_c_str();
         unsafe {
             let pv = property_list_float_add(
@@ -647,22 +649,79 @@ impl PropertyShow for f64 {
     }
 }
 
-impl PropertyShow for vec::Quat {
+impl PropertyShow for String {
 
     fn create_widget(&self, property : &mut Property, field : &str)
     {
         let f = field.to_c_str();
+        let v = self.to_c_str();
+
         unsafe {
-            let pv = property_list_float_add(
+            let pv = property_list_string_add(
                 property.jk_property_list,
                 f.unwrap(),
-                self.x as c_float);
+                v.unwrap());
             if pv != ptr::null() {
                 property.pv.insert(field.to_string(), pv);
             }
         }
     }
 }
+
+
+/*
+impl PropertyShow for vec::Quat {
+
+    fn create_widget(&self, property : &mut Property, field : &str)
+    {
+        let s = field.to_string() + "/x".to_string();
+        self.x.create_widget(property, s.as_slice());
+
+        let s = field.to_string() + "/y".to_string();
+        self.y.create_widget(property, s.as_slice());
+
+        let s = field.to_string() + "/z".to_string();
+        self.z.create_widget(property, s.as_slice());
+
+        let s = field.to_string() + "/w".to_string();
+        self.w.create_widget(property, s.as_slice());
+    }
+}
+*/
+
+pub macro_rules! property_show_impl(
+    ($my_type:ty, [ $($member:ident),+ ]) => ( 
+
+        impl PropertyShow for $my_type
+        {
+            fn create_widget(&self, property : &mut Property, field : &str)
+            {
+                let f = field.to_c_str();
+                unsafe {
+                    property_list_node_add(
+                        property.jk_property_list,
+                        f.unwrap());
+                }
+
+                $(
+                    let s = field.to_string()
+                    + "/".to_string()
+                    + stringify!($member).to_string();
+                    self.$member.create_widget(property, s.as_slice());
+                 )+
+            }
+        }
+    )
+)
+
+property_show_impl!(vec::Vec3,
+                     [x,y,z])
+
+property_show_impl!(vec::Quat,[x,y,z,w])
+
+property_show_impl!(object::Object,
+                     [name,position,orientation])
+
 
 
 fn join_string(path : &Vec<String>) -> String
