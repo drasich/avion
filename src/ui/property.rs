@@ -599,6 +599,12 @@ pub trait PropertyShow
     fn update_widget(&self, pv : *const PropertyValue) {
     }
 
+      fn get_property(&self, field : &str) -> Option<&PropertyShow>
+    {
+        return None;
+    }
+
+
     /*
     {
         for v in self.fields().iter()
@@ -723,6 +729,16 @@ pub macro_rules! property_show_impl(
                     self.$member.create_widget(property, s.as_slice());
                  )+
             }
+
+            fn get_property(&self, field : &str) -> Option<&PropertyShow>
+            {
+                match field {
+                $(
+                    stringify!($member) => Some(&self.$member as &PropertyShow),
+                 )+
+                    _ => None
+                }
+            }
         }
     )
 )
@@ -752,3 +768,30 @@ fn join_string(path : &Vec<String>) -> String
     s
 }
 
+fn make_vec_from_string(s : &String) -> Vec<String>
+{
+    let v: Vec<&str> = s.split('/').collect();
+
+    let mut vs = Vec::new();
+    for i in v.iter()
+    {
+        vs.push(i.to_string());
+    }
+
+    vs
+}
+
+pub fn find_property_show(p : &PropertyShow, path : Vec<String>) -> 
+Option<&PropertyShow>
+{
+    //let vs = make_vec_from_string(&field.to_string());
+
+    match path.len() {
+        0 =>  None,
+        1 => p.get_property(path[0].as_slice()),
+        _ => { 
+            let yep = p.get_property(path[0].as_slice());
+            find_property_show(p, path.tail().to_vec())
+        }
+    }
+}
