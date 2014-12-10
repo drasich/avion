@@ -45,14 +45,14 @@ impl property::ChrisProperty for Orientation
 
 impl ui::PropertyShow for Orientation {
 
-    fn create_widget(&self, property : &mut ui::Property, field : &str)
+    fn create_widget(&self, property : &mut ui::Property, field : &str, depth : i32)
     {
         //let f = field.to_c_str();
         //TODO add selector of enum
 
         match *self {
-          AngleXYZ(ref v) => v.create_widget(property, field),
-          Quat(ref q) => q.create_widget(property, field)
+          AngleXYZ(ref v) => v.create_widget(property, field, depth),
+          Quat(ref q) => q.create_widget(property, field, depth)
         };
     }
 }

@@ -195,7 +195,7 @@ impl Property
         let mut v = Vec::new();
         v.push("object".to_string());
         //self.create_entries(o, v);//Vec::new());
-        o.create_widget(self, "object");
+        o.create_widget(self, "object", 1);
     }
 
     pub fn create_entries(
@@ -593,7 +593,9 @@ pub trait PropertyShow
     fn create_widget(
         &self,
         property : &mut Property,
-        field : &str);
+        field : &str,
+        depth : i32
+        );
 
 
     fn update_widget(&self, pv : *const PropertyValue) {
@@ -644,7 +646,7 @@ impl PropertyShow for vec::Quat {
 
 impl PropertyShow for f64 {
 
-    fn create_widget(&self, property : &mut Property, field : &str)
+    fn create_widget(&self, property : &mut Property, field : &str, depth : i32)
     {
         println!("adding field : {}", field);
         let f = field.to_c_str();
@@ -670,7 +672,7 @@ impl PropertyShow for f64 {
 
 impl PropertyShow for String {
 
-    fn create_widget(&self, property : &mut Property, field : &str)
+    fn create_widget(&self, property : &mut Property, field : &str, depth : i32)
     {
         let f = field.to_c_str();
         let v = self.to_c_str();
@@ -713,21 +715,34 @@ pub macro_rules! property_show_impl(
 
         impl PropertyShow for $my_type
         {
-            fn create_widget(&self, property : &mut Property, field : &str)
+            fn create_widget(
+                &self,
+                property : &mut Property,
+                field : &str,
+                depth : i32)
             {
-                let f = field.to_c_str();
-                unsafe {
-                    property_list_node_add(
-                        property.jk_property_list,
-                        f.unwrap());
+                if depth < 0 {
+                    return;
                 }
 
+                if depth >= 0
+                {
+                    let f = field.to_c_str();
+                    unsafe {
+                        property_list_node_add(
+                            property.jk_property_list,
+                            f.unwrap());
+                    }
+                }
+
+                if depth > 0 {
                 $(
                     let s = field.to_string()
                     + "/".to_string()
                     + stringify!($member).to_string();
-                    self.$member.create_widget(property, s.as_slice());
+                    self.$member.create_widget(property, s.as_slice(), depth-1);
                  )+
+                }
             }
 
             fn get_property(&self, field : &str) -> Option<&PropertyShow>
