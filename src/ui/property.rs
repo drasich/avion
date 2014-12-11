@@ -21,6 +21,7 @@ use operation;
 use control::Control;
 use control::WidgetUpdate;
 use vec;
+use transform;
 
 #[repr(C)]
 pub struct Elm_Object_Item;
@@ -304,45 +305,22 @@ impl Property
         //unsafe { property_data_set(self.jk_property, data); }
     }
 
-    pub fn update_object(&mut self, object : &ChrisProperty, but : &str)
+    pub fn update_object(&mut self, object : &PropertyShow, but : &str)
     {
-        let path = vec!("object".to_string());
-        //let path = vec!();
-
-        fn _update_obj_rec(
-            prop :&mut Property,
-            object : &ChrisProperty,
-            child : &ChrisProperty,
-            path : &Vec<String>,
-            but : &str
-            )
-        {
-            for f in child.fields().iter() {
-                let mut yep = path.clone();
-                yep.push(f.clone());
-                //println!("try to find : {}", yep);
-                match object.get_property_hier(yep.tail().to_vec()) {
-                    property::BoxAny(a) => {
-                        let s = join_string(&yep);
-                        if s.as_slice() != but{
-                        prop.update_changed(
-                            s.as_slice(),
-                            &*a);
-                        }
-                    },
-                    property::BoxChrisProperty(cp) => {
-                        //_update_obj_rec(prop, &*cp, &yep);
-                        _update_obj_rec(prop, object, &*cp, &yep, but);
-                    }
-                    property::ChrisNone => {
-                        println!("its none : {}", yep);
-                    }
+        for (f,pv) in self.pv.iter() {
+            if f.as_slice() == but {
+                continue;
+            }
+            let yep = make_vec_from_string(f).tail().to_vec();
+            match find_property_show(object, yep.clone()) {
+                Some(ppp) => {
+                    ppp.update_widget(*pv);
+                },
+                None => {
+                    println!("could not find prop : {}", yep);
                 }
             }
         }
-
-        println!("updating object.......");
-        _update_obj_rec(self, object, object, &path, but);
     }
 }
 
@@ -524,9 +502,11 @@ extern fn expand(
                 None => return
             };
 
-            match property::find_property(&*o.read(), yep.clone()) {
+            //match property::find_property(&*o.read(), yep.clone()) {
+            match find_property_show(&*o.read(), yep.clone()) {
                 Some(ppp) => {
-                    p.create_entries(&*ppp, vs.clone());
+                    //p.create_entries(&*ppp, vs.clone());
+                    ppp.create_widget(p, path , 1);
                 },
                 None => {
                     println!("could not find property {} ", vs);
@@ -710,6 +690,23 @@ impl PropertyShow for vec::Quat {
 }
 */
 
+impl<T : PropertyShow> PropertyShow for Box<T> {
+
+    fn create_widget(
+        &self,
+        property : &mut Property,
+        field : &str,
+        depth : i32)
+    {
+        (**self).create_widget(property ,field, depth);
+    }
+
+    fn get_property(&self, field : &str) -> Option<&PropertyShow>
+    {
+        (**self).get_property(field)
+    }
+}
+
 pub macro_rules! property_show_impl(
     ($my_type:ty, [ $($member:ident),+ ]) => ( 
 
@@ -725,7 +722,7 @@ pub macro_rules! property_show_impl(
                     return;
                 }
 
-                if depth == 0
+                if depth == 0 && field != ""
                 {
                     let f = field.to_c_str();
                     unsafe {
@@ -763,8 +760,10 @@ property_show_impl!(vec::Vec3,
 
 property_show_impl!(vec::Quat,[x,y,z,w])
 
+property_show_impl!(transform::Transform,[position,orientation])
+
 property_show_impl!(object::Object,
-                     [name,position,orientation])
+                     [name,position,orientation,scale,transform])
 
 
 
@@ -805,8 +804,14 @@ Option<&PropertyShow>
         0 =>  None,
         1 => p.get_property(path[0].as_slice()),
         _ => { 
-            let yep = p.get_property(path[0].as_slice());
-            find_property_show(p, path.tail().to_vec())
+             match p.get_property(path[0].as_slice()) {
+                 Some(ppp) => {
+                     find_property_show(ppp, path.tail().to_vec())
+                 },
+                 None => {
+                     None
+                 }
+             }
         }
     }
 }

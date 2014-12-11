@@ -236,8 +236,9 @@ impl Control
         o.write().set_property_hier(vs, new);
 
         //TODO it might do more than just update this property
-        // for example for quat, it updates other properties
-        // if you change angle x, angle y might also change...
+        // for example for orientation enum, you change the enum
+        // the widget must change.
+        // the proeprty might also be displayed somewhere else
 
         //TODO update the widget that has this object/property, but not the
         // widget where the change came from
