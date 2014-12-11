@@ -725,7 +725,7 @@ pub macro_rules! property_show_impl(
                     return;
                 }
 
-                if depth >= 0
+                if depth == 0
                 {
                     let f = field.to_c_str();
                     unsafe {
