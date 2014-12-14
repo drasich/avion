@@ -39,7 +39,7 @@ pub type RegisterChangeFunc = extern fn(
     action_type : c_int
     );
 
-pub type PropertyTreeExpandFunc = extern fn(
+pub type PropertyTreeFunc = extern fn(
     property : *const Property,
     object : *const c_void,
     parent : *const Elm_Object_Item);
@@ -111,7 +111,8 @@ extern {
         changed_string : ChangedFunc,
         register_change_string : RegisterChangeFunc,
         register_change_float : RegisterChangeFunc,
-        expand : PropertyTreeExpandFunc
+        expand : PropertyTreeFunc,
+        contract : PropertyTreeFunc
         );
 
     fn property_list_group_add(
@@ -120,6 +121,11 @@ extern {
         );
 
     fn property_list_node_add(
+        pl : *const JkPropertyList,
+        name : *const c_char
+        );
+
+    fn property_list_nodes_remove(
         pl : *const JkPropertyList,
         name : *const c_char
         );
@@ -176,7 +182,8 @@ impl Property
                 changed_set_string,
                 register_change_string,
                 register_change_float,
-                expand
+                expand,
+                contract
                 ); 
         }
 
@@ -470,9 +477,7 @@ extern fn expand(
     let mut p : &mut Property = unsafe {mem::transmute(property)};
 
     //println!("expanding ! property name {} ", p.name);
-
-    let s = unsafe {CString::new(data as *const i8, false) };
-    println!("I changed the value {} ", s);
+    println!("I expand the value {} ", s);
 
     let path = match s.as_str() {
         Some(pp) => pp,
@@ -481,14 +486,7 @@ extern fn expand(
             return;}
     };
 
-    let v: Vec<&str> = path.split('/').collect();
-
-    let mut vs = Vec::new();
-    for i in v.iter()
-    {
-        vs.push(i.to_string());
-        println!("pushing {}", i);
-    }
+    let vs = make_vec_from_string(&path.to_string());
 
     let yep = vs.tail().to_vec();
     println!("expand : {}", vs);
@@ -516,6 +514,50 @@ extern fn expand(
         None => return
     };
 
+}
+
+extern fn contract(
+    property: *const Property,
+    data : *const c_void,
+    parent : *const Elm_Object_Item) -> ()
+{
+    let mut p : &mut Property = unsafe {mem::transmute(property)};
+
+    unsafe {
+        property_list_nodes_remove(
+            p.jk_property_list,
+            data as *const c_char
+            //s.unwrap(),
+            );
+    };
+
+    let s = unsafe {CString::new(data as *const i8, false) };
+    let path = match s.as_str() {
+        Some(pp) => pp,
+        None => {
+            println!("problem with the path");
+            return;}
+    };
+
+    println!("I contract the path {} ", path);
+
+    let vs = make_vec_from_string(&path.to_string());
+
+    let yep = vs.tail().to_vec();
+    println!("contract : {}", vs);
+
+    let clone = p.pv.clone();
+
+    for (key,pv) in clone.iter() {
+        println!("start with key '{}' ", key);
+        if key.as_slice().starts_with(path) {
+            println!("yes, '{}' starts with '{}'", key, path);
+            match p.pv.remove(key) {
+                Some(_) => println!("yes I removed {}", key),
+                None => println!("could not find {}", key)
+            }
+        }
+    }
 }
 
 impl WidgetUpdate for Property
@@ -576,7 +618,6 @@ pub trait PropertyShow
         field : &str,
         depth : i32
         );
-
 
     fn update_widget(&self, pv : *const PropertyValue) {
     }
