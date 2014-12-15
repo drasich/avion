@@ -10,8 +10,6 @@ pub enum Orientation
     Quat(vec::Quat)
 }
 
-
-
 #[deriving(Decodable, Encodable, Clone)]
 pub struct Transform {
     pub position : vec::Vec3, 
@@ -49,6 +47,18 @@ impl ui::PropertyShow for Orientation {
     {
         //let f = field.to_c_str();
         //TODO add selector of enum
+        /*
+        unsafe {
+            let pv= property_list_enum_add(
+                property.jk_property_list,
+                field + "/type" .unwrap(),
+                "AngleXYZ"); // "Quat"
+                    
+            if pv != ptr::null() {
+                self.pv.insert(field, pv);
+            }
+        }
+        */
 
         match *self {
           AngleXYZ(ref v) => v.create_widget(property, field, depth),
