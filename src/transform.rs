@@ -6,17 +6,15 @@ use std::ptr;
 use libc::{c_char, c_void, c_int, c_float};
 
 
-/*
 #[link(name = "joker")]
 extern {
     fn property_list_enum_add(
-        ps : *const JkPropertyList,
+        ps : *const ui::JkPropertyList,
         name : *const c_char,
         possible_values : *const *const c_char,
         value : *const c_char
-        ) -> *const PropertyValue;
+        ) -> *const ui::PropertyValue;
 }
-*/
 
 
 #[deriving(Decodable, Encodable, Clone)]
@@ -76,7 +74,6 @@ impl ui::PropertyShow for Orientation {
         }
         */
 
-        /*
         let yep = field.to_string() + "/type";
         let f = yep.to_c_str();
         let type_value = match *self {
@@ -96,7 +93,6 @@ impl ui::PropertyShow for Orientation {
                 property.pv.insert(field.to_string(), pv);
             }
         }
-        */
 
         match *self {
           AngleXYZ(ref v) => v.create_widget(property, field, depth),

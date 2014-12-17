@@ -161,8 +161,8 @@ extern {
 pub struct Property
 {
     pub name : String,
-    jk_property_list : *const JkPropertyList,
-    pv : HashMap<String, *const PropertyValue>,
+    pub jk_property_list : *const JkPropertyList,
+    pub pv : HashMap<String, *const PropertyValue>,
     control : Rc<RefCell<Control>>
 }
 
