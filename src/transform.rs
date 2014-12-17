@@ -2,6 +2,22 @@ use vec;
 use property;
 use ui;
 use std::any::{Any, AnyRefExt};
+use std::ptr;
+use libc::{c_char, c_void, c_int, c_float};
+
+
+/*
+#[link(name = "joker")]
+extern {
+    fn property_list_enum_add(
+        ps : *const JkPropertyList,
+        name : *const c_char,
+        possible_values : *const *const c_char,
+        value : *const c_char
+        ) -> *const PropertyValue;
+}
+*/
+
 
 #[deriving(Decodable, Encodable, Clone)]
 pub enum Orientation
@@ -56,6 +72,28 @@ impl ui::PropertyShow for Orientation {
                     
             if pv != ptr::null() {
                 self.pv.insert(field, pv);
+            }
+        }
+        */
+
+        /*
+        let yep = field.to_string() + "/type";
+        let f = yep.to_c_str();
+        let type_value = match *self {
+            AngleXYZ(_) => "AngleXYZ",
+            Quat(_) => "Quat"
+        };
+        let v = type_value.to_c_str();
+
+        unsafe {
+            let pv = property_list_enum_add(
+                property.jk_property_list,
+                f.unwrap(),
+                ptr::null(),
+                v.unwrap());
+
+            if pv != ptr::null() {
+                property.pv.insert(field.to_string(), pv);
             }
         }
         */

@@ -28,10 +28,12 @@ pub enum teststtst
 
 
 pub trait ChrisProperty {
+    //*
   fn fields(&self) -> Box<[String]>
   {
       return box [];
   }
+  //*/
 
   fn get_property(&self, name: &str) -> ChrisValue
   {
@@ -160,6 +162,7 @@ macro_rules! new_test(
     )
   )
 
+/*
 macro_rules! new_test_set(
   ($sself:ident, $member:ident, SString, $value:ident, $name:ident) => (
     match $value {
@@ -196,6 +199,7 @@ macro_rules! new_test_set(
     }
     )
   )
+  */
 
 macro_rules! match_get(
   ($yo:ident, $member:ident, $yep:ty, PlainString) => (
@@ -264,6 +268,7 @@ pub macro_rules! chris_property_impl(
 
       impl ChrisProperty for $my_type
       {
+          //*
         fn fields(&self) -> Box<[String]>
         {
           return box[
@@ -273,6 +278,7 @@ pub macro_rules! chris_property_impl(
           ];
 
         }
+        //*/
 
         fn get_property(&self, name: &str) -> ChrisValue
         {

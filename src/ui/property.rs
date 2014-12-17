@@ -142,6 +142,13 @@ extern {
         value : *const c_char
         ) -> *const PropertyValue;
 
+    fn property_list_enum_add(
+        ps : *const JkPropertyList,
+        name : *const c_char,
+        possible_values : *const *const c_char,
+        value : *const c_char
+        ) -> *const PropertyValue;
+
     fn property_list_string_update(
         pv : *const PropertyValue,
         value : *const c_char);
