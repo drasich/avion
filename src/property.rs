@@ -468,9 +468,11 @@ pub trait ChrisTest
 {
   fn test_set_property(&mut self, value: &Any)
   {
+      println!("default set property does nothing");
   }
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {
+      println!("default set property HIER does nothing");
   }
 }
 
@@ -501,6 +503,11 @@ impl<T:ChrisTest> ChrisTest for Box<T>
   fn test_set_property(&mut self, value: &Any)
   {
       (**self).test_set_property(value);
+  }
+
+  fn test_set_property_hier(&mut self, name : &str, value: &Any)
+  {
+      (**self).test_set_property_hier(name, value);
   }
 }
 
@@ -547,7 +554,42 @@ impl ChrisTest for vec::Quat
   }
 }
 
-impl ChrisTest for object::Object
+impl ChrisTest for transform::Orientation
+{
+
+    /*
+  fn test_set_property(&mut self, value: &Any)
+  {
+      match value.downcast_ref::<vec::Vec3>() {
+          Some(v) => *self = *v,
+          None => {}
+      }
+  }
+  */
+
+  fn test_set_property_hier(&mut self, name : &str, value: &Any)
+  {
+      if name == "type" {
+          let s = match value.downcast_ref::<String>() {
+              Some(v) => v,
+              None => return
+          };
+          match s.as_slice() {
+              "AngleXYZ" => self.to_angle_xyz(),
+              "Quat" => self.to_quat(),
+              _ => println!("no such type")
+          }
+      }
+      else  {
+          match *self {
+              transform::AngleXYZ(ref mut v) => v.test_set_property_hier(name, value),
+              transform::Quat(ref mut v) => v.test_set_property_hier(name, value),
+          }
+      }
+  }
+}
+
+impl ChrisTest for transform::Transform
 {
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {
@@ -570,6 +612,47 @@ impl ChrisTest for object::Object
                   "orientation" =>
                       self.orientation.test_set_property_hier(yep.as_slice(), value),
                   _ => println!("no such member")
+              }
+          }
+      }
+  }
+}
+
+impl ChrisTest for object::Object
+{
+  fn test_set_property_hier(&mut self, name : &str, value: &Any)
+  {
+      //TODO remove
+      println!("REMOVE THIS");
+      let mut vs = make_vec_from_string(name);
+      if vs.len() > 0 {
+          if vs[0].as_slice() == "object" {
+              vs = vs.tail().to_vec();
+          }
+      }
+
+      match vs.len() {
+          0 => {},
+          1 => {
+              match vs[0].as_slice() {
+                  "position" => self.position.test_set_property(value),
+                  "orientation" => self.orientation.test_set_property(value),
+                  "transform" => self.transform.test_set_property(value),
+                  _ => println!("no such member : {} ", vs[0])
+              }
+          },
+          _ => {
+              let yep = join_string(&vs.tail().to_vec());
+              match vs[0].as_slice() {
+                  "position" => 
+                      self.position.test_set_property_hier(yep.as_slice(), value),
+                  "orientation" =>
+                      self.orientation.test_set_property_hier(yep.as_slice(), value),
+                  "transform" => {
+                      println!("yes come here");
+                      self.transform.test_set_property_hier(yep.as_slice(), value);
+                  }
+                  _ => println!("no such member,hier : {}", vs[0])
               }
           }
       }

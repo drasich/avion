@@ -24,6 +24,17 @@ pub enum Orientation
     Quat(vec::Quat)
 }
 
+impl Orientation
+{
+    pub fn to_angle_xyz(&mut self) {
+        println!("todo : to angle xyz");
+    }
+
+    pub fn to_quat(&mut self) {
+        println!("todo : to quat");
+    }
+}
+
 #[deriving(Decodable, Encodable, Clone)]
 pub struct Transform {
     pub position : vec::Vec3, 
