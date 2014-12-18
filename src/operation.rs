@@ -7,6 +7,7 @@ use std::fmt;
 use object;
 use property;
 use property::ChrisProperty;
+use property::ChrisTest;
 use ui;
 use control::WidgetUpdate;
 
@@ -51,7 +52,8 @@ impl Operation
 
         //o.write().set_property_hier(vs, &*self.old);
         println!("apply {}, {}", self.name, self.new);
-        o.write().set_property_hier(self.name.clone(), &*self.new);
+        //o.write().set_property_hier(self.name.clone(), &*self.new);
+        o.write().test_set_property_hier(join_string(&self.name).as_slice(), &*self.new);
         println!("applied {}", self.name);
 
         match self.new.downcast_ref::<String>() {
@@ -127,5 +129,21 @@ impl OperationManager
 
         op.apply();
     }
+}
+
+//TODO remove
+fn join_string(path : &Vec<String>) -> String
+{
+    let mut s = String::new();
+    let mut first = true;
+    for v in path.iter() {
+        if !first {
+            s.push('/');
+        }
+        s.push_str(v.as_slice());
+        first = false;
+    }
+
+    s
 }
 

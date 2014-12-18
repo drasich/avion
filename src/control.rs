@@ -18,6 +18,7 @@ use vec;
 use object;
 use property;
 use property::ChrisProperty;
+use property::ChrisTest;
 
 pub enum MasterState
 {
@@ -233,7 +234,8 @@ impl Control
 
         let vs = name.tail().to_vec();
 
-        o.write().set_property_hier(vs, new);
+        //o.write().set_property_hier(vs, new);
+        o.write().test_set_property_hier(join_string(&vs).as_slice(), new);
 
         //TODO it might do more than just update this property
         // for example for orientation enum, you change the enum

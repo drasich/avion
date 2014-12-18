@@ -464,3 +464,143 @@ impl ChrisProperty for vec::Quat
 }
 */
 
+pub trait ChrisTest
+{
+  fn test_set_property(&mut self, value: &Any)
+  {
+  }
+  fn test_set_property_hier(&mut self, name : &str, value: &Any)
+  {
+  }
+}
+
+impl ChrisTest for f64
+{
+  fn test_set_property(&mut self, value: &Any)
+  {
+      match value.downcast_ref::<f64>() {
+          Some(v) => *self = *v,
+          None => {}
+      }
+  }
+}
+
+impl ChrisTest for String
+{
+  fn test_set_property(&mut self, value: &Any)
+  {
+      match value.downcast_ref::<String>() {
+          Some(v) => *self = v.clone(),
+          None => {}
+      }
+  }
+}
+
+impl<T:ChrisTest> ChrisTest for Box<T>
+{
+  fn test_set_property(&mut self, value: &Any)
+  {
+      (**self).test_set_property(value);
+  }
+}
+
+impl ChrisTest for vec::Vec3
+{
+  fn test_set_property(&mut self, value: &Any)
+  {
+      match value.downcast_ref::<vec::Vec3>() {
+          Some(v) => *self = *v,
+          None => {}
+      }
+  }
+
+  fn test_set_property_hier(&mut self, name : &str, value: &Any)
+  {
+      match name {
+          "x" => self.x.test_set_property(value),
+          "y" => self.y.test_set_property(value),
+          "z" => self.z.test_set_property(value),
+          _ => println!("no such member")
+      }
+  }
+}
+
+impl ChrisTest for vec::Quat
+{
+  fn test_set_property(&mut self, value: &Any)
+  {
+      match value.downcast_ref::<vec::Quat>() {
+          Some(v) => *self = *v,
+          None => {}
+      }
+  }
+
+  fn test_set_property_hier(&mut self, name : &str, value: &Any)
+  {
+      match name {
+          "x" => self.x.test_set_property(value),
+          "y" => self.y.test_set_property(value),
+          "z" => self.z.test_set_property(value),
+          "w" => self.w.test_set_property(value),
+          _ => println!("no such member")
+      }
+  }
+}
+
+impl ChrisTest for object::Object
+{
+  fn test_set_property_hier(&mut self, name : &str, value: &Any)
+  {
+      let vs = make_vec_from_string(name);
+
+      match vs.len() {
+          0 => {},
+          1 => {
+              match vs[0].as_slice() {
+                  "position" => self.position.test_set_property(value),
+                  "orientation" => self.orientation.test_set_property(value),
+                  _ => println!("no such member")
+              }
+          },
+          _ => {
+              let yep = join_string(&vs.tail().to_vec());
+              match vs[0].as_slice() {
+                  "position" => 
+                      self.position.test_set_property_hier(yep.as_slice(), value),
+                  "orientation" =>
+                      self.orientation.test_set_property_hier(yep.as_slice(), value),
+                  _ => println!("no such member")
+              }
+          }
+      }
+  }
+}
+
+fn make_vec_from_string(s : &str) -> Vec<String>
+{
+    let v: Vec<&str> = s.split('/').collect();
+
+    let mut vs = Vec::new();
+    for i in v.iter()
+    {
+        vs.push(i.to_string());
+    }
+
+    vs
+}
+
+fn join_string(path : &Vec<String>) -> String
+{
+    let mut s = String::new();
+    let mut first = true;
+    for v in path.iter() {
+        if !first {
+            s.push('/');
+        }
+        s.push_str(v.as_slice());
+        first = false;
+    }
+
+    s
+}
+

@@ -109,8 +109,10 @@ extern {
         data : *const Property,
         changed_float : ChangedFunc,
         changed_string : ChangedFunc,
+        changed_enum : ChangedFunc,
         register_change_string : RegisterChangeFunc,
         register_change_float : RegisterChangeFunc,
+        register_change_enum : RegisterChangeFunc,
         expand : PropertyTreeFunc,
         contract : PropertyTreeFunc
         );
@@ -187,8 +189,10 @@ impl Property
                 &*p, //ptr::null(),
                 changed_set_float,
                 changed_set_string,
+                changed_set_enum,
                 register_change_string,
                 register_change_float,
+                register_change_enum,
                 expand,
                 contract
                 ); 
@@ -376,6 +380,14 @@ pub extern fn changed_set_string(
     changed_set(property, name, None, &ss, 0);
 }
 
+pub extern fn changed_set_enum(
+    property : *const c_void,
+    name : *const c_char,
+    data : *const c_void) {
+    println!("DOES NOT NO ANYTHING");
+}
+
+
 pub extern fn register_change_string(
     property : *const c_void,
     name : *const c_char,
@@ -420,6 +432,34 @@ pub extern fn register_change_float(
     }
     else {
         changed_set(property, name, None, fnew, action);
+    }
+}
+
+pub extern fn register_change_enum(
+    property : *const c_void,
+    name : *const c_char,
+    old : *const c_void,
+    new : *const c_void,
+    action : c_int
+    ) {
+
+    let s = unsafe {CString::new(new as *const i8, false) };
+    let ss = match s.as_str() {
+        Some(sss) => sss.to_string(),
+        None => return
+    };
+
+    //println!("the string is {}", ss);
+    if action == 1 && old != ptr::null() {
+        let so = unsafe {CString::new(old as *const i8, false) };
+        let sso = match so.as_str() {
+            Some(ssso) => ssso.to_string(),
+            None => return
+        };
+        changed_set(property, name, Some(&sso), &ss, action);
+    }
+    else {
+        changed_set(property, name, None, &ss, action);
     }
 }
 
