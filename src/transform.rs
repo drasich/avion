@@ -11,7 +11,7 @@ extern {
     fn property_list_enum_add(
         ps : *const ui::JkPropertyList,
         name : *const c_char,
-        possible_values : *const *const c_char,
+        possible_values : *const c_char,
         value : *const c_char
         ) -> *const ui::PropertyValue;
 }
@@ -82,11 +82,13 @@ impl ui::PropertyShow for Orientation {
         };
         let v = type_value.to_c_str();
 
+        let types = "AngleXYZ/Quat".to_c_str();
+
         unsafe {
             let pv = property_list_enum_add(
                 property.jk_property_list,
                 f.unwrap(),
-                ptr::null(),
+                types.unwrap(),
                 v.unwrap());
 
             if pv != ptr::null() {
