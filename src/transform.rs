@@ -37,7 +37,7 @@ impl Orientation
     pub fn to_quat(&mut self) {
         println!("todo : to quat");
         match *self {
-            AngleXYZ(a) => *self = Quat(new_angles_deg(a)),
+            AngleXYZ(a) => *self = Quat(vec::Quat::new_angles_deg(&a)),
             _ => {}
         }
     }
@@ -93,8 +93,8 @@ impl ui::PropertyShow for Orientation {
         }
         */
 
-        let yep = field.to_string() + "/type";
-        let f = yep.to_c_str();
+        //let yep = field.to_string() + "/type";
+        let f = field.to_c_str();
         let type_value = match *self {
             AngleXYZ(_) => "AngleXYZ",
             Quat(_) => "Quat"
@@ -115,9 +115,19 @@ impl ui::PropertyShow for Orientation {
             }
         }
 
+        return;
+
         match *self {
-          AngleXYZ(ref v) => v.create_widget(property, field, depth),
-          Quat(ref q) => q.create_widget(property, field, depth)
+          AngleXYZ(ref v) =>  {
+              //v.create_widget(property, field, depth);
+              let yep = field.to_string() + "/AngleXYZ";
+              v.create_widget(property, yep.as_slice(), depth);
+          },
+          Quat(ref q) => {
+              //q.create_widget(property, field, depth)
+              let yep = field.to_string() + "/Quat";
+              q.create_widget(property, yep.as_slice(), depth);
+          }
         };
     }
 }
