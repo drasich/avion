@@ -27,11 +27,19 @@ pub enum Orientation
 impl Orientation
 {
     pub fn to_angle_xyz(&mut self) {
+        match *self {
+            Quat(q) => *self = AngleXYZ(q.to_euler_deg()),
+            _ => {}
+        }
         println!("todo : to angle xyz");
     }
 
     pub fn to_quat(&mut self) {
         println!("todo : to quat");
+        match *self {
+            AngleXYZ(a) => *self = Quat(new_angles_deg(a)),
+            _ => {}
+        }
     }
 }
 
