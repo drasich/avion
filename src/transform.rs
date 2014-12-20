@@ -78,58 +78,43 @@ impl ui::PropertyShow for Orientation {
 
     fn create_widget(&self, property : &mut ui::Property, field : &str, depth : i32)
     {
-        //let f = field.to_c_str();
-        //TODO add selector of enum
-        /*
-        unsafe {
-            let pv= property_list_enum_add(
-                property.jk_property_list,
-                field + "/type" .unwrap(),
-                "AngleXYZ"); // "Quat"
-                    
-            if pv != ptr::null() {
-                self.pv.insert(field, pv);
-            }
-        }
-        */
+        if depth == 0 {
+            //let yep = field.to_string() + "/type";
+            let f = field.to_c_str();
+            let type_value = match *self {
+                AngleXYZ(_) => "AngleXYZ",
+                Quat(_) => "Quat"
+            };
+            let v = type_value.to_c_str();
 
-        //let yep = field.to_string() + "/type";
-        let f = field.to_c_str();
-        let type_value = match *self {
-            AngleXYZ(_) => "AngleXYZ",
-            Quat(_) => "Quat"
-        };
-        let v = type_value.to_c_str();
+            let types = "AngleXYZ/Quat".to_c_str();
 
-        let types = "AngleXYZ/Quat".to_c_str();
+            unsafe {
+                let pv = property_list_enum_add(
+                    property.jk_property_list,
+                    f.unwrap(),
+                    types.unwrap(),
+                    v.unwrap());
 
-        unsafe {
-            let pv = property_list_enum_add(
-                property.jk_property_list,
-                f.unwrap(),
-                types.unwrap(),
-                v.unwrap());
-
-            if pv != ptr::null() {
-                property.pv.insert(field.to_string(), pv);
+                if pv != ptr::null() {
+                    property.pv.insert(field.to_string(), pv);
+                }
             }
         }
 
-        return;
 
-        match *self {
-          AngleXYZ(ref v) =>  {
-              //v.create_widget(property, field, depth);
-              let yep = field.to_string() + "/AngleXYZ";
-              v.create_widget(property, yep.as_slice(), depth);
-          },
-          Quat(ref q) => {
-              //q.create_widget(property, field, depth)
-              let yep = field.to_string() + "/Quat";
-              q.create_widget(property, yep.as_slice(), depth);
-          }
-        };
+        if depth == 1 {
+            match *self {
+                AngleXYZ(ref v) =>  {
+                    v.create_widget(property, field, depth);
+                },
+                Quat(ref q) => {
+                    q.create_widget(property, field, depth)
+                }
+            };
+        }
     }
+
 }
 
 

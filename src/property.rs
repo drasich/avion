@@ -556,16 +556,27 @@ impl ChrisTest for vec::Quat
 
 impl ChrisTest for transform::Orientation
 {
-
-    /*
   fn test_set_property(&mut self, value: &Any)
   {
-      match value.downcast_ref::<vec::Vec3>() {
-          Some(v) => *self = *v,
+      match value.downcast_ref::<transform::Orientation>() {
+          Some(v) => {
+              *self = *v;
+              return;
+          }
+          None => {}
+      }
+
+      match value.downcast_ref::<String>() {
+          Some(s) => {
+              match s.as_slice() {
+                  "AngleXYZ" => self.to_angle_xyz(),
+                  "Quat" => self.to_quat(),
+                  _ => println!("no such type")
+              }
+          },
           None => {}
       }
   }
-  */
 
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {
