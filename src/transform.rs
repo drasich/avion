@@ -60,20 +60,6 @@ impl Transform
     }
 }
 
-impl property::ChrisProperty for Orientation
-{
-  //TODO set_property return a vec of properties that were changed,
-  // execpt the one we sent...
-  fn set_property(&mut self, name: &str, value: &Any)
-  {
-      match *self {
-          AngleXYZ(ref mut v) => v.set_property(name, value),
-          Quat(ref mut q) => q.set_property(name, value),
-          
-      };
-  }
-}
-
 impl ui::PropertyShow for Orientation {
 
     fn create_widget(&self, property : &mut ui::Property, field : &str, depth : i32)
@@ -101,7 +87,6 @@ impl ui::PropertyShow for Orientation {
                 }
             }
         }
-
 
         if depth == 1 {
             match *self {

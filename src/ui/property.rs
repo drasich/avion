@@ -16,7 +16,6 @@ use object;
 use ui::Window;
 use ui;
 use property;
-use property::ChrisProperty;
 use operation;
 use control::Control;
 use control::WidgetUpdate;
@@ -213,109 +212,8 @@ impl Property
         }
         let mut v = Vec::new();
         v.push("object".to_string());
-        //self.create_entries(o, v);//Vec::new());
         o.create_widget(self, "object", 1);
     }
-
-    pub fn create_entries(
-        &mut self,
-        o : &ChrisProperty,
-        path : Vec<String>)
-    {
-        //o.create_entries(self, path);
-        fn get_node_path(path : &Vec<String>) -> String
-        {
-            let mut s = String::new();
-            let mut first = true;
-            for v in path.iter() {
-                if !first {
-                    s.push('/');
-                }
-                s.push_str(v.as_slice());
-                first = false;
-            }
-
-            s
-        }
-
-        fn create_node_path(path : &Vec<String>, field : &str) -> String
-        {
-            let mut s = get_node_path(path);
-            if !path.is_empty(){
-                s.push('/');
-            }
-            s.push_str(field);
-
-            s
-        }
-
-        //TODO this function for jk_property_list
-            println!("entries!!! {}", path);
-            for field in o.fields().iter()
-            {
-                match o.get_property(field.as_slice()) {
-                    property::BoxAny(p) => {
-                        match p.downcast_ref::<String>() {
-                            Some(s) => {
-                                let field = create_node_path(
-                                    &path,
-                                    field.as_slice());
-                                let v = s.to_c_str();
-                                let f = field.to_c_str();
-                                unsafe {
-                                    let pv = property_list_string_add(
-                                        self.jk_property_list,
-                                        f.unwrap(),
-                                        v.unwrap());
-                                    if pv != ptr::null() {
-                                        self.pv.insert(field, pv);
-                                    }
-                                }
-                            },
-                            None => {}
-                        }
-                        match p.downcast_ref::<f64>() {
-                            Some(v) => {
-                                let field = create_node_path(
-                                    &path,
-                                    field.as_slice());
-                                let f = field.to_c_str();
-                                println!("field : {}", field);
-                                unsafe {
-                                    let pv = property_list_float_add(
-                                        self.jk_property_list,
-                                        f.unwrap(),
-                                        *v as c_float);
-                                    if pv != ptr::null() {
-                                        self.pv.insert(field, pv);
-                                    }
-                                }
-                            },
-                            None => {}
-                        }
-                        //TODO other type
-                    },
-                    property::BoxChrisProperty(p) => {
-                        let field = create_node_path(&path, field.as_slice());
-                        println!("I come here and field is : {}", field);
-                        let f = field.to_c_str();
-                        unsafe {
-                            property_list_node_add(
-                                self.jk_property_list,
-                                f.unwrap());
-                        }
-                        /*
-                        let mut yep = path.clone();
-                        yep.push(field.clone());
-                        self.create_entries(&*p, yep);
-                        */
-                    },
-                    property::ChrisNone => {}
-                }
-
-            }
-        }
-
 
     pub fn data_set(&self, data : *const c_void)
     {
@@ -673,31 +571,7 @@ pub trait PropertyShow
     {
         return None;
     }
-
-
-    /*
-    {
-        for v in self.fields().iter()
-        {
-            println!("__________normal chris_______");
-        }
-    }
-    */
 }
-
-/*
-
-impl<T : ChrisProperty> PropertyShow for T {
-
-    fn create_entries(
-        &self,
-        property:&mut Property,
-        path : Vec<String>)
-    {
-    }
-
-}
-*/
 
 /*
 impl PropertyShow for vec::Quat {

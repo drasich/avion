@@ -7,71 +7,6 @@ use transform;
 //log_syntax!()
 //trace_macros!(true)
 
-pub enum ChrisValue
-{
-    ChrisNone,
-    BoxAny(Box<Any>),
-    BoxChrisProperty(Box<ChrisProperty+'static>),
-    //ChrisEnum(Box<ChrisValue>) 
-}
-
-/*
-pub enum teststtst
-{
-    Yep,
-    Yop(f64, i32),
-    BoxAnytest(Box<Any>),
-    BoxChrisPropertytest(Box<ChrisProperty+'static>),
-    BoxCouple(Box<Any>, Box<ChrisProperty+'static>)
-}
-*/
-
-
-pub trait ChrisProperty {
-    //*
-  fn fields(&self) -> Box<[String]>
-  {
-      return box [];
-  }
-  //*/
-
-  fn get_property(&self, name: &str) -> ChrisValue
-  {
-      return ChrisNone;
-  }
-  fn get_property_hier(&self, name: Vec<String>) -> ChrisValue
-  {
-      match name.len() {
-          0 => ChrisNone,
-          _ => self.get_property(name[0].as_slice())
-      }
-  }
-  fn set_property(&mut self, name: &str, value: &Any)
-  {
-  }
-  fn set_property_hier(&mut self, name: Vec<String>, value: &Any)
-  {
-      match name.len() {
-          0 => {},
-          _ => self.set_property(name[0].as_slice(), value)
-      };
-  }
-}
-
-/*
-impl<T: 'static> ChrisProperty for T {
-  fn fields(&self) -> Box<[String]>
-  {
-      return box [];
-  }
-}
-*/
-impl ChrisProperty for f64 {
-}
-
-impl ChrisProperty for String {
-}
-
 #[deriving(Decodable, Encodable, Clone)]
 pub struct Chris
 {
@@ -95,61 +30,6 @@ impl Chris
     }
 }
 
-
-/*
-impl ChrisProperty for vec::Vec3
-{
-  fn fields(&self) -> Box<[String]> 
-  {
-      return box[
-          String::from_str("x"),
-          String::from_str("y"),
-          String::from_str("z"),
-      ];
-  }
-
-  fn get_property(&self, name: &str) -> ChrisValue
-  {
-      let v = match name {
-          "x" => box self.x,// as Box<Any>,
-          "y" => box self.y,// as Box<Any>,
-          "z" => box self.z,// as Box<Any>,
-          _ => return ChrisNone
-      };
-
-      BoxAny(v as Box<Any>)
-  }
-
-  fn set_property(&mut self, name: &str, value: &Any)
-  {
-      match name {
-          "x" => {
-              //if self.x.get_type_id() == value.get_type_id {
-              //}
-              match value.downcast_ref::<f64>() {
-                  Some(v) => self.x = *v,
-                  None => {}
-
-              }
-          },
-          "y" => {
-              match value.downcast_ref::<f64>() {
-                  Some(v) => self.y = *v,
-                  None => {}
-              }
-          },
-          "z" => {
-              match value.downcast_ref::<f64>() {
-                  Some(v) => self.z = *v,
-                  None => {}
-              }
-          }
-          _ => {}
-      }
-  }
-}
-*/
-
 macro_rules! new_test(
   ($yo:ident, $member:ident, SString) => (
     $yo.$member.to_string()
@@ -161,45 +41,6 @@ macro_rules! new_test(
     $yo.$member
     )
   )
-
-/*
-macro_rules! new_test_set(
-  ($sself:ident, $member:ident, SString, $value:ident, $name:ident) => (
-    match $value {
-    &SString(ref s) => {
-    $sself.$member = s.to_string()
-    }
-    _ => {
-      //println!("cant set {} to {}, because it is a String", $value, $name);
-      println!("cant set property(TODO) to {}, because it is a String", $name);
-    }
-    }
-    );
-  ($sself:ident, $member:ident, Struct, $value:ident, $name:ident) => (
-    match $value {
-    &Struct(ref s) => {
-    for p in s.fields().iter() {
-      $sself.$member.set_property(p.as_slice(),& s.get_property(p.as_slice()));
-    }
-    }
-    _ => {
-      println!("cant set {:?} to {}, because it is a Struct", $value, $name);
-    }
-    }
-    );
-  ($sself:ident, $member:ident, $yep:ident, $value:ident, $name:ident) => (
-    match $value {
-    &$yep(f) => {
-    $sself.$member = f;
-    }
-    _ => {
-      //println!("cant set {} to {}, because it is a {}", $value, $name, stringify!($yep));
-      println!("cant set property(TODO) to {}, because it is a {}", $name, stringify!($yep));
-    }
-    }
-    )
-  )
-  */
 
 macro_rules! match_get(
   ($yo:ident, $member:ident, $yep:ty, PlainString) => (
@@ -263,12 +104,13 @@ pub enum AllocStyle
     PlainStruct
 }
 
+/*
 pub macro_rules! chris_property_impl(
     ($my_type:ty, [ $($member:ident,$mytype:ty,$alloctype:ident)|+ ]) => ( 
 
       impl ChrisProperty for $my_type
       {
-          //*
+          /*
         fn fields(&self) -> Box<[String]>
         {
           return box[
@@ -278,7 +120,7 @@ pub macro_rules! chris_property_impl(
           ];
 
         }
-        //*/
+        */
 
         fn get_property(&self, name: &str) -> ChrisValue
         {
@@ -345,7 +187,9 @@ pub macro_rules! chris_property_impl(
      }
   );
 )
+*/
 
+/*
 chris_property_impl!(Chris,
                      [x,f64,Plain|
                      y,f64,Plain|
@@ -395,6 +239,7 @@ Option<Box<ChrisProperty>>
 
     return None;
 }
+*/
 
 
 /*

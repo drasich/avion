@@ -6,7 +6,6 @@ use std::fmt;
 
 use object;
 use property;
-use property::ChrisProperty;
 use property::ChrisTest;
 use ui;
 use control::WidgetUpdate;
@@ -73,7 +72,8 @@ impl Operation
         let vs = self.name.tail().to_vec();
 
         //o.write().set_property_hier(self.name.clone(), &*self.old);
-        o.write().set_property_hier(vs, &*self.old);
+        //o.write().set_property_hier(vs, &*self.old);
+        o.write().test_set_property_hier(join_string(&vs).as_slice(), &*self.old);
     }
 }
 

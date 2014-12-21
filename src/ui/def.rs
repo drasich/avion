@@ -8,7 +8,6 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::any::{Any, AnyRefExt};
-use property::ChrisProperty;
 
 use uuid::Uuid;
 
