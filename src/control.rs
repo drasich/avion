@@ -117,7 +117,22 @@ impl Control
             }
         }
 
-        if c.selected.len() == 1 {
+        if c.selected.len() == 0 {
+            match self.property {
+                Some(ref pp) => {
+                    match pp.try_borrow_mut() {
+                        Some(ref mut p) => {
+                            p.set_nothing();
+                        },
+                        None => {println!("cannot borrow property");}
+                    };
+                },
+                None => {
+                    println!("control no property");
+                }
+            }
+        }
+        else if c.selected.len() == 1 {
             //TODO select tree
             match c.selected.front() {
                 Some(o) => {
@@ -337,6 +352,8 @@ impl Control
 
     fn rotate_camera(&mut self, x : f64, y : f64)
     {
+        self.state = CameraRotation;
+
         let mut camera = self.camera.borrow_mut();
         let cori = camera.object.read().orientation;
 

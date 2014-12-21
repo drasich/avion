@@ -215,6 +215,12 @@ impl Property
         o.create_widget(self, "object", 1);
     }
 
+    pub fn set_nothing(&mut self)
+    {
+        unsafe { property_list_clear(self.jk_property_list); }
+        self.pv.clear();
+    }
+
     pub fn data_set(&self, data : *const c_void)
     {
         //TODO
