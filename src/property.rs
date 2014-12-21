@@ -214,23 +214,25 @@ impl PropertyWrite for object::Object
           0 => {},
           1 => {
               match vs[0].as_slice() {
+                  "name" => self.name.test_set_property(value),
                   "position" => self.position.test_set_property(value),
                   "orientation" => self.orientation.test_set_property(value),
-                  "transform" => self.transform.test_set_property(value),
+                  //"transform" => self.transform.test_set_property(value),
                   _ => println!("no such member : {} ", vs[0])
               }
           },
           _ => {
               let yep = join_string(&vs.tail().to_vec());
               match vs[0].as_slice() {
+                  "name" => self.name.test_set_property_hier(yep.as_slice(),value),
                   "position" => 
                       self.position.test_set_property_hier(yep.as_slice(), value),
                   "orientation" =>
                       self.orientation.test_set_property_hier(yep.as_slice(), value),
-                  "transform" => {
-                      println!("yes come here");
-                      self.transform.test_set_property_hier(yep.as_slice(), value);
-                  }
+                  //"transform" => {
+                      //println!("yes come here");
+                      //self.transform.test_set_property_hier(yep.as_slice(), value);
+                  //}
                   _ => println!("no such member,hier : {}", vs[0])
               }
           }

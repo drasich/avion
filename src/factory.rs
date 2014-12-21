@@ -45,7 +45,7 @@ impl Factory {
             scale : vec::Vec3::one(),
             children : DList::new(),
             parent : None,
-            transform : box transform::Transform::new()
+            //transform : box transform::Transform::new()
         }
     }
 

@@ -725,7 +725,7 @@ property_show_impl!(vec::Quat,[x,y,z,w])
 property_show_impl!(transform::Transform,[position,orientation])
 
 property_show_impl!(object::Object,
-                     [name,position,orientation,scale,transform])
+                     [name,position,orientation,scale])
 
 
 
