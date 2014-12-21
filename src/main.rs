@@ -186,6 +186,8 @@ name = "image/base_skeleton_col.png"
             mem::transmute(box m.clone()));
     }
 
+    m.borrow().render.scene.read().save();
+
     unsafe { 
         ui::elm_simple_window_main();
     };

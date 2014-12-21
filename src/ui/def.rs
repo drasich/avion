@@ -291,6 +291,7 @@ pub extern fn key_down(
     c.key_down(modifier, keyname_str.as_slice(), key_str.as_slice(), timestamp);
 }
 
+/*
 pub struct PropertyContainer<'a>
 {
     //pub yo : HashMap<Uuid, DList<&'a WidgetUpdate+'a>>
@@ -314,6 +315,7 @@ impl<'a> PropertyContainer<'a>
         self.yo.insert(Uuid::new_v4(), w);
     }
 }
+*/
 
 /*
 impl WidgetUpdate for Master

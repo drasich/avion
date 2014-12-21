@@ -122,7 +122,7 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Object {
           id: try!(decoder.read_struct_field("id", 0, |decoder| Decodable::decode(decoder))),
           mesh_render: try!(decoder.read_struct_field("mesh_render", 0, |decoder| Decodable::decode(decoder))),
           position: try!(decoder.read_struct_field("position", 0, |decoder| Decodable::decode(decoder))),
-          orientation: transform::Quat(try!(decoder.read_struct_field("orientation", 0, |decoder| Decodable::decode(decoder)))),
+          orientation: try!(decoder.read_struct_field("orientation", 0, |decoder| Decodable::decode(decoder))),
           scale: try!(decoder.read_struct_field("scale", 0, |decoder| Decodable::decode(decoder))),
           children: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
           //parent: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
