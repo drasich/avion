@@ -184,15 +184,15 @@ name = "image/base_skeleton_col.png"
         ui::init_callback_set(
             ui::init_cb,
             mem::transmute(box m.clone()));
-    }
 
-    m.borrow().render.scene.read().save();
+        ui::exit_callback_set(
+            ui::exit_cb,
+            mem::transmute(box m.clone()));
+    }
 
     unsafe { 
         ui::elm_simple_window_main();
     };
-
-    //m.borrow().render.scene.read().save();
 }
 
 

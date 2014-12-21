@@ -90,6 +90,10 @@ extern {
         cb: extern fn(*mut c_void) -> (),
         master: *const c_void
         ) -> ();
+    pub fn exit_callback_set(
+        cb: extern fn(*mut c_void) -> (),
+        master: *const c_void
+        ) -> ();
 
 }
 
@@ -202,6 +206,14 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     master.tree = Some(t);
     master.property = Some(p);
 }
+
+pub extern fn exit_cb(data: *mut c_void) -> () {
+    let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
+
+    master_rc.borrow().render.scene.read().save();
+
+}
+
 
 pub extern fn mouse_down(
     data : *const c_void,

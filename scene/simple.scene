@@ -14,18 +14,17 @@
         }
       },
       "position": {
-        "x": 100,
+        "x": 48,
         "y": 0,
         "z": -2000
       },
       "orientation": {
-        "variant": "Quat",
+        "variant": "AngleXYZ",
         "fields": [
           {
-            "x": 0,
+            "x": 2.9,
             "y": 0,
-            "z": 0,
-            "w": 1
+            "z": 0
           }
         ]
       },
@@ -84,10 +83,10 @@
         "variant": "Quat",
         "fields": [
           {
-            "x": 0,
-            "y": 0.707107,
-            "z": 0,
-            "w": 0.707107
+            "x": null,
+            "y": null,
+            "z": null,
+            "w": null
           }
         ]
       },
