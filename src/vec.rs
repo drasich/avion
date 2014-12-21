@@ -214,6 +214,11 @@ impl Quat
         self.x*self.x + self.y*self.y + self.z*self.z + self.w*self.w
     }
 
+    pub fn length(&self) -> f64
+    {
+        self.length2().sqrt()
+    }
+
     pub fn new_axis_angle(axis : Vec3, angle_radian : f64) -> Quat
     {
         let length = axis.length();
@@ -264,8 +269,8 @@ impl Quat
         let qy = Quat::new_axis_angle(Vec3::new(0f64,1f64,0f64), angles.y);
         let qz = Quat::new_axis_angle(Vec3::new(0f64,0f64,1f64), angles.z);
 
-        let q1 =  qx * qy;
-        q1 * qz
+        let q1 =  qz * qy;
+        q1 * qx
     }
 
     pub fn new_angles_deg(angles : &Vec3) -> Quat
@@ -303,6 +308,8 @@ impl Quat
             z : -self.z,
             w : self.w,
         }
+        //let q1 =  qx * qy;
+        //q1 * qz
     }
 
     pub fn inverse(&self) -> Quat
@@ -318,10 +325,18 @@ impl Quat
 
     pub fn to_euler_rad(&self) -> Vec3
     {
+        let q = self.normalized();
+        /*
         Vec3 {
             x : (2f64*(self.w*self.x + self.y*self.z)).atan2(1f64 - 2f64*(self.x*self.x + self.y*self.y)),
             y : (2f64*(self.w*self.y - self.z*self.x)).asin(),
             z : (2f64*(self.w*self.z + self.x*self.y)).atan2(1f64- 2f64*(self.y*self.y + self.z*self.z))
+        }
+        */
+        Vec3 {
+            x : (2f64*(q.w*q.x + q.y*q.z)).atan2(1f64 - 2f64*(q.x*q.x + q.y*q.y)),
+            y : (2f64*(q.w*q.y - q.z*q.x)).asin(),
+            z : (2f64*(q.w*q.z + q.x*q.y)).atan2(1f64- 2f64*(q.y*q.y + q.z*q.z))
         }
     }
 
@@ -331,6 +346,12 @@ impl Quat
         v = v * (180f64 / consts::PI);
         v
     }
+
+    pub fn normalized(&self) -> Quat
+    {
+        *self * (1f64/ self.length())
+    }
+
 
 }
 
@@ -414,6 +435,19 @@ impl Mul<Quat, Quat> for Quat {
         }
     }
 }
+
+impl Mul<f64, Quat> for Quat {
+    fn mul(&self, f: &f64) -> Quat {
+        Quat {
+            x : self.x * *f,
+            y : self.y * *f,
+            z : self.z * *f,
+            w : self.w * *f
+        }
+    }
+}
+
+
 
 
 

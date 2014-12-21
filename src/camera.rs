@@ -182,7 +182,7 @@ impl Camera
 
         let offset = o.orientation.rotate_vec3(&c.local_offset);
         let origin = o.position - offset;
-        let qi = o.orientation.inverse();
+        let qi = o.orientation.as_quat().inverse();
         c.origin = qi.rotate_vec3_around(&origin, &c.center);
     }
 

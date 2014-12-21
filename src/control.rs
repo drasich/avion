@@ -4,6 +4,7 @@ use std::any::{Any,AnyRefExt};
 use sync::{RWLock, Arc};
 use std::collections::DList;
 use std::f64::consts;
+use transform;
 
 use uuid::Uuid;
 
@@ -370,7 +371,8 @@ impl Control
         camera.rotate_around_center(&result);
 
         let mut c = camera.object.write();
-        (*c).orientation = vec::Quat::new_yaw_pitch_roll_deg(angle_y, angle_x, 0f64);
+        //(*c).orientation = vec::Quat::new_yaw_pitch_roll_deg(angle_y, angle_x, 0f64);
+        (*c).orientation = transform::Quat(vec::Quat::new_yaw_pitch_roll_deg(angle_y, angle_x, 0f64));
         //self.state = CameraRotation;
     }
 

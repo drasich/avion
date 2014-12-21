@@ -1,7 +1,7 @@
 use vec;
 use matrix;
 use mesh_render;
-//use transform;
+use transform;
 
 use std::collections::{DList};
 use sync::{RWLock, Arc};//,RWLockReadGuard};
@@ -18,7 +18,8 @@ pub struct Object
     pub id : uuid::Uuid,
     pub mesh_render : Option<mesh_render::MeshRender>,
     pub position : vec::Vec3,
-    pub orientation : vec::Quat,
+    //pub orientation : vec::Quat,
+    pub orientation : transform::Orientation,
     //pub angles : vec::Vec3,
     pub scale : vec::Vec3,
     pub children : DList<Arc<RWLock<Object>>>,
@@ -48,7 +49,7 @@ impl Object
     pub fn matrix_get(&self) -> matrix::Matrix4
     {
         let mt = matrix::Matrix4::translation(self.position);
-        let mq = matrix::Matrix4::rotation(self.orientation);
+        let mq = matrix::Matrix4::rotation(self.orientation.as_quat());
         let ms = matrix::Matrix4::scale(self.scale);
 
         mt * mq * ms
@@ -78,9 +79,9 @@ impl Object
     pub fn world_orientation(&self) -> vec::Quat
     {
         match self.parent {
-            None => return self.orientation,
+            None => return self.orientation.as_quat(),
             Some(ref p) => {
-                return p.read().world_orientation() * self.orientation;
+                return p.read().world_orientation() * self.orientation.as_quat();
             }
         }
     }
@@ -121,7 +122,7 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Object {
           id: try!(decoder.read_struct_field("id", 0, |decoder| Decodable::decode(decoder))),
           mesh_render: try!(decoder.read_struct_field("mesh_render", 0, |decoder| Decodable::decode(decoder))),
           position: try!(decoder.read_struct_field("position", 0, |decoder| Decodable::decode(decoder))),
-          orientation: try!(decoder.read_struct_field("orientation", 0, |decoder| Decodable::decode(decoder))),
+          orientation: transform::Quat(try!(decoder.read_struct_field("orientation", 0, |decoder| Decodable::decode(decoder)))),
           scale: try!(decoder.read_struct_field("scale", 0, |decoder| Decodable::decode(decoder))),
           children: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
           //parent: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),

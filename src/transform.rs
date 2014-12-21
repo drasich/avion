@@ -31,15 +31,36 @@ impl Orientation
             Quat(q) => *self = AngleXYZ(q.to_euler_deg()),
             _ => {}
         }
-        println!("todo : to angle xyz");
     }
 
     pub fn to_quat(&mut self) {
-        println!("todo : to quat");
         match *self {
             AngleXYZ(a) => *self = Quat(vec::Quat::new_angles_deg(&a)),
             _ => {}
         }
+    }
+
+    pub fn as_quat(&self) -> vec::Quat
+    {
+        match *self {
+            AngleXYZ(a) => vec::Quat::new_angles_deg(&a),
+            Quat(q) => q
+        }
+    }
+
+    pub fn new_with_quat(q : &vec::Quat) -> Orientation
+    {
+        Quat(*q)
+    }
+
+    pub fn new_quat() -> Orientation
+    {
+        Quat(vec::Quat::identity())
+    }
+
+    pub fn rotate_vec3(&self, v : &vec::Vec3) -> vec::Vec3
+    {
+        self.as_quat().rotate_vec3(v)
     }
 }
 
