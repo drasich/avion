@@ -17,7 +17,7 @@ use intersection;
 use vec;
 use object;
 use property;
-use property::ChrisTest;
+use property::PropertyWrite;
 
 pub enum MasterState
 {

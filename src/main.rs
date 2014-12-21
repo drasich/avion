@@ -25,7 +25,6 @@ extern crate uuid;
 //use std::rc::Rc;
 //use std::cell::RefCell;
 use std::mem;
-//use property::ChrisProperty;
 //use std::any::{Any, AnyRefExt};
 
 mod resource;

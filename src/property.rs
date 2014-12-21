@@ -30,7 +30,7 @@ impl Chris
     }
 }
 
-pub trait ChrisTest
+pub trait PropertyWrite
 {
   fn test_set_property(&mut self, value: &Any)
   {
@@ -42,7 +42,7 @@ pub trait ChrisTest
   }
 }
 
-impl ChrisTest for f64
+impl PropertyWrite for f64
 {
   fn test_set_property(&mut self, value: &Any)
   {
@@ -53,7 +53,7 @@ impl ChrisTest for f64
   }
 }
 
-impl ChrisTest for String
+impl PropertyWrite for String
 {
   fn test_set_property(&mut self, value: &Any)
   {
@@ -64,7 +64,7 @@ impl ChrisTest for String
   }
 }
 
-impl<T:ChrisTest> ChrisTest for Box<T>
+impl<T:PropertyWrite> PropertyWrite for Box<T>
 {
   fn test_set_property(&mut self, value: &Any)
   {
@@ -77,7 +77,7 @@ impl<T:ChrisTest> ChrisTest for Box<T>
   }
 }
 
-impl ChrisTest for vec::Vec3
+impl PropertyWrite for vec::Vec3
 {
   fn test_set_property(&mut self, value: &Any)
   {
@@ -98,7 +98,7 @@ impl ChrisTest for vec::Vec3
   }
 }
 
-impl ChrisTest for vec::Quat
+impl PropertyWrite for vec::Quat
 {
   fn test_set_property(&mut self, value: &Any)
   {
@@ -120,7 +120,7 @@ impl ChrisTest for vec::Quat
   }
 }
 
-impl ChrisTest for transform::Orientation
+impl PropertyWrite for transform::Orientation
 {
   fn test_set_property(&mut self, value: &Any)
   {
@@ -166,7 +166,7 @@ impl ChrisTest for transform::Orientation
   }
 }
 
-impl ChrisTest for transform::Transform
+impl PropertyWrite for transform::Transform
 {
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {
@@ -195,7 +195,7 @@ impl ChrisTest for transform::Transform
   }
 }
 
-impl ChrisTest for object::Object
+impl PropertyWrite for object::Object
 {
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {

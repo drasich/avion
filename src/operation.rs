@@ -6,7 +6,7 @@ use std::fmt;
 
 use object;
 use property;
-use property::ChrisTest;
+use property::PropertyWrite;
 use ui;
 use control::WidgetUpdate;
 
