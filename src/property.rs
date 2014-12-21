@@ -7,6 +7,7 @@ use transform;
 //log_syntax!()
 //trace_macros!(true)
 
+/* //For testing
 #[deriving(Decodable, Encodable, Clone)]
 pub struct Chris
 {
@@ -29,6 +30,7 @@ impl Chris
             boxpos : box vec::Vec3::new(6f64,7f64,8f64)}
     }
 }
+*/
 
 pub trait PropertyWrite
 {
