@@ -1,4 +1,3 @@
-//use std::sync::Arc;
 use std::collections::{DList};
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -23,7 +22,6 @@ use factory;
 use context;
 
 use mesh::BufferSend;
-
 
 #[link(name = "cypher")]
 extern {
@@ -58,8 +56,6 @@ pub extern fn resize_cb(r : *mut Render, w : c_int, h : c_int) -> () {
     }
 }
 
-
-
 pub struct RenderPass
 {
     pub name : String,
@@ -82,12 +78,13 @@ impl RenderPass
               }
     }
 
-    pub fn draw_frame(&self,
-                      mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
-                      shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
-                      texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
-                      fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>
-                     ) -> ()
+    pub fn draw_frame(
+        &self,
+        mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
+        shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
+        texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
+        fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>
+        ) -> ()
     {
         {
             let mut matm = self.material.write();
@@ -108,7 +105,6 @@ impl RenderPass
                     },
                     _ => {} //fbo so nothing to do
                 }
-
             }
         }
 
@@ -212,7 +208,8 @@ impl RenderPass
         )
     {
         let themesh = match ob.mesh_render {
-            Some(ref mut mr) => resource::resource_get(&mut *mesh_manager.write(), &mut mr.mesh),
+            Some(ref mut mr) => 
+                resource::resource_get(&mut *mesh_manager.write(), &mut mr.mesh),
             None => {
                 println!("no mesh render");
                 return;
@@ -220,7 +217,7 @@ impl RenderPass
         };
 
         //TODO chris
-        match  themesh  {
+        match themesh  {
             None => return,
             Some(ref m) => {
                 let mut mb = m.write();
@@ -262,7 +259,8 @@ impl RenderPass
                             continue;
                         },
                         None => {
-                            //println!("while sending attributes, this mesh does not have the '{}' buffer, not rendering", name);
+                            //println!("while sending attributes, this mesh does 
+                            //not have the '{}' buffer, not rendering", name);
                             can_render = false;
                             break;
                         }
@@ -276,32 +274,31 @@ impl RenderPass
 
                     match mb.buffer_u32_get("faces") {
                         //Some(ref bind) =>
-                        Some(bind) =>
-                            unsafe{
-                                match (**bind).cgl_buffer_get() {
-                                    Some(b) => {
-                                        let faces_data_count = bind.size_get();
-                                        cgl_draw_faces(b, faces_data_count as c_uint);
-                                        cgl_draw_end();
-                                    },
-                                    None => ()
-                                }
-                            },
-                            None => {
-                                match mb.draw_type {
-                                    mesh::Lines => {
-                                        let vc : uint = vertex_data_count/3;
-                                        unsafe {
-                                            cgl_draw_lines(vc as c_uint);
-                                        }
-                                    },
-                                    _ => {
-                                        unsafe {
-                                            cgl_draw(vertex_data_count as c_uint);
-                                        }
+                        Some(bind) => unsafe {
+                            match (**bind).cgl_buffer_get() {
+                                Some(b) => {
+                                    let faces_data_count = bind.size_get();
+                                    cgl_draw_faces(b, faces_data_count as c_uint);
+                                    cgl_draw_end();
+                                },
+                                None => ()
+                            }
+                        },
+                        None => {
+                            match mb.draw_type {
+                                mesh::Lines => {
+                                    let vc : uint = vertex_data_count/3;
+                                    unsafe {
+                                        cgl_draw_lines(vc as c_uint);
+                                    }
+                                },
+                                _ => {
+                                    unsafe {
+                                        cgl_draw(vertex_data_count as c_uint);
                                     }
                                 }
                             }
+                        }
                     }
                 }
             }

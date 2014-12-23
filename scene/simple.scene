@@ -3,7 +3,7 @@
   "id": "472ada79-efd8-4c91-80ed-57804f97a10b",
   "objects": [
     {
-      "name": "yepyoyo",
+      "name": "skeleton001",
       "id": "2d977dae-7d47-419e-8335-1a9fe2cb39a2",
       "mesh_render": {
         "mesh": {
@@ -22,8 +22,8 @@
         "variant": "AngleXYZ",
         "fields": [
           {
-            "x": -0.7,
-            "y": 0,
+            "x": -1.7,
+            "y": 28.1,
             "z": 0
           }
         ]
@@ -64,7 +64,7 @@
       ]
     },
     {
-      "name": "yep2",
+      "name": "skeleton002",
       "id": "4f08ca14-c83c-4792-9142-45dde59bfbef",
       "mesh_render": {
         "mesh": {
@@ -97,7 +97,7 @@
       "children": []
     },
     {
-      "name": "nouvel object",
+      "name": "plane",
       "id": "88aaa2da-888e-4f33-b1e5-2cd24847c82c",
       "mesh_render": {
         "mesh": {
