@@ -109,12 +109,30 @@ impl Control
             None => return
         };
 
+        let mut found_length = 0f64;
+        let mut closest_obj = None;
         for o in scene.read().objects.iter() {
             let ir = intersection::ray_object(&r, &*o.read());
             if ir.hit {
-                println!(" I hit object {} ", o.read().name);
-                c.selected.push_back(o.clone());
+                let length = (ir.position - r.start).length2();
+                match closest_obj {
+                    None => {
+                        closest_obj = Some(o.clone());
+                        found_length = length;
+                    }
+                    Some(_) => {
+                        if length < found_length {
+                            closest_obj = Some(o.clone());
+                            found_length = length;
+                        }
+                    }
+                }
             }
+        }
+
+        match closest_obj {
+            None => return,
+            Some(o) => c.selected.push_back(o)
         }
 
         if c.selected.len() == 0 {
