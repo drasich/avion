@@ -4,6 +4,9 @@ pub use self::property::{Property,ChangedFunc};
 pub use self::property::{PropertyShow};
 pub use self::property::{JkPropertyList, PropertyValue};
 
+pub use self::view::View;
+
 mod tree;
 pub mod def;
 pub mod property;
+pub mod view;
