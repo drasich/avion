@@ -68,6 +68,7 @@ impl Control
         match self.state {
             CameraRotation => {
                 self.state = Idle;
+                println!("state was cam rotate ");
                 return;
             },
             _ => {}
@@ -106,8 +107,13 @@ impl Control
 
         let scene = match c.scene {
             Some(ref s) => s.clone(),
-            None => return
+            None => {
+                println!("no scene ");
+                return;
+            }
         };
+
+        println!("objects in the scene : {}", scene.read().objects.len());
 
         let mut found_length = 0f64;
         let mut closest_obj = None;
@@ -131,9 +137,11 @@ impl Control
         }
 
         match closest_obj {
-            None => return,
+            None => {},
             Some(o) => c.selected.push_back(o)
         }
+
+        println!("object seclected : {}",  c.selected.len());
 
         if c.selected.len() == 0 {
             match self.property {
