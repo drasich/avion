@@ -127,7 +127,6 @@ impl Master
 
 pub extern fn init_cb(data: *mut c_void) -> () {
     let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
-
     let mut master = master_rc.borrow_mut();
 
     for v in master.views.iter_mut()
@@ -138,8 +137,14 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 
 pub extern fn exit_cb(data: *mut c_void) -> () {
     let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
+    let mut master = master_rc.borrow();
 
-    //master_rc.borrow().render.scene.read().save();
-
+    for v in master.views.iter()
+    {
+        match v.scene {
+            Some(ref s) => s.read().save(),
+            None => {}
+        }
+    }
 }
 

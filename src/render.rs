@@ -46,7 +46,7 @@ pub extern fn init_cb(r : *mut Render) -> () {
 
 pub extern fn draw_cb(r : *mut Render) -> () {
     unsafe {
-        return (*r).draw_frame();
+        return (*r).draw();
     }
 }
 
@@ -402,12 +402,6 @@ impl Render {
         r
     }
 
-    pub fn init(&mut self)
-    {
-        self.fbo_all.write().cgl_create();
-        self.fbo_selected.write().cgl_create();
-    }
-
     fn resolution_set(&mut self, w : c_int, h : c_int)
     {
         let oc = self.quad_outline.clone();
@@ -438,81 +432,6 @@ impl Render {
             _ => {}
         }
 
-    }
-
-    pub fn resize(&mut self, w : c_int, h : c_int)
-    {
-        {
-            self.quad_outline.write().scale = 
-                vec::Vec3::new(w as f64, h as f64, 1f64);
-
-            let mut cam = self.camera.borrow_mut();
-            cam.resolution_set(w, h);
-
-            let mut cam_ortho = self.camera_ortho.borrow_mut();
-            cam_ortho.resolution_set(w, h);
-
-            self.fbo_all.write().cgl_resize(w, h);
-            self.fbo_selected.write().cgl_resize(w, h);
-        }
-
-        self.resolution_set(w,h);
-    }
-
-    pub fn draw_frame(&mut self) -> ()
-    {
-        self.prepare_passes_selected();
-        self.fbo_selected.read().cgl_use();
-        for p in self.passes.values()
-        {
-            p.draw_frame(
-                self.mesh_manager.clone(),
-                self.shader_manager.clone(),
-                self.texture_manager.clone(),
-                self.fbo_manager.clone(),
-                );
-        }
-        fbo::Fbo::cgl_use_end();
-
-        self.prepare_passes();
-
-        self.fbo_all.read().cgl_use();
-        for p in self.passes.values()
-        {
-            p.draw_frame(
-                self.mesh_manager.clone(),
-                self.shader_manager.clone(),
-                self.texture_manager.clone(),
-                self.fbo_manager.clone(),
-                );
-        }
-        fbo::Fbo::cgl_use_end();
-
-        //self.request_manager.handle_requests();
-        //return (*self.pass).draw_frame();
-
-        for p in self.passes.values()
-        {
-            p.draw_frame(
-                self.mesh_manager.clone(),
-                self.shader_manager.clone(),
-                self.texture_manager.clone(),
-                self.fbo_manager.clone(),
-                );
-        }
-
-        self.prepare_passes_quad_outline();
-        //TODO draw with ortho
-
-        for p in self.passes.values()
-        {
-            p.draw_frame(
-                self.mesh_manager.clone(),
-                self.shader_manager.clone(),
-                self.texture_manager.clone(),
-                self.fbo_manager.clone(),
-                );
-        }
     }
 
     fn prepare_passes(&mut self)
@@ -615,5 +534,99 @@ fn prepare_passes_object(
             prepare_passes_object(c.clone(), passes, material_manager.clone(), camera.clone());
         }
     }
+}
+
+pub trait Renderer
+{
+    fn init(&mut self);
+    fn draw(&mut self);
+    fn resize(&mut self, w : c_int, h : c_int);
+}
+
+impl Renderer for Render
+{
+    fn init(&mut self)
+    {
+        self.fbo_all.write().cgl_create();
+        self.fbo_selected.write().cgl_create();
+    }
+
+    fn resize(&mut self, w : c_int, h : c_int)
+    {
+        {
+            self.quad_outline.write().scale = 
+                vec::Vec3::new(w as f64, h as f64, 1f64);
+
+            let mut cam = self.camera.borrow_mut();
+            cam.resolution_set(w, h);
+
+            let mut cam_ortho = self.camera_ortho.borrow_mut();
+            cam_ortho.resolution_set(w, h);
+
+            self.fbo_all.write().cgl_resize(w, h);
+            self.fbo_selected.write().cgl_resize(w, h);
+        }
+
+        self.resolution_set(w,h);
+    }
+
+    fn draw(&mut self) -> ()
+    {
+        self.prepare_passes_selected();
+        self.fbo_selected.read().cgl_use();
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+        fbo::Fbo::cgl_use_end();
+
+        self.prepare_passes();
+
+        self.fbo_all.read().cgl_use();
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+        fbo::Fbo::cgl_use_end();
+
+        //self.request_manager.handle_requests();
+        //return (*self.pass).draw_frame();
+
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+
+        self.prepare_passes_quad_outline();
+        //TODO draw with ortho
+
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+    }
+
+
+
 }
 

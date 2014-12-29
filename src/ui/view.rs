@@ -131,60 +131,6 @@ pub struct WindowView
 }
 */
 
-
-/*
-pub extern fn view_init_cb(data: *mut c_void) -> () {
-    let view_rc : &Rc<RefCell<View>> = unsafe {mem::transmute(data)};
-    let w = unsafe {ui::window_new()};
-
-    let mut view = view_rc.borrow_mut();
-    let control = match view.control {
-        Some(ref c) => c.clone(),
-        None => { println!("no control"); return; }
-    };   
-
-    unsafe {
-        ui::window_callback_set(
-            w,
-            mem::transmute(box control.clone()),
-            mouse_down,
-            mouse_up,
-            mouse_move,
-            mouse_wheel,
-            key_down
-            );
-    }
-
-    view.window = Some(w);
-
-    let p = Rc::new(RefCell::new(ui::Property::new(
-                w,
-                control.clone())));
-
-    let t = Rc::new(RefCell::new(ui::Tree::new(
-                w,
-                control.clone())));
-
-    match (*view).scene {
-        Some(ref s) => {
-            t.borrow_mut().set_scene(&*s.read());
-        },
-        None => {}
-    };
-
-    match control.try_borrow_mut() {
-        Some(ref mut c) => {
-            c.property = Some(p.clone());
-            c.tree = Some(t.clone());
-        },
-        None => {}
-    };
-
-    view.tree = Some(t);
-    view.property = Some(p);
-}
-*/
-
 pub extern fn mouse_down(
     data : *const c_void,
     modifier : c_int,
