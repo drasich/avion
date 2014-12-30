@@ -217,6 +217,7 @@ impl PropertyWrite for object::Object
                   "name" => self.name.test_set_property(value),
                   "position" => self.position.test_set_property(value),
                   "orientation" => self.orientation.test_set_property(value),
+                  "scale" => self.scale.test_set_property(value),
                   //"transform" => self.transform.test_set_property(value),
                   _ => println!("no such member : {} ", vs[0])
               }
@@ -229,6 +230,8 @@ impl PropertyWrite for object::Object
                       self.position.test_set_property_hier(yep.as_slice(), value),
                   "orientation" =>
                       self.orientation.test_set_property_hier(yep.as_slice(), value),
+                  "scale" => 
+                      self.scale.test_set_property_hier(yep.as_slice(), value),
                   //"transform" => {
                       //println!("yes come here");
                       //self.transform.test_set_property_hier(yep.as_slice(), value);

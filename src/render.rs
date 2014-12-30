@@ -21,6 +21,8 @@ use vec;
 use factory;
 use context;
 
+use geometry;
+
 use mesh::BufferSend;
 
 #[link(name = "cypher")]
@@ -327,7 +329,9 @@ pub struct Render
     pub quad_outline : Arc<RWLock<object::Object>>,
     pub line : Arc<RWLock<object::Object>>,
 
-    pub context : Rc<RefCell<context::Context>>
+    pub context : Rc<RefCell<context::Context>>,
+
+    pub grid : Arc<RWLock<object::Object>>,
 }
 
 impl Render {
@@ -343,11 +347,16 @@ impl Render {
         let fbo_selected = fbo_manager.write().request_use_no_proc("fbo_selected");
 
         let camera = Rc::new(RefCell::new(factory.create_camera()));
+        {
+            let mut cam = camera.borrow_mut();
+            cam.pan(&vec::Vec3::new(0f64,20f64,200f64));
+            cam.lookat(vec::Vec3::new(0f64,0f64,0f64));
+        }
         let camera_ortho = Rc::new(RefCell::new(factory.create_camera()));
         {
             let mut cam = camera_ortho.borrow_mut();
             cam.data.projection = camera::Projection::Orthographic;
-            cam.object.write().position = vec::Vec3::new(0f64,0f64,10f64);
+            cam.pan(&vec::Vec3::new(0f64,0f64,50f64));
         }
 
         let material_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
@@ -372,13 +381,34 @@ impl Render {
             //quad_outline : Arc::new(RWLock::new(object::Object::new("quad_outline")))
             quad_outline : Arc::new(RWLock::new(factory.create_object("quad_outline"))),
 
-            context : context
+            context : context,
+
+            grid : Arc::new(RWLock::new(factory.create_object("grid"))),
         };
 
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
             let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("line", rs);
+
+            r.line.write().mesh_render =
+                Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
+        }
+
+        {
+            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
+
+            create_grid(&mut *m.write(), 100i32, 10i32);
+            /*
+            m.write().add_line(
+                geometry::Segment::new(
+                    vec::Vec3::new(-1000f64, 0f64,0f64),
+                    vec::Vec3::new(100f64, 0f64,0f64)),
+                    vec::Vec4::new(1.0f64, 0f64,0f64,1f64));
+                    */
+
+            let rs = resource::ResTest::ResData(m);
+            let mr = resource::ResTT::new_with_res("grid", rs);
 
             r.line.write().mesh_render =
                 Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
@@ -454,6 +484,12 @@ impl Render {
 
         prepare_passes_object(
             self.line.clone(),
+            &mut self.passes,
+            self.material_manager.clone(),
+            self.camera.clone());
+
+        prepare_passes_object(
+            self.grid.clone(),
             &mut self.passes,
             self.material_manager.clone(),
             self.camera.clone());
@@ -628,8 +664,36 @@ impl Renderer for Render
                 );
         }
     }
+}
 
+fn create_grid(m : &mut mesh::Mesh, num : i32, space : i32)
+{
+    let color = vec::Vec4::new(1f64,1f64,1f64,0.1f64);
+    let xc = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.4f64);
+    let zc = vec::Vec4::new(0f64,0.4745f64,1f64,0.4f64);
 
+    for i in  range(-num, num) {
+        let p1 = vec::Vec3::new((i*space) as f64, 0f64, (-space*num) as f64);
+        let p2 = vec::Vec3::new((i*space) as f64, 0f64, (space*num) as f64);
+        let s = geometry::Segment::new(p1,p2);
+        if i == 0 {
+            m.add_line(s, zc);
+        }
+        else {
+            m.add_line(s, color);
+        }
+    }
 
+    for i in  range(-num, num) {
+        let p1 = vec::Vec3::new((-space*num) as f64, 0f64, (i*space) as f64);
+        let p2 = vec::Vec3::new((space*num) as f64, 0f64, (i*space) as f64);
+        let s = geometry::Segment::new(p1,p2);
+        if i == 0 {
+            m.add_line(s, xc);
+        }
+        else {
+            m.add_line(s, color);
+        }
+    }
 }
 

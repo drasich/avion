@@ -31,6 +31,11 @@ extern {
     pub fn cgl_shader_attribute_send(
         att : *const shader::CglShaderAttribute,
         buffer : *const CglBuffer) -> ();
+
+    pub fn cgl_buffer_update(
+        buffer : *const CglBuffer,
+        data : *const c_void,
+        count : c_uint);
 }
 
 pub enum BufferType
@@ -41,12 +46,23 @@ pub enum BufferType
     Uv
 }
 
+/*
+enum BufferState
+{
+    Created,
+    Init,
+    Usable,
+    ToUpdate
+}
+*/
+
 pub struct Buffer<T>
 {
     pub name: String,
     pub data : Vec<T>,
     cgl_buffer: Option<*const CglBuffer>,
-    buffer_type : BufferType
+    buffer_type : BufferType,
+    //state : BufferState
 }
 
 impl<T> Buffer<T>
@@ -57,7 +73,8 @@ impl<T> Buffer<T>
             name : name,
             data : data,
             cgl_buffer : None,
-            buffer_type : buffer_type
+            buffer_type : buffer_type,
+            //state : BufferState::Created
         }
     }
 }
@@ -68,11 +85,23 @@ pub trait BufferSend
     fn utilise(&self, att : *const shader::CglShaderAttribute) ->();
     fn size_get(&self) -> uint;
     fn cgl_buffer_get(&self) -> Option<*const CglBuffer>;
+    //fn update(&mut self) -> ();
 }
 
 impl<T> BufferSend for Buffer<T> {
     fn send(&mut self) -> ()
     {
+        match self.cgl_buffer {
+            Some(b) => unsafe {
+                cgl_buffer_update(
+                    b,
+                    mem::transmute(self.data.as_ptr()),
+                    self.data.len() as c_uint);
+                return;
+            },
+            None => {}
+        };
+
         match self.buffer_type {
             BufferType::Vertex => unsafe {
                 println!("sending buffersend vertex '{}'", self.name);
@@ -98,14 +127,30 @@ impl<T> BufferSend for Buffer<T> {
         }
     }
 
+    /*
+    fn update(&mut self) -> ()
+    {
+        let cb = match self.cgl_buffer {
+            Some(b) => b,
+            None => return
+        };
+
+        unsafe {
+            cgl_buffer_update(
+                cb,
+                mem::transmute(self.data.as_ptr()),
+                self.data.len() as c_uint);
+        }
+    }
+    */
+
     fn utilise(&self, att : *const shader::CglShaderAttribute) ->()
     {
         match self.cgl_buffer {
-            Some(b) =>
-                unsafe {
-                    cgl_shader_attribute_send(att, b);
-                },
-                None => ()
+            Some(b) => unsafe {
+                cgl_shader_attribute_send(att, b);
+            },
+            None => ()
         }
     }
 
@@ -330,13 +375,14 @@ impl Mesh
         println!("init buffers : {} ", self.name);
         if self.state == 1 {
             for (_,b) in self.buffers.iter_mut() {
-                Some(b.send());
+                //Some(b.send());
+                b.send();
             }
             for (_,b) in self.buffers_u32.iter_mut() {
-                Some(b.send());
+                b.send();
             }
             for (_,b) in self.buffers_f32.iter_mut() {
-                Some(b.send());
+                b.send();
             }
             self.state = 11;
         }
@@ -374,7 +420,6 @@ impl Mesh
 
     pub fn add_line(&mut self, s : geometry::Segment, color : vec::Vec4)
     {
-        let name = String::from_str("position");
         let count = 6;
         let mut vvv : Vec<f32> = Vec::with_capacity(count);
         vvv.push(s.p0.x as f32);
@@ -384,16 +429,43 @@ impl Mesh
         vvv.push(s.p1.y as f32);
         vvv.push(s.p1.z as f32);
 
-        let buffer = box Buffer::new(
-            name.clone(),
-            vvv,
-            BufferType::Vertex);
+        let mut colbuf : Vec<f32> = Vec::with_capacity(8);
+        for i in range(0u32, 2) {
+            colbuf.push(color.x as f32);
+            colbuf.push(color.y as f32);
+            colbuf.push(color.z as f32);
+            colbuf.push(color.w as f32);
+        }
 
-        match self.buffers_f32.entry(name) {
-            Vacant(entry) => {entry.set(buffer);},
+        let name = String::from_str("position");
+        match self.buffers_f32.entry(name.clone()) {
+            Vacant(entry) => {
+                let buffer = box Buffer::new(
+                    name.clone(),
+                    vvv,
+                    BufferType::Vertex);
+
+                entry.set(buffer);
+            },
             Occupied(entry) => {
                 let en = entry.into_mut();
-                *en = buffer;
+                en.data.push_all(vvv.as_slice());
+            }
+        };
+
+        let name = String::from_str("color");
+        match self.buffers_f32.entry(name.clone()) {
+            Vacant(entry) => {
+                let buffer = box Buffer::new(
+                    name.clone(),
+                    colbuf,
+                    BufferType::Vertex);
+
+                entry.set(buffer);
+            },
+            Occupied(entry) => {
+                let en = entry.into_mut();
+                en.data.push_all(colbuf.as_slice());
             }
         };
 

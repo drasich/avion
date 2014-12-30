@@ -2,12 +2,14 @@ use std::sync::{RWLock, Arc};
 use std::f64::consts;
 use std::default::Default;
 use std::num::FloatMath;
+use std::num::Float;
 
 use vec;
 use vec::{Vec3};
 use object;
 use matrix;
 use geometry;
+use transform::Orientation;
 
 pub enum Projection
 {
@@ -202,6 +204,33 @@ impl Camera
         o.position = o.position + tt;
     }
 
+    pub fn lookat(&mut self, at : vec::Vec3)
+    {
+        {
+            let mut o = &mut self.object.write();
+            let c = &mut self.data;
 
+            let d = at - o.position;
+
+            c.yaw = (-d.x).atan2(-d.z);
+            let r = ( d.x*d.x + d.z*d.z ).sqrt();
+            c.pitch = d.y.atan2(r);
+
+            c.center = at;
+
+            let ori = &mut o.orientation;
+
+            match *ori {
+                Orientation::AngleXYZ(ref mut a) => {
+                    (*a).x = c.pitch/consts::PI*180.0;
+                    (*a).y = c.yaw/consts::PI*180.0;
+                },
+                Orientation::Quat(ref mut q) => 
+                    *q = vec::Quat::new_yaw_pitch_roll_rad(c.yaw, c.pitch, 0f64)
+            }
+        }
+
+        self.recalculate_origin();
+    }
 }
 

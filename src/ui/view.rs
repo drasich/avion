@@ -34,9 +34,7 @@ impl View
     pub fn new(factory: &mut factory::Factory) -> View
     {
         let context = Rc::new(RefCell::new(context::Context::new()));
-
         let render = box Render::new(factory, context.clone());
-
         let control = Rc::new(RefCell::new(
                 Control::new(
                     render.camera.clone(),
