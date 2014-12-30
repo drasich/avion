@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::any::{Any,AnyRefExt};
-use sync::{RWLock, Arc};
+use std::sync::{RWLock, Arc};
 use std::collections::DList;
 use std::f64::consts;
 use transform;
@@ -20,7 +20,7 @@ use object;
 use property;
 use property::PropertyWrite;
 
-pub enum MasterState
+pub enum State
 {
     Idle,
     CameraRotation
@@ -30,7 +30,7 @@ pub struct Control
 {
     pub op_mgr : operation::OperationManager,
     pub camera : Rc<RefCell<camera::Camera>>,
-    pub state : MasterState,
+    pub state : State,
     pub context : Rc<RefCell<context::Context>>,
 
     //TODO control listener
@@ -52,7 +52,7 @@ impl Control
             camera : camera,
             property : None,
             tree : None,
-            state : Idle,
+            state : State::Idle,
             context : context
         }
     }
@@ -66,8 +66,8 @@ impl Control
     {
         println!("control fn mouse up");
         match self.state {
-            CameraRotation => {
-                self.state = Idle;
+            State::CameraRotation => {
+                self.state = State::Idle;
                 println!("state was cam rotate ");
                 return;
             },
@@ -378,7 +378,7 @@ impl Control
 
     fn rotate_camera(&mut self, x : f64, y : f64)
     {
-        self.state = CameraRotation;
+        self.state = State::CameraRotation;
 
         let mut camera = self.camera.borrow_mut();
         let cori = camera.object.read().orientation;
@@ -415,7 +415,7 @@ impl Control
 
         let mut c = camera.object.write();
         //(*c).orientation = vec::Quat::new_yaw_pitch_roll_deg(angle_y, angle_x, 0f64);
-        (*c).orientation = transform::Quat(vec::Quat::new_yaw_pitch_roll_deg(angle_y, angle_x, 0f64));
+        (*c).orientation = transform::Orientation::Quat(vec::Quat::new_yaw_pitch_roll_deg(angle_y, angle_x, 0f64));
         //self.state = CameraRotation;
     }
 

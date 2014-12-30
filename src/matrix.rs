@@ -307,8 +307,8 @@ impl Matrix4
 
 }
 
-impl Mul<Matrix4, Matrix4> for Matrix4 {
-    fn mul(&self, other: &Matrix4) -> Matrix4 {
+impl<'a> Mul<&'a Matrix4, Matrix4> for &'a Matrix4 {
+    fn mul(self, other: &'a Matrix4) -> Matrix4 {
         let mut out : [f64, ..16] = [0f64, ..16];
 
         let m = self.data;

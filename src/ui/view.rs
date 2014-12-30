@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use sync::{RWLock, Arc};
+use std::sync::{RWLock, Arc};
 use libc::{c_char, c_void, c_int};
 use std::mem;
 use std::c_str::CString;

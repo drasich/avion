@@ -1,9 +1,9 @@
 use std::collections::HashMap;
-use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::File;
 use std::io::BufferedReader;
 //use std::default::Default;
-use toml;
+//use toml;
 
 
 use vec;
@@ -17,12 +17,13 @@ use texture;
 use fbo;
 //#[deriving(Decodable, Encodable, Default)]
 //#[deriving(Encodable, Default)]
+use self::Sampler::{ImageFile,Fbo};
 
-#[deriving(Decodable, Encodable)]
+#[deriving(RustcDecodable, RustcEncodable)]
 pub enum Sampler
 {
-    SamplerImageFile(resource::ResTT<texture::Texture>),
-    SamplerFbo(resource::ResTT<fbo::Fbo>)
+    ImageFile(resource::ResTT<texture::Texture>),
+    Fbo(resource::ResTT<fbo::Fbo>)
 }
 
 impl Sampler
@@ -30,10 +31,10 @@ impl Sampler
     pub fn name(&self) -> &str
     {
         match *self {
-            SamplerImageFile(ref img) => {
+            ImageFile(ref img) => {
                 img.name.as_slice()
             },
-            SamplerFbo(ref f) => {
+            Fbo(ref f) => {
                 f.name.as_slice()
             }
         }
@@ -113,11 +114,11 @@ impl Material
         for (k,v) in mat.textures.iter()
         {
             match *v {
-                SamplerImageFile(ref img) => {
-                    self.textures.insert(k.clone(), SamplerImageFile(resource::ResTT::new(img.name.as_slice())));
+                ImageFile(ref img) => {
+                    self.textures.insert(k.clone(), ImageFile(resource::ResTT::new(img.name.as_slice())));
                 },
-                SamplerFbo(ref f) => {
-                    self.textures.insert(k.clone(), SamplerFbo(resource::ResTT::new(f.name.as_slice())));
+                Fbo(ref f) => {
+                    self.textures.insert(k.clone(), Fbo(resource::ResTT::new(f.name.as_slice())));
                 }
             }
         }
@@ -139,15 +140,9 @@ impl Material
         self.encode(&mut encoder).unwrap();
     }
 
+    /*
     pub fn savetoml(&self)
     {
-        /*
-        let mut encoder = toml::Encoder::new();
-        let yep = self.encode(&mut encoder).unwrap();
-        println!("yep : {} ", yep );
-        //println!("encoder : {} ", encoder );
-        println!("encoder toml : {} ", encoder.toml );
-        */
         let s = toml::encode_str(self);
         println!("encoder toml : {} ", s );
     }
@@ -157,6 +152,7 @@ impl Material
         let mat : Material = toml::decode_str(s).unwrap();
         mat
     }
+    */
 
 
 
@@ -207,7 +203,6 @@ impl <M: Encoder<E>, E> Encodable<M, E> for Material {
       })
   }
 }
-
 
 impl<M: Decoder<E>, E> Decodable<M, E> for Material {
   fn decode(decoder: &mut M) -> Result<Material, E> {

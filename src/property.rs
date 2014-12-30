@@ -161,8 +161,8 @@ impl PropertyWrite for transform::Orientation
       }
       else  {
           match *self {
-              transform::AngleXYZ(ref mut v) => v.test_set_property_hier(name, value),
-              transform::Quat(ref mut v) => v.test_set_property_hier(name, value),
+              transform::Orientation::AngleXYZ(ref mut v) => v.test_set_property_hier(name, value),
+              transform::Orientation::Quat(ref mut v) => v.test_set_property_hier(name, value),
           }
       }
   }

@@ -17,7 +17,7 @@ extern {
 }
 
 
-#[deriving(Decodable, Encodable, Clone)]
+#[deriving(RustcDecodable, RustcEncodable, Clone, Copy)]
 pub enum Orientation
 {
     AngleXYZ(vec::Vec3),
@@ -28,14 +28,14 @@ impl Orientation
 {
     pub fn to_angle_xyz(&mut self) {
         match *self {
-            Quat(q) => *self = AngleXYZ(q.to_euler_deg()),
+            Orientation::Quat(q) => *self = Orientation::AngleXYZ(q.to_euler_deg()),
             _ => {}
         }
     }
 
     pub fn to_quat(&mut self) {
         match *self {
-            AngleXYZ(a) => *self = Quat(vec::Quat::new_angles_deg(&a)),
+            Orientation::AngleXYZ(a) => *self = Orientation::Quat(vec::Quat::new_angles_deg(&a)),
             _ => {}
         }
     }
@@ -43,19 +43,19 @@ impl Orientation
     pub fn as_quat(&self) -> vec::Quat
     {
         match *self {
-            AngleXYZ(a) => vec::Quat::new_angles_deg(&a),
-            Quat(q) => q
+            Orientation::AngleXYZ(a) => vec::Quat::new_angles_deg(&a),
+            Orientation::Quat(q) => q
         }
     }
 
     pub fn new_with_quat(q : &vec::Quat) -> Orientation
     {
-        Quat(*q)
+        Orientation::Quat(*q)
     }
 
     pub fn new_quat() -> Orientation
     {
-        Quat(vec::Quat::identity())
+        Orientation::Quat(vec::Quat::identity())
     }
 
     pub fn rotate_vec3(&self, v : &vec::Vec3) -> vec::Vec3
@@ -64,7 +64,7 @@ impl Orientation
     }
 }
 
-#[deriving(Decodable, Encodable, Clone)]
+#[deriving(RustcDecodable, RustcEncodable, Clone)]
 pub struct Transform {
     pub position : vec::Vec3, 
     pub orientation : Orientation
@@ -76,7 +76,7 @@ impl Transform
     {
         Transform {
             position : vec::Vec3::zero(),
-            orientation : Quat(vec::Quat::identity())
+            orientation : Orientation::Quat(vec::Quat::identity())
         }
     }
 }
@@ -89,8 +89,8 @@ impl ui::PropertyShow for Orientation {
             //let yep = field.to_string() + "/type";
             let f = field.to_c_str();
             let type_value = match *self {
-                AngleXYZ(_) => "AngleXYZ",
-                Quat(_) => "Quat"
+                Orientation::AngleXYZ(_) => "AngleXYZ",
+                Orientation::Quat(_) => "Quat"
             };
             let v = type_value.to_c_str();
 
@@ -111,10 +111,10 @@ impl ui::PropertyShow for Orientation {
 
         if depth == 1 {
             match *self {
-                AngleXYZ(ref v) =>  {
+                Orientation::AngleXYZ(ref v) =>  {
                     v.create_widget(property, field, depth);
                 },
-                Quat(ref q) => {
+                Orientation::Quat(ref q) => {
                     q.create_widget(property, field, depth)
                 }
             };

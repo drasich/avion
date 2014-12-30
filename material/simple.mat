@@ -5,7 +5,7 @@
   },
   "textures": {
     "texture": {
-      "variant": "SamplerImageFile",
+      "variant": "ImageFile",
       "fields": [
         {
           "name": "image/base_skeleton_col.png"

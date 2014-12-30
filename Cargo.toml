@@ -9,9 +9,9 @@ authors = [ "chris@indefini.org" ]
 name = "avion"
 
 [dependencies.png]
-
 #git = "https://github.com/servo/rust-png.git"
-git = "https://github.com/sebcrozet/rust-png.git"
+#git = "https://github.com/sebcrozet/rust-png.git"
+git = "https://github.com/bfops/rust-png.git"
 
 #[dependencies.cypher]
 
@@ -22,3 +22,6 @@ git = "https://github.com/alexcrichton/toml-rs"
 
 [dependencies.uuid]
 git = "https://github.com/rust-lang/uuid.git"
+
+[dependencies]
+rustc-serialize = "0.1.1"

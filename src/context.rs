@@ -2,7 +2,7 @@ use object;
 use scene;
 
 use std::collections::{DList};
-use sync::{RWLock, Arc};
+use std::sync::{RWLock, Arc};
 
 pub struct Context
 {

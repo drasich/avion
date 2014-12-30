@@ -1,8 +1,8 @@
 use object;
 use std::collections::{DList};
-use sync::{RWLock, Arc};
+use std::sync::{RWLock, Arc};
 use std::io::File;
-use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use uuid::Uuid;
 
 pub struct Scene

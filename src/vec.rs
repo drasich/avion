@@ -3,7 +3,7 @@ use std::num::FloatMath;
 use std::num::Float;
 use std::f64::consts;
 
-#[deriving(Decodable, Encodable, Clone)]
+#[deriving(RustcDecodable, RustcEncodable, Clone, Copy)]
 pub struct Vec3
 {
     pub x : f64,
@@ -11,14 +11,14 @@ pub struct Vec3
     pub z : f64
 }
 
-#[deriving(Decodable, Encodable)]
+#[deriving(RustcDecodable, RustcEncodable, Copy)]
 pub struct Vec2
 {
     pub x : f64,
     pub y : f64,
 }
 
-#[deriving(Decodable, Encodable)]
+#[deriving(RustcDecodable, RustcEncodable, Copy)]
 pub struct Vec4
 {
     pub x : f64,
@@ -27,7 +27,7 @@ pub struct Vec4
     pub w : f64
 }
 
-#[deriving(Decodable, Encodable, Clone)]
+#[deriving(RustcDecodable, RustcEncodable, Clone, Copy)]
 pub struct Quat
 {
     pub x : f64,
@@ -371,7 +371,7 @@ impl fmt::Show for Quat
 }
 
 impl BitXor<Vec3, Vec3> for Vec3 {
-    fn bitxor(&self, other: &Vec3) -> Vec3 {
+    fn bitxor(self, other: Vec3) -> Vec3 {
         Vec3::new(
             self.y * other.z - self.z*other.y,
             self.z * other.x - self.x*other.z,
@@ -381,7 +381,7 @@ impl BitXor<Vec3, Vec3> for Vec3 {
 }
 
 impl Add<Vec3, Vec3> for Vec3 {
-    fn add(&self, other: &Vec3) -> Vec3 {
+    fn add(self, other: Vec3) -> Vec3 {
         Vec3::new(
             self.x + other.x,
             self.y + other.y,
@@ -390,7 +390,7 @@ impl Add<Vec3, Vec3> for Vec3 {
 }
 
 impl Sub<Vec3, Vec3> for Vec3 {
-    fn sub(&self, other: &Vec3) -> Vec3 {
+    fn sub(self, other: Vec3) -> Vec3 {
         Vec3::new(
             self.x - other.x,
             self.y - other.y,
@@ -399,19 +399,19 @@ impl Sub<Vec3, Vec3> for Vec3 {
 }
 
 impl Mul<f64, Vec3> for Vec3 {
-    fn mul(&self, f: &f64) -> Vec3 {
-        Vec3::new(self.x**f, self.y**f, self.z**f)
+    fn mul(self, f: f64) -> Vec3 {
+        Vec3::new(self.x*f, self.y*f, self.z*f)
     }
 }
 
 impl Mul<Vec3, f64> for Vec3 {
-    fn mul(&self, v: &Vec3) -> f64 {
+    fn mul(self, v: Vec3) -> f64 {
         self.x*v.x + self.y*v.y + self.z*v.z
     }
 }
 
 impl Mul<Vec3, Vec3> for Vec3 {
-    fn mul(&self, v: &Vec3) -> Vec3 {
+    fn mul(self, v: Vec3) -> Vec3 {
         Vec3::new(self.x*v.x, self.y*v.y, self.z*v.z)
     }
 }
@@ -419,14 +419,14 @@ impl Mul<Vec3, Vec3> for Vec3 {
 
 
 impl Div<f64, Vec3> for Vec3 {
-    fn div(&self, f: &f64) -> Vec3 {
-        Vec3::new(self.x/(*f), self.y/(*f), self.z/(*f))
+    fn div(self, f: f64) -> Vec3 {
+        Vec3::new(self.x/f, self.y/f, self.z/f)
     }
 }
 
 
 impl Mul<Quat, Quat> for Quat {
-    fn mul(&self, other: &Quat) -> Quat {
+    fn mul(self, other: Quat) -> Quat {
         Quat {
             x : self.w * other.x + self.x * other.w + self.y * other.z - self.z * other.y,
             y : self.w * other.y + self.y * other.w + self.z * other.x - self.x * other.z,
@@ -437,12 +437,12 @@ impl Mul<Quat, Quat> for Quat {
 }
 
 impl Mul<f64, Quat> for Quat {
-    fn mul(&self, f: &f64) -> Quat {
+    fn mul(self, f: f64) -> Quat {
         Quat {
-            x : self.x * *f,
-            y : self.y * *f,
-            z : self.z * *f,
-            w : self.w * *f
+            x : self.x * f,
+            y : self.y * f,
+            z : self.z * f,
+            w : self.w * f
         }
     }
 }

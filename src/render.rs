@@ -2,9 +2,9 @@ use std::collections::{DList};
 use std::rc::Rc;
 use std::cell::RefCell;
 use libc::{c_uint, c_int};
-use sync::{RWLock, Arc,RWLockReadGuard};
+use std::sync::{RWLock, Arc,RWLockReadGuard};
 use std::collections::HashMap;
-use std::collections::hash_map::{Occupied,Vacant};
+use std::collections::hash_map::Entry::{Occupied,Vacant};
 
 use resource;
 use shader;
@@ -88,10 +88,11 @@ impl RenderPass
     {
         {
             let mut matm = self.material.write();
+            //println!("material : {}", matm.name);
 
             for (_,t) in matm.textures.iter_mut() {
                 match *t {
-                    material::SamplerImageFile(ref mut img) => {
+                    material::Sampler::ImageFile(ref mut img) => {
                         let yep = resource::resource_get(&mut *texture_manager.write(), img);
                         match yep.clone() {
                             None => {},
@@ -117,7 +118,7 @@ impl RenderPass
 
             let shaderres = &mut matm.shader;
             match *shaderres  {
-                None => {},
+                None => {println!("shaderes none");},
                 Some(ref mut s) => {
                     yep = resource::resource_get(&mut *shader_manager.write(), s);
                     match yep.clone() {
@@ -159,7 +160,7 @@ impl RenderPass
             let mut i = 0u32;
             for (name,t) in material.textures.iter_mut() {
                 match *t {
-                    material::SamplerImageFile(ref mut img) => {
+                    material::Sampler::ImageFile(ref mut img) => {
                         let yep = resource::resource_get(&mut *texture_manager.write(), img);
                         match yep {
                             Some(yoyo) => {
@@ -169,7 +170,7 @@ impl RenderPass
                             None => {}
                         }
                     },
-                    material::SamplerFbo(ref mut fbo) => {
+                    material::Sampler::Fbo(ref mut fbo) => {
                         let yep = resource::resource_get(&mut *fbo_manager.write(), fbo);
                         match yep {
                             Some(yoyo) => {
@@ -191,7 +192,7 @@ impl RenderPass
         let cam_mat = self.camera.borrow().object.read().matrix_get();
         let cam_projection = self.camera.borrow().perspective_get();
         let cam_mat_inv = cam_mat.inverse_get();
-        let matrix = cam_projection * cam_mat_inv;
+        let matrix = &cam_projection * &cam_mat_inv;
 
         for o in self.objects.iter() {
             let mut ob = o.write();
@@ -269,7 +270,7 @@ impl RenderPass
 
                 if can_render {
                     let object = ob.matrix_get();
-                    let m = *matrix * object ;
+                    let m = matrix * &object ;
                     shader.uniform_set("matrix", &m);
 
                     match mb.buffer_u32_get("faces") {
@@ -286,7 +287,7 @@ impl RenderPass
                         },
                         None => {
                             match mb.draw_type {
-                                mesh::Lines => {
+                                mesh::DrawType::Lines => {
                                     let vc : uint = vertex_data_count/3;
                                     unsafe {
                                         cgl_draw_lines(vc as c_uint);
@@ -345,7 +346,7 @@ impl Render {
         let camera_ortho = Rc::new(RefCell::new(factory.create_camera()));
         {
             let mut cam = camera_ortho.borrow_mut();
-            cam.data.projection = camera::Orthographic;
+            cam.data.projection = camera::Projection::Orthographic;
             cam.object.write().position = vec::Vec3::new(0f64,0f64,10f64);
         }
 
@@ -376,7 +377,7 @@ impl Render {
 
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
-            let rs = resource::ResData(m);
+            let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("line", rs);
 
             r.line.write().mesh_render =
@@ -386,12 +387,12 @@ impl Render {
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
             m.write().add_quad(1f32, 1f32);
-            let rs = resource::ResData(m);
+            let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("quad", rs);
 
             shader_manager.write().request_use_no_proc("shader/outline.sh");
             let outline_mat = material_manager.write().request_use_no_proc("material/outline.mat");
-            let outline_res = resource::ResTT::new_with_res("material/outline.mat", resource::ResData(outline_mat));
+            let outline_res = resource::ResTT::new_with_res("material/outline.mat", resource::ResTest::ResData(outline_mat));
 
             r.quad_outline.write().mesh_render = Some(
                 mesh_render::MeshRender::new_with_mesh_and_mat(
@@ -425,7 +426,7 @@ impl Render {
         };
 
         match shader.resource {
-            resource::ResData(ref mut ss) => {
+            resource::ResTest::ResData(ref mut ss) => {
                 {ss.write().utilise();}
                 ss.write().uniform_set("resolution", &vec::Vec2::new(w as f64, h as f64));
             },
@@ -510,7 +511,9 @@ fn prepare_passes_object(
             None => return
         };
 
-        let material = resource::resource_get(&mut *material_manager.write(), mesh_render_material);
+        let material = resource::resource_get(
+            &mut *material_manager.write(),
+            mesh_render_material);
 
         let mat = match material.clone() {
             None => return,

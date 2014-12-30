@@ -1,4 +1,4 @@
-use sync::{RWLock, Arc};
+use std::sync::{RWLock, Arc};
 use std::collections::HashMap;
 use libc::{c_char, c_void, c_int, c_float};
 use std::mem;
@@ -703,8 +703,8 @@ pub macro_rules! property_show_impl(
                 if depth > 0 {
                 $(
                     let s = field.to_string()
-                    + "/".to_string()
-                    + stringify!($member).to_string();
+                    + "/"//.to_string()
+                    + stringify!($member);//.to_string();
                     self.$member.create_widget(property, s.as_slice(), depth-1);
                  )+
                 }
@@ -721,19 +721,17 @@ pub macro_rules! property_show_impl(
             }
         }
     )
-)
+);
 
 property_show_impl!(vec::Vec3,
-                     [x,y,z])
+                     [x,y,z]);
 
-property_show_impl!(vec::Quat,[x,y,z,w])
+property_show_impl!(vec::Quat,[x,y,z,w]);
 
-property_show_impl!(transform::Transform,[position,orientation])
+property_show_impl!(transform::Transform,[position,orientation]);
 
 property_show_impl!(object::Object,
-                     [name,position,orientation,scale])
-
-
+                     [name,position,orientation,scale]);
 
 fn join_string(path : &Vec<String>) -> String
 {

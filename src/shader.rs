@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::File;
 use std::io::BufferedReader;
 use libc::{c_char, c_uint};
@@ -213,7 +213,7 @@ impl Shader
 }
 
 
-#[deriving(Decodable,Encodable)]
+#[deriving(RustcDecodable,RustcEncodable)]
 pub enum UniformData
 {
     Int(i32),
@@ -227,12 +227,12 @@ macro_rules! unimatch(
     ($inp:expr, $uni:expr, [ $($sp:ident)|+ ]) => (
         match $inp {
             $(
-                $sp(x) => { x.uniform_send($uni); }
+                UniformData::$sp(ref x) => { x.uniform_send($uni); }
              )+
             _ => {}
         }
     );
-)
+);
 
 impl UniformSend for UniformData
 {

@@ -11,11 +11,12 @@
 //#![allow(ctypes)]
 
 #![feature(globs)]
-extern crate serialize;
+//extern crate serialize;
+extern crate "rustc-serialize" as rustc_serialize;
 extern crate libc;
-extern crate sync;
+//extern crate sync;
 extern crate png;
-extern crate toml;
+//extern crate toml;
 //extern crate debug;
 extern crate uuid;
 

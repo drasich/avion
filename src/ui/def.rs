@@ -1,6 +1,6 @@
 use libc::{c_char, c_void, c_int};
 use std::mem;
-use sync::{RWLock, Arc};
+use std::sync::{RWLock, Arc};
 use std::c_str::CString;
 use std::collections::{DList};
 use std::ptr;
@@ -111,7 +111,7 @@ impl Master
             views : DList::new(),
         };
 
-        m.views.push_back(box View::new(&mut factory));
+        m.views.push_back(box View::new(&mut m.factory));
 
         m
     }

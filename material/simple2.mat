@@ -6,7 +6,7 @@
   "state": 0,
   "textures": {
     "texture": {
-      "variant": "SamplerImageFile",
+      "variant": "ImageFile",
       "fields": [
         {
           "name": "image/tex_ground.png"

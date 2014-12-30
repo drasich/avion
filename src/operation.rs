@@ -1,5 +1,5 @@
 use std::any::{Any, AnyRefExt};
-use sync::{RWLock, Arc};
+use std::sync::{RWLock, Arc};
 use std::cell::RefCell;
 use std::rc::Weak;
 use std::fmt;

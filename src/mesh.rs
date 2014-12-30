@@ -1,7 +1,7 @@
 use std::collections::HashMap;
-use std::collections::hash_map::{Occupied,Vacant};
+use std::collections::hash_map::Entry::{Occupied,Vacant};
 use std::io::File;
-use serialize::{Encodable, Encoder, Decoder, Decodable};
+use rustc_serialize::{Encodable, Encoder, Decoder, Decodable};
 
 //use libc::{c_char, c_int, c_uint, c_void};
 use libc::{c_uint, c_void};
@@ -10,6 +10,8 @@ use resource;
 use shader;
 use geometry;
 use vec;
+
+use self::DrawType::{Faces,Vertices,Lines};
 
 #[repr(C)]
 pub struct CglBuffer;
@@ -72,14 +74,14 @@ impl<T> BufferSend for Buffer<T> {
     fn send(&mut self) -> ()
     {
         match self.buffer_type {
-            Vertex => unsafe {
+            BufferType::Vertex => unsafe {
                 println!("sending buffersend vertex '{}'", self.name);
                 let cgl_buffer = cgl_buffer_init(
                     mem::transmute(self.data.as_ptr()),
                     self.data.len() as c_uint);
                 self.cgl_buffer = Some(cgl_buffer);
             },
-            Index => unsafe {
+            BufferType::Index => unsafe {
                 println!("sending buffersend index '{}'", self.name);
                 let cgl_buffer = cgl_buffer_index_init(
                     mem::transmute(self.data.as_ptr()),
@@ -226,7 +228,7 @@ impl Mesh
            self.buffers_f32.insert(bufname.clone(), box Buffer::new(
                    bufname.clone(),
                    vvv,
-                   Vertex));
+                   BufferType::Vertex));
        }
 
        {
@@ -252,7 +254,7 @@ impl Mesh
            self.buffers_u32.insert(bufname.clone(), box Buffer::new(
                    bufname.clone(),
                    fff,
-                   Index));
+                   BufferType::Index));
        }
 
        {
@@ -273,7 +275,7 @@ impl Mesh
                self.buffers.insert(bufname.clone(), box Buffer::new(
                        bufname.clone(),
                        nnn,
-                       Normal));
+                       BufferType::Normal));
            }
        }
 
@@ -305,7 +307,7 @@ impl Mesh
                self.buffers.insert(bufname.clone(), box Buffer::new(
                        bufname.clone(),
                        uuu,
-                       Uv));
+                       BufferType::Uv));
            }
        }
 
@@ -385,7 +387,7 @@ impl Mesh
         let buffer = box Buffer::new(
             name.clone(),
             vvv,
-            Vertex);
+            BufferType::Vertex);
 
         match self.buffers_f32.entry(name) {
             Vacant(entry) => {entry.set(buffer);},
@@ -427,7 +429,7 @@ impl Mesh
         let buffer = box Buffer::new(
             name.clone(),
             vvv,
-            Vertex);
+            BufferType::Vertex);
 
         match self.buffers_f32.entry(name) {
             Vacant(entry) => {entry.set(buffer);},
@@ -451,7 +453,7 @@ impl Mesh
         let buffer = box Buffer::new(
             name.clone(),
             fff,
-            Index);
+            BufferType::Index);
 
         match self.buffers_u32.entry(name) {
             Vacant(entry) => {entry.set(buffer);},
@@ -480,7 +482,7 @@ impl Mesh
             let buffer = box Buffer::new(
                 name.clone(),
                 uuu,
-                Uv);
+                BufferType::Uv);
 
             match self.buffers_f32.entry(name) {
                 Vacant(entry) => { entry.set(buffer); },

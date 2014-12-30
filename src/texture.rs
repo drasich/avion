@@ -1,6 +1,6 @@
 use png;
 use libc::{c_uint, c_void};
-use serialize::{Encodable, Encoder, Decoder, Decodable};
+use rustc_serialize::{Encodable, Encoder, Decoder, Decodable};
 use std::mem;
 
 #[repr(C)]

@@ -1,6 +1,6 @@
 use std::default::Default;
 use std::collections::{DList};
-use sync::{RWLock, Arc};
+use std::sync::{RWLock, Arc};
 use uuid;
 
 use object;
@@ -9,7 +9,7 @@ use scene;
 use vec;
 use transform;
 
-#[deriving(Decodable, Encodable)]
+#[deriving(RustcDecodable, RustcEncodable)]
 pub struct Factory
 {
      id : u32

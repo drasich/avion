@@ -5,7 +5,7 @@
   },
   "textures": {
     "texture": {
-      "variant": "SamplerFbo",
+      "variant": "Fbo",
       "fields": [
         {
           "name": "fbo_selected"
@@ -13,7 +13,7 @@
       ]
     },
     "texture_all": {
-      "variant": "SamplerFbo",
+      "variant": "Fbo",
       "fields": [
         {
           "name": "fbo_all"

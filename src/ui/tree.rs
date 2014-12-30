@@ -1,4 +1,4 @@
-use sync::{RWLock, Arc};
+use std::sync::{RWLock, Arc};
 use std::collections::HashMap;
 use libc::{c_char, c_void, c_int};
 use std::mem;
@@ -125,7 +125,7 @@ impl Tree
         };
 
         if eoi != ptr::null() {
-            self.objects.insert(object.read().id, eoi);
+            self.objects.insert(object.read().id.clone(), eoi);
         }
     }
 
@@ -213,7 +213,7 @@ extern fn expand(
         println!("expanding ! with child {} ", (*c).read().name);
         unsafe {
             let eoi = tree_object_add(t.jk_tree, mem::transmute(c), parent);
-            t.objects.insert(c.read().id, eoi);
+            t.objects.insert(c.read().id.clone(), eoi);
         }
     }
 }

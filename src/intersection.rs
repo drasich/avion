@@ -36,7 +36,7 @@ pub fn ray_object(ray : &geometry::Ray, o : &object::Object) -> IntersectionRay
         None => return out,
         Some(ref mr) => {
             match mr.mesh.resource {
-                resource::ResData(ref m) => {
+                resource::ResTest::ResData(ref m) => {
                     let wp = o.world_position();
                     let wq = o.world_orientation();
                     let ws = o.world_scale();
@@ -86,11 +86,11 @@ pub fn ray_mesh(
         Some(ref b) => {
             for i in range_step(0, b.data.len(), 3) {
                 let index = b.data[i] as uint;
-                let v0 = get_vertex(&vertices.data, index).mul(scale);
+                let v0 = get_vertex(&vertices.data, index) * *scale;
                 let index = b.data[i+1] as uint;
-                let v1 = get_vertex(&vertices.data, index).mul(scale);
+                let v1 = get_vertex(&vertices.data, index) * *scale;
                 let index = b.data[i+2] as uint;
-                let v2 = get_vertex(&vertices.data, index).mul(scale);
+                let v2 = get_vertex(&vertices.data, index)* *scale;
 
                 let tri = geometry::Triangle::new(v0,v1,v2);
 

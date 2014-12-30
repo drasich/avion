@@ -3,12 +3,15 @@ use texture;
 use shader;
 use fbo;
 use material;
-use serialize::{Encodable, Encoder, Decoder, Decodable};
+use rustc_serialize::{Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
-use std::collections::hash_map::{Occupied,Vacant};
-use sync::{RWLock, Arc};
+use std::collections::hash_map::Entry;
+use std::collections::hash_map::Entry::{Occupied,Vacant};
+use std::sync::{RWLock, Arc};
 //use std::io::timer::sleep;
 //use std::time::duration::Duration;
+use self::ResTest::{ResData,ResWait,ResNone};
+use std::thread::Thread;
 
 
 /*
@@ -49,7 +52,7 @@ impl<T> ResTT<T>
     {
         ResTT {
             name : String::from_str(name),
-            resource : ResNone
+            resource : ResTest::ResNone
         }
     }
 
@@ -161,8 +164,8 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
         let mut ms1w = ms1.write();
 
         let v : &mut ResTest<T> = match ms1w.entry(String::from_str(name)) {
-            Vacant(entry) => entry.set(ResNone),
-            Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => entry.set(ResTest::ResNone),
+            Entry::Occupied(entry) => entry.into_mut(),
         };
 
         let s = String::from_str(name);
@@ -171,12 +174,12 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
         match *v 
         {
             ResNone => {
-                *v = ResWait;
+                *v = ResTest::ResWait;
 
                 let ss = s.clone();
 
                 let (tx, rx) = channel::<Arc<RWLock<T>>>();
-                spawn( proc() {
+                let guard = Thread::spawn(move || {
                     //sleep(::std::time::duration::Duration::seconds(5));
                     let mt : T = Create::create(ss.as_slice());
                     let m = Arc::new(RWLock::new(mt));
@@ -184,19 +187,19 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                     tx.send(m.clone());
                 });
 
-                spawn( proc() {
+                let result = guard.join();
+
+                let guard = Thread::spawn( move || {
                     loop {
                     match rx.try_recv() {
-                        Err(_) => {},//println!("nothing"),
+                        Err(_) => {},
                         Ok(value) =>  { 
-                            //println!("received val {} ", value.read().name);
-
                             let mut mscwww = msc.write();
 
                             match mscwww.entry(s.clone()) {
-                                Vacant(entry) => entry.set(ResNone),
-                                Occupied(mut entry) => { 
-                                    *entry.get_mut() = ResData(value.clone());
+                                Entry::Vacant(entry) => entry.set(ResTest::ResNone),
+                                Entry::Occupied(mut entry) => { 
+                                    *entry.get_mut() = ResTest::ResData(value.clone());
                                     entry.into_mut()
                                 }
                             };
@@ -206,13 +209,15 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                     }
                 });
 
-                return ResWait;
+                guard.detach();
+
+                return ResTest::ResWait;
             },
-            ResData(ref yep) => {
-                return ResData(yep.clone());
+            ResTest::ResData(ref yep) => {
+                return ResTest::ResData(yep.clone());
             },
-            ResWait => {
-                return ResWait;
+            ResTest::ResWait => {
+                return ResTest::ResWait;
             }
         }
     }

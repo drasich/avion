@@ -1,4 +1,4 @@
-use sync::{RWLock, Arc};
+use std::sync::{RWLock, Arc};
 use std::f64::consts;
 use std::default::Default;
 use std::num::FloatMath;
@@ -62,7 +62,7 @@ impl Default for CameraData
 
             clear_color : vec::Vec4::zero(),
 
-            projection : Perspective,
+            projection : Projection::Perspective,
 
             //euler : vec::Vec3::zero(),
         }
@@ -96,13 +96,13 @@ impl Camera
         //TODO
         //matrix::Matrix4::perspective(0.4f64,1f64,1f64,10000f64)
         match self.data.projection {
-            Perspective =>
+            Projection::Perspective =>
                 matrix::Matrix4::perspective(
                     self.data.fovy,
                     self.data.aspect,
                     self.data.near,
                     self.data.far),
-            Orthographic => 
+            Projection::Orthographic => 
                 matrix::Matrix4::orthographic(
                     (self.data.width / 2f64) as u32,
                     (self.data.height / 2f64) as u32,
@@ -113,7 +113,7 @@ impl Camera
 
     pub fn ray_from_screen(&self, x : f64, y : f64, length: f64) -> geometry::Ray
     {
-        let c = self.data;
+        let c = &self.data;
         let o = self.object.read();
 
         let near = c.near;
