@@ -355,11 +355,12 @@ pub struct Render
     pub fbo_selected : Arc<RWLock<fbo::Fbo>>,
 
     pub quad_outline : Arc<RWLock<object::Object>>,
-    pub line : Arc<RWLock<object::Object>>,
+    //pub line : Arc<RWLock<object::Object>>,
 
     pub context : Rc<RefCell<context::Context>>,
 
     pub grid : Arc<RWLock<object::Object>>,
+    pub camera_repere : Arc<RWLock<object::Object>>,
 }
 
 impl Render {
@@ -403,7 +404,7 @@ impl Render {
             camera : camera,
             camera_ortho : camera_ortho,
             //line : Arc::new(RWLock::new(object::Object::new("line"))),
-            line : Arc::new(RWLock::new(factory.create_object("line"))),
+            //line : Arc::new(RWLock::new(factory.create_object("line"))),
             fbo_all : fbo_all,
             fbo_selected : fbo_selected,
             //quad_outline : Arc::new(RWLock::new(object::Object::new("quad_outline")))
@@ -412,8 +413,11 @@ impl Render {
             context : context,
 
             grid : Arc::new(RWLock::new(factory.create_object("grid"))),
+            camera_repere : Arc::new(RWLock::new(
+                    factory.create_object("camera_repere"))),
         };
 
+        /*
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
             let rs = resource::ResTest::ResData(m);
@@ -422,23 +426,25 @@ impl Render {
             r.line.write().mesh_render =
                 Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
         }
+        */
 
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
-
             create_grid(&mut *m.write(), 100i32, 10i32);
-            /*
-            m.write().add_line(
-                geometry::Segment::new(
-                    vec::Vec3::new(-1000f64, 0f64,0f64),
-                    vec::Vec3::new(100f64, 0f64,0f64)),
-                    vec::Vec4::new(1.0f64, 0f64,0f64,1f64));
-                    */
-
             let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("grid", rs);
 
-            r.line.write().mesh_render =
+            r.grid.write().mesh_render =
+                Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
+        }
+
+        {
+            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
+            create_repere(&mut *m.write());
+            let rs = resource::ResTest::ResData(m);
+            let mr = resource::ResTT::new_with_res("repere", rs);
+
+            r.camera_repere.write().mesh_render =
                 Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
         }
 
@@ -511,11 +517,13 @@ impl Render {
                 self.camera.clone());
         }
 
+        /*
         prepare_passes_object(
             self.line.clone(),
             &mut self.passes,
             self.material_manager.clone(),
             self.camera.clone());
+            */
 
         prepare_passes_object(
             self.grid.clone(),
@@ -523,13 +531,21 @@ impl Render {
             self.material_manager.clone(),
             self.camera.clone());
 
-        /*
+        let m = 40f64;
+        self.camera_repere.write().position = 
+            vec::Vec3::new(
+                -self.camera_ortho.borrow().data.width/2f64 +m, 
+                -self.camera_ortho.borrow().data.height/2f64 +m, 
+                -10f64);
+        self.camera_repere.write().orientation = 
+            self.camera.borrow().object.read().orientation.inverse();
+
+
         prepare_passes_object(
             self.camera_repere.clone(),
             &mut self.passes,
             self.material_manager.clone(),
             self.camera_ortho.clone());
-            */
     }
 
     fn prepare_passes_selected(&mut self)
@@ -748,3 +764,22 @@ fn create_grid(m : &mut mesh::Mesh, num : i32, space : i32)
     }
 }
 
+fn create_repere(m : &mut mesh::Mesh)
+{
+    let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,1f64);
+    let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,1f64);
+    let blue = vec::Vec4::new(0f64,0.4745f64,1f64,1f64);
+
+    let len = 40f64;
+    let s = geometry::Segment::new(
+        vec::Vec3::zero(), vec::Vec3::new(len, 0f64, 0f64));
+    m.add_line(s, red);
+
+    let s = geometry::Segment::new(
+        vec::Vec3::zero(), vec::Vec3::new(0f64, len, 0f64));
+    m.add_line(s, green);
+
+    let s = geometry::Segment::new(
+        vec::Vec3::zero(), vec::Vec3::new(0f64, 0f64, len));
+    m.add_line(s, blue);
+}

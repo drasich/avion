@@ -58,6 +58,46 @@ impl Vec4
             w : w 
         }
     }
+
+    pub fn x() -> Vec4
+    {
+        Vec4 {
+            x : 1f64,
+            y : 0f64,
+            z : 0f64,
+            w : 0f64
+        }
+    }
+
+    pub fn y() -> Vec4
+    {
+        Vec4 {
+            x : 0f64,
+            y : 1f64,
+            z : 0f64,
+            w : 0f64
+        }
+    }
+
+    pub fn z() -> Vec4
+    {
+        Vec4 {
+            x : 0f64,
+            y : 0f64,
+            z : 1f64,
+            w : 0f64
+        }
+    }
+
+    pub fn w() -> Vec4
+    {
+        Vec4 {
+            x : 0f64,
+            y : 0f64,
+            z : 0f64,
+            w : 1f64
+        }
+    }
 }
 
 impl Vec2

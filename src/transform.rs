@@ -62,6 +62,20 @@ impl Orientation
     {
         self.as_quat().rotate_vec3(v)
     }
+
+    pub fn inverse(&self) -> Orientation
+    {
+        match *self {
+            Orientation::AngleXYZ(_) => {
+                //TODO
+                let q = self.as_quat().inverse();
+                let mut o = Orientation::new_with_quat(&q);
+                o.to_angle_xyz();
+                o
+            },
+            Orientation::Quat(q) => Orientation::Quat(q.inverse())
+        }
+    }
 }
 
 #[deriving(RustcDecodable, RustcEncodable, Clone)]
