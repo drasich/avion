@@ -5,6 +5,7 @@ use libc::{c_uint, c_int};
 use std::sync::{RWLock, Arc,RWLockReadGuard};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied,Vacant};
+use uuid;
 
 use resource;
 use shader;
@@ -58,12 +59,35 @@ pub extern fn resize_cb(r : *mut Render, w : c_int, h : c_int) -> () {
     }
 }
 
-pub struct RenderPass
+struct CameraPass
+{
+    camera : Rc<RefCell<camera::Camera>>,
+    objects : DList<Arc<RWLock<object::Object>>>,
+}
+
+impl CameraPass
+{
+    fn new(camera : Rc<RefCell<camera::Camera>>) -> CameraPass
+    {
+        CameraPass {
+            camera : camera,
+            objects : DList::new()
+        }
+    }
+
+    fn add_object(&mut self, o : Arc<RWLock<object::Object>>)
+    {
+        self.objects.push_back(o);
+    }
+}
+
+struct RenderPass
 {
     pub name : String,
     pub material : Arc<RWLock<material::Material>>,
-    pub objects : DList<Arc<RWLock<object::Object>>>,
-    pub camera : Rc<RefCell<camera::Camera>>,
+    //pub objects : DList<Arc<RWLock<object::Object>>>,
+    //pub camera : Rc<RefCell<camera::Camera>>,
+    pub passes : HashMap<uuid::Uuid, Box<CameraPass>>,
 }
 
 impl RenderPass
@@ -75,8 +99,9 @@ impl RenderPass
         RenderPass {
                   name : String::from_str("passtest"),
                   material : material.clone(),
-                  objects : DList::new(),
-                  camera : camera,
+                  //objects : DList::new(),
+                  //camera : camera,
+                  passes : HashMap::new()
               }
     }
 
@@ -191,15 +216,18 @@ impl RenderPass
             }
         }
 
-        let cam_mat = self.camera.borrow().object.read().matrix_get();
-        let cam_projection = self.camera.borrow().perspective_get();
-        let cam_mat_inv = cam_mat.inverse_get();
-        let matrix = &cam_projection * &cam_mat_inv;
+        for (_,p) in self.passes.iter() {
+            let cam_mat = p.camera.borrow().object.read().matrix_get();
+            let cam_projection = p.camera.borrow().perspective_get();
+            let cam_mat_inv = cam_mat.inverse_get();
+            let matrix = &cam_projection * &cam_mat_inv;
 
-        for o in self.objects.iter() {
-            let mut ob = o.write();
-            self.draw_object(shader, &mut *ob, &matrix, mesh_manager.clone());
+            for o in p.objects.iter() {
+                let mut ob = o.write();
+                self.draw_object(shader, &mut *ob, &matrix, mesh_manager.clone());
+            }
         }
+
     }
 
     fn draw_object(
@@ -349,8 +377,8 @@ impl Render {
         let camera = Rc::new(RefCell::new(factory.create_camera()));
         {
             let mut cam = camera.borrow_mut();
-            cam.pan(&vec::Vec3::new(0f64,20f64,200f64));
-            cam.lookat(vec::Vec3::new(0f64,0f64,0f64));
+            cam.pan(&vec::Vec3::new(100f64,20f64,100f64));
+            cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
         }
         let camera_ortho = Rc::new(RefCell::new(factory.create_camera()));
         {
@@ -469,7 +497,8 @@ impl Render {
     {
         for (_,p) in self.passes.iter_mut()
         {
-            p.objects.clear();
+            //p.objects.clear();
+            p.passes.clear();
         }
 
         let objects = &self.scene.read().objects;
@@ -493,13 +522,22 @@ impl Render {
             &mut self.passes,
             self.material_manager.clone(),
             self.camera.clone());
+
+        /*
+        prepare_passes_object(
+            self.camera_repere.clone(),
+            &mut self.passes,
+            self.material_manager.clone(),
+            self.camera_ortho.clone());
+            */
     }
 
     fn prepare_passes_selected(&mut self)
     {
         for (_,p) in self.passes.iter_mut()
         {
-            p.objects.clear();
+            //p.objects.clear();
+            p.passes.clear();
         }
 
         let context = match self.context.try_borrow() {
@@ -521,7 +559,8 @@ impl Render {
     {
         for (_,p) in self.passes.iter_mut()
         {
-            p.objects.clear();
+            //p.objects.clear();
+            p.passes.clear();
         }
 
         prepare_passes_object(
@@ -551,18 +590,27 @@ fn prepare_passes_object(
             &mut *material_manager.write(),
             mesh_render_material);
 
-        let mat = match material.clone() {
+        let mat = match material {
             None => return,
             Some(mat) => mat
         };
 
         {
             let rp = match passes.entry(mesh_render_material.name.clone()) {
-                Vacant(entry) => entry.set(box RenderPass::new(mat.clone(), camera.clone())),
+                Vacant(entry) => 
+                    entry.set(box RenderPass::new(mat.clone(), camera.clone())),
                 Occupied(entry) => entry.into_mut(),
             };
 
-            rp.objects.push_back(o.clone());
+            //rp.objects.push_back(o.clone());
+
+            let cam_pass = match rp.passes.entry(camera.borrow().id.clone()) {
+                Vacant(entry) => 
+                    entry.set(box CameraPass::new(camera.clone())),
+                Occupied(entry) => entry.into_mut(),
+            };
+
+            cam_pass.add_object(o.clone());
         }
     }
 
@@ -668,6 +716,9 @@ impl Renderer for Render
 
 fn create_grid(m : &mut mesh::Mesh, num : i32, space : i32)
 {
+    //TODO make something better then using add_line
+    //ie create the vec and then add the buffer
+
     let color = vec::Vec4::new(1f64,1f64,1f64,0.1f64);
     let xc = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.4f64);
     let zc = vec::Vec4::new(0f64,0.4745f64,1f64,0.4f64);

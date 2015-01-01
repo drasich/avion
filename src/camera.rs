@@ -10,6 +10,7 @@ use object;
 use matrix;
 use geometry;
 use transform::Orientation;
+use uuid;
 
 pub enum Projection
 {
@@ -75,6 +76,7 @@ pub struct Camera
 {
     pub data : CameraData,
     pub object : Arc<RWLock<object::Object>>,
+    pub id : uuid::Uuid
 }
 
 impl Camera

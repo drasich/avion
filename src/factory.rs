@@ -54,7 +54,8 @@ impl Factory {
     {
         let c = camera::Camera {
             data : Default::default(),
-            object : Arc::new(RWLock::new(self.create_object("camera")))
+            object : Arc::new(RWLock::new(self.create_object("camera"))),
+            id : self.create_id(),
         };
 
         c.object.write().position = vec::Vec3::new(0.1f64, 0f64, 0f64);
