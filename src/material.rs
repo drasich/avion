@@ -123,12 +123,7 @@ impl Material
             }
         }
 
-        /*
-        for t in mat.textures.iter()
-        {
-            self.textures.push(resource::ResTT::new(t.name.as_slice()));
-        }
-        */
+        self.uniforms = mat.uniforms.clone();
     }
 
     pub fn save(&self)

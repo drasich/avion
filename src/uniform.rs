@@ -1,6 +1,6 @@
 extern crate libc;
 
-use self::libc::{c_float, c_uint};
+use self::libc::{c_float, c_uint, c_int};
 use shader;
 use matrix;
 use vec;
@@ -9,9 +9,26 @@ use fbo;
 
 #[link(name = "cypher")]
 extern {
+    pub fn cgl_shader_uniform_int_set(
+        uniform : *const shader::CglShaderUniform,
+        value : c_int) -> ();
+
     pub fn cgl_shader_uniform_float_set(
         uniform : *const shader::CglShaderUniform,
         value : c_float) -> ();
+
+    pub fn cgl_shader_uniform_vec2_set(
+        uniform : *const shader::CglShaderUniform,
+        x : c_float,
+        y : c_float,
+        ) -> ();
+
+    pub fn cgl_shader_uniform_vec3_set(
+        uniform : *const shader::CglShaderUniform,
+        x : c_float,
+        y : c_float,
+        z : c_float,
+        ) -> ();
 
     pub fn cgl_shader_uniform_vec4_set(
         uniform : *const shader::CglShaderUniform,
@@ -19,12 +36,6 @@ extern {
         y : c_float,
         z : c_float,
         w : c_float
-        ) -> ();
-
-    pub fn cgl_shader_uniform_vec2_set(
-        uniform : *const shader::CglShaderUniform,
-        x : c_float,
-        y : c_float,
         ) -> ();
 
     pub fn cgl_shader_uniform_mat4_set(
@@ -49,6 +60,16 @@ pub trait UniformSend
     fn uniform_send(&self, uni : *const shader::CglShaderUniform) ->();
 }
 
+impl UniformSend for i32 {
+
+    fn uniform_send(&self, uni : *const shader::CglShaderUniform) ->()
+    {
+        unsafe {
+            cgl_shader_uniform_int_set(uni, *self);
+        }
+    }
+}
+
 impl UniformSend for f32 {
 
     fn uniform_send(&self, uni : *const shader::CglShaderUniform) ->()
@@ -68,6 +89,21 @@ impl UniformSend for vec::Vec2 {
         }
     }
 }
+
+impl UniformSend for vec::Vec3 {
+
+    fn uniform_send(&self, uni : *const shader::CglShaderUniform) ->()
+    {
+        unsafe {
+            cgl_shader_uniform_vec3_set(
+                uni,
+                self.x as c_float,
+                self.y as c_float,
+                self.z as c_float);
+        }
+    }
+}
+
 
 impl UniformSend for vec::Vec4 {
 

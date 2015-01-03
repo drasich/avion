@@ -11,14 +11,14 @@ pub struct Vec3
     pub z : f64
 }
 
-#[deriving(RustcDecodable, RustcEncodable, Copy)]
+#[deriving(RustcDecodable, RustcEncodable, Clone, Copy)]
 pub struct Vec2
 {
     pub x : f64,
     pub y : f64,
 }
 
-#[deriving(RustcDecodable, RustcEncodable, Copy)]
+#[deriving(RustcDecodable, RustcEncodable, Clone, Copy)]
 pub struct Vec4
 {
     pub x : f64,

@@ -15,6 +15,5 @@
     }
   },
   "uniforms": {
-    "unitest": { "variant": "Float", "fields" : [5.6] }
   }
 }

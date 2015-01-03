@@ -5,5 +5,12 @@
   },
   "textures": {
   },
-  "uniforms": {}
+  "uniforms": {
+    "size_fixed": {
+      "variant": "Int",
+      "fields": [
+        0
+      ]
+    }
+  }
 }

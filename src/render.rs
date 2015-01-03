@@ -21,6 +21,7 @@ use fbo;
 use vec;
 use factory;
 use context;
+use transform;
 
 use geometry;
 
@@ -355,12 +356,13 @@ pub struct Render
     pub fbo_selected : Arc<RWLock<fbo::Fbo>>,
 
     pub quad_outline : Arc<RWLock<object::Object>>,
-    //pub line : Arc<RWLock<object::Object>>,
 
     pub context : Rc<RefCell<context::Context>>,
 
     pub grid : Arc<RWLock<object::Object>>,
     pub camera_repere : Arc<RWLock<object::Object>>,
+
+    pub dragger : Arc<RWLock<object::Object>>,
 }
 
 impl Render {
@@ -403,8 +405,6 @@ impl Render {
             scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path))),
             camera : camera,
             camera_ortho : camera_ortho,
-            //line : Arc::new(RWLock::new(object::Object::new("line"))),
-            //line : Arc::new(RWLock::new(factory.create_object("line"))),
             fbo_all : fbo_all,
             fbo_selected : fbo_selected,
             //quad_outline : Arc::new(RWLock::new(object::Object::new("quad_outline")))
@@ -415,18 +415,10 @@ impl Render {
             grid : Arc::new(RWLock::new(factory.create_object("grid"))),
             camera_repere : Arc::new(RWLock::new(
                     factory.create_object("camera_repere"))),
+
+            dragger : Arc::new(RWLock::new(
+                    factory.create_object("dragger"))),
         };
-
-        /*
-        {
-            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
-            let rs = resource::ResTest::ResData(m);
-            let mr = resource::ResTT::new_with_res("line", rs);
-
-            r.line.write().mesh_render =
-                Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
-        }
-        */
 
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
@@ -440,12 +432,22 @@ impl Render {
 
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
-            create_repere(&mut *m.write());
+            create_repere(&mut *m.write(), 40f64 );
             let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("repere", rs);
 
             r.camera_repere.write().mesh_render =
                 Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
+        }
+
+        {
+            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
+            create_repere(&mut *m.write(), 1f64);
+            let rs = resource::ResTest::ResData(m);
+            let mr = resource::ResTT::new_with_res("repere", rs);
+
+            r.dragger.write().mesh_render =
+                Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line_size_fixed.mat"));
         }
 
         {
@@ -469,34 +471,10 @@ impl Render {
 
     fn resolution_set(&mut self, w : c_int, h : c_int)
     {
-        let oc = self.quad_outline.clone();
-        let render = &mut oc.write().mesh_render;
-        let mesh_render_material = match *render {
-            Some(ref mut mr) => &mut mr.material,
-            None => return
-        };
-
-        let material = resource::resource_get(&mut *self.material_manager.write(), mesh_render_material);
-
-        let mat = match material.clone() {
-            None => return,
-            Some(mat) => mat
-        };
-
-        let shaderop = &mut mat.write().shader;
-        let shader = match *shaderop {
-            Some(ref mut s) => s,
-            None => return
-        };
-
-        match shader.resource {
-            resource::ResTest::ResData(ref mut ss) => {
-                {ss.write().utilise();}
-                ss.write().uniform_set("resolution", &vec::Vec2::new(w as f64, h as f64));
-            },
-            _ => {}
-        }
-
+        set_object_uniform_data(
+            &*self.quad_outline.clone().read(),
+            "resolution",
+            shader::UniformData::Vec2(vec::Vec2::new(w as f64, h as f64)));
     }
 
     fn prepare_passes(&mut self)
@@ -517,14 +495,6 @@ impl Render {
                 self.camera.clone());
         }
 
-        /*
-        prepare_passes_object(
-            self.line.clone(),
-            &mut self.passes,
-            self.material_manager.clone(),
-            self.camera.clone());
-            */
-
         prepare_passes_object(
             self.grid.clone(),
             &mut self.passes,
@@ -540,12 +510,55 @@ impl Render {
         self.camera_repere.write().orientation = 
             self.camera.borrow().object.read().orientation.inverse();
 
-
         prepare_passes_object(
             self.camera_repere.clone(),
             &mut self.passes,
             self.material_manager.clone(),
             self.camera_ortho.clone());
+
+        let sel_len = match self.context.try_borrow() {
+            Some(c) => c.selected.len(),
+            None => {println!("cannot borrow context"); 0}
+        };
+
+        if sel_len > 0 {
+            /*
+            {
+            let draggerc = self.dragger.clone();
+            let draggerw = draggerc.write();
+            let render = match draggerw.mesh_render {
+                Some(ref r) => r,
+                None => return
+            };
+
+            match render.material.resource {
+                resource::ResTest::ResData(ref d) => {
+                    {
+                    let mut dw = d.write();
+                    let yep = match dw.uniforms.entry("size_fixed".to_string()){
+                        Vacant(entry) => 
+                            entry.set(box shader::UniformData::Int(1i32)),
+                            Occupied(entry) => {
+                                entry.into_mut()
+                                //entry.set(box shader::UniformData::Int(1i32))
+                            }
+                    };
+                    }
+                    {
+                    d.clone().read().save();
+                    }
+                },
+                _ => {}
+            }
+            }
+            */
+
+            prepare_passes_object(
+                self.dragger.clone(),
+                &mut self.passes,
+                self.material_manager.clone(),
+                self.camera.clone());
+        }
     }
 
     fn prepare_passes_selected(&mut self)
@@ -560,14 +573,25 @@ impl Render {
             Some(c) => c,
             None => {println!("cannot borrow context"); return;}
         };
+
         let objects = &context.selected;
 
+        let mut center = vec::Vec3::zero();
+        let mut ori = vec::Quat::identity();
         for o in objects.iter() {
+            center = center + o.read().position;
+            ori = ori * o.read().world_orientation();
             prepare_passes_object(
                 o.clone(),
                 &mut self.passes,
                 self.material_manager.clone(),
                 self.camera.clone());
+        }
+
+        if objects.len() > 0 {
+            center = center / (objects.len() as f64);
+            self.dragger.write().position = center;
+            self.dragger.write().orientation = transform::Orientation::Quat(ori);
         }
     }
 
@@ -764,13 +788,12 @@ fn create_grid(m : &mut mesh::Mesh, num : i32, space : i32)
     }
 }
 
-fn create_repere(m : &mut mesh::Mesh)
+fn create_repere(m : &mut mesh::Mesh, len : f64)
 {
     let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,1f64);
     let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,1f64);
     let blue = vec::Vec4::new(0f64,0.4745f64,1f64,1f64);
 
-    let len = 40f64;
     let s = geometry::Segment::new(
         vec::Vec3::zero(), vec::Vec3::new(len, 0f64, 0f64));
     m.add_line(s, red);
@@ -782,4 +805,29 @@ fn create_repere(m : &mut mesh::Mesh)
     let s = geometry::Segment::new(
         vec::Vec3::zero(), vec::Vec3::new(0f64, 0f64, len));
     m.add_line(s, blue);
+}
+
+fn set_object_uniform_data(o : &object::Object, name : &str, data : shader::UniformData)
+{
+    let render = match o.mesh_render {
+        Some(ref r) => r,
+        None => return
+    };
+
+    match render.material.resource {
+        resource::ResTest::ResData(ref d) => {
+            {
+                let mut dw = d.write();
+                let yep = match dw.uniforms.entry(name.to_string()){
+                    Vacant(entry) => entry.set(box data),
+                    Occupied(entry) => {
+                        let entry = entry.into_mut();
+                        *entry = box data;
+                        entry
+                    }
+                };
+            }
+        },
+        _ => {}
+    }
 }

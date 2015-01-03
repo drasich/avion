@@ -213,7 +213,7 @@ impl Shader
 }
 
 
-#[deriving(RustcDecodable,RustcEncodable)]
+#[deriving(Clone,RustcDecodable,RustcEncodable)]
 pub enum UniformData
 {
     Int(i32),
@@ -229,7 +229,7 @@ macro_rules! unimatch(
             $(
                 UniformData::$sp(ref x) => { x.uniform_send($uni); }
              )+
-            _ => {}
+            //_ => {}
         }
     );
 );
@@ -238,7 +238,7 @@ impl UniformSend for UniformData
 {
     fn uniform_send(&self, uni : *const CglShaderUniform) ->()
     {
-        unimatch!(*self, uni, [Float|Color]);
+        unimatch!(*self, uni, [Int|Float|Color|Vec2|Vec3]);
     }
 }
 
