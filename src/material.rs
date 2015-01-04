@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::File;
 use std::io::BufferedReader;
+use std::collections::hash_map::Entry::{Occupied,Vacant};
 //use std::default::Default;
 //use toml;
 
@@ -163,6 +164,19 @@ impl Material
 
     }
     */
+
+    pub fn set_uniform_data(&mut self, name : &str, data : shader::UniformData)
+    {
+        let yep = match self.uniforms.entry(name.to_string()){
+            Vacant(entry) => entry.set(box data),
+            Occupied(entry) => {
+                let entry = entry.into_mut();
+                *entry = box data;
+                entry
+            }
+        };
+    }
+
 }
 
 impl resource::ResourceT for Material

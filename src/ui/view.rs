@@ -7,6 +7,7 @@ use std::c_str::CString;
 use object;
 use mesh;
 use shader;
+use transform;
 
 use ui;
 use render;
@@ -14,9 +15,11 @@ use render::Render;
 use factory;
 use context;
 use resource;
+use resource::Create;
 use mesh_render;
 use vec;
 use geometry;
+use material;
 
 use control;
 use control::Control;
@@ -42,7 +45,8 @@ impl View
 {
     pub fn new(factory: &mut factory::Factory) -> View
     {
-        let dragger = Arc::new(RWLock::new(create_dragger(factory)));
+        //let dragger = Arc::new(RWLock::new(create_dragger(factory)));
+        let dragger = create_dragger(factory);
 
         let context = Rc::new(RefCell::new(context::Context::new()));
         let render = box Render::new(factory, context.clone(), dragger.clone());
@@ -251,11 +255,56 @@ fn create_repere(m : &mut mesh::Mesh, len : f64)
     m.add_line(s, blue);
 }
 
-fn create_dragger(factory : &mut factory::Factory) -> object::Object
+fn create_mat_res(color : vec::Vec4) -> resource::ResTT<material::Material>
 {
-    let mut dragger = factory.create_object("dragger_x");
-    dragger.mesh_render = 
-        Some(mesh_render::MeshRender::new("model/dragger_arrow.mesh", "material/dragger.mat"));
+    let mut mat : material::Material = Create::create("material/dragger.mat");
+    mat.inittt();
+    mat.set_uniform_data(
+        "color",
+        shader::UniformData::Vec4(color));
+    let matarc = Arc::new(RWLock::new(mat));
+
+    let rs = resource::ResTest::ResData(matarc);
+    let mr = resource::ResTT::new_with_res("dragger_x_mat", rs);
+
+    mr
+}
+
+fn create_dragger_tr(
+    factory : &mut factory::Factory,
+    ori :vec::Quat, color : vec::Vec4) -> Arc<RWLock<object::Object>>
+{
+    let mut dragger = 
+        Arc::new(RWLock::new(factory.create_object("dragger_x")));
+    let mat = create_mat_res(color);
+
+    dragger.write().mesh_render = 
+        Some(mesh_render::MeshRender::new_with_mat(
+        "model/dragger_arrow.mesh", mat));
+
+    dragger.write().orientation = transform::Orientation::Quat(ori);
 
     dragger
+}
+
+fn create_dragger(factory : &mut factory::Factory) -> 
+        Arc<RWLock<object::Object>>
+{
+    let dragger_parent = 
+        Arc::new(RWLock::new(factory.create_object("dragger")));
+
+    let dragger_x = create_dragger_tr(
+        factory,
+        vec::Quat::identity(), 
+        vec::Vec4::new(1f64, 0f64, 0f64, 1f64));
+
+    let dragger_y = create_dragger_tr(
+        factory,
+        vec::Quat::new_axis_angle(vec::Vec3::new(1f64,0f64,0f64), 90f64), 
+        vec::Vec4::new(0f64, 1f64, 0f64, 1f64));
+
+    object::child_add(dragger_parent.clone(), dragger_x);
+    object::child_add(dragger_parent.clone(), dragger_y);
+
+    dragger_parent
 }

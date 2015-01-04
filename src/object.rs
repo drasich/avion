@@ -58,6 +58,16 @@ impl Object
         &(&mt * &mq) * &ms
     }
 
+    pub fn get_world_matrix(&self) -> matrix::Matrix4
+    {
+        let mt = matrix::Matrix4::translation(self.world_position());
+        let mq = matrix::Matrix4::rotation(self.world_orientation());
+        let ms = matrix::Matrix4::scale(self.world_scale());
+
+        &(&mt * &mq) * &ms
+    }
+
+
     /*
     pub fn child_add(&mut self, child : Arc<RWLock<Object>>)
     {
@@ -109,17 +119,7 @@ impl Object
 
         match render.material.resource {
             resource::ResTest::ResData(ref d) => {
-                {
-                    let mut dw = d.write();
-                    let yep = match dw.uniforms.entry(name.to_string()){
-                        Vacant(entry) => entry.set(box data),
-                        Occupied(entry) => {
-                            let entry = entry.into_mut();
-                            *entry = box data;
-                            entry
-                        }
-                    };
-                }
+                d.write().set_uniform_data(name, data);
             },
             _ => {}
         }

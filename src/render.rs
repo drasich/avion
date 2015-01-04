@@ -218,7 +218,7 @@ impl RenderPass
         }
 
         for (_,p) in self.passes.iter() {
-            let cam_mat = p.camera.borrow().object.read().matrix_get();
+            let cam_mat = p.camera.borrow().object.read().get_world_matrix();
             let cam_projection = p.camera.borrow().perspective_get();
             let cam_mat_inv = cam_mat.inverse_get();
             let matrix = &cam_projection * &cam_mat_inv;
@@ -300,7 +300,7 @@ impl RenderPass
                 }
 
                 if can_render {
-                    let object = ob.matrix_get();
+                    let object = ob.get_world_matrix();
                     let m = matrix * &object ;
                     shader.uniform_set("matrix", &m);
 
@@ -514,37 +514,6 @@ impl Render {
         };
 
         if sel_len > 0 {
-            /*
-            {
-            let draggerc = self.dragger.clone();
-            let draggerw = draggerc.write();
-            let render = match draggerw.mesh_render {
-                Some(ref r) => r,
-                None => return
-            };
-
-            match render.material.resource {
-                resource::ResTest::ResData(ref d) => {
-                    {
-                    let mut dw = d.write();
-                    let yep = match dw.uniforms.entry("size_fixed".to_string()){
-                        Vacant(entry) => 
-                            entry.set(box shader::UniformData::Int(1i32)),
-                            Occupied(entry) => {
-                                entry.into_mut()
-                                //entry.set(box shader::UniformData::Int(1i32))
-                            }
-                    };
-                    }
-                    {
-                    d.clone().read().save();
-                    }
-                },
-                _ => {}
-            }
-            }
-            */
-
             prepare_passes_object(
                 self.dragger.clone(),
                 &mut self.passes,
@@ -611,6 +580,14 @@ fn prepare_passes_object(
     )
 {
     {
+        let occ = o.clone();
+        for c in occ.read().children.iter()
+        {
+            prepare_passes_object(c.clone(), passes, material_manager.clone(), camera.clone());
+        }
+    }
+
+    {
         let oc = o.clone();
         let render = &mut oc.write().mesh_render;
         let mesh_render_material = match *render {
@@ -646,13 +623,17 @@ fn prepare_passes_object(
         }
     }
 
+    //done at the beginning
+    /*
     {
         let occ = o.clone();
         for c in occ.read().children.iter()
         {
+            println!("prepare child : {}", c.read().name);
             prepare_passes_object(c.clone(), passes, material_manager.clone(), camera.clone());
         }
     }
+    */
 }
 
 pub trait Renderer
