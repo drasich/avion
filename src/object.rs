@@ -2,10 +2,13 @@ use vec;
 use matrix;
 use mesh_render;
 use transform;
+use shader;
+use resource;
 
 use std::collections::{DList};
 use std::sync::{RWLock, Arc};//,RWLockReadGuard};
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use std::collections::hash_map::Entry::{Occupied,Vacant};
 use uuid;
 use uuid::Uuid;
 
@@ -95,6 +98,33 @@ impl Object
             }
         }
     }
+
+    //TODO remove
+    pub fn set_uniform_data(&self, name : &str, data : shader::UniformData)
+    {
+        let render = match self.mesh_render {
+            Some(ref r) => r,
+            None => return
+        };
+
+        match render.material.resource {
+            resource::ResTest::ResData(ref d) => {
+                {
+                    let mut dw = d.write();
+                    let yep = match dw.uniforms.entry(name.to_string()){
+                        Vacant(entry) => entry.set(box data),
+                        Occupied(entry) => {
+                            let entry = entry.into_mut();
+                            *entry = box data;
+                            entry
+                        }
+                    };
+                }
+            },
+            _ => {}
+        }
+    }
+
 }
 
 pub fn child_add(parent : Arc<RWLock<Object>>, child : Arc<RWLock<Object>>)

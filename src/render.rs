@@ -367,8 +367,11 @@ pub struct Render
 
 impl Render {
 
+    //TODO remove dragger and put "view_objects"
+    //TODO dont create the scene here
     pub fn new(factory: &mut factory::Factory,
-               context: Rc<RefCell<context::Context>>
+               context: Rc<RefCell<context::Context>>,
+               dragger : Arc<RWLock<object::Object>>,
                ) -> Render
     {
         let scene_path = "scene/simple.scene";
@@ -416,8 +419,8 @@ impl Render {
             camera_repere : Arc::new(RWLock::new(
                     factory.create_object("camera_repere"))),
 
-            dragger : Arc::new(RWLock::new(
-                    factory.create_object("dragger"))),
+            dragger : dragger// Arc::new(RWLock::new(
+                    //factory.create_object("dragger"))),
         };
 
         {
@@ -442,16 +445,6 @@ impl Render {
 
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
-            create_repere(&mut *m.write(), 1f64);
-            let rs = resource::ResTest::ResData(m);
-            let mr = resource::ResTT::new_with_res("repere", rs);
-
-            r.dragger.write().mesh_render =
-                Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line_size_fixed.mat"));
-        }
-
-        {
-            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
             m.write().add_quad(1f32, 1f32);
             let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("quad", rs);
@@ -471,8 +464,7 @@ impl Render {
 
     fn resolution_set(&mut self, w : c_int, h : c_int)
     {
-        set_object_uniform_data(
-            &*self.quad_outline.clone().read(),
+        self.quad_outline.clone().read().set_uniform_data(
             "resolution",
             shader::UniformData::Vec2(vec::Vec2::new(w as f64, h as f64)));
     }
@@ -807,27 +799,3 @@ fn create_repere(m : &mut mesh::Mesh, len : f64)
     m.add_line(s, blue);
 }
 
-fn set_object_uniform_data(o : &object::Object, name : &str, data : shader::UniformData)
-{
-    let render = match o.mesh_render {
-        Some(ref r) => r,
-        None => return
-    };
-
-    match render.material.resource {
-        resource::ResTest::ResData(ref d) => {
-            {
-                let mut dw = d.write();
-                let yep = match dw.uniforms.entry(name.to_string()){
-                    Vacant(entry) => entry.set(box data),
-                    Occupied(entry) => {
-                        let entry = entry.into_mut();
-                        *entry = box data;
-                        entry
-                    }
-                };
-            }
-        },
-        _ => {}
-    }
-}

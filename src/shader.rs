@@ -220,7 +220,7 @@ pub enum UniformData
     Float(f32),
     Vec2(vec::Vec2),
     Vec3(vec::Vec3),
-    Color(vec::Vec4),
+    Vec4(vec::Vec4),
 }
 
 macro_rules! unimatch(
@@ -238,7 +238,7 @@ impl UniformSend for UniformData
 {
     fn uniform_send(&self, uni : *const CglShaderUniform) ->()
     {
-        unimatch!(*self, uni, [Int|Float|Color|Vec2|Vec3]);
+        unimatch!(*self, uni, [Int|Float|Vec2|Vec3|Vec4]);
     }
 }
 

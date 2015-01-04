@@ -4,12 +4,19 @@ use std::sync::{RWLock, Arc};
 use libc::{c_char, c_void, c_int};
 use std::mem;
 use std::c_str::CString;
+use object;
+use mesh;
+use shader;
 
 use ui;
 use render;
 use render::Render;
 use factory;
 use context;
+use resource;
+use mesh_render;
+use vec;
+use geometry;
 
 use control;
 use control::Control;
@@ -27,14 +34,18 @@ pub struct View
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>,
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
     pub scene : Option<Arc<RWLock<scene::Scene>>>,
+
+    pub dragger : Arc<RWLock<object::Object>>,
 }
 
 impl View
 {
     pub fn new(factory: &mut factory::Factory) -> View
     {
+        let dragger = Arc::new(RWLock::new(create_dragger(factory)));
+
         let context = Rc::new(RefCell::new(context::Context::new()));
-        let render = box Render::new(factory, context.clone());
+        let render = box Render::new(factory, context.clone(), dragger.clone());
         let control = Rc::new(RefCell::new(
                 Control::new(
                     render.camera.clone(),
@@ -53,7 +64,8 @@ impl View
             tree : None,
             property: None,
 
-            scene : None
+            scene : None,
+            dragger : dragger
         };
 
         v.scene = Some(v.render.scene.clone());
@@ -218,3 +230,32 @@ pub extern fn key_down(
     c.key_down(modifier, keyname_str.as_slice(), key_str.as_slice(), timestamp);
 }
 
+
+//TODO remove
+fn create_repere(m : &mut mesh::Mesh, len : f64)
+{
+    let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,1f64);
+    let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,1f64);
+    let blue = vec::Vec4::new(0f64,0.4745f64,1f64,1f64);
+
+    let s = geometry::Segment::new(
+        vec::Vec3::zero(), vec::Vec3::new(len, 0f64, 0f64));
+    m.add_line(s, red);
+
+    let s = geometry::Segment::new(
+        vec::Vec3::zero(), vec::Vec3::new(0f64, len, 0f64));
+    m.add_line(s, green);
+
+    let s = geometry::Segment::new(
+        vec::Vec3::zero(), vec::Vec3::new(0f64, 0f64, len));
+    m.add_line(s, blue);
+}
+
+fn create_dragger(factory : &mut factory::Factory) -> object::Object
+{
+    let mut dragger = factory.create_object("dragger_x");
+    dragger.mesh_render = 
+        Some(mesh_render::MeshRender::new("model/dragger_arrow.mesh", "material/dragger.mat"));
+
+    dragger
+}

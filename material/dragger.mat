@@ -1,0 +1,21 @@
+{
+  "name": "material/dragger.mat",
+  "shader": {
+    "name": "shader/dragger.sh"
+  },
+  "textures": {
+  },
+  "uniforms": {
+    "color": {
+      "variant": "Vec4",
+      "fields": [
+        {
+          "x": 1.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        }
+      ]
+    }
+    }
+}
