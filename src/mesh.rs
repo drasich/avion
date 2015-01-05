@@ -443,14 +443,14 @@ impl Mesh
         }
 
         let name = String::from_str("position");
-        match self.buffers_f32.entry(name.clone()) {
+        match self.buffers_f32.entry(&name.clone()) {
             Vacant(entry) => {
                 let buffer = box Buffer::new(
                     name.clone(),
                     vvv,
                     BufferType::Vertex);
 
-                entry.set(buffer);
+                entry.insert(buffer);
             },
             Occupied(entry) => {
                 let en = entry.into_mut();
@@ -459,14 +459,14 @@ impl Mesh
         };
 
         let name = String::from_str("color");
-        match self.buffers_f32.entry(name.clone()) {
+        match self.buffers_f32.entry(&name.clone()) {
             Vacant(entry) => {
                 let buffer = box Buffer::new(
                     name.clone(),
                     colbuf,
                     BufferType::Vertex);
 
-                entry.set(buffer);
+                entry.insert(buffer);
             },
             Occupied(entry) => {
                 let en = entry.into_mut();
@@ -508,8 +508,8 @@ impl Mesh
             vvv,
             BufferType::Vertex);
 
-        match self.buffers_f32.entry(name) {
-            Vacant(entry) => {entry.set(buffer);},
+        match self.buffers_f32.entry(&name) {
+            Vacant(entry) => {entry.insert(buffer);},
             Occupied(entry) => {
                 let en = entry.into_mut();
                 *en = buffer;
@@ -532,8 +532,8 @@ impl Mesh
             fff,
             BufferType::Index);
 
-        match self.buffers_u32.entry(name) {
-            Vacant(entry) => {entry.set(buffer);},
+        match self.buffers_u32.entry(&name) {
+            Vacant(entry) => {entry.insert(buffer);},
             Occupied(entry) => {
                 let en = entry.into_mut();
                 *en = buffer;
@@ -561,8 +561,8 @@ impl Mesh
                 uuu,
                 BufferType::Uv);
 
-            match self.buffers_f32.entry(name) {
-                Vacant(entry) => { entry.set(buffer); },
+            match self.buffers_f32.entry(&name) {
+                Vacant(entry) => { entry.insert(buffer); },
                 Occupied(entry) => {
                     let en = entry.into_mut();
                     *en = buffer;

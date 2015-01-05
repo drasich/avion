@@ -175,7 +175,8 @@ extern fn name_get(data : *const c_void) -> *const c_char
     let cs = o.read().unwrap().name.to_c_str();
 
     unsafe {
-        cs.unwrap()
+        //TODO can use as_ptr?
+        cs.into_inner()
     }
 }
 

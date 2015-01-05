@@ -1,6 +1,6 @@
 use object;
 use vec;
-use std::any::{Any, AnyRefExt};
+use std::any::{Any};//, AnyRefExt};
 use std::f64::consts;
 use transform;
 

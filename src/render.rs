@@ -606,17 +606,19 @@ fn prepare_passes_object(
         };
 
         {
-            let rp = match passes.entry(mesh_render_material.name.clone()) {
+            let key = mesh_render_material.name.clone();
+            let rp = match passes.entry(&key) {
                 Vacant(entry) => 
-                    entry.set(box RenderPass::new(mat.clone(), camera.clone())),
+                    entry.insert(box RenderPass::new(mat.clone(), camera.clone())),
                 Occupied(entry) => entry.into_mut(),
             };
 
             //rp.objects.push_back(o.clone());
 
-            let cam_pass = match rp.passes.entry(camera.borrow().id.clone()) {
+            let key_cam = camera.borrow().id.clone();
+            let cam_pass = match rp.passes.entry(&key_cam) {
                 Vacant(entry) => 
-                    entry.set(box CameraPass::new(camera.clone())),
+                    entry.insert(box CameraPass::new(camera.clone())),
                 Occupied(entry) => entry.into_mut(),
             };
 

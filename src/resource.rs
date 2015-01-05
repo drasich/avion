@@ -164,8 +164,11 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
         let ms1 = self.resources.clone();
         let mut ms1w = ms1.write().unwrap();
 
-        let v : &mut ResTest<T> = match ms1w.entry(String::from_str(name)) {
-            Entry::Vacant(entry) => entry.set(ResTest::ResNone),
+        let key = String::from_str(name);
+
+        let v : &mut ResTest<T> = match ms1w.entry(&key) {
+        //let v : &mut ResTest<T> = match ms1w.entry(&s) {
+            Entry::Vacant(entry) => entry.insert(ResTest::ResNone),
             Entry::Occupied(entry) => entry.into_mut(),
         };
 
@@ -197,8 +200,8 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                         Ok(value) =>  { 
                             let mut mscwww = msc.write().unwrap();
 
-                            match mscwww.entry(s.clone()) {
-                                Entry::Vacant(entry) => entry.set(ResTest::ResNone),
+                            match mscwww.entry(&s.clone()) {
+                                Entry::Vacant(entry) => entry.insert(ResTest::ResNone),
                                 Entry::Occupied(mut entry) => { 
                                     *entry.get_mut() = ResTest::ResData(value.clone());
                                     entry.into_mut()
@@ -228,8 +231,10 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
         let ms1 = self.resources.clone();
         let mut ms1w = ms1.write().unwrap();
 
-        let v : &mut ResTest<T> = match ms1w.entry(String::from_str(name)) {
-            Vacant(entry) => entry.set(ResNone),
+        let key = String::from_str(name);
+
+        let v : &mut ResTest<T> = match ms1w.entry(&key) {
+            Vacant(entry) => entry.insert(ResNone),
             Occupied(entry) => entry.into_mut(),
         };
 

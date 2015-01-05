@@ -9,7 +9,7 @@ use std::ptr;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::rc::Weak;
-use std::any::{Any, AnyRefExt};
+use std::any::{Any};//, AnyRefExt};
 use std::c_str::ToCStr;
 
 use scene;
@@ -209,7 +209,7 @@ impl Property
         unsafe {
             property_list_group_add(
                 self.jk_property_list,
-                "object".to_c_str().unwrap());
+                "object".to_c_str().into_inner());
         }
         let mut v = Vec::new();
         v.push("object".to_string());
@@ -258,7 +258,7 @@ pub extern fn name_get(data : *const c_void) -> *const c_char {
     let cs = o.read().unwrap().name.to_c_str();
 
     unsafe {
-        cs.unwrap()
+        cs.into_inner()
     }
 }
 
@@ -550,7 +550,7 @@ impl WidgetUpdate for Property
                 unsafe {
                     property_list_string_update(
                         *pv,
-                        v.unwrap());
+                        v.into_inner());
                 };
                 return;
             },
@@ -602,7 +602,7 @@ impl PropertyShow for f64 {
         unsafe {
             let pv = property_list_float_add(
                 property.jk_property_list,
-                f.unwrap(),
+                f.into_inner(),
                 *self as c_float);
             if pv != ptr::null() {
                 property.pv.insert(field.to_string(), pv);
@@ -629,8 +629,8 @@ impl PropertyShow for String {
         unsafe {
             let pv = property_list_string_add(
                 property.jk_property_list,
-                f.unwrap(),
-                v.unwrap());
+                f.into_inner(),
+                v.into_inner());
             if pv != ptr::null() {
                 property.pv.insert(field.to_string(), pv);
             }
@@ -697,7 +697,7 @@ pub macro_rules! property_show_impl(
                     unsafe {
                         property_list_node_add(
                             property.jk_property_list,
-                            f.unwrap());
+                            f.into_inner());
                     }
                 }
 

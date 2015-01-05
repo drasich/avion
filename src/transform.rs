@@ -1,7 +1,7 @@
 use vec;
 use property;
 use ui;
-use std::any::{Any, AnyRefExt};
+use std::any::{Any};//, AnyRefExt};
 use std::ptr;
 use libc::{c_char, c_void, c_int, c_float};
 use std::c_str::ToCStr;
@@ -114,9 +114,9 @@ impl ui::PropertyShow for Orientation {
             unsafe {
                 let pv = property_list_enum_add(
                     property.jk_property_list,
-                    f.unwrap(),
-                    types.unwrap(),
-                    v.unwrap());
+                    f.into_inner(),
+                    types.into_inner(),
+                    v.into_inner());
 
                 if pv != ptr::null() {
                     property.pv.insert(field.to_string(), pv);

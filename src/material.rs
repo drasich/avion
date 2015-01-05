@@ -171,8 +171,9 @@ impl Material
 
     pub fn set_uniform_data(&mut self, name : &str, data : shader::UniformData)
     {
-        let yep = match self.uniforms.entry(name.to_string()){
-            Vacant(entry) => entry.set(box data),
+        let key = name.to_string();
+        let yep = match self.uniforms.entry(&key){
+            Vacant(entry) => entry.insert(box data),
             Occupied(entry) => {
                 let entry = entry.into_mut();
                 *entry = box data;
