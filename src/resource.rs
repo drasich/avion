@@ -44,7 +44,7 @@ pub enum ResTest<T>
 pub struct ResTT<T>
 {
     pub name : String,
-    pub resource : ResTest<T>
+    pub resource : ResTest<T>,
 }
 
 impl<T> ResTT<T>

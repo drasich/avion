@@ -103,7 +103,9 @@ impl Material
                          file!(),
                          line!(),
                          self.name,
-                         e); Material::new(self.name.as_slice()) }
+                         e); 
+                Material::new(self.name.as_slice())
+            }
         };
 
         self.name = mat.name.clone();

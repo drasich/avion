@@ -255,7 +255,7 @@ fn create_repere(m : &mut mesh::Mesh, len : f64)
     m.add_line(s, blue);
 }
 
-fn create_mat_res(color : vec::Vec4) -> resource::ResTT<material::Material>
+fn create_mat_res(color : vec::Vec4, name : &str) -> resource::ResTT<material::Material>
 {
     let mut mat : material::Material = Create::create("material/dragger.mat");
     mat.inittt();
@@ -266,17 +266,20 @@ fn create_mat_res(color : vec::Vec4) -> resource::ResTT<material::Material>
 
     let rs = resource::ResTest::ResData(matarc);
     let mr = resource::ResTT::new_with_res("dragger_x_mat", rs);
+    //let mr = resource::ResTT::new_with_res(name, rs);
 
     mr
 }
 
 fn create_dragger_tr(
     factory : &mut factory::Factory,
-    ori :vec::Quat, color : vec::Vec4) -> Arc<RWLock<object::Object>>
+    name : &str,
+    ori :vec::Quat,
+    color : vec::Vec4) -> Arc<RWLock<object::Object>>
 {
     let mut dragger = 
         Arc::new(RWLock::new(factory.create_object("dragger_x")));
-    let mat = create_mat_res(color);
+    let mat = create_mat_res(color, name);
 
     dragger.write().unwrap().mesh_render = 
         Some(mesh_render::MeshRender::new_with_mat(
@@ -295,11 +298,13 @@ fn create_dragger(factory : &mut factory::Factory) ->
 
     let dragger_x = create_dragger_tr(
         factory,
+        "dragger_x",
         vec::Quat::identity(), 
-        vec::Vec4::new(1f64, 0f64, 0f64, 1f64));
+        vec::Vec4::new(1f64, 0f64, 1f64, 1f64));
 
     let dragger_y = create_dragger_tr(
         factory,
+        "dragger_y",
         vec::Quat::new_axis_angle(vec::Vec3::new(1f64,0f64,0f64), 90f64), 
         vec::Vec4::new(0f64, 1f64, 0f64, 1f64));
 
