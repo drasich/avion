@@ -118,7 +118,7 @@ impl Camera
     pub fn ray_from_screen(&self, x : f64, y : f64, length: f64) -> geometry::Ray
     {
         let c = &self.data;
-        let o = self.object.read();
+        let o = self.object.read().unwrap();
 
         let near = c.near;
         let camz = o.orientation.rotate_vec3(&Vec3::forward());
@@ -176,12 +176,12 @@ impl Camera
 
         let def = q.rotate_vec3_around(&c.origin, &c.center);
         let doff = q.rotate_vec3(&c.local_offset);
-        o.write().position = def + doff;
+        o.write().unwrap().position = def + doff;
     }
 
     fn recalculate_origin(&mut self)
     {
-        let o = &self.object.read();
+        let o = &self.object.read().unwrap();
         let c = &mut self.data;
 
         let offset = o.orientation.rotate_vec3(&c.local_offset);
@@ -198,7 +198,7 @@ impl Camera
 
     pub fn pan(&mut self, t : &vec::Vec3)
     {
-        let o = &mut self.object.write();
+        let o = &mut self.object.write().unwrap();
         let c = &mut self.data;
 
         c.local_offset = c.local_offset + *t;
@@ -209,7 +209,7 @@ impl Camera
     pub fn lookat(&mut self, at : vec::Vec3)
     {
         {
-            let mut o = &mut self.object.write();
+            let mut o = &mut self.object.write().unwrap();
             let c = &mut self.data;
 
             let d = at - o.position;

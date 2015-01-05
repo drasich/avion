@@ -4,6 +4,8 @@ use std::io::File;
 use std::io::BufferedReader;
 use libc::{c_char, c_uint};
 use std::ptr;
+use std::c_str::ToCStr;
+use std::str::FromStr;
 //use std::default::Default;
 //use toml;
 
@@ -19,6 +21,15 @@ pub struct CglShader;
 pub struct CglShaderAttribute;
 #[repr(C)]
 pub struct CglShaderUniform;
+
+unsafe impl Send for *const CglShader {}
+unsafe impl Sync for *const CglShader {}
+
+unsafe impl Send for *const CglShaderUniform {}
+unsafe impl Sync for *const CglShaderUniform {}
+
+unsafe impl Send for *const CglShaderAttribute {}
+unsafe impl Sync for *const CglShaderAttribute {}
 
 pub struct Shader
 {
@@ -138,7 +149,8 @@ impl Shader
             let split : Vec<&str> = l.as_slice().split(',').collect();
             if split[0] == "att" {
                 let size : u32;
-                match from_str(split[2]) {
+                let op : Option<u32> = FromStr::from_str(split[2]);
+                match op {
                     Some(u) => size = u,
                     None => continue
                 }

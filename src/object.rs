@@ -82,9 +82,9 @@ impl Object
         match self.parent {
             None => return self.position,
             Some(ref parent) => {
-                let wo = parent.read().world_orientation();
+                let wo = parent.read().unwrap().world_orientation();
                 let p = wo.rotate_vec3(&self.position);
-                return p + parent.read().world_position();
+                return p + parent.read().unwrap().world_position();
             }
         }
     }
@@ -94,7 +94,7 @@ impl Object
         match self.parent {
             None => return self.orientation.as_quat(),
             Some(ref p) => {
-                return p.read().world_orientation() * self.orientation.as_quat();
+                return p.read().unwrap().world_orientation() * self.orientation.as_quat();
             }
         }
     }
@@ -104,7 +104,8 @@ impl Object
         match self.parent {
             None => return self.scale,
             Some(ref p) => {
-                return self.scale * p.read().world_scale();
+                //return self.scale * p.read().unwrap().world_scale();
+                return self.scale.mul(p.read().unwrap().world_scale());
             }
         }
     }
@@ -119,7 +120,7 @@ impl Object
 
         match render.material.resource {
             resource::ResTest::ResData(ref d) => {
-                d.write().set_uniform_data(name, data);
+                d.write().unwrap().set_uniform_data(name, data);
             },
             _ => {}
         }
@@ -129,8 +130,8 @@ impl Object
 
 pub fn child_add(parent : Arc<RWLock<Object>>, child : Arc<RWLock<Object>>)
 {
-    parent.write().children.push_back(child.clone());
-    child.write().parent = Some(parent.clone());
+    parent.write().unwrap().children.push_back(child.clone());
+    child.write().unwrap().parent = Some(parent.clone());
 }
 
 

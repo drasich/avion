@@ -142,7 +142,7 @@ pub extern fn exit_cb(data: *mut c_void) -> () {
     for v in master.views.iter()
     {
         match v.scene {
-            Some(ref s) => s.read().save(),
+            Some(ref s) => s.read().unwrap().save(),
             None => {}
         }
     }

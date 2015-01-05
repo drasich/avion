@@ -3,6 +3,7 @@
 name = "avion"
 version = "0.1.0"
 authors = [ "chris@indefini.org" ]
+build = "build.rs"
 
 [[bin]]
 
@@ -24,4 +25,5 @@ git = "https://github.com/alexcrichton/toml-rs"
 git = "https://github.com/rust-lang/uuid.git"
 
 [dependencies]
-rustc-serialize = "0.1.1"
+rustc-serialize = "0.2.3"
+

@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::collections::hash_map::Entry::{Occupied,Vacant};
 use std::sync::{RWLock, Arc};
+use std::sync::mpsc::channel;
 //use std::io::timer::sleep;
 //use std::time::duration::Duration;
 use self::ResTest::{ResData,ResWait,ResNone};
@@ -161,7 +162,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
     pub fn request_use(&mut self, name : &str) -> ResTest<T>
     {
         let ms1 = self.resources.clone();
-        let mut ms1w = ms1.write();
+        let mut ms1w = ms1.write().unwrap();
 
         let v : &mut ResTest<T> = match ms1w.entry(String::from_str(name)) {
             Entry::Vacant(entry) => entry.set(ResTest::ResNone),
@@ -183,7 +184,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                     //sleep(::std::time::duration::Duration::seconds(5));
                     let mt : T = Create::create(ss.as_slice());
                     let m = Arc::new(RWLock::new(mt));
-                    m.write().inittt();
+                    m.write().unwrap().inittt();
                     tx.send(m.clone());
                 });
 
@@ -194,7 +195,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                     match rx.try_recv() {
                         Err(_) => {},
                         Ok(value) =>  { 
-                            let mut mscwww = msc.write();
+                            let mut mscwww = msc.write().unwrap();
 
                             match mscwww.entry(s.clone()) {
                                 Entry::Vacant(entry) => entry.set(ResTest::ResNone),
@@ -225,7 +226,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
     pub fn request_use_no_proc(&mut self, name : &str) -> Arc<RWLock<T>>
     {
         let ms1 = self.resources.clone();
-        let mut ms1w = ms1.write();
+        let mut ms1w = ms1.write().unwrap();
 
         let v : &mut ResTest<T> = match ms1w.entry(String::from_str(name)) {
             Vacant(entry) => entry.set(ResNone),
@@ -237,7 +238,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
             ResNone | ResWait => {
                 let mt : T = Create::create(name);
                 let m = Arc::new(RWLock::new(mt));
-                m.write().inittt();
+                m.write().unwrap().inittt();
 
                 *v = ResData(m.clone());
                 return m.clone();

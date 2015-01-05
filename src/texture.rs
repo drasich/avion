@@ -6,6 +6,9 @@ use std::mem;
 #[repr(C)]
 pub struct CglTexture;
 
+unsafe impl Send for *const CglTexture {}
+unsafe impl Sync for *const CglTexture {}
+
 #[link(name = "cypher")]
 extern {
     pub fn cgl_texture_init(

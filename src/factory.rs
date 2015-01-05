@@ -58,7 +58,7 @@ impl Factory {
             id : self.create_id(),
         };
 
-        c.object.write().position = vec::Vec3::new(0.1f64, 0f64, 0f64);
+        c.object.write().unwrap().position = vec::Vec3::new(0.1f64, 0f64, 0f64);
 
         c
     }

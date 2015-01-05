@@ -10,6 +10,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::rc::Weak;
 use std::any::{Any, AnyRefExt};
+use std::c_str::ToCStr;
 
 use scene;
 use object;
@@ -254,7 +255,7 @@ pub extern fn name_get(data : *const c_void) -> *const c_char {
 
     //println!("name get {:?}", o);
 
-    let cs = o.read().name.to_c_str();
+    let cs = o.read().unwrap().name.to_c_str();
 
     unsafe {
         cs.unwrap()
@@ -452,7 +453,7 @@ extern fn expand(
             };
 
             //match property::find_property(&*o.read(), yep.clone()) {
-            match find_property_show(&*o.read(), yep.clone()) {
+            match find_property_show(&*o.read().unwrap(), yep.clone()) {
                 Some(ppp) => {
                     //p.create_entries(&*ppp, vs.clone());
                     ppp.create_widget(p, path , 1);

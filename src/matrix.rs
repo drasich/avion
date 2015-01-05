@@ -3,10 +3,11 @@ use std::num::Zero;
 use std::fmt;
 use std::num::FloatMath;
 use std::num::Float;
+use std::ops::{Mul};
 
 pub struct Matrix4
 {
-    data : [f64, .. 16]
+    data : [f64; 16]
 }
 
 /*
@@ -72,9 +73,9 @@ impl Matrix4
         }
     }
 
-    pub fn to_f32(&self) -> [f32, ..16]
+    pub fn to_f32(&self) -> [f32; 16]
     {
-        let mut m : [f32, ..16] = [0f32, ..16];
+        let mut m : [f32;16] = [0f32; 16];
         for i in range(0u, 16)
         {
             m[i] = self.data[i] as f32;
@@ -91,7 +92,7 @@ impl Matrix4
         near : f64,
         far : f64) -> Matrix4
     {
-        let mut m : [f64, ..16] = [0f64, ..16];
+        let mut m : [f64; 16] = [0f64; 16];
         m[0] = 2f64 * near / (right - left);
         m[8] = (right + left) / (right - left);
         m[5] = 2f64 * near / (top - bottom);
@@ -122,7 +123,7 @@ impl Matrix4
         near : f64,
         far : f64 ) ->Matrix4
     {
-        let mut m : [f64, ..16] = [0f64, ..16];
+        let mut m : [f64; 16] = [0f64; 16];
 
         m[0] =  1f64/ hw as f64;
         m[5] =  1f64/ hh as f64;
@@ -135,7 +136,7 @@ impl Matrix4
 
     pub fn translation(t : vec::Vec3) -> Matrix4
     {
-        let mut m : [f64, ..16] = [0f64, ..16];
+        let mut m : [f64; 16] = [0f64; 16];
 
         m[0] = 1f64;
         m[5] = 1f64;
@@ -151,7 +152,7 @@ impl Matrix4
 
     pub fn rotation(q : vec::Quat) -> Matrix4
     {
-        let mut m : [f64, ..16] = [0f64, ..16];
+        let mut m : [f64; 16] = [0f64; 16];
 
         let length2 = q.length2();
 
@@ -214,7 +215,7 @@ impl Matrix4
 
     pub fn scale(s : vec::Vec3) -> Matrix4
     {
-        let mut m : [f64, ..16] = [0f64, ..16];
+        let mut m : [f64; 16] = [0f64; 16];
 
         m[0] = s.x;
         m[5] = s.y;
@@ -307,9 +308,11 @@ impl Matrix4
 
 }
 
-impl<'a> Mul<&'a Matrix4, Matrix4> for &'a Matrix4 {
+//impl<'a> Mul<&'a Matrix4, Matrix4> for &'a Matrix4 {
+impl<'a> Mul for &'a Matrix4 {
+    type Output = Matrix4;
     fn mul(self, other: &'a Matrix4) -> Matrix4 {
-        let mut out : [f64, ..16] = [0f64, ..16];
+        let mut out : [f64; 16] = [0f64; 16];
 
         let m = self.data;
         let n = other.data;

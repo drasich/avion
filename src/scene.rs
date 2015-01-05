@@ -44,6 +44,8 @@ impl Scene
 
     pub fn save(&self)
     {
+        println!("save scene todo serialize");
+        /*
         let mut file = File::create(&Path::new(self.name.as_slice()));
         //let mut stdwriter = stdio::stdout();
         //let mut encoder = json::Encoder::new(&mut stdwriter);
@@ -53,13 +55,14 @@ impl Scene
 
         //println!("scene : \n\n {}", json::encode(&scene));
         self.encode(&mut encoder).unwrap();
+        */
     }
 
     pub fn object_find(&self, name : &str) -> Option<Arc<RWLock<object::Object>>>
     {
         for o in self.objects.iter()
         {
-            if o.read().name.as_slice() == name {
+            if o.read().unwrap().name.as_slice() == name {
                 return Some(o.clone());
             }
         }
@@ -71,7 +74,7 @@ impl Scene
     {
         for o in self.objects.iter()
         {
-            if o.read().id == *id {
+            if o.read().unwrap().id == *id {
                 return Some(o.clone());
             }
         }
@@ -84,7 +87,7 @@ impl Scene
 //impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RWLock<object::Object>> {
 impl <S: Encoder<E>, E> Encodable<S, E> for RWLock<object::Object> {
   fn encode(&self, encoder: &mut S) -> Result<(), E> {
-      self.read().encode(encoder)
+      self.read().unwrap().encode(encoder)
   }
 }
 
@@ -126,9 +129,9 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Scene {
 
 pub fn post_read_parent_set(o : Arc<RWLock<object::Object>>)
 {
-    for c in o.read().children.iter()
+    for c in o.read().unwrap().children.iter()
     {
-        c.write().parent = Some(o.clone());
+        c.write().unwrap().parent = Some(o.clone());
         post_read_parent_set(c.clone());
     }
 }

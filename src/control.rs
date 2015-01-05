@@ -113,12 +113,12 @@ impl Control
             }
         };
 
-        println!("objects in the scene : {}", scene.read().objects.len());
+        println!("objects in the scene : {}", scene.read().unwrap().objects.len());
 
         let mut found_length = 0f64;
         let mut closest_obj = None;
-        for o in scene.read().objects.iter() {
-            let ir = intersection::ray_object(&r, &*o.read());
+        for o in scene.read().unwrap().objects.iter() {
+            let ir = intersection::ray_object(&r, &*o.read().unwrap());
             if ir.hit {
                 let length = (ir.position - r.start).length2();
                 match closest_obj {
@@ -166,7 +166,7 @@ impl Control
                         Some(ref pp) => {
                             match pp.try_borrow_mut() {
                                 Some(ref mut p) => {
-                                    p.set_object(&*o.read());
+                                    p.set_object(&*o.read().unwrap());
                                 },
                                 None => {println!("cannot borrow property");}
                             };
@@ -180,7 +180,7 @@ impl Control
                         Some(ref tt) => {
                             match tt.try_borrow_mut() {
                                 Some(ref mut t) => {
-                                    t.select(&o.read().id);
+                                    t.select(&o.read().unwrap().id);
                                 }
                                 _ => {}
                             }
@@ -211,14 +211,14 @@ impl Control
             None => return
         };
 
-        for o in scene.read().objects.iter() {
-            if o.read().id == *id {
+        for o in scene.read().unwrap().objects.iter() {
+            if o.read().unwrap().id == *id {
                 c.selected.push_back(o.clone());
                 match self.property {
                     Some(ref mut pp) =>
                         match pp.try_borrow_mut() {
                             Some(ref mut p) => {
-                                p.set_object(&*o.read());
+                                p.set_object(&*o.read().unwrap());
                             },
                             None=> {}
                         },
@@ -276,7 +276,7 @@ impl Control
         let vs = name.tail().to_vec();
 
         //o.write().set_property_hier(vs, new);
-        o.write().test_set_property_hier(join_string(&vs).as_slice(), new);
+        o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), new);
 
         //TODO it might do more than just update this property
         // for example for orientation enum, you change the enum
@@ -295,7 +295,7 @@ impl Control
                 Some(ref mut tt) =>
                     match tt.try_borrow_mut() {
                         Some(ref mut t) => {
-                            t.update_object(&o.read().id);
+                            t.update_object(&o.read().unwrap().id);
                         },
                         None=> {}
                     },
@@ -307,7 +307,7 @@ impl Control
             Some(ref mut pp) =>
                 match pp.try_borrow_mut() {
                     Some(ref mut p) => {
-                        p.update_object(&*o.read(), s.as_slice());
+                        p.update_object(&*o.read().unwrap(), s.as_slice());
                     },
                     None=> {}
                 },
@@ -344,7 +344,7 @@ impl Control
 
         match self.get_selected_object() {
             Some(o) => {
-                if op.object.read().id == o.read().id  {
+                if op.object.read().unwrap().id == o.read().unwrap().id  {
                     match self.property {
                         Some(ref mut pp) =>
                             match pp.try_borrow_mut() {
@@ -367,7 +367,7 @@ impl Control
                 Some(ref mut tt) =>
                     match tt.try_borrow_mut() {
                         Some(ref mut t) => {
-                            t.update_object(&op.object.read().id);
+                            t.update_object(&op.object.read().unwrap().id);
                         },
                         None=> {}
                     },
@@ -381,7 +381,7 @@ impl Control
         self.state = State::CameraRotation;
 
         let mut camera = self.camera.borrow_mut();
-        let cori = camera.object.read().orientation;
+        let cori = camera.object.read().unwrap().orientation;
 
         let (result, angle_x, angle_y) = {
             let cam = &mut camera.data;
@@ -413,7 +413,7 @@ impl Control
 
         camera.rotate_around_center(&result);
 
-        let mut c = camera.object.write();
+        let mut c = camera.object.write().unwrap();
         //(*c).orientation = vec::Quat::new_yaw_pitch_roll_deg(angle_y, angle_x, 0f64);
         (*c).orientation = transform::Orientation::Quat(vec::Quat::new_yaw_pitch_roll_deg(angle_y, angle_x, 0f64));
         //self.state = CameraRotation;
@@ -485,8 +485,8 @@ impl Control
 
         {
             let mut camera = self.camera.borrow_mut();
-            let p = camera.object.read().position;
-            camera.object.write().position = p + t;
+            let p = camera.object.read().unwrap().position;
+            camera.object.write().unwrap().position = p + t;
         }
     }
 
@@ -512,7 +512,7 @@ fn objects_center(objects : &DList<Arc<RWLock<object::Object>>>) -> vec::Vec3
     let mut v = vec::Vec3::zero();
     for o in objects.iter()
     {
-        v = v + o.read().position;
+        v = v + o.read().unwrap().position;
     }
 
     v = v / objects.len() as f64;

@@ -9,6 +9,8 @@ use std::cell::RefCell;
 use std::rc::Weak;
 use std::rc::Rc;
 use uuid::Uuid;
+use std::c_str::ToCStr;
+
 
 use scene;
 use object;
@@ -99,9 +101,9 @@ impl Tree
     pub fn add_object(&mut self, object : Arc<RWLock<object::Object>>)
     {
         let eoi = unsafe {
-            match object.read().parent {
+            match object.read().unwrap().parent {
                 Some(ref p) =>  {
-                    match self.objects.get(&p.read().id) {
+                    match self.objects.get(&p.read().unwrap().id) {
                         Some(item) => {
                             tree_object_add(
                                 self.jk_tree,
@@ -125,7 +127,7 @@ impl Tree
         };
 
         if eoi != ptr::null() {
-            self.objects.insert(object.read().id.clone(), eoi);
+            self.objects.insert(object.read().unwrap().id.clone(), eoi);
         }
     }
 
@@ -170,7 +172,7 @@ extern fn name_get(data : *const c_void) -> *const c_char
 
     //println!("name get {:?}", o);
 
-    let cs = o.read().name.to_c_str();
+    let cs = o.read().unwrap().name.to_c_str();
 
     unsafe {
         cs.unwrap()
@@ -182,7 +184,7 @@ extern fn item_selected(data : *const c_void) -> ()
     let o : &Arc<RWLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
-    println!("selected ! {} ", o.read().name);
+    println!("selected ! {} ", o.read().unwrap().name);
 }
 
 extern fn can_expand(data : *const c_void) -> bool
@@ -191,8 +193,8 @@ extern fn can_expand(data : *const c_void) -> bool
         mem::transmute(data)
     };
 
-    println!("can expand :{}", o.read().children.is_empty());
-    return !o.read().children.is_empty();
+    println!("can expand :{}", o.read().unwrap().children.is_empty());
+    return !o.read().unwrap().children.is_empty();
 }
 
 extern fn expand(
@@ -206,14 +208,14 @@ extern fn expand(
 
     let mut t : &mut Tree = unsafe {mem::transmute(tree)};
 
-    println!("expanding ! {} ", o.read().name);
+    println!("expanding ! {} ", o.read().unwrap().name);
     println!("expanding ! tree name {} ", t.name);
 
-    for c in o.read().children.iter() {
-        println!("expanding ! with child {} ", (*c).read().name);
+    for c in o.read().unwrap().children.iter() {
+        println!("expanding ! with child {} ", (*c).read().unwrap().name);
         unsafe {
             let eoi = tree_object_add(t.jk_tree, mem::transmute(c), parent);
-            t.objects.insert(c.read().id.clone(), eoi);
+            t.objects.insert(c.read().unwrap().id.clone(), eoi);
         }
     }
 }
@@ -229,7 +231,7 @@ extern fn selected(
 
     let t : &Tree = unsafe {mem::transmute(tree)};
 
-    println!("sel ! {} ", o.read().name);
+    println!("sel ! {} ", o.read().unwrap().name);
     println!("sel ! tree name {} ", t.name);
 
     if t.dont_forward_signal {
@@ -238,7 +240,7 @@ extern fn selected(
 
     match t.control.try_borrow_mut() {
         Some(ref mut c) => {
-            c.select(&o.read().id);
+            c.select(&o.read().unwrap().id);
         },
         _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
     }

@@ -4,6 +4,7 @@ use ui;
 use std::any::{Any, AnyRefExt};
 use std::ptr;
 use libc::{c_char, c_void, c_int, c_float};
+use std::c_str::ToCStr;
 
 
 #[link(name = "joker")]

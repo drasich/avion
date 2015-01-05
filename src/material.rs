@@ -42,6 +42,7 @@ impl Sampler
     }
 }
 
+//#[derive(RustcDecodable, RustcEncodable)]
 pub struct Material
 {
     pub name : String,
@@ -129,11 +130,14 @@ impl Material
 
     pub fn save(&self)
     {
+        println!("save to do again ");
+        /*
         let mut file = File::create(&Path::new(self.name.as_slice()));
         //let mut stdwriter = stdio::stdout();
         let mut encoder = json::PrettyEncoder::new(&mut file);
         //let mut encoder = json::Encoder::new(&mut file);
         self.encode(&mut encoder).unwrap();
+        */
     }
 
     /*

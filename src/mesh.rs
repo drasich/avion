@@ -65,6 +65,9 @@ pub struct Buffer<T>
     //state : BufferState
 }
 
+unsafe impl Send for *const CglBuffer {}
+unsafe impl Sync for *const CglBuffer {}
+
 impl<T> Buffer<T>
 {
     pub fn new(name: String, data : Vec<T>, buffer_type : BufferType) -> Buffer<T>
@@ -177,6 +180,7 @@ pub struct Mesh
     pub name : String,
     pub state : i32,
     pub buffers : HashMap<String, Box<BufferSend+'static+Send+Sync>>, //TODO check
+    //pub buffers : HashMap<String, Box<BufferSend+'static>>, //TODO check
     pub buffers_f32 : HashMap<String, Box<Buffer<f32>>>, //TODO check
     pub buffers_u32 : HashMap<String, Box<Buffer<u32>>>, //TODO check
     pub draw_type : DrawType
@@ -409,6 +413,7 @@ impl Mesh
     }
 
     pub fn buffer_get(&self, name : &str) -> Option<&Box<BufferSend+Send+Sync>>
+    //pub fn buffer_get(&self, name : &str) -> Option<&Box<BufferSend>>
     {
         let s = String::from_str(name);
 

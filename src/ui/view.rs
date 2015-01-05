@@ -118,7 +118,7 @@ impl View
 
         match self.scene {
             Some(ref s) => {
-                t.borrow_mut().set_scene(&*s.read());
+                t.borrow_mut().set_scene(&*s.read().unwrap());
             },
             None => {}
         };
@@ -278,11 +278,11 @@ fn create_dragger_tr(
         Arc::new(RWLock::new(factory.create_object("dragger_x")));
     let mat = create_mat_res(color);
 
-    dragger.write().mesh_render = 
+    dragger.write().unwrap().mesh_render = 
         Some(mesh_render::MeshRender::new_with_mat(
         "model/dragger_arrow.mesh", mat));
 
-    dragger.write().orientation = transform::Orientation::Quat(ori);
+    dragger.write().unwrap().orientation = transform::Orientation::Quat(ori);
 
     dragger
 }

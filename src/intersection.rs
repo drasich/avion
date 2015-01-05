@@ -43,7 +43,7 @@ pub fn ray_object(ray : &geometry::Ray, o : &object::Object) -> IntersectionRay
 
                     //TODO
                     //let ir_box = ray_box(ray, .... 
-                    return ray_mesh(ray, &*m.read(), &wp, &wq, &ws);
+                    return ray_mesh(ray, &*m.read().unwrap(), &wp, &wq, &ws);
                 },
                 _ => return out
             }
@@ -86,11 +86,14 @@ pub fn ray_mesh(
         Some(ref b) => {
             for i in range_step(0, b.data.len(), 3) {
                 let index = b.data[i] as uint;
-                let v0 = get_vertex(&vertices.data, index) * *scale;
+                //let v0 = get_vertex(&vertices.data, index) * *scale;
+                let v0 = get_vertex(&vertices.data, index).mul(*scale);
                 let index = b.data[i+1] as uint;
-                let v1 = get_vertex(&vertices.data, index) * *scale;
+                //let v1 = get_vertex(&vertices.data, index) * *scale;
+                let v1 = get_vertex(&vertices.data, index).mul(*scale);
                 let index = b.data[i+2] as uint;
-                let v2 = get_vertex(&vertices.data, index)* *scale;
+                //let v2 = get_vertex(&vertices.data, index)* *scale;
+                let v2 = get_vertex(&vertices.data, index).mul(*scale);
 
                 let tri = geometry::Triangle::new(v0,v1,v2);
 

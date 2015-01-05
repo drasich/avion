@@ -52,7 +52,7 @@ impl Operation
         //o.write().set_property_hier(vs, &*self.old);
         println!("apply {}, {}", self.name, self.new);
         //o.write().set_property_hier(self.name.clone(), &*self.new);
-        o.write().test_set_property_hier(join_string(&self.name).as_slice(), &*self.new);
+        o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &*self.new);
         println!("applied {}", self.name);
 
         match self.new.downcast_ref::<String>() {
@@ -73,7 +73,7 @@ impl Operation
 
         //o.write().set_property_hier(self.name.clone(), &*self.old);
         //o.write().set_property_hier(vs, &*self.old);
-        o.write().test_set_property_hier(join_string(&vs).as_slice(), &*self.old);
+        o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), &*self.old);
     }
 }
 

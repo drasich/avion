@@ -3,6 +3,9 @@ use libc::{c_uint, c_int};
 #[repr(C)]
 pub struct CglFbo;
 
+unsafe impl Send for *const CglFbo {}
+unsafe impl Sync for *const CglFbo {}
+
 #[link(name = "cypher")]
 extern {
     pub fn cgl_create_fbo() -> *const CglFbo;

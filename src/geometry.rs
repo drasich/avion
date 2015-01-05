@@ -117,7 +117,7 @@ impl AABox
 
 pub struct OBox
 {
-    pub v : [Vec3,..8]
+    pub v : [Vec3; 8]
 }
 
 pub struct Segment

@@ -2,6 +2,7 @@ use std::collections::{DList};
 use std::rc::Rc;
 use std::cell::RefCell;
 use libc::{c_uint, c_int};
+use std::sync;
 use std::sync::{RWLock, Arc,RWLockReadGuard};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied,Vacant};
@@ -85,7 +86,7 @@ impl CameraPass
 struct RenderPass
 {
     pub name : String,
-    pub material : Arc<RWLock<material::Material>>,
+    pub material : Arc<sync::RWLock<material::Material>>,
     //pub objects : DList<Arc<RWLock<object::Object>>>,
     //pub camera : Rc<RefCell<camera::Camera>>,
     pub passes : HashMap<uuid::Uuid, Box<CameraPass>>,
@@ -115,17 +116,17 @@ impl RenderPass
         ) -> ()
     {
         {
-            let mut matm = self.material.write();
+            let mut matm = self.material.write().unwrap();
             //println!("material : {}", matm.name);
 
             for (_,t) in matm.textures.iter_mut() {
                 match *t {
                     material::Sampler::ImageFile(ref mut img) => {
-                        let yep = resource::resource_get(&mut *texture_manager.write(), img);
+                        let yep = resource::resource_get(&mut *texture_manager.write().unwrap(), img);
                         match yep.clone() {
                             None => {},
                             Some(yy) => {
-                                let mut yoyo = yy.write();
+                                let mut yoyo = yy.write().unwrap();
                                 if yoyo.state == 1 {
                                     yoyo.init();
                                 }
@@ -142,17 +143,17 @@ impl RenderPass
 
         {
             //let mut matm = self.material.borrow_mut();
-            let mut matm = self.material.write();
+            let mut matm = self.material.write().unwrap();
 
             let shaderres = &mut matm.shader;
             match *shaderres  {
                 None => {println!("shaderes none");},
                 Some(ref mut s) => {
-                    yep = resource::resource_get(&mut *shader_manager.write(), s);
+                    yep = resource::resource_get(&mut *shader_manager.write().unwrap(), s);
                     match yep.clone() {
                         None => {println!("no shader yet {}", s.name);},
                         Some(yy) => {
-                            let mut yoyo = yy.write();
+                            let mut yoyo = yy.write().unwrap();
                             if yoyo.state == 0 {
                                 yoyo.read();
                                 println!("find shader!!! {}", s.name);
@@ -174,7 +175,7 @@ impl RenderPass
                 return;},
             Some(ref sh) => {
                 c = sh.clone();
-                cr = c.read();
+                cr = c.read().unwrap();
                 shader = & *cr;
             }
         }
@@ -183,26 +184,26 @@ impl RenderPass
         {
             //TODO for shader textures, for uniform textures instead of 'for material
             //tex/uniforms'?
-            let mut material = self.material.write();
+            let mut material = self.material.write().unwrap();
 
             let mut i = 0u32;
             for (name,t) in material.textures.iter_mut() {
                 match *t {
                     material::Sampler::ImageFile(ref mut img) => {
-                        let yep = resource::resource_get(&mut *texture_manager.write(), img);
+                        let yep = resource::resource_get(&mut *texture_manager.write().unwrap(), img);
                         match yep {
                             Some(yoyo) => {
-                                shader.texture_set(name.as_slice(), & *yoyo.read(),i);
+                                shader.texture_set(name.as_slice(), & *yoyo.read().unwrap(),i);
                                 i = i +1;
                             },
                             None => {}
                         }
                     },
                     material::Sampler::Fbo(ref mut fbo) => {
-                        let yep = resource::resource_get(&mut *fbo_manager.write(), fbo);
+                        let yep = resource::resource_get(&mut *fbo_manager.write().unwrap(), fbo);
                         match yep {
                             Some(yoyo) => {
-                                shader.texture_set(name.as_slice(), & *yoyo.read(),i);
+                                shader.texture_set(name.as_slice(), & *yoyo.read().unwrap(),i);
                                 i = i +1;
                             },
                             None => {}
@@ -218,13 +219,13 @@ impl RenderPass
         }
 
         for (_,p) in self.passes.iter() {
-            let cam_mat = p.camera.borrow().object.read().get_world_matrix();
+            let cam_mat = p.camera.borrow().object.read().unwrap().get_world_matrix();
             let cam_projection = p.camera.borrow().perspective_get();
             let cam_mat_inv = cam_mat.inverse_get();
             let matrix = &cam_projection * &cam_mat_inv;
 
             for o in p.objects.iter() {
-                let mut ob = o.write();
+                let mut ob = o.write().unwrap();
                 self.draw_object(shader, &mut *ob, &matrix, mesh_manager.clone());
             }
         }
@@ -241,7 +242,7 @@ impl RenderPass
     {
         let themesh = match ob.mesh_render {
             Some(ref mut mr) => 
-                resource::resource_get(&mut *mesh_manager.write(), &mut mr.mesh),
+                resource::resource_get(&mut *mesh_manager.write().unwrap(), &mut mr.mesh),
             None => {
                 println!("no mesh render");
                 return;
@@ -252,7 +253,7 @@ impl RenderPass
         match themesh  {
             None => return,
             Some(ref m) => {
-                let mut mb = m.write();
+                let mut mb = m.write().unwrap();
                 if mb.state == 1 {
                     println!("init buffers");
                     mb.init_buffers();
@@ -377,8 +378,8 @@ impl Render {
         let scene_path = "scene/simple.scene";
 
         let fbo_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
-        let fbo_all = fbo_manager.write().request_use_no_proc("fbo_all");
-        let fbo_selected = fbo_manager.write().request_use_no_proc("fbo_selected");
+        let fbo_all = fbo_manager.write().unwrap().request_use_no_proc("fbo_all");
+        let fbo_selected = fbo_manager.write().unwrap().request_use_no_proc("fbo_selected");
 
         let camera = Rc::new(RefCell::new(factory.create_camera()));
         {
@@ -425,35 +426,35 @@ impl Render {
 
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
-            create_grid(&mut *m.write(), 100i32, 10i32);
+            create_grid(&mut *m.write().unwrap(), 100i32, 10i32);
             let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("grid", rs);
 
-            r.grid.write().mesh_render =
+            r.grid.write().unwrap().mesh_render =
                 Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
         }
 
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
-            create_repere(&mut *m.write(), 40f64 );
+            create_repere(&mut *m.write().unwrap(), 40f64 );
             let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("repere", rs);
 
-            r.camera_repere.write().mesh_render =
+            r.camera_repere.write().unwrap().mesh_render =
                 Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
         }
 
         {
             let m = Arc::new(RWLock::new(mesh::Mesh::new()));
-            m.write().add_quad(1f32, 1f32);
+            m.write().unwrap().add_quad(1f32, 1f32);
             let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("quad", rs);
 
-            shader_manager.write().request_use_no_proc("shader/outline.sh");
-            let outline_mat = material_manager.write().request_use_no_proc("material/outline.mat");
+            shader_manager.write().unwrap().request_use_no_proc("shader/outline.sh");
+            let outline_mat = material_manager.write().unwrap().request_use_no_proc("material/outline.mat");
             let outline_res = resource::ResTT::new_with_res("material/outline.mat", resource::ResTest::ResData(outline_mat));
 
-            r.quad_outline.write().mesh_render = Some(
+            r.quad_outline.write().unwrap().mesh_render = Some(
                 mesh_render::MeshRender::new_with_mesh_and_mat(
                     mr,
                     outline_res));
@@ -464,7 +465,7 @@ impl Render {
 
     fn resolution_set(&mut self, w : c_int, h : c_int)
     {
-        self.quad_outline.clone().read().set_uniform_data(
+        self.quad_outline.clone().read().unwrap().set_uniform_data(
             "resolution",
             shader::UniformData::Vec2(vec::Vec2::new(w as f64, h as f64)));
     }
@@ -477,7 +478,7 @@ impl Render {
             p.passes.clear();
         }
 
-        let objects = &self.scene.read().objects;
+        let objects = &self.scene.read().unwrap().objects;
         //self.passes.clear();
         for o in objects.iter() {
             prepare_passes_object(
@@ -494,13 +495,13 @@ impl Render {
             self.camera.clone());
 
         let m = 40f64;
-        self.camera_repere.write().position = 
+        self.camera_repere.write().unwrap().position = 
             vec::Vec3::new(
                 -self.camera_ortho.borrow().data.width/2f64 +m, 
                 -self.camera_ortho.borrow().data.height/2f64 +m, 
                 -10f64);
-        self.camera_repere.write().orientation = 
-            self.camera.borrow().object.read().orientation.inverse();
+        self.camera_repere.write().unwrap().orientation = 
+            self.camera.borrow().object.read().unwrap().orientation.inverse();
 
         prepare_passes_object(
             self.camera_repere.clone(),
@@ -540,8 +541,8 @@ impl Render {
         let mut center = vec::Vec3::zero();
         let mut ori = vec::Quat::identity();
         for o in objects.iter() {
-            center = center + o.read().position;
-            ori = ori * o.read().world_orientation();
+            center = center + o.read().unwrap().position;
+            ori = ori * o.read().unwrap().world_orientation();
             prepare_passes_object(
                 o.clone(),
                 &mut self.passes,
@@ -551,8 +552,8 @@ impl Render {
 
         if objects.len() > 0 {
             center = center / (objects.len() as f64);
-            self.dragger.write().position = center;
-            self.dragger.write().orientation = transform::Orientation::Quat(ori);
+            self.dragger.write().unwrap().position = center;
+            self.dragger.write().unwrap().orientation = transform::Orientation::Quat(ori);
         }
     }
 
@@ -581,7 +582,7 @@ fn prepare_passes_object(
 {
     {
         let occ = o.clone();
-        for c in occ.read().children.iter()
+        for c in occ.read().unwrap().children.iter()
         {
             prepare_passes_object(c.clone(), passes, material_manager.clone(), camera.clone());
         }
@@ -589,14 +590,14 @@ fn prepare_passes_object(
 
     {
         let oc = o.clone();
-        let render = &mut oc.write().mesh_render;
+        let render = &mut oc.write().unwrap().mesh_render;
         let mesh_render_material = match *render {
             Some(ref mut mr) => &mut mr.material,
             None => return
         };
 
         let material = resource::resource_get(
-            &mut *material_manager.write(),
+            &mut *material_manager.write().unwrap(),
             mesh_render_material);
 
         let mat = match material {
@@ -647,14 +648,14 @@ impl Renderer for Render
 {
     fn init(&mut self)
     {
-        self.fbo_all.write().cgl_create();
-        self.fbo_selected.write().cgl_create();
+        self.fbo_all.write().unwrap().cgl_create();
+        self.fbo_selected.write().unwrap().cgl_create();
     }
 
     fn resize(&mut self, w : c_int, h : c_int)
     {
         {
-            self.quad_outline.write().scale = 
+            self.quad_outline.write().unwrap().scale = 
                 vec::Vec3::new(w as f64, h as f64, 1f64);
 
             let mut cam = self.camera.borrow_mut();
@@ -663,8 +664,8 @@ impl Renderer for Render
             let mut cam_ortho = self.camera_ortho.borrow_mut();
             cam_ortho.resolution_set(w, h);
 
-            self.fbo_all.write().cgl_resize(w, h);
-            self.fbo_selected.write().cgl_resize(w, h);
+            self.fbo_all.write().unwrap().cgl_resize(w, h);
+            self.fbo_selected.write().unwrap().cgl_resize(w, h);
         }
 
         self.resolution_set(w,h);
@@ -673,7 +674,7 @@ impl Renderer for Render
     fn draw(&mut self) -> ()
     {
         self.prepare_passes_selected();
-        self.fbo_selected.read().cgl_use();
+        self.fbo_selected.read().unwrap().cgl_use();
         for p in self.passes.values()
         {
             p.draw_frame(
@@ -687,7 +688,7 @@ impl Renderer for Render
 
         self.prepare_passes();
 
-        self.fbo_all.read().cgl_use();
+        self.fbo_all.read().unwrap().cgl_use();
         for p in self.passes.values()
         {
             p.draw_frame(

@@ -2,6 +2,9 @@
 #![feature(log_syntax)]
 #![feature(trace_macros)]
 #![feature(slicing_syntax)]
+#![feature(associated_types)]
+#![feature(old_orphan_check)]
+#![feature(default_type_params)]
 
 //TODO remove
 #![allow(unused_variables)]
