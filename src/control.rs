@@ -395,8 +395,8 @@ impl Control
 
             cam.pitch -= 0.005*y;
 
-            let qy = vec::Quat::new_axis_angle(vec::Vec3::up(), cam.yaw);
-            let qp = vec::Quat::new_axis_angle(vec::Vec3::right(), cam.pitch);
+            let qy = vec::Quat::new_axis_angle_rad(vec::Vec3::up(), cam.yaw);
+            let qp = vec::Quat::new_axis_angle_rad(vec::Vec3::right(), cam.pitch);
 
             (
                 qy * qp,

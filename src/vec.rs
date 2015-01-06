@@ -253,7 +253,7 @@ impl Quat
         self.length2().sqrt()
     }
 
-    pub fn new_axis_angle(axis : Vec3, angle_radian : f64) -> Quat
+    pub fn new_axis_angle_rad(axis : Vec3, angle_radian : f64) -> Quat
     {
         let length = axis.length();
 
@@ -276,11 +276,19 @@ impl Quat
         }
     }
 
+    pub fn new_axis_angle_deg(axis : Vec3, angle_deg : f64) -> Quat
+    {
+        let r = consts::PI / 180f64;
+
+        Quat::new_axis_angle_rad(axis, angle_deg * r)
+    }
+
+
     pub fn new_yaw_pitch_roll_rad(yaw : f64, pitch : f64, roll : f64) -> Quat
     {
-        let qy = Quat::new_axis_angle(Vec3::new(0f64,1f64,0f64), yaw);
-        let qp = Quat::new_axis_angle(Vec3::new(1f64,0f64,0f64), pitch);
-        let qr = Quat::new_axis_angle(Vec3::new(0f64,0f64,1f64), roll);
+        let qy = Quat::new_axis_angle_rad(Vec3::new(0f64,1f64,0f64), yaw);
+        let qp = Quat::new_axis_angle_rad(Vec3::new(1f64,0f64,0f64), pitch);
+        let qr = Quat::new_axis_angle_rad(Vec3::new(0f64,0f64,1f64), roll);
 
         let q1 = qy * qp;
 
@@ -299,9 +307,9 @@ impl Quat
 
     pub fn new_angles_rad(angles : &Vec3) -> Quat
     {
-        let qx = Quat::new_axis_angle(Vec3::new(1f64,0f64,0f64), angles.x);
-        let qy = Quat::new_axis_angle(Vec3::new(0f64,1f64,0f64), angles.y);
-        let qz = Quat::new_axis_angle(Vec3::new(0f64,0f64,1f64), angles.z);
+        let qx = Quat::new_axis_angle_rad(Vec3::new(1f64,0f64,0f64), angles.x);
+        let qy = Quat::new_axis_angle_rad(Vec3::new(0f64,1f64,0f64), angles.y);
+        let qz = Quat::new_axis_angle_rad(Vec3::new(0f64,0f64,1f64), angles.z);
 
         let q1 =  qz * qy;
         q1 * qx

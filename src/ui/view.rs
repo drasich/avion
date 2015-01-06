@@ -299,17 +299,24 @@ fn create_dragger(factory : &mut factory::Factory) ->
     let dragger_x = create_dragger_tr(
         factory,
         "dragger_x",
-        vec::Quat::identity(), 
-        vec::Vec4::new(1f64, 0f64, 1f64, 1f64));
+        vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,1f64,0f64), 90f64), 
+        vec::Vec4::new(1f64, 0f64, 0f64, 1f64));
 
     let dragger_y = create_dragger_tr(
         factory,
         "dragger_y",
-        vec::Quat::new_axis_angle(vec::Vec3::new(1f64,0f64,0f64), 90f64), 
+        vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64), 
         vec::Vec4::new(0f64, 1f64, 0f64, 1f64));
+
+    let dragger_z = create_dragger_tr(
+        factory,
+        "dragger_z",
+        vec::Quat::identity(), 
+        vec::Vec4::new(0f64, 0f64, 1f64, 1f64));
 
     object::child_add(dragger_parent.clone(), dragger_x);
     object::child_add(dragger_parent.clone(), dragger_y);
+    object::child_add(dragger_parent.clone(), dragger_z);
 
     dragger_parent
 }
