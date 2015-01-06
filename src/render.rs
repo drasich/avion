@@ -117,127 +117,13 @@ impl RenderPass
         fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>
         ) -> ()
     {
-        /*
-        {
-            let mut matm = self.shader.write().unwrap();
-            //println!("material : {}", matm.name);
-
-            for (_,t) in matm.textures.iter_mut() {
-                match *t {
-                    material::Sampler::ImageFile(ref mut img) => {
-                        let yep = resource::resource_get(&mut *texture_manager.write().unwrap(), img);
-                        match yep.clone() {
-                            None => {},
-                            Some(yy) => {
-                                let mut yoyo = yy.write().unwrap();
-                                if yoyo.state == 1 {
-                                    yoyo.init();
-                                }
-                            }
-                        }
-                    },
-                    _ => {} //fbo so nothing to do
-                }
-            }
-        }
-        */
-
         let shader = &mut *self.shader.write().unwrap();
 
-        /*
-        let yep = resource::resource_get(
-            &mut *shader_manager.write().unwrap(),
-            s);
-            */
-
-        /*
-        //let shader : &shader::Shader;
-        let mut yep : Option<Arc<RWLock<shader::Shader>>> = None;
-
-        {
-            //let mut matm = self.material.borrow_mut();
-            let mut matm = self.material.write().unwrap();
-
-            let shaderres = &mut matm.shader;
-            match *shaderres  {
-                None => {println!("shaderes none");},
-                Some(ref mut s) => {
-                    yep = resource::resource_get(&mut *shader_manager.write().unwrap(), s);
-                    match yep.clone() {
-                        None => {println!("no shader yet {}", s.name);},
-                        Some(yy) => {
-                            let mut yoyo = yy.write().unwrap();
-                            if yoyo.state == 0 {
-                                yoyo.read();
-                                println!("find shader!!! {}", s.name);
-                            }
-                        }
-                    }
-                }
-            }
+        if shader.state == 0 {
+            shader.read();
         }
-        */
-
-        let c : Arc<RWLock<shader::Shader>>;
-        let cr : RWLockReadGuard<shader::Shader>;
-
-        /*
-        let shader : &shader::Shader;
-
-        match yep
-        {
-            None => {
-                println!("shader not yet available");
-                return;},
-            Some(ref sh) => {
-                c = sh.clone();
-                cr = c.read().unwrap();
-                shader = & *cr;
-            }
-        }
-        */
 
         shader.utilise();
-
-        //Do in object
-        /*
-        {
-            //TODO for shader textures, for uniform textures instead of 'for material
-            //tex/uniforms'?
-            let mut material = self.material.write().unwrap();
-
-            let mut i = 0u32;
-            for (name,t) in material.textures.iter_mut() {
-                match *t {
-                    material::Sampler::ImageFile(ref mut img) => {
-                        let yep = resource::resource_get(&mut *texture_manager.write().unwrap(), img);
-                        match yep {
-                            Some(yoyo) => {
-                                shader.texture_set(name.as_slice(), & *yoyo.read().unwrap(),i);
-                                i = i +1;
-                            },
-                            None => {}
-                        }
-                    },
-                    material::Sampler::Fbo(ref mut fbo) => {
-                        let yep = resource::resource_get(&mut *fbo_manager.write().unwrap(), fbo);
-                        match yep {
-                            Some(yoyo) => {
-                                shader.texture_set(name.as_slice(), & *yoyo.read().unwrap(),i);
-                                i = i +1;
-                            },
-                            None => {}
-                        }
-                    },
-                    //_ => {println!("todo fbo"); }
-                }
-            }
-
-            for (k,v) in material.uniforms.iter() {
-                shader.uniform_set(k.as_slice(), &(**v));
-            }
-        }
-        */
 
         for (_,p) in self.passes.iter() {
             let cam_mat = p.camera.borrow().object.read().unwrap().get_world_matrix();
@@ -284,14 +170,29 @@ impl RenderPass
                 (resource::resource_get(&mut *mesh_manager.write().unwrap(), &mut mr.mesh),
                 mmm)
             },
-            None => {
-                println!("no mesh render");
-                return;
-            }
+            None => return
         };
 
         if let Some(ref mat) = the_mat {
             let mut material = mat.write().unwrap();
+
+            for (_,t) in material.textures.iter_mut() {
+                match *t {
+                    material::Sampler::ImageFile(ref mut img) => {
+                        let yep = resource::resource_get(&mut *texture_manager.write().unwrap(), img);
+                        match yep.clone() {
+                            None => {},
+                            Some(yy) => {
+                                let mut yoyo = yy.write().unwrap();
+                                if yoyo.state == 1 {
+                                    yoyo.init();
+                                }
+                            }
+                        }
+                    },
+                    _ => {} //fbo so nothing to do
+                }
+            }
 
             let mut i = 0u32;
             for (name,t) in material.textures.iter_mut() {
@@ -570,7 +471,7 @@ impl Render {
             self.grid.clone(),
             &mut self.passes,
             self.material_manager.clone(),
-                self.shader_manager.clone(),
+            self.shader_manager.clone(),
             self.camera.clone());
 
         let m = 40f64;
@@ -679,70 +580,27 @@ fn prepare_passes_object(
 
     {
         let oc = o.clone();
-        let render = &mut oc.write().unwrap().mesh_render;
+        let mut occ = oc.write().unwrap();
+        let ocname = occ.name.clone();
+        let render = &mut occ.mesh_render;
 
         let material = match *render {
             Some(ref mut mr) => { 
                 mr.material.get_resource(&mut *material_manager.write().unwrap())
-
-                /*
-                match mr.material.resource {
-                    ResTest::ResData(rd) => Some(rd.clone()),
-                    _ =>
-                        resource::resource_get(&mut *material_manager.write().unwrap(), &mut mr.material)
-                }
-                */
             },
-            None => {
-                println!("no mesh render");
-                return;
-            }
-        };
-
-        /*
-        let mesh_render_material = match *render {
-            Some(ref mut mr) => &mut mr.material,
             None => return
         };
-
-
-        let material = resource::resource_get(
-            &mut *material_manager.write().unwrap(),
-            mesh_render_material);
-        */
 
         let mat = match material {
             None => return,
             Some(m) => m
         };
 
+        let mmm = &mut mat.write().unwrap().shader;
 
-        /*
-        {
-            let key = mesh_render_material.name.clone();
-            let rp = match passes.entry(&key) {
-                Vacant(entry) => 
-                    entry.insert(box RenderPass::new(mat.clone(), camera.clone())),
-                Occupied(entry) => entry.into_mut(),
-            };
-
-            //rp.objects.push_back(o.clone());
-
-            let key_cam = camera.borrow().id.clone();
-            let cam_pass = match rp.passes.entry(&key_cam) {
-                Vacant(entry) => 
-                    entry.insert(box CameraPass::new(camera.clone())),
-                Occupied(entry) => entry.into_mut(),
-            };
-
-            cam_pass.add_object(o.clone());
-        }
-        */
-        let mmm = mat.write().unwrap();
-
-        let mut shader_yep = match mmm.shader {
-            Some(ref s) => s,
-            None => return
+        let mut shader_yep = match *mmm {
+            Some(ref mut s) => s,
+            None =>  return
         };
 
         let shader = match shader_yep.get_resource(&mut *shader_manager.write().unwrap()) {
@@ -757,8 +615,6 @@ fn prepare_passes_object(
                     entry.insert(box RenderPass::new(shader.clone(), camera.clone())),
                 Occupied(entry) => entry.into_mut(),
             };
-
-            //rp.objects.push_back(o.clone());
 
             let key_cam = camera.borrow().id.clone();
             let cam_pass = match rp.passes.entry(&key_cam) {
