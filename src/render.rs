@@ -86,7 +86,8 @@ impl CameraPass
 struct RenderPass
 {
     pub name : String,
-    pub material : Arc<sync::RWLock<material::Material>>,
+    //pub material : Arc<sync::RWLock<material::Material>>,
+    pub shader : Arc<sync::RWLock<shader::Shader>>,
     //pub objects : DList<Arc<RWLock<object::Object>>>,
     //pub camera : Rc<RefCell<camera::Camera>>,
     pub passes : HashMap<uuid::Uuid, Box<CameraPass>>,
@@ -95,12 +96,12 @@ struct RenderPass
 impl RenderPass
 {
     pub fn new(
-        material : Arc<RWLock<material::Material>>,
+        shader : Arc<RWLock<shader::Shader>>,
         camera : Rc<RefCell<camera::Camera>>) -> RenderPass
     {
         RenderPass {
                   name : String::from_str("passtest"),
-                  material : material.clone(),
+                  shader : shader.clone(),
                   //objects : DList::new(),
                   //camera : camera,
                   passes : HashMap::new()
@@ -110,16 +111,72 @@ impl RenderPass
     pub fn draw_frame(
         &self,
         mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
+        material_manager : Arc<RWLock<resource::ResourceManager<material::Material>>>,
         shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
         texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
         fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>
         ) -> ()
     {
-        {
-            let mut matm = self.material.write().unwrap();
-            //println!("material : {}", matm.name);
+        let shader = &mut *self.shader.write().unwrap();
 
-            for (_,t) in matm.textures.iter_mut() {
+        if shader.state == 0 {
+            shader.read();
+        }
+
+        shader.utilise();
+
+        for (_,p) in self.passes.iter() {
+            let cam_mat = p.camera.borrow().object.read().unwrap().get_world_matrix();
+            let cam_projection = p.camera.borrow().perspective_get();
+            let cam_mat_inv = cam_mat.inverse_get();
+            let matrix = &cam_projection * &cam_mat_inv;
+
+            for o in p.objects.iter() {
+                let mut ob = o.write().unwrap();
+                self.draw_object(
+                    shader,
+                    &mut *ob,
+                    &matrix, 
+                    mesh_manager.clone(),
+                    material_manager.clone(),
+                    texture_manager.clone(),
+                    fbo_manager.clone()
+                    );
+            }
+        }
+
+    }
+
+    fn draw_object(
+        &self,
+        shader : &shader::Shader,
+        ob : &mut object::Object,
+        matrix : &matrix::Matrix4,
+        mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
+        material_manager : Arc<RWLock<resource::ResourceManager<material::Material>>>,
+        texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
+        fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>
+        )
+    {
+
+        let (themesh, the_mat) = match ob.mesh_render {
+            Some(ref mut mr) => { 
+                let mmm = match mr.material.resource {
+                    resource::ResTest::ResData(ref rd) => Some(rd.clone()),
+                    _ =>
+                        resource::resource_get(&mut *material_manager.write().unwrap(), &mut mr.material)
+                };
+
+                (resource::resource_get(&mut *mesh_manager.write().unwrap(), &mut mr.mesh),
+                mmm)
+            },
+            None => return
+        };
+
+        if let Some(ref mat) = the_mat {
+            let mut material = mat.write().unwrap();
+
+            for (_,t) in material.textures.iter_mut() {
                 match *t {
                     material::Sampler::ImageFile(ref mut img) => {
                         let yep = resource::resource_get(&mut *texture_manager.write().unwrap(), img);
@@ -136,55 +193,6 @@ impl RenderPass
                     _ => {} //fbo so nothing to do
                 }
             }
-        }
-
-        //let shader : &shader::Shader;
-        let mut yep : Option<Arc<RWLock<shader::Shader>>> = None;
-
-        {
-            //let mut matm = self.material.borrow_mut();
-            let mut matm = self.material.write().unwrap();
-
-            let shaderres = &mut matm.shader;
-            match *shaderres  {
-                None => {println!("shaderes none");},
-                Some(ref mut s) => {
-                    yep = resource::resource_get(&mut *shader_manager.write().unwrap(), s);
-                    match yep.clone() {
-                        None => {println!("no shader yet {}", s.name);},
-                        Some(yy) => {
-                            let mut yoyo = yy.write().unwrap();
-                            if yoyo.state == 0 {
-                                yoyo.read();
-                                println!("find shader!!! {}", s.name);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        let c : Arc<RWLock<shader::Shader>>;
-        let cr : RWLockReadGuard<shader::Shader>;
-
-        let shader : &shader::Shader;
-        match yep
-        {
-            None => {
-                println!("shader not yet available");
-                return;},
-            Some(ref sh) => {
-                c = sh.clone();
-                cr = c.read().unwrap();
-                shader = & *cr;
-            }
-        }
-
-        shader.utilise();
-        {
-            //TODO for shader textures, for uniform textures instead of 'for material
-            //tex/uniforms'?
-            let mut material = self.material.write().unwrap();
 
             let mut i = 0u32;
             for (name,t) in material.textures.iter_mut() {
@@ -216,38 +224,8 @@ impl RenderPass
             for (k,v) in material.uniforms.iter() {
                 shader.uniform_set(k.as_slice(), &(**v));
             }
+
         }
-
-        for (_,p) in self.passes.iter() {
-            let cam_mat = p.camera.borrow().object.read().unwrap().get_world_matrix();
-            let cam_projection = p.camera.borrow().perspective_get();
-            let cam_mat_inv = cam_mat.inverse_get();
-            let matrix = &cam_projection * &cam_mat_inv;
-
-            for o in p.objects.iter() {
-                let mut ob = o.write().unwrap();
-                self.draw_object(shader, &mut *ob, &matrix, mesh_manager.clone());
-            }
-        }
-
-    }
-
-    fn draw_object(
-        &self,
-        shader : &shader::Shader,
-        ob : &mut object::Object,
-        matrix : &matrix::Matrix4,
-        mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>
-        )
-    {
-        let themesh = match ob.mesh_render {
-            Some(ref mut mr) => 
-                resource::resource_get(&mut *mesh_manager.write().unwrap(), &mut mr.mesh),
-            None => {
-                println!("no mesh render");
-                return;
-            }
-        };
 
         //TODO chris
         match themesh  {
@@ -485,6 +463,7 @@ impl Render {
                 o.clone(),
                 &mut self.passes,
                 self.material_manager.clone(),
+                self.shader_manager.clone(),
                 self.camera.clone());
         }
 
@@ -492,6 +471,7 @@ impl Render {
             self.grid.clone(),
             &mut self.passes,
             self.material_manager.clone(),
+            self.shader_manager.clone(),
             self.camera.clone());
 
         let m = 40f64;
@@ -507,6 +487,7 @@ impl Render {
             self.camera_repere.clone(),
             &mut self.passes,
             self.material_manager.clone(),
+                self.shader_manager.clone(),
             self.camera_ortho.clone());
 
         let sel_len = match self.context.try_borrow() {
@@ -519,6 +500,7 @@ impl Render {
                 self.dragger.clone(),
                 &mut self.passes,
                 self.material_manager.clone(),
+                self.shader_manager.clone(),
                 self.camera.clone());
         }
     }
@@ -547,6 +529,7 @@ impl Render {
                 o.clone(),
                 &mut self.passes,
                 self.material_manager.clone(),
+                self.shader_manager.clone(),
                 self.camera.clone());
         }
 
@@ -569,6 +552,7 @@ impl Render {
             self.quad_outline.clone(),
             &mut self.passes,
             self.material_manager.clone(),
+            self.shader_manager.clone(),
             self.camera_ortho.clone());
     }
 }
@@ -577,6 +561,7 @@ fn prepare_passes_object(
     o : Arc<RWLock<object::Object>>,
     passes : &mut HashMap<String, Box<RenderPass>>, 
     material_manager : Arc<RWLock<resource::ResourceManager<material::Material>>>,
+    shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
     camera : Rc<RefCell<camera::Camera>>
     )
 {
@@ -584,36 +569,52 @@ fn prepare_passes_object(
         let occ = o.clone();
         for c in occ.read().unwrap().children.iter()
         {
-            prepare_passes_object(c.clone(), passes, material_manager.clone(), camera.clone());
+            prepare_passes_object(
+                c.clone(),
+                passes,
+                material_manager.clone(),
+                shader_manager.clone(),
+                camera.clone());
         }
     }
 
     {
         let oc = o.clone();
-        let render = &mut oc.write().unwrap().mesh_render;
-        let mesh_render_material = match *render {
-            Some(ref mut mr) => &mut mr.material,
+        let mut occ = oc.write().unwrap();
+        let ocname = occ.name.clone();
+        let render = &mut occ.mesh_render;
+
+        let material = match *render {
+            Some(ref mut mr) => { 
+                mr.material.get_resource(&mut *material_manager.write().unwrap())
+            },
             None => return
         };
 
-        let material = resource::resource_get(
-            &mut *material_manager.write().unwrap(),
-            mesh_render_material);
-
         let mat = match material {
             None => return,
-            Some(mat) => mat
+            Some(m) => m
+        };
+
+        let mmm = &mut mat.write().unwrap().shader;
+
+        let mut shader_yep = match *mmm {
+            Some(ref mut s) => s,
+            None =>  return
+        };
+
+        let shader = match shader_yep.get_resource(&mut *shader_manager.write().unwrap()) {
+            Some(s) => s,
+            None => return
         };
 
         {
-            let key = mesh_render_material.name.clone();
+            let key = shader.read().unwrap().name.clone();
             let rp = match passes.entry(&key) {
                 Vacant(entry) => 
-                    entry.insert(box RenderPass::new(mat.clone(), camera.clone())),
+                    entry.insert(box RenderPass::new(shader.clone(), camera.clone())),
                 Occupied(entry) => entry.into_mut(),
             };
-
-            //rp.objects.push_back(o.clone());
 
             let key_cam = camera.borrow().id.clone();
             let cam_pass = match rp.passes.entry(&key_cam) {
@@ -624,6 +625,7 @@ fn prepare_passes_object(
 
             cam_pass.add_object(o.clone());
         }
+
     }
 
     //done at the beginning
@@ -681,6 +683,7 @@ impl Renderer for Render
         {
             p.draw_frame(
                 self.mesh_manager.clone(),
+                self.material_manager.clone(),
                 self.shader_manager.clone(),
                 self.texture_manager.clone(),
                 self.fbo_manager.clone(),
@@ -695,6 +698,7 @@ impl Renderer for Render
         {
             p.draw_frame(
                 self.mesh_manager.clone(),
+                self.material_manager.clone(),
                 self.shader_manager.clone(),
                 self.texture_manager.clone(),
                 self.fbo_manager.clone(),
@@ -709,6 +713,7 @@ impl Renderer for Render
         {
             p.draw_frame(
                 self.mesh_manager.clone(),
+                self.material_manager.clone(),
                 self.shader_manager.clone(),
                 self.texture_manager.clone(),
                 self.fbo_manager.clone(),
@@ -722,6 +727,7 @@ impl Renderer for Render
         {
             p.draw_frame(
                 self.mesh_manager.clone(),
+                self.material_manager.clone(),
                 self.shader_manager.clone(),
                 self.texture_manager.clone(),
                 self.fbo_manager.clone(),
