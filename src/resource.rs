@@ -64,6 +64,20 @@ impl<T> ResTT<T>
             resource : res
         }
     }
+
+}
+
+impl <T:'static+Create+Send+Sync> ResTT<T>
+{
+    pub fn get_resource(&mut self, manager : &mut ResourceManager<T> ) -> Option<Arc<RWLock<T>>>
+    {
+        match self.resource {
+            ResTest::ResData(ref rd) => Some(rd.clone()),
+            //ResTest::ResWait => None,
+            _ => resource_get(manager, self)
+        }
+    }
+
 }
 
 pub trait Create
