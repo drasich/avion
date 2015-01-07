@@ -48,7 +48,13 @@ extern {
         index : c_uint
         ) -> ();
 
-    pub fn cgl_shader_uniform_fbo_set(
+    pub fn cgl_shader_uniform_fbo_depth_set(
+        uniform : *const shader::CglShaderUniform,
+        fbo : *const fbo::CglFbo,
+        index : c_uint
+        ) -> ();
+
+    pub fn cgl_shader_uniform_fbo_color_set(
         uniform : *const shader::CglShaderUniform,
         fbo : *const fbo::CglFbo,
         index : c_uint
@@ -152,9 +158,15 @@ impl TextureSend for fbo::Fbo {
             None => {},
             Some(f) => unsafe {
                 //TODO just depth for now
-                cgl_shader_uniform_fbo_set(uni, f, index);
+                match self.to_send {
+                    fbo::ToSend::Depth =>
+                        cgl_shader_uniform_fbo_depth_set(uni, f, index),
+                    fbo::ToSend::Color =>
+                        cgl_shader_uniform_fbo_color_set(uni, f, index)
+                }
             }
         }
     }
 }
+
 

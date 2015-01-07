@@ -9,7 +9,8 @@
       "fields": [
         {
           "name": "fbo_selected"
-        }
+        },
+        "Depth"
       ]
     },
     "texture_all": {
@@ -17,7 +18,8 @@
       "fields": [
         {
           "name": "fbo_all"
-        }
+        },
+        "Color"
       ]
     }
   },

@@ -207,7 +207,7 @@ impl RenderPass
                             None => {}
                         }
                     },
-                    material::Sampler::Fbo(ref mut fbo) => {
+                    material::Sampler::Fbo(ref mut fbo, ref attachment) => {
                         let yep = resource::resource_get(&mut *fbo_manager.write().unwrap(), fbo);
                         match yep {
                             Some(yoyo) => {
@@ -335,6 +335,7 @@ pub struct Render
     pub fbo_selected : Arc<RWLock<fbo::Fbo>>,
 
     pub quad_outline : Arc<RWLock<object::Object>>,
+    pub quad_all : Arc<RWLock<object::Object>>,
 
     pub context : Rc<RefCell<context::Context>>,
 
@@ -357,6 +358,11 @@ impl Render {
 
         let fbo_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
         let fbo_all = fbo_manager.write().unwrap().request_use_no_proc("fbo_all");
+        /*
+        let fc = fbo_all.clone();
+        let f : &mut fbo::Fbo = &mut *fc.write().unwrap();
+        f.to_send = fbo::ToSend::Color;
+        */
         let fbo_selected = fbo_manager.write().unwrap().request_use_no_proc("fbo_selected");
 
         let camera = Rc::new(RefCell::new(factory.create_camera()));
@@ -389,8 +395,8 @@ impl Render {
             camera_ortho : camera_ortho,
             fbo_all : fbo_all,
             fbo_selected : fbo_selected,
-            //quad_outline : Arc::new(RWLock::new(object::Object::new("quad_outline")))
             quad_outline : Arc::new(RWLock::new(factory.create_object("quad_outline"))),
+            quad_all : Arc::new(RWLock::new(factory.create_object("quad_all"))),
 
             context : context,
 
@@ -438,6 +444,22 @@ impl Render {
                     outline_res));
         }
 
+        {
+            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
+            m.write().unwrap().add_quad(1f32, 1f32);
+            let rs = resource::ResTest::ResData(m);
+            let mr = resource::ResTT::new_with_res("quad", rs);
+
+            //shader_manager.write().unwrap().request_use_no_proc("shader/all.sh");
+            let all_mat = material_manager.write().unwrap().request_use_no_proc("material/fbo_all.mat");
+            let all_res = resource::ResTT::new_with_res("material/fbo_all.mat", resource::ResTest::ResData(all_mat));
+
+            r.quad_all.write().unwrap().mesh_render = Some(
+                mesh_render::MeshRender::new_with_mesh_and_mat(
+                    mr,
+                    all_res));
+        }
+
         r
     }
 
@@ -446,6 +468,12 @@ impl Render {
         self.quad_outline.clone().read().unwrap().set_uniform_data(
             "resolution",
             shader::UniformData::Vec2(vec::Vec2::new(w as f64, h as f64)));
+
+        /*
+        self.quad_all.clone().read().unwrap().set_uniform_data(
+            "resolution",
+            shader::UniformData::Vec2(vec::Vec2::new(w as f64, h as f64)));
+            */
     }
 
     fn prepare_passes(&mut self)
@@ -489,20 +517,6 @@ impl Render {
             self.material_manager.clone(),
                 self.shader_manager.clone(),
             self.camera_ortho.clone());
-
-        let sel_len = match self.context.try_borrow() {
-            Some(c) => c.selected.len(),
-            None => {println!("cannot borrow context"); 0}
-        };
-
-        if sel_len > 0 {
-            prepare_passes_object(
-                self.dragger.clone(),
-                &mut self.passes,
-                self.material_manager.clone(),
-                self.shader_manager.clone(),
-                self.camera.clone());
-        }
     }
 
     fn prepare_passes_selected(&mut self)
@@ -540,7 +554,7 @@ impl Render {
         }
     }
 
-    fn prepare_passes_quad_outline(&mut self)
+    fn prepare_passes_objects_ortho(&mut self, list : DList<Arc<RWLock<object::Object>>>)
     {
         for (_,p) in self.passes.iter_mut()
         {
@@ -548,12 +562,34 @@ impl Render {
             p.passes.clear();
         }
 
+        for o in list.iter() {
+
         prepare_passes_object(
-            self.quad_outline.clone(),
+            o.clone(),
             &mut self.passes,
             self.material_manager.clone(),
             self.shader_manager.clone(),
             self.camera_ortho.clone());
+        }
+    }
+
+    fn prepare_passes_objects_per(&mut self, list : DList<Arc<RWLock<object::Object>>>)
+    {
+        for (_,p) in self.passes.iter_mut()
+        {
+            //p.objects.clear();
+            p.passes.clear();
+        }
+
+        for o in list.iter() {
+
+        prepare_passes_object(
+            o.clone(),
+            &mut self.passes,
+            self.material_manager.clone(),
+            self.shader_manager.clone(),
+            self.camera.clone());
+        }
     }
 }
 
@@ -662,6 +698,9 @@ impl Renderer for Render
             self.quad_outline.write().unwrap().scale = 
                 vec::Vec3::new(w as f64, h as f64, 1f64);
 
+            self.quad_all.write().unwrap().scale = 
+                vec::Vec3::new(w as f64, h as f64, 1f64);
+
             let mut cam = self.camera.borrow_mut();
             cam.resolution_set(w, h);
 
@@ -706,8 +745,24 @@ impl Renderer for Render
         }
         fbo::Fbo::cgl_use_end();
 
-        //self.request_manager.handle_requests();
-        //return (*self.pass).draw_frame();
+        //*
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.material_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+        //*/
+
+
+        /*
+        let mut l = DList::new();
+        l.push_back(self.quad_all.clone());
+        self.prepare_passes_objects_ortho(l);
 
         for p in self.passes.values()
         {
@@ -719,19 +774,44 @@ impl Renderer for Render
                 self.fbo_manager.clone(),
                 );
         }
+        */
 
-        self.prepare_passes_quad_outline();
-        //TODO draw with ortho
+        let sel_len = match self.context.try_borrow() {
+            Some(c) => c.selected.len(),
+            None => {println!("cannot borrow context"); 0}
+        };
 
-        for p in self.passes.values()
-        {
-            p.draw_frame(
-                self.mesh_manager.clone(),
-                self.material_manager.clone(),
-                self.shader_manager.clone(),
-                self.texture_manager.clone(),
-                self.fbo_manager.clone(),
-                );
+        if sel_len > 0 {
+            let mut ld = DList::new();
+            ld.push_back(self.dragger.clone());
+            self.prepare_passes_objects_per(ld);
+            //TODO draw with ortho
+
+            for p in self.passes.values()
+            {
+                p.draw_frame(
+                    self.mesh_manager.clone(),
+                    self.material_manager.clone(),
+                    self.shader_manager.clone(),
+                    self.texture_manager.clone(),
+                    self.fbo_manager.clone(),
+                    );
+            }
+
+            let mut l = DList::new();
+            l.push_back(self.quad_outline.clone());
+            self.prepare_passes_objects_ortho(l);
+
+            for p in self.passes.values()
+            {
+                p.draw_frame(
+                    self.mesh_manager.clone(),
+                    self.material_manager.clone(),
+                    self.shader_manager.clone(),
+                    self.texture_manager.clone(),
+                    self.fbo_manager.clone(),
+                    );
+            }
         }
     }
 }

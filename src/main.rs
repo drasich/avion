@@ -24,8 +24,8 @@ extern crate png;
 extern crate uuid;
 
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
-//use std::collections::HashMap;
-//use sync::{RWLock, Arc};
+use std::collections::HashMap;
+use std::sync::{RWLock, Arc};
 //use std::rc::Rc;
 //use std::cell::RefCell;
 use std::mem;
@@ -80,23 +80,21 @@ fn main() {
     }
     */
 
-
-    //spawn(proc() {
     /*
-       let mut mattt = Arc::new(RWLock::new( material::Material {
-            name : String::from_str("material/my_mat"),
-            //shader : Some(shader::Shader::new("shader/simple.sh")),
-            shader : Some(resource::ResTT::new("shader/simple.sh")),
-            state : 0,
-            //texture : Some(t)
-            textures : HashMap::new(),
-            uniforms : HashMap::new(),
-        }));
-       //mattt.write().textures.insert(String::from_str("texnametest"), material::SamplerImageFile(resource::ResTT::new("image/base_skeleton_col.png")));
-       mattt.write().textures.insert(String::from_str("texnametest"), material::SamplerFbo(resource::ResTT::new("fbo_all")));
-       mattt.write().uniforms.insert(String::from_str("unitest"), box shader::Vec2(vec::Vec2::new(5.6f64, 1.2f64)));
+
+    let mut mattt = Arc::new(RWLock::new( material::Material {
+        name : String::from_str("material/my_mat"),
+        //shader : Some(shader::Shader::new("shader/simple.sh")),
+        shader : Some(resource::ResTT::new("shader/simple.sh")),
+        state : 0,
+        textures : HashMap::new(),
+        uniforms : HashMap::new(),
+    }));
+    //mattt.write().textures.insert(String::from_str("texnametest"), material::SamplerImageFile(resource::ResTT::new("image/base_skeleton_col.png")));
+    mattt.write().unwrap().textures.insert(String::from_str("texnametest"), material::Sampler::Fbo(resource::ResTT::new("fbo_all"),material::Attachment::Depth));
+    //mattt.write().uniforms.insert(String::from_str("unitest"), box shader::Vec2(vec::Vec2::new(5.6f64, 1.2f64)));
     //mattt.read().savetoml();
-    mattt.read().save();
+    mattt.read().unwrap().save();
     */
 
     /*

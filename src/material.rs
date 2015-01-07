@@ -13,18 +13,26 @@ use shader;
 use resource;
 //use uniform;
 //use uniform::UniformSend;
-//use uniform::TextureSend;
+use uniform::TextureSend;
 use texture;
 use fbo;
 //#[deriving(Decodable, Encodable, Default)]
 //#[deriving(Encodable, Default)]
 use self::Sampler::{ImageFile,Fbo};
 
-#[deriving(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable, Copy)]
+pub enum Attachment
+{
+    Depth,
+    Color
+}
+
+
+#[derive(RustcDecodable, RustcEncodable)]
 pub enum Sampler
 {
     ImageFile(resource::ResTT<texture::Texture>),
-    Fbo(resource::ResTT<fbo::Fbo>)
+    Fbo(resource::ResTT<fbo::Fbo>, Attachment)
 }
 
 impl Sampler
@@ -35,7 +43,7 @@ impl Sampler
             ImageFile(ref img) => {
                 img.name.as_slice()
             },
-            Fbo(ref f) => {
+            Fbo(ref f, _) => {
                 f.name.as_slice()
             }
         }
@@ -121,8 +129,8 @@ impl Material
                 ImageFile(ref img) => {
                     self.textures.insert(k.clone(), ImageFile(resource::ResTT::new(img.name.as_slice())));
                 },
-                Fbo(ref f) => {
-                    self.textures.insert(k.clone(), Fbo(resource::ResTT::new(f.name.as_slice())));
+                Fbo(ref f, ref a) => {
+                    self.textures.insert(k.clone(), Fbo(resource::ResTT::new(f.name.as_slice()), *a));
                 }
             }
         }
@@ -133,13 +141,21 @@ impl Material
     pub fn save(&self)
     {
         println!("save to do again ");
-        /*
         let mut file = File::create(&Path::new(self.name.as_slice()));
+        /*
         //let mut stdwriter = stdio::stdout();
-        let mut encoder = json::PrettyEncoder::new(&mut file);
-        //let mut encoder = json::Encoder::new(&mut file);
+        let mut encoder = json::PrettyEncoder::new(&mut file.unwrap());
+        //let mut encoder = json::Encoder::new(&mut file.unwrap());
         self.encode(&mut encoder).unwrap();
         */
+
+        let encoded = json::encode(self);
+        let mut s = String::new();
+        {
+            let mut encoder = json::PrettyEncoder::new(&mut s);
+            let _ = self.encode(&mut encoder);
+        }
+        file.write_str(s.as_slice());
     }
 
     /*
@@ -234,5 +250,26 @@ impl<M: Decoder<E>, E> Decodable<M, E> for Material {
         })
     })
   }
+}
+
+impl TextureSend for Sampler {
+
+    fn uniform_send(&self, uni : *const shader::CglShaderUniform, index : u32) ->()
+    {
+        /*
+        match self.cgl_fbo {
+            None => {},
+            Some(f) => unsafe {
+                //TODO just depth for now
+                match self.to_send {
+                    fbo::ToSend::Depth =>
+                        cgl_shader_uniform_fbo_depth_set(uni, f, index),
+                    fbo::ToSend::Color =>
+                        cgl_shader_uniform_fbo_color_set(uni, f, index)
+                }
+            }
+        }
+        */
+    }
 }
 

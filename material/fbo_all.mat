@@ -1,16 +1,16 @@
 {
-  "name": "material/fbo.mat",
+  "name": "material/fbo_all.mat",
   "shader": {
-    "name": "shader/simple.sh"
+    "name": "shader/simple_normal.sh"
   },
   "textures": {
     "texture": {
       "variant": "Fbo",
       "fields": [
         {
-          "name": "fbo_selected"
+          "name": "fbo_all"
         },
-        "Depth"
+        "Color"
       ]
     }
   },
