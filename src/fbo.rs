@@ -15,12 +15,6 @@ extern {
     pub fn cgl_fbo_destroy(fbo : *const CglFbo);
 }
 
-pub enum ToSend
-{
-    Depth,
-    Color
-}
-
 #[derive(RustcDecodable, RustcEncodable, Copy)]
 pub enum Attachment
 {
@@ -28,13 +22,11 @@ pub enum Attachment
     Color
 }
 
-
 pub struct Fbo
 {
     pub name : String,
     pub state : i32,
     pub cgl_fbo: Option<*const CglFbo>,
-    pub to_send : ToSend
 } 
 
 impl Fbo
@@ -45,7 +37,6 @@ impl Fbo
             name : String::from_str(name),
             state : 0,
             cgl_fbo : None,
-            to_send : ToSend::Depth
         }
     }
 
