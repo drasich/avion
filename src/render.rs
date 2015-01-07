@@ -42,6 +42,8 @@ extern {
     pub fn cgl_draw_lines(vertex_count : c_uint) -> ();
     pub fn cgl_draw_faces(buffer : *const mesh::CglBuffer, index_count : c_uint) -> ();
     pub fn cgl_draw_end() -> ();
+
+    pub fn cgl_clear() -> ();
 }
 
 pub extern fn init_cb(r : *mut Render) -> () {
@@ -790,10 +792,9 @@ impl Renderer for Render
         };
 
         if sel_len > 0 {
-            let mut ld = DList::new();
-            ld.push_back(self.dragger.clone());
-            self.prepare_passes_objects_per(ld);
-            //TODO draw with ortho
+            let mut l = DList::new();
+            l.push_back(self.quad_outline.clone());
+            self.prepare_passes_objects_ortho(l);
 
             for p in self.passes.values()
             {
@@ -806,9 +807,11 @@ impl Renderer for Render
                     );
             }
 
-            let mut l = DList::new();
-            l.push_back(self.quad_outline.clone());
-            self.prepare_passes_objects_ortho(l);
+            unsafe { cgl_clear(); }
+            let mut ld = DList::new();
+            ld.push_back(self.dragger.clone());
+            self.prepare_passes_objects_per(ld);
+            //TODO draw with ortho
 
             for p in self.passes.values()
             {

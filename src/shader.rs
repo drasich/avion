@@ -91,7 +91,6 @@ impl Shader
 
     pub fn texture_set(&self, name : &str, value : &TextureSend, index : u32)
     {
-        println!("texture set '{}'", name);
         match self.uniforms.get(&String::from_str(name)) {
             Some(uni) => value.uniform_send(*uni, index),
             None => {}//println!("ERR!!!! : could not find such uniform '{}'",name)
