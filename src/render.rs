@@ -23,6 +23,7 @@ use vec;
 use factory;
 use context;
 use transform;
+use uniform;
 
 use geometry;
 
@@ -211,7 +212,14 @@ impl RenderPass
                         let yep = resource::resource_get(&mut *fbo_manager.write().unwrap(), fbo);
                         match yep {
                             Some(yoyo) => {
-                                shader.texture_set(name.as_slice(), & *yoyo.read().unwrap(),i);
+                                let fc = yoyo.clone();
+                                let fff = fc.read().unwrap();
+                                let fbosamp = uniform::FboSampler { 
+                                    fbo : & *fff,
+                                    attachment : *attachment
+                                };
+                                //shader.texture_set(name.as_slice(), & *yoyo.read().unwrap(),i);
+                                shader.texture_set(name.as_slice(), &fbosamp,i);
                                 i = i +1;
                             },
                             None => {}
@@ -745,7 +753,7 @@ impl Renderer for Render
         }
         fbo::Fbo::cgl_use_end();
 
-        //*
+        /*
         for p in self.passes.values()
         {
             p.draw_frame(
@@ -756,10 +764,10 @@ impl Renderer for Render
                 self.fbo_manager.clone(),
                 );
         }
-        //*/
+        */
 
 
-        /*
+        //*
         let mut l = DList::new();
         l.push_back(self.quad_all.clone());
         self.prepare_passes_objects_ortho(l);
@@ -774,7 +782,7 @@ impl Renderer for Render
                 self.fbo_manager.clone(),
                 );
         }
-        */
+        //*/
 
         let sel_len = match self.context.try_borrow() {
             Some(c) => c.selected.len(),

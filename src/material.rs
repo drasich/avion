@@ -20,19 +20,11 @@ use fbo;
 //#[deriving(Encodable, Default)]
 use self::Sampler::{ImageFile,Fbo};
 
-#[derive(RustcDecodable, RustcEncodable, Copy)]
-pub enum Attachment
-{
-    Depth,
-    Color
-}
-
-
 #[derive(RustcDecodable, RustcEncodable)]
 pub enum Sampler
 {
     ImageFile(resource::ResTT<texture::Texture>),
-    Fbo(resource::ResTT<fbo::Fbo>, Attachment)
+    Fbo(resource::ResTT<fbo::Fbo>, fbo::Attachment)
 }
 
 impl Sampler
@@ -250,26 +242,5 @@ impl<M: Decoder<E>, E> Decodable<M, E> for Material {
         })
     })
   }
-}
-
-impl TextureSend for Sampler {
-
-    fn uniform_send(&self, uni : *const shader::CglShaderUniform, index : u32) ->()
-    {
-        /*
-        match self.cgl_fbo {
-            None => {},
-            Some(f) => unsafe {
-                //TODO just depth for now
-                match self.to_send {
-                    fbo::ToSend::Depth =>
-                        cgl_shader_uniform_fbo_depth_set(uni, f, index),
-                    fbo::ToSend::Color =>
-                        cgl_shader_uniform_fbo_color_set(uni, f, index)
-                }
-            }
-        }
-        */
-    }
 }
 

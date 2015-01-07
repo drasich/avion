@@ -150,6 +150,7 @@ impl TextureSend for texture::Texture {
     }
 }
 
+/*
 impl TextureSend for fbo::Fbo {
 
     fn uniform_send(&self, uni : *const shader::CglShaderUniform, index : u32) ->()
@@ -168,5 +169,34 @@ impl TextureSend for fbo::Fbo {
         }
     }
 }
+*/
 
+
+pub struct FboSampler<'a>
+{
+    pub fbo : &'a fbo::Fbo,
+    pub attachment :  fbo::Attachment
+}
+
+impl<'a> TextureSend for FboSampler<'a> {
+
+    fn uniform_send(&self, uni : *const shader::CglShaderUniform, index : u32) ->()
+    {
+        let f = match self.fbo.cgl_fbo {
+            None => return,
+            Some(f) => f
+        };
+
+        match self.attachment {
+            fbo::Attachment::Depth => unsafe {
+                println!("depth");
+                cgl_shader_uniform_fbo_depth_set(uni, f, index);
+            },
+            fbo::Attachment::Color => unsafe {
+                println!("color");
+                cgl_shader_uniform_fbo_color_set(uni, f, index);
+            }
+        }
+    }
+}
 

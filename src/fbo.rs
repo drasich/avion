@@ -21,6 +21,14 @@ pub enum ToSend
     Color
 }
 
+#[derive(RustcDecodable, RustcEncodable, Copy)]
+pub enum Attachment
+{
+    Depth,
+    Color
+}
+
+
 pub struct Fbo
 {
     pub name : String,

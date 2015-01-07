@@ -19,7 +19,7 @@
         {
           "name": "fbo_all"
         },
-        "Color"
+        "Depth"
       ]
     }
   },
