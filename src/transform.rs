@@ -4,7 +4,8 @@ use ui;
 use std::any::{Any};//, AnyRefExt};
 use std::ptr;
 use libc::{c_char, c_void, c_int, c_float};
-use std::c_str::ToCStr;
+use std::ffi::CString;
+//use std::c_str::ToCStr;
 
 
 #[link(name = "joker")]
@@ -18,7 +19,7 @@ extern {
 }
 
 
-#[deriving(RustcDecodable, RustcEncodable, Clone, Copy)]
+#[derive(RustcDecodable, RustcEncodable, Clone, Copy)]
 pub enum Orientation
 {
     AngleXYZ(vec::Vec3),
@@ -79,7 +80,7 @@ impl Orientation
     }
 }
 
-#[deriving(RustcDecodable, RustcEncodable, Clone)]
+#[derive(RustcDecodable, RustcEncodable, Clone)]
 pub struct Transform {
     pub position : vec::Vec3, 
     pub orientation : Orientation
@@ -102,21 +103,22 @@ impl ui::PropertyShow for Orientation {
     {
         if depth == 0 {
             //let yep = field.to_string() + "/type";
-            let f = field.to_c_str();
+            let f = CString::from_slice(field.as_bytes());
             let type_value = match *self {
                 Orientation::AngleXYZ(_) => "AngleXYZ",
                 Orientation::Quat(_) => "Quat"
             };
-            let v = type_value.to_c_str();
 
-            let types = "AngleXYZ/Quat".to_c_str();
+            let v = CString::from_slice(type_value.as_bytes());
+
+            let types = CString::from_slice("AngleXYZ/Quat".as_bytes());
 
             unsafe {
                 let pv = property_list_enum_add(
                     property.jk_property_list,
-                    f.into_inner(),
-                    types.into_inner(),
-                    v.into_inner());
+                    f.as_ptr(),
+                    types.as_ptr(),
+                    v.as_ptr());
 
                 if pv != ptr::null() {
                     property.pv.insert(field.to_string(), pv);

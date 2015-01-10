@@ -2,12 +2,12 @@ use object;
 use scene;
 
 use std::collections::{DList};
-use std::sync::{RWLock, Arc};
+use std::sync::{RwLock, Arc};
 
 pub struct Context
 {
-    pub selected : DList<Arc<RWLock<object::Object>>>,
-    pub scene : Option<Arc<RWLock<scene::Scene>>>,
+    pub selected : DList<Arc<RwLock<object::Object>>>,
+    pub scene : Option<Arc<RwLock<scene::Scene>>>,
 }
 
 impl Context

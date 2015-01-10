@@ -1,7 +1,6 @@
 use libc::{c_char, c_void, c_int};
 use std::mem;
-use std::sync::{RWLock, Arc};
-use std::c_str::CString;
+use std::sync::{RwLock, Arc};
 use std::collections::{DList};
 use std::ptr;
 use std::rc::Rc;

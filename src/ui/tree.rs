@@ -1,16 +1,14 @@
-use std::sync::{RWLock, Arc};
+use std::sync::{RwLock, Arc};
 use std::collections::HashMap;
 use libc::{c_char, c_void, c_int};
 use std::mem;
-use std::c_str::CString;
 //use std::collections::{DList,Deque};
 use std::ptr;
 use std::cell::RefCell;
 use std::rc::Weak;
 use std::rc::Rc;
 use uuid::Uuid;
-use std::c_str::ToCStr;
-
+use std::ffi::CString;
 
 use scene;
 use object;
@@ -55,7 +53,7 @@ pub struct Tree
 {
     pub name : String,
     //TODO change the key
-    //objects : HashMap<Arc<RWLock<object::Object>>, *const Elm_Object_Item >
+    //objects : HashMap<Arc<RwLock<object::Object>>, *const Elm_Object_Item >
     //objects : HashMap<String, *const Elm_Object_Item>,
     objects : HashMap<Uuid, *const Elm_Object_Item>,
     jk_tree : *const JkTree,
@@ -98,7 +96,7 @@ impl Tree
         }
     }
 
-    pub fn add_object(&mut self, object : Arc<RWLock<object::Object>>)
+    pub fn add_object(&mut self, object : Arc<RwLock<object::Object>>)
     {
         let eoi = unsafe {
             match object.read().unwrap().parent {
@@ -166,23 +164,23 @@ impl Tree
 
 extern fn name_get(data : *const c_void) -> *const c_char
 {
-    let o : &Arc<RWLock<object::Object>> = unsafe {
+    let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
 
     //println!("name get {:?}", o);
 
-    let cs = o.read().unwrap().name.to_c_str();
+    let cs = CString::from_slice(o.read().unwrap().name.as_bytes());
 
     unsafe {
         //TODO can use as_ptr?
-        cs.into_inner()
+        cs.as_ptr()
     }
 }
 
 extern fn item_selected(data : *const c_void) -> ()
 {
-    let o : &Arc<RWLock<object::Object>> = unsafe {
+    let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
     println!("selected ! {} ", o.read().unwrap().name);
@@ -190,7 +188,7 @@ extern fn item_selected(data : *const c_void) -> ()
 
 extern fn can_expand(data : *const c_void) -> bool
 {
-    let o : &Arc<RWLock<object::Object>> = unsafe {
+    let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
 
@@ -203,7 +201,7 @@ extern fn expand(
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
-    let o : &Arc<RWLock<object::Object>> = unsafe {
+    let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
 
@@ -226,7 +224,7 @@ extern fn selected(
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
-    let o : &Arc<RWLock<object::Object>> = unsafe {
+    let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
 

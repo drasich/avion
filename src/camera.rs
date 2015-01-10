@@ -1,7 +1,6 @@
-use std::sync::{RWLock, Arc};
+use std::sync::{RwLock, Arc};
 use std::f64::consts;
 use std::default::Default;
-use std::num::FloatMath;
 use std::num::Float;
 
 use vec;
@@ -75,7 +74,7 @@ impl Default for CameraData
 pub struct Camera
 {
     pub data : CameraData,
-    pub object : Arc<RWLock<object::Object>>,
+    pub object : Arc<RwLock<object::Object>>,
     pub id : uuid::Uuid
 }
 
@@ -86,7 +85,7 @@ impl Camera
     {
         let c = Camera {
             data : Default::default(),
-            object : Arc::new(RWLock::new(object::Object::new("camera")))
+            object : Arc::new(RwLock::new(object::Object::new("camera")))
         };
 
         c.object.write().position = vec::Vec3::new(0.1f64, 0f64, 0f64);

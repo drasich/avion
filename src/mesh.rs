@@ -443,7 +443,7 @@ impl Mesh
         }
 
         let name = String::from_str("position");
-        match self.buffers_f32.entry(&name.clone()) {
+        match self.buffers_f32.entry(name.clone()) {
             Vacant(entry) => {
                 let buffer = box Buffer::new(
                     name.clone(),
@@ -459,7 +459,7 @@ impl Mesh
         };
 
         let name = String::from_str("color");
-        match self.buffers_f32.entry(&name.clone()) {
+        match self.buffers_f32.entry(name.clone()) {
             Vacant(entry) => {
                 let buffer = box Buffer::new(
                     name.clone(),
@@ -508,7 +508,7 @@ impl Mesh
             vvv,
             BufferType::Vertex);
 
-        match self.buffers_f32.entry(&name) {
+        match self.buffers_f32.entry(name) {
             Vacant(entry) => {entry.insert(buffer);},
             Occupied(entry) => {
                 let en = entry.into_mut();
@@ -532,7 +532,7 @@ impl Mesh
             fff,
             BufferType::Index);
 
-        match self.buffers_u32.entry(&name) {
+        match self.buffers_u32.entry(name) {
             Vacant(entry) => {entry.insert(buffer);},
             Occupied(entry) => {
                 let en = entry.into_mut();
@@ -561,7 +561,7 @@ impl Mesh
                 uuu,
                 BufferType::Uv);
 
-            match self.buffers_f32.entry(&name) {
+            match self.buffers_f32.entry(name) {
                 Vacant(entry) => { entry.insert(buffer); },
                 Occupied(entry) => {
                     let en = entry.into_mut();
@@ -592,8 +592,8 @@ impl resource::ResourceT for Mesh
     }
 }
 
-impl <S: Encoder<E>, E> Encodable<S, E> for Mesh {
-  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+impl Encodable for Mesh {
+  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Mesh", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
           Ok(())
@@ -601,8 +601,8 @@ impl <S: Encoder<E>, E> Encodable<S, E> for Mesh {
   }
 }
 
-impl<S: Decoder<E>, E> Decodable<S, E> for Mesh {
-  fn decode(decoder: &mut S) -> Result<Mesh, E> {
+impl Decodable for Mesh {
+  fn decode<D : Decoder>(decoder: &mut D) -> Result<Mesh, D::Error> {
     decoder.read_struct("root", 0, |decoder| {
          Ok(Mesh{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),

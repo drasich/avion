@@ -3,7 +3,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use libc::{c_uint, c_int};
 use std::sync;
-use std::sync::{RWLock, Arc,RWLockReadGuard};
+use std::sync::{RwLock, Arc, RwLockReadGuard};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied,Vacant};
 use uuid;
@@ -67,7 +67,7 @@ pub extern fn resize_cb(r : *mut Render, w : c_int, h : c_int) -> () {
 struct CameraPass
 {
     camera : Rc<RefCell<camera::Camera>>,
-    objects : DList<Arc<RWLock<object::Object>>>,
+    objects : DList<Arc<RwLock<object::Object>>>,
 }
 
 impl CameraPass
@@ -80,7 +80,7 @@ impl CameraPass
         }
     }
 
-    fn add_object(&mut self, o : Arc<RWLock<object::Object>>)
+    fn add_object(&mut self, o : Arc<RwLock<object::Object>>)
     {
         self.objects.push_back(o);
     }
@@ -89,9 +89,9 @@ impl CameraPass
 struct RenderPass
 {
     pub name : String,
-    //pub material : Arc<sync::RWLock<material::Material>>,
-    pub shader : Arc<sync::RWLock<shader::Shader>>,
-    //pub objects : DList<Arc<RWLock<object::Object>>>,
+    //pub material : Arc<sync::RwLock<material::Material>>,
+    pub shader : Arc<sync::RwLock<shader::Shader>>,
+    //pub objects : DList<Arc<RwLock<object::Object>>>,
     //pub camera : Rc<RefCell<camera::Camera>>,
     pub passes : HashMap<uuid::Uuid, Box<CameraPass>>,
 }
@@ -99,7 +99,7 @@ struct RenderPass
 impl RenderPass
 {
     pub fn new(
-        shader : Arc<RWLock<shader::Shader>>,
+        shader : Arc<RwLock<shader::Shader>>,
         camera : Rc<RefCell<camera::Camera>>) -> RenderPass
     {
         RenderPass {
@@ -113,11 +113,11 @@ impl RenderPass
 
     pub fn draw_frame(
         &self,
-        mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
-        material_manager : Arc<RWLock<resource::ResourceManager<material::Material>>>,
-        shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
-        texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
-        fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>
+        mesh_manager : Arc<RwLock<resource::ResourceManager<mesh::Mesh>>>,
+        material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
+        shader_manager : Arc<RwLock<resource::ResourceManager<shader::Shader>>>,
+        texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
+        fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>
         ) -> ()
     {
         let shader = &mut *self.shader.write().unwrap();
@@ -155,10 +155,10 @@ impl RenderPass
         shader : &shader::Shader,
         ob : &mut object::Object,
         matrix : &matrix::Matrix4,
-        mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
-        material_manager : Arc<RWLock<resource::ResourceManager<material::Material>>>,
-        texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
-        fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>
+        mesh_manager : Arc<RwLock<resource::ResourceManager<mesh::Mesh>>>,
+        material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
+        texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
+        fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>
         )
     {
 
@@ -331,28 +331,28 @@ pub struct Render
 {
     pub passes : HashMap<String, Box<RenderPass>>, //TODO check
 
-    pub mesh_manager : Arc<RWLock<resource::ResourceManager<mesh::Mesh>>>,
-    pub shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
-    pub texture_manager : Arc<RWLock<resource::ResourceManager<texture::Texture>>>,
-    pub material_manager : Arc<RWLock<resource::ResourceManager<material::Material>>>,
-    pub fbo_manager : Arc<RWLock<resource::ResourceManager<fbo::Fbo>>>,
+    pub mesh_manager : Arc<RwLock<resource::ResourceManager<mesh::Mesh>>>,
+    pub shader_manager : Arc<RwLock<resource::ResourceManager<shader::Shader>>>,
+    pub texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
+    pub material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
+    pub fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>,
 
-    pub scene : Arc<RWLock<scene::Scene>>,
+    pub scene : Arc<RwLock<scene::Scene>>,
     pub camera : Rc<RefCell<camera::Camera>>,
     pub camera_ortho : Rc<RefCell<camera::Camera>>,
 
-    pub fbo_all : Arc<RWLock<fbo::Fbo>>,
-    pub fbo_selected : Arc<RWLock<fbo::Fbo>>,
+    pub fbo_all : Arc<RwLock<fbo::Fbo>>,
+    pub fbo_selected : Arc<RwLock<fbo::Fbo>>,
 
-    pub quad_outline : Arc<RWLock<object::Object>>,
-    pub quad_all : Arc<RWLock<object::Object>>,
+    pub quad_outline : Arc<RwLock<object::Object>>,
+    pub quad_all : Arc<RwLock<object::Object>>,
 
     pub context : Rc<RefCell<context::Context>>,
 
-    pub grid : Arc<RWLock<object::Object>>,
-    pub camera_repere : Arc<RWLock<object::Object>>,
+    pub grid : Arc<RwLock<object::Object>>,
+    pub camera_repere : Arc<RwLock<object::Object>>,
 
-    pub dragger : Arc<RWLock<object::Object>>,
+    pub dragger : Arc<RwLock<object::Object>>,
 }
 
 impl Render {
@@ -361,12 +361,12 @@ impl Render {
     //TODO dont create the scene here
     pub fn new(factory: &mut factory::Factory,
                context: Rc<RefCell<context::Context>>,
-               dragger : Arc<RWLock<object::Object>>,
+               dragger : Arc<RwLock<object::Object>>,
                ) -> Render
     {
         let scene_path = "scene/simple.scene";
 
-        let fbo_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
+        let fbo_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
         let fbo_all = fbo_manager.write().unwrap().request_use_no_proc("fbo_all");
         /*
         let fc = fbo_all.clone();
@@ -388,38 +388,38 @@ impl Render {
             cam.pan(&vec::Vec3::new(0f64,0f64,50f64));
         }
 
-        let material_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
-        let shader_manager = Arc::new(RWLock::new(resource::ResourceManager::new()));
+        let material_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
+        let shader_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
 
 
         let r = Render { 
             passes : HashMap::new(),
-            mesh_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+            mesh_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
             shader_manager : shader_manager.clone(),
-            texture_manager : Arc::new(RWLock::new(resource::ResourceManager::new())),
+            texture_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
             material_manager : material_manager.clone(),
             fbo_manager : fbo_manager.clone(),
             //scene : box scene::Scene::new_from_file(scene_path)
-            scene : Arc::new(RWLock::new(scene::Scene::new_from_file(scene_path))),
+            scene : Arc::new(RwLock::new(scene::Scene::new_from_file(scene_path))),
             camera : camera,
             camera_ortho : camera_ortho,
             fbo_all : fbo_all,
             fbo_selected : fbo_selected,
-            quad_outline : Arc::new(RWLock::new(factory.create_object("quad_outline"))),
-            quad_all : Arc::new(RWLock::new(factory.create_object("quad_all"))),
+            quad_outline : Arc::new(RwLock::new(factory.create_object("quad_outline"))),
+            quad_all : Arc::new(RwLock::new(factory.create_object("quad_all"))),
 
             context : context,
 
-            grid : Arc::new(RWLock::new(factory.create_object("grid"))),
-            camera_repere : Arc::new(RWLock::new(
+            grid : Arc::new(RwLock::new(factory.create_object("grid"))),
+            camera_repere : Arc::new(RwLock::new(
                     factory.create_object("camera_repere"))),
 
-            dragger : dragger// Arc::new(RWLock::new(
+            dragger : dragger// Arc::new(RwLock::new(
                     //factory.create_object("dragger"))),
         };
 
         {
-            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
+            let m = Arc::new(RwLock::new(mesh::Mesh::new()));
             create_grid(&mut *m.write().unwrap(), 100i32, 10i32);
             let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("grid", rs);
@@ -429,7 +429,7 @@ impl Render {
         }
 
         {
-            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
+            let m = Arc::new(RwLock::new(mesh::Mesh::new()));
             create_repere(&mut *m.write().unwrap(), 40f64 );
             let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("repere", rs);
@@ -439,7 +439,7 @@ impl Render {
         }
 
         {
-            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
+            let m = Arc::new(RwLock::new(mesh::Mesh::new()));
             m.write().unwrap().add_quad(1f32, 1f32);
             let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("quad", rs);
@@ -455,7 +455,7 @@ impl Render {
         }
 
         {
-            let m = Arc::new(RWLock::new(mesh::Mesh::new()));
+            let m = Arc::new(RwLock::new(mesh::Mesh::new()));
             m.write().unwrap().add_quad(1f32, 1f32);
             let rs = resource::ResTest::ResData(m);
             let mr = resource::ResTT::new_with_res("quad", rs);
@@ -564,7 +564,7 @@ impl Render {
         }
     }
 
-    fn prepare_passes_objects_ortho(&mut self, list : DList<Arc<RWLock<object::Object>>>)
+    fn prepare_passes_objects_ortho(&mut self, list : DList<Arc<RwLock<object::Object>>>)
     {
         for (_,p) in self.passes.iter_mut()
         {
@@ -583,7 +583,7 @@ impl Render {
         }
     }
 
-    fn prepare_passes_objects_per(&mut self, list : DList<Arc<RWLock<object::Object>>>)
+    fn prepare_passes_objects_per(&mut self, list : DList<Arc<RwLock<object::Object>>>)
     {
         for (_,p) in self.passes.iter_mut()
         {
@@ -604,10 +604,10 @@ impl Render {
 }
 
 fn prepare_passes_object(
-    o : Arc<RWLock<object::Object>>,
+    o : Arc<RwLock<object::Object>>,
     passes : &mut HashMap<String, Box<RenderPass>>, 
-    material_manager : Arc<RWLock<resource::ResourceManager<material::Material>>>,
-    shader_manager : Arc<RWLock<resource::ResourceManager<shader::Shader>>>,
+    material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
+    shader_manager : Arc<RwLock<resource::ResourceManager<shader::Shader>>>,
     camera : Rc<RefCell<camera::Camera>>
     )
 {
@@ -656,14 +656,14 @@ fn prepare_passes_object(
 
         {
             let key = shader.read().unwrap().name.clone();
-            let rp = match passes.entry(&key) {
+            let rp = match passes.entry(key) {
                 Vacant(entry) => 
                     entry.insert(box RenderPass::new(shader.clone(), camera.clone())),
                 Occupied(entry) => entry.into_mut(),
             };
 
             let key_cam = camera.borrow().id.clone();
-            let cam_pass = match rp.passes.entry(&key_cam) {
+            let cam_pass = match rp.passes.entry(key_cam) {
                 Vacant(entry) => 
                     entry.insert(box CameraPass::new(camera.clone())),
                 Occupied(entry) => entry.into_mut(),

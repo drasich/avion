@@ -1,9 +1,11 @@
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::sync::{RWLock, Arc};
+use std::sync::{RwLock, Arc};
 use libc::{c_char, c_void, c_int};
 use std::mem;
-use std::c_str::CString;
+use std::ffi;
+use std::ffi::CString;
+use std::str;
 use object;
 use mesh;
 use shader;
@@ -36,16 +38,16 @@ pub struct View
     //pub tree : Option<Box<Tree>>,
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>,
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
-    pub scene : Option<Arc<RWLock<scene::Scene>>>,
+    pub scene : Option<Arc<RwLock<scene::Scene>>>,
 
-    pub dragger : Arc<RWLock<object::Object>>,
+    pub dragger : Arc<RwLock<object::Object>>,
 }
 
 impl View
 {
     pub fn new(factory: &mut factory::Factory) -> View
     {
-        //let dragger = Arc::new(RWLock::new(create_dragger(factory)));
+        //let dragger = Arc::new(RwLock::new(create_dragger(factory)));
         let dragger = create_dragger(factory);
 
         let context = Rc::new(RefCell::new(context::Context::new()));
@@ -216,18 +218,25 @@ pub extern fn key_down(
     let mut c = control_rc.borrow_mut();
 
     let key_str = {
-        let s = unsafe {CString::new(key as *const i8, false) };
-        match s.as_str() {
-            Some(ss) => ss.to_string(),
-            _ => return
+        let s = unsafe {ffi::c_str_to_bytes_with_nul(&key)};
+        match str::from_utf8(s) {
+            Ok(ss) => ss.to_string(),
+            _ => {
+                println!("error");
+                return;
+            }
         }
     };
 
     let keyname_str = {
-        let s = unsafe {CString::new(keyname as *const i8, false) };
-        match s.as_str() {
-            Some(ss) => ss.to_string(),
-            _ => return
+        let keynameconst = keyname as *const c_char;
+        let s = unsafe {ffi::c_str_to_bytes_with_nul(&keynameconst)};
+        match str::from_utf8(s) {
+            Ok(ss) => ss.to_string(),
+            _ => {
+                println!("error");
+                return
+            }
         }
     };
 
@@ -262,7 +271,7 @@ fn create_mat_res(color : vec::Vec4, name : &str) -> resource::ResTT<material::M
     mat.set_uniform_data(
         "color",
         shader::UniformData::Vec4(color));
-    let matarc = Arc::new(RWLock::new(mat));
+    let matarc = Arc::new(RwLock::new(mat));
 
     let rs = resource::ResTest::ResData(matarc);
     let mr = resource::ResTT::new_with_res("dragger_x_mat", rs);
@@ -275,10 +284,10 @@ fn create_dragger_tr(
     factory : &mut factory::Factory,
     name : &str,
     ori :vec::Quat,
-    color : vec::Vec4) -> Arc<RWLock<object::Object>>
+    color : vec::Vec4) -> Arc<RwLock<object::Object>>
 {
     let mut dragger = 
-        Arc::new(RWLock::new(factory.create_object("dragger_x")));
+        Arc::new(RwLock::new(factory.create_object("dragger_x")));
     let mat = create_mat_res(color, name);
 
     dragger.write().unwrap().mesh_render = 
@@ -291,13 +300,13 @@ fn create_dragger_tr(
 }
 
 fn create_dragger(factory : &mut factory::Factory) -> 
-        Arc<RWLock<object::Object>>
+        Arc<RwLock<object::Object>>
 {
     let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
     let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
     let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
     let dragger_parent = 
-        Arc::new(RWLock::new(factory.create_object("dragger")));
+        Arc::new(RwLock::new(factory.create_object("dragger")));
 
     let dragger_x = create_dragger_tr(
         factory,

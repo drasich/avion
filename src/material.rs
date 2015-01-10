@@ -99,7 +99,7 @@ impl Material
         let mat : Material = match json::decode(file.as_slice()){
             Ok(m) => m,
             Err(e) => { 
-                println!("{}, line {}: error reading material '{}': {}, creating new material",
+                println!("{}, line {}: error reading material '{}': {:?}, creating new material",
                          file!(),
                          line!(),
                          self.name,
@@ -132,7 +132,6 @@ impl Material
 
     pub fn save(&self)
     {
-        println!("save to do again ");
         let mut file = File::create(&Path::new(self.name.as_slice()));
         /*
         //let mut stdwriter = stdio::stdout();
@@ -182,7 +181,7 @@ impl Material
     pub fn set_uniform_data(&mut self, name : &str, data : shader::UniformData)
     {
         let key = name.to_string();
-        let yep = match self.uniforms.entry(&key){
+        let yep = match self.uniforms.entry(key){
             Vacant(entry) => entry.insert(box data),
             Occupied(entry) => {
                 let entry = entry.into_mut();
@@ -216,8 +215,8 @@ impl resource::ResourceT for Material
 
 }
 
-impl <M: Encoder<E>, E> Encodable<M, E> for Material {
-  fn encode(&self, encoder: &mut M) -> Result<(), E> {
+impl Encodable for Material {
+  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Material", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
           try!(encoder.emit_struct_field( "shader", 1u, |encoder| self.shader.encode(encoder)));
@@ -228,8 +227,8 @@ impl <M: Encoder<E>, E> Encodable<M, E> for Material {
   }
 }
 
-impl<M: Decoder<E>, E> Decodable<M, E> for Material {
-  fn decode(decoder: &mut M) -> Result<Material, E> {
+impl Decodable for Material {
+  fn decode<D : Decoder>(decoder: &mut D) -> Result<Material, D::Error> {
     decoder.read_struct("root", 0, |decoder| {
          Ok(Material{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),

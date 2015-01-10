@@ -1,5 +1,5 @@
 use std::any::{Any};//, AnyRefExt};
-use std::sync::{RWLock, Arc};
+use std::sync::{RwLock, Arc};
 use std::cell::RefCell;
 use std::rc::Weak;
 use std::fmt;
@@ -12,7 +12,7 @@ use control::WidgetUpdate;
 
 pub struct Operation
 {
-    pub object : Arc<RWLock<object::Object>>,
+    pub object : Arc<RwLock<object::Object>>,
     pub name : Vec<String>,
     pub old : Box<Any>,
     pub new : Box<Any>,
@@ -21,7 +21,7 @@ pub struct Operation
 impl Operation
 {
     pub fn new(
-        object : Arc<RWLock<object::Object>>,
+        object : Arc<RwLock<object::Object>>,
         name : Vec<String>,
         old : Box<Any>,
         new : Box<Any>) -> Operation
@@ -50,10 +50,10 @@ impl Operation
         */
 
         //o.write().set_property_hier(vs, &*self.old);
-        println!("apply {}, {}", self.name, self.new);
+        println!("apply {:?}, {:?}", self.name, self.new);
         //o.write().set_property_hier(self.name.clone(), &*self.new);
         o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &*self.new);
-        println!("applied {}", self.name);
+        println!("applied {:?}", self.name);
 
         match self.new.downcast_ref::<String>() {
             Some(s) => println!("applay with value {}" , s),

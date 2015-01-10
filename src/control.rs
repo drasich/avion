@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::any::{Any};//, AnyRefExt};
-use std::sync::{RWLock, Arc};
+use std::sync::{RwLock, Arc};
 use std::collections::DList;
 use std::f64::consts;
 use transform;
@@ -315,7 +315,7 @@ impl Control
         };
     }
 
-    pub fn get_selected_object(&self) -> Option<Arc<RWLock<object::Object>>>
+    pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
     {
         let c = match self.context.try_borrow(){
             Some(con) => con,
@@ -507,7 +507,7 @@ fn join_string(path : &Vec<String>) -> String
     s
 }
 
-fn objects_center(objects : &DList<Arc<RWLock<object::Object>>>) -> vec::Vec3
+fn objects_center(objects : &DList<Arc<RwLock<object::Object>>>) -> vec::Vec3
 {
     let mut v = vec::Vec3::zero();
     for o in objects.iter()

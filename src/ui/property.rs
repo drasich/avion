@@ -1,8 +1,8 @@
-use std::sync::{RWLock, Arc};
+use std::sync::{RwLock, Arc};
 use std::collections::HashMap;
 use libc::{c_char, c_void, c_int, c_float};
+use std::str;
 use std::mem;
-use std::c_str::CString;
 //use std::collections::{DList,Deque};
 use std::collections::{DList};
 use std::ptr;
@@ -10,7 +10,8 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use std::rc::Weak;
 use std::any::{Any};//, AnyRefExt};
-use std::c_str::ToCStr;
+use std::ffi::CString;
+use std::ffi;
 
 use scene;
 use object;
@@ -209,7 +210,7 @@ impl Property
         unsafe {
             property_list_group_add(
                 self.jk_property_list,
-                "object".to_c_str().into_inner());
+                CString::from_slice("object".as_bytes()).as_ptr());
         }
         let mut v = Vec::new();
         v.push("object".to_string());
@@ -240,7 +241,7 @@ impl Property
                     ppp.update_widget(*pv);
                 },
                 None => {
-                    println!("could not find prop : {}", yep);
+                    println!("could not find prop : {:?}", yep);
                 }
             }
         }
@@ -249,16 +250,17 @@ impl Property
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
 
-    let o : &Arc<RWLock<object::Object>> = unsafe {
+    let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
 
-    //println!("name get {:?}", o);
 
-    let cs = o.read().unwrap().name.to_c_str();
+    let cs = CString::from_slice(o.read().unwrap().name.as_bytes());
+
+    println!("..........name get {:?}", cs);
 
     unsafe {
-        cs.into_inner()
+        cs.as_ptr()
     }
 }
 
@@ -276,10 +278,13 @@ pub extern fn changed_set_string(
     name : *const c_char,
     data : *const c_void) {
 
-    let s = unsafe {CString::new(data as *const i8, false) };
-    let ss = match s.as_str() {
-        Some(sss) => sss.to_string(),
-        None => return
+    let datachar = data as *const i8;
+    let s = unsafe {ffi::c_str_to_bytes(&datachar)};
+    let ss = match str::from_utf8(s) {
+        Ok(sss) => sss.to_string(),
+        _ => {
+            return;
+        }
     };
     //println!("the string is {}", ss);
     changed_set(property, name, None, &ss, 0);
@@ -301,18 +306,26 @@ pub extern fn register_change_string(
     action : c_int
     ) {
 
-    let s = unsafe {CString::new(new as *const i8, false) };
-    let ss = match s.as_str() {
-        Some(sss) => sss.to_string(),
-        None => return
+    let newchar = new as *const i8;
+    let s = unsafe {ffi::c_str_to_bytes(&newchar)};
+    let ss = match str::from_utf8(s) {
+        Ok(sss) => sss.to_string(),
+        _ => {
+            println!("error");
+            return;
+        }
     };
 
     //println!("the string is {}", ss);
     if action == 1 && old != ptr::null() {
-        let so = unsafe {CString::new(old as *const i8, false) };
-        let sso = match so.as_str() {
-            Some(ssso) => ssso.to_string(),
-            None => return
+        let oldchar = new as *const i8;
+        let so = unsafe {ffi::c_str_to_bytes(&oldchar)};
+        let sso = match str::from_utf8(so) {
+            Ok(ssso) => ssso.to_string(),
+            _ => {
+                println!("error");
+                return;
+            }
         };
         changed_set(property, name, Some(&sso), &ss, action);
     }
@@ -348,18 +361,26 @@ pub extern fn register_change_enum(
     action : c_int
     ) {
 
-    let s = unsafe {CString::new(new as *const i8, false) };
-    let ss = match s.as_str() {
-        Some(sss) => sss.to_string(),
-        None => return
+    let newchar = new as *const i8;
+    let s = unsafe {ffi::c_str_to_bytes(&newchar)};
+    let ss = match str::from_utf8(s) {
+        Ok(sss) => sss.to_string(),
+        _ => {
+            println!("error");
+            return
+        }
     };
 
     //println!("the string is {}", ss);
     if action == 1 && old != ptr::null() {
-        let so = unsafe {CString::new(old as *const i8, false) };
-        let sso = match so.as_str() {
-            Some(ssso) => ssso.to_string(),
-            None => return
+        let oldchar = old as *const i8;
+        let so = unsafe {ffi::c_str_to_bytes(&oldchar)};
+        let sso = match str::from_utf8(so) {
+            Ok(ssso) => ssso.to_string(),
+            _ => {
+                println!("error");
+                return
+            }
         };
         changed_set(property, name, Some(&sso), &ss, action);
     }
@@ -376,15 +397,16 @@ fn changed_set<T : Any+Clone+PartialEq>(
     new : &T,
     action : c_int
     ) {
-    let s = unsafe {CString::new(name as *const i8, false) };
-    println!("I changed the value {} ", s);
+    let s = unsafe {ffi::c_str_to_bytes(&name)};
 
-    let path = match s.as_str() {
-        Some(pp) => pp,
-        None => {
+    let path = match str::from_utf8(s) {
+        Ok(pp) => pp,
+        _ => {
             println!("problem with the path");
             return;}
     };
+
+    println!("I changed the value {} ", path);
 
     let v: Vec<&str> = path.split('/').collect();
 
@@ -425,23 +447,25 @@ extern fn expand(
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
-    let s = unsafe {CString::new(data as *const i8, false) };
+    let datachar = data as *const i8;
+    let s = unsafe {ffi::c_str_to_bytes(&datachar)};
     let mut p : &mut Property = unsafe {mem::transmute(property)};
 
     //println!("expanding ! property name {} ", p.name);
-    println!("I expand the value {} ", s);
 
-    let path = match s.as_str() {
-        Some(pp) => pp,
-        None => {
+    let path = match str::from_utf8(s) {
+        Ok(pp) => pp,
+        _ => {
             println!("problem with the path");
             return;}
     };
 
+    println!("I expand the value {} ", path);
+
     let vs = make_vec_from_string(&path.to_string());
 
     let yep = vs.tail().to_vec();
-    println!("expand : {}", vs);
+    println!("expand : {:?}", vs);
 
     match p.control.clone().try_borrow() {
     //match control_rc.clone().try_borrow() {
@@ -459,7 +483,7 @@ extern fn expand(
                     ppp.create_widget(p, path , 1);
                 },
                 None => {
-                    println!("could not find property {} ", vs);
+                    println!("could not find property {:?} ", vs);
                 }
             }
         },
@@ -483,10 +507,11 @@ extern fn contract(
             );
     };
 
-    let s = unsafe {CString::new(data as *const i8, false) };
-    let path = match s.as_str() {
-        Some(pp) => pp,
-        None => {
+    let datachar = data as *const i8;
+    let s = unsafe {ffi::c_str_to_bytes(&datachar)};
+    let path = match str::from_utf8(s) {
+        Ok(pp) => pp,
+        _ => {
             println!("problem with the path");
             return;}
     };
@@ -496,7 +521,7 @@ extern fn contract(
     let vs = make_vec_from_string(&path.to_string());
 
     let yep = vs.tail().to_vec();
-    println!("contract : {}", vs);
+    println!("contract : {:?}", vs);
 
     let clone = p.pv.clone();
 
@@ -546,11 +571,11 @@ impl WidgetUpdate for Property
 
         match new.downcast_ref::<String>() {
             Some(s) => {
-                let v = s.to_c_str();
+                let v = CString::from_slice(s.as_bytes());
                 unsafe {
                     property_list_string_update(
                         *pv,
-                        v.into_inner());
+                        v.as_ptr());
                 };
                 return;
             },
@@ -598,11 +623,11 @@ impl PropertyShow for f64 {
     fn create_widget(&self, property : &mut Property, field : &str, depth : i32)
     {
         println!("adding field : {}", field);
-        let f = field.to_c_str();
+        let f = CString::from_slice(field.as_bytes());
         unsafe {
             let pv = property_list_float_add(
                 property.jk_property_list,
-                f.into_inner(),
+                f.as_ptr(),
                 *self as c_float);
             if pv != ptr::null() {
                 property.pv.insert(field.to_string(), pv);
@@ -623,14 +648,14 @@ impl PropertyShow for String {
 
     fn create_widget(&self, property : &mut Property, field : &str, depth : i32)
     {
-        let f = field.to_c_str();
-        let v = self.to_c_str();
+        let f = CString::from_slice(field.as_bytes());
+        let v = CString::from_slice(self.as_bytes());
 
         unsafe {
             let pv = property_list_string_add(
                 property.jk_property_list,
-                f.into_inner(),
-                v.into_inner());
+                f.as_ptr(),
+                v.as_ptr());
             if pv != ptr::null() {
                 property.pv.insert(field.to_string(), pv);
             }
@@ -693,11 +718,11 @@ pub macro_rules! property_show_impl(
 
                 if depth == 0 && field != ""
                 {
-                    let f = field.to_c_str();
+                    let f = CString::from_slice(field.as_bytes());
                     unsafe {
                         property_list_node_add(
                             property.jk_property_list,
-                            f.into_inner());
+                            f.as_ptr());
                     }
                 }
 

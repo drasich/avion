@@ -25,5 +25,5 @@ git = "https://github.com/alexcrichton/toml-rs"
 git = "https://github.com/rust-lang/uuid.git"
 
 [dependencies]
-rustc-serialize = "0.2.4"
+rustc-serialize = "0.2.7"
 

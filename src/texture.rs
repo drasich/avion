@@ -95,8 +95,8 @@ impl Texture
     }
 }
 
-impl <S: Encoder<E>, E> Encodable<S, E> for Texture {
-  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+impl Encodable for Texture {
+  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Texture", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
           Ok(())
@@ -104,8 +104,8 @@ impl <S: Encoder<E>, E> Encodable<S, E> for Texture {
   }
 }
 
-impl<S: Decoder<E>, E> Decodable<S, E> for Texture {
-  fn decode(decoder: &mut S) -> Result<Texture, E> {
+impl Decodable for Texture {
+  fn decode<D : Decoder>(decoder: &mut D) -> Result<Texture, D::Error> {
     decoder.read_struct("root", 0, |decoder| {
          Ok(Texture{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),

@@ -1,6 +1,6 @@
 use object;
 use std::collections::{DList};
-use std::sync::{RWLock, Arc};
+use std::sync::{RwLock, Arc};
 use std::io::File;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use uuid::Uuid;
@@ -9,7 +9,7 @@ pub struct Scene
 {
     pub name : String,
     pub id : Uuid,
-    pub objects : DList<Arc<RWLock<object::Object>>>
+    pub objects : DList<Arc<RwLock<object::Object>>>
 }
 
 impl Scene
@@ -58,7 +58,7 @@ impl Scene
         */
     }
 
-    pub fn object_find(&self, name : &str) -> Option<Arc<RWLock<object::Object>>>
+    pub fn object_find(&self, name : &str) -> Option<Arc<RwLock<object::Object>>>
     {
         for o in self.objects.iter()
         {
@@ -70,7 +70,7 @@ impl Scene
         None
     }
 
-    pub fn object_find_by_id(&self, id : &Uuid) -> Option<Arc<RWLock<object::Object>>>
+    pub fn object_find_by_id(&self, id : &Uuid) -> Option<Arc<RwLock<object::Object>>>
     {
         for o in self.objects.iter()
         {
@@ -84,24 +84,24 @@ impl Scene
 
 }
 
-//impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RWLock<object::Object>> {
-impl <S: Encoder<E>, E> Encodable<S, E> for RWLock<object::Object> {
-  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+//impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RwLock<object::Object>> {
+impl Encodable for RwLock<object::Object> {
+  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       self.read().unwrap().encode(encoder)
   }
 }
 
-//impl<S: Decoder<E>, E> Decodable<S, E> for Arc<RWLock<object::Object>> {
-//fn decode(decoder: &mut S) -> Result<Arc<RWLock<object::Object>>, E> {
-impl<S: Decoder<E>, E> Decodable<S, E> for RWLock<object::Object> {
-  fn decode(decoder: &mut S) -> Result<RWLock<object::Object>, E> {
-      //Ok(Arc::new(RWLock::new(try!(Decodable::decode(decoder)))))
-      Ok(RWLock::new(try!(Decodable::decode(decoder))))
+//impl<S: Decoder<E>, E> Decodable<S, E> for Arc<RwLock<object::Object>> {
+//fn decode(decoder: &mut S) -> Result<Arc<RwLock<object::Object>>, E> {
+impl Decodable for RwLock<object::Object> {
+  fn decode<D : Decoder>(decoder: &mut D) -> Result<RwLock<object::Object>, D::Error> {
+      //Ok(Arc::new(RwLock::new(try!(Decodable::decode(decoder)))))
+      Ok(RwLock::new(try!(Decodable::decode(decoder))))
   }
 }
 
-impl <S: Encoder<E>, E> Encodable<S, E> for Scene {
-  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+impl Encodable for Scene {
+  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Scene", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
           try!(encoder.emit_struct_field( "id", 1u, |encoder| self.id.encode(encoder)));
@@ -111,8 +111,8 @@ impl <S: Encoder<E>, E> Encodable<S, E> for Scene {
   }
 }
 
-impl<S: Decoder<E>, E> Decodable<S, E> for Scene {
-  fn decode(decoder: &mut S) -> Result<Scene, E> {
+impl Decodable for Scene {
+  fn decode<D : Decoder>(decoder: &mut D) -> Result<Scene, D::Error> {
     decoder.read_struct("root", 0, |decoder| {
          Ok(Scene{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
@@ -127,7 +127,7 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Scene {
   }
 }
 
-pub fn post_read_parent_set(o : Arc<RWLock<object::Object>>)
+pub fn post_read_parent_set(o : Arc<RwLock<object::Object>>)
 {
     for c in o.read().unwrap().children.iter()
     {

@@ -7,7 +7,7 @@ use rustc_serialize::{Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::collections::hash_map::Entry::{Occupied,Vacant};
-use std::sync::{RWLock, Arc};
+use std::sync::{RwLock, Arc};
 use std::sync::mpsc::channel;
 //use std::io::timer::sleep;
 //use std::time::duration::Duration;
@@ -35,7 +35,7 @@ pub trait ResourceT  {
 
 pub enum ResTest<T>
 {
-    ResData(Arc<RWLock<T>>),
+    ResData(Arc<RwLock<T>>),
     ResWait,
     ResNone
 }
@@ -69,7 +69,7 @@ impl<T> ResTT<T>
 
 impl <T:'static+Create+Send+Sync> ResTT<T>
 {
-    pub fn get_resource(&mut self, manager : &mut ResourceManager<T> ) -> Option<Arc<RWLock<T>>>
+    pub fn get_resource(&mut self, manager : &mut ResourceManager<T> ) -> Option<Arc<RwLock<T>>>
     {
         match self.resource {
             ResTest::ResData(ref rd) => Some(rd.clone()),
@@ -162,14 +162,14 @@ impl Create for fbo::Fbo
 
 pub struct ResourceManager<T>
 {
-    resources : Arc<RWLock<HashMap<String, ResTest<T>>>>,
+    resources : Arc<RwLock<HashMap<String, ResTest<T>>>>,
 }
 
 impl<T:'static+Create+Sync+Send> ResourceManager<T> {
     pub fn new() -> ResourceManager<T>
     {
         ResourceManager {
-            resources : Arc::new(RWLock::new(HashMap::new())),
+            resources : Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -180,7 +180,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
 
         let key = String::from_str(name);
 
-        let v : &mut ResTest<T> = match ms1w.entry(&key) {
+        let v : &mut ResTest<T> = match ms1w.entry(key) {
         //let v : &mut ResTest<T> = match ms1w.entry(&s) {
             Entry::Vacant(entry) => entry.insert(ResTest::ResNone),
             Entry::Occupied(entry) => entry.into_mut(),
@@ -196,25 +196,25 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
 
                 let ss = s.clone();
 
-                let (tx, rx) = channel::<Arc<RWLock<T>>>();
-                let guard = Thread::spawn(move || {
+                let (tx, rx) = channel::<Arc<RwLock<T>>>();
+                let guard = Thread::scoped(move || {
                     //sleep(::std::time::duration::Duration::seconds(5));
                     let mt : T = Create::create(ss.as_slice());
-                    let m = Arc::new(RWLock::new(mt));
+                    let m = Arc::new(RwLock::new(mt));
                     m.write().unwrap().inittt();
                     tx.send(m.clone());
                 });
 
                 let result = guard.join();
 
-                let guard = Thread::spawn( move || {
+                Thread::spawn( move || {
                     loop {
                     match rx.try_recv() {
                         Err(_) => {},
                         Ok(value) =>  { 
                             let mut mscwww = msc.write().unwrap();
 
-                            match mscwww.entry(&s.clone()) {
+                            match mscwww.entry(s.clone()) {
                                 Entry::Vacant(entry) => entry.insert(ResTest::ResNone),
                                 Entry::Occupied(mut entry) => { 
                                     *entry.get_mut() = ResTest::ResData(value.clone());
@@ -227,8 +227,6 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                     }
                 });
 
-                guard.detach();
-
                 return ResTest::ResWait;
             },
             ResTest::ResData(ref yep) => {
@@ -240,14 +238,14 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
         }
     }
 
-    pub fn request_use_no_proc(&mut self, name : &str) -> Arc<RWLock<T>>
+    pub fn request_use_no_proc(&mut self, name : &str) -> Arc<RwLock<T>>
     {
         let ms1 = self.resources.clone();
         let mut ms1w = ms1.write().unwrap();
 
         let key = String::from_str(name);
 
-        let v : &mut ResTest<T> = match ms1w.entry(&key) {
+        let v : &mut ResTest<T> = match ms1w.entry(key) {
             Vacant(entry) => entry.insert(ResNone),
             Occupied(entry) => entry.into_mut(),
         };
@@ -256,7 +254,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
         {
             ResNone | ResWait => {
                 let mt : T = Create::create(name);
-                let m = Arc::new(RWLock::new(mt));
+                let m = Arc::new(RwLock::new(mt));
                 m.write().unwrap().inittt();
 
                 *v = ResData(m.clone());
@@ -279,34 +277,34 @@ pub struct ResourceRef
 }
 */
 
-impl <S: Encoder<E>, E, T> Encodable<S, E> for ResTT<T> {
-  fn encode(&self, encoder: &mut S) -> Result<(), E> {
-      encoder.emit_struct("NotImportantName", 1, |encoder| {
-          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
-          Ok(())
-      })
-  }
+impl <T> Encodable for ResTT<T> {
+    fn encode<S: Encoder>(&self, encoder: &mut S) -> Result<(), S::Error> {
+        encoder.emit_struct("NotImportantName", 1, |encoder| {
+            try!(encoder.emit_struct_field( "name", 0us, |encoder| self.name.encode(encoder)));
+            Ok(())
+        })
+    }
 }
 
-impl<S: Decoder<E>, E, T> Decodable<S, E> for ResTT<T> {
-  fn decode(decoder: &mut S) -> Result<ResTT<T>, E> {
-    decoder.read_struct("root", 0, |decoder| {
-         Ok(
-             ResTT{
-                 name : try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
-                 resource : ResNone,
-            }
-           )
-    })
-  }
+impl<T> Decodable for ResTT<T> {
+    fn decode<D : Decoder>(decoder: &mut D) -> Result<ResTT<T>, D::Error> {
+        decoder.read_struct("root", 0, |decoder| {
+            Ok(
+                ResTT{
+                    name : try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
+                    resource : ResNone,
+                }
+              )
+        })
+    }
 }
 
 pub fn resource_get<T:'static+Create+Send+Sync>(
     manager : &mut ResourceManager<T>,
     res: &mut ResTT<T>) 
-    -> Option<Arc<RWLock<T>>>
+    -> Option<Arc<RwLock<T>>>
 {
-    let mut the_res : Option<Arc<RWLock<T>>> = None;
+    let mut the_res : Option<Arc<RwLock<T>>> = None;
     match res.resource{
         ResNone | ResWait => {
             res.resource = manager.request_use(res.name.as_slice());

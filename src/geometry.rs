@@ -140,7 +140,7 @@ impl Segment
 impl fmt::Show for Segment
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}; {}", self.p0, self.p1)
+        write!(fmt, "{:?}; {:?}", self.p0, self.p1)
     }
 }
 
@@ -148,21 +148,21 @@ impl fmt::Show for Segment
 impl fmt::Show for Ray
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}; {}", self.start, self.direction)
+        write!(fmt, "{:?}; {:?}", self.start, self.direction)
     }
 }
 
 impl fmt::Show for Triangle
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{} ; {} ; {}", self.v0, self.v1, self.v2)
+        write!(fmt, "{:?} ; {:?} ; {:?}", self.v0, self.v1, self.v2)
     }
 }
 
 impl fmt::Show for Repere
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{} ; {}", self.origin, self.rotation)
+        write!(fmt, "{:?} ; {:?}", self.origin, self.rotation)
     }
 }
 

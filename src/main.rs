@@ -5,6 +5,7 @@
 #![feature(associated_types)]
 #![feature(old_orphan_check)]
 #![feature(default_type_params)]
+#![feature(box_syntax)]
 
 //TODO remove
 #![allow(unused_variables)]
@@ -25,7 +26,7 @@ extern crate uuid;
 
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
-use std::sync::{RWLock, Arc};
+use std::sync::{RwLock, Arc};
 //use std::rc::Rc;
 //use std::cell::RefCell;
 use std::mem;
@@ -82,7 +83,7 @@ fn main() {
 
     /*
 
-    let mut mattt = Arc::new(RWLock::new( material::Material {
+    let mut mattt = Arc::new(RwLock::new( material::Material {
         name : String::from_str("material/my_mat"),
         //shader : Some(shader::Shader::new("shader/simple.sh")),
         shader : Some(resource::ResTT::new("shader/simple.sh")),
@@ -109,7 +110,7 @@ name = "image/base_skeleton_col.png"
     let mattt = shader::Material::new_toml(matoml);
     */
 
-    //let mat = Arc::new(RWLock::new(shader::Material::new_from_file("material/simple.mat")));
+    //let mat = Arc::new(RwLock::new(shader::Material::new_from_file("material/simple.mat")));
     //mat.read().save();
 
     //let cam = camera::Camera::new();
@@ -118,7 +119,7 @@ name = "image/base_skeleton_col.png"
     let oo = r.scene.read().object_find("yep");
     match oo {
         Some(o) => { println!("I found the obj");
-            o.write().child_add(Arc::new(RWLock::new(object::Object::new("my_child"))));
+            o.write().child_add(Arc::new(RwLock::new(object::Object::new("my_child"))));
             println!("yooooooooooooooooooooooooooooooooo");
             property::print_pt(o.read().get_property("name"));
         }

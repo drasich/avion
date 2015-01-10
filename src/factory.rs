@@ -1,6 +1,6 @@
 use std::default::Default;
 use std::collections::{DList};
-use std::sync::{RWLock, Arc};
+use std::sync::{RwLock, Arc};
 use uuid;
 
 use object;
@@ -54,7 +54,7 @@ impl Factory {
     {
         let c = camera::Camera {
             data : Default::default(),
-            object : Arc::new(RWLock::new(self.create_object("camera"))),
+            object : Arc::new(RwLock::new(self.create_object("camera"))),
             id : self.create_id(),
         };
 

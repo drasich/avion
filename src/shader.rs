@@ -4,8 +4,8 @@ use std::io::File;
 use std::io::BufferedReader;
 use libc::{c_char, c_uint};
 use std::ptr;
-use std::c_str::ToCStr;
 use std::str::FromStr;
+use std::ffi::CString;
 //use std::default::Default;
 //use toml;
 
@@ -48,7 +48,7 @@ impl Shader
 {
     fn attribute_add(&mut self, name : &str, size : u32)
     {
-        let attc = name.to_c_str();
+        let attc = CString::from_slice(name.as_bytes());
 
         match self.cgl_shader {
             None => {},
@@ -65,7 +65,7 @@ impl Shader
 
     fn uniform_add(&mut self, name : &str)
     {
-        let unic = name.to_c_str();
+        let unic = CString::from_slice(name.as_bytes());
 
         match self.cgl_shader {
             None => {},
@@ -198,7 +198,7 @@ impl Shader
         match self.vert {
             None => return,
             Some(ref v) => {
-                vertc = v.to_c_str();
+                vertc = CString::from_slice(v.as_bytes());
             }
         }
 
@@ -206,7 +206,7 @@ impl Shader
         match self.frag {
             None => return,
             Some(ref f) => {
-                fragc = f.to_c_str();
+                fragc = CString::from_slice(f.as_bytes());
             }
         }
 
@@ -225,7 +225,7 @@ impl Shader
 }
 
 
-#[deriving(Clone,RustcDecodable,RustcEncodable)]
+#[derive(Clone,RustcDecodable,RustcEncodable)]
 pub enum UniformData
 {
     Int(i32),
@@ -273,8 +273,9 @@ extern {
 
 }
 
-impl <S: Encoder<E>, E> Encodable<S, E> for Shader {
-  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+//impl <S: Encoder<E>, E> Encodable<S, E> for Shader {
+impl Encodable for Shader {
+  fn encode<S : Encoder>(&self, encoder: &mut S) -> Result<(), S::Error> {
       encoder.emit_struct("Mesh", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
           Ok(())
@@ -282,8 +283,8 @@ impl <S: Encoder<E>, E> Encodable<S, E> for Shader {
   }
 }
 
-impl<S: Decoder<E>, E> Decodable<S, E> for Shader {
-  fn decode(decoder: &mut S) -> Result<Shader, E> {
+impl Decodable for Shader {
+  fn decode<D : Decoder>(decoder: &mut D) -> Result<Shader, D::Error> {
     decoder.read_struct("root", 0, |decoder| {
          Ok(Shader{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),

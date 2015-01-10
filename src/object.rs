@@ -6,14 +6,14 @@ use shader;
 use resource;
 
 use std::collections::{DList};
-use std::sync::{RWLock, Arc};//,RWLockReadGuard};
+use std::sync::{RwLock, Arc};//,RWLockReadGuard};
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::hash_map::Entry::{Occupied,Vacant};
 use uuid;
 use uuid::Uuid;
 
-//#[deriving(Decodable, Encodable)]
-//#[deriving(Encodable)]
+//#[derive(Decodable, Encodable)]
+//#[derive(Encodable)]
 pub struct Object
 {
     pub name : String,
@@ -25,8 +25,8 @@ pub struct Object
     pub orientation : transform::Orientation,
     //pub angles : vec::Vec3,
     pub scale : vec::Vec3,
-    pub children : DList<Arc<RWLock<Object>>>,
-    pub parent : Option<Arc<RWLock<Object>>>,
+    pub children : DList<Arc<RwLock<Object>>>,
+    pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
 }
 
@@ -69,7 +69,7 @@ impl Object
 
 
     /*
-    pub fn child_add(&mut self, child : Arc<RWLock<Object>>)
+    pub fn child_add(&mut self, child : Arc<RwLock<Object>>)
     {
         self.children.push(child);
         child.write().parent = Some(self.clone());
@@ -128,7 +128,7 @@ impl Object
 
 }
 
-pub fn child_add(parent : Arc<RWLock<Object>>, child : Arc<RWLock<Object>>)
+pub fn child_add(parent : Arc<RwLock<Object>>, child : Arc<RwLock<Object>>)
 {
     parent.write().unwrap().children.push_back(child.clone());
     child.write().unwrap().parent = Some(parent.clone());
@@ -145,8 +145,8 @@ impl PropertyShow for Object
 }
 */
 
-impl<S: Decoder<E>, E> Decodable<S, E> for Object {
-  fn decode(decoder: &mut S) -> Result<Object, E> {
+impl Decodable for Object {
+  fn decode<D : Decoder>(decoder: &mut D) -> Result<Object, D::Error> {
     decoder.read_struct("root", 0, |decoder| {
          Ok(Object{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
@@ -165,8 +165,8 @@ impl<S: Decoder<E>, E> Decodable<S, E> for Object {
 }
 
 
-impl <S: Encoder<E>, E> Encodable<S, E> for Object {
-  fn encode(&self, encoder: &mut S) -> Result<(), E> {
+impl Encodable  for Object {
+  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Object", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
           try!(encoder.emit_struct_field( "id", 1u, |encoder| self.id.encode(encoder)));
