@@ -16,8 +16,8 @@ use resource;
 use uniform::TextureSend;
 use texture;
 use fbo;
-//#[deriving(Decodable, Encodable, Default)]
-//#[deriving(Encodable, Default)]
+//#[derive(Decodable, Encodable, Default)]
+//#[derive(Encodable, Default)]
 use self::Sampler::{ImageFile,Fbo};
 
 #[derive(RustcDecodable, RustcEncodable)]

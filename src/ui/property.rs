@@ -257,7 +257,7 @@ pub extern fn name_get(data : *const c_void) -> *const c_char {
 
     let cs = CString::from_slice(o.read().unwrap().name.as_bytes());
 
-    println!("..........name get {:?}", cs);
+    //println!("..........name get {:?}", cs);
 
     unsafe {
         cs.as_ptr()

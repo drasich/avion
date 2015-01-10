@@ -8,7 +8,7 @@ use transform;
 //trace_macros!(true)
 
 /* //For testing
-#[deriving(Decodable, Encodable, Clone)]
+#[derive(Decodable, Encodable, Clone)]
 pub struct Chris
 {
     pub x : f64,

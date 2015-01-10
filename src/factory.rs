@@ -9,7 +9,7 @@ use scene;
 use vec;
 use transform;
 
-#[deriving(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable)]
 pub struct Factory
 {
      id : u32
