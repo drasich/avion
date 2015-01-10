@@ -202,7 +202,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                     let mt : T = Create::create(ss.as_slice());
                     let m = Arc::new(RwLock::new(mt));
                     m.write().unwrap().inittt();
-                    tx.send(m.clone());
+                    let result = tx.send(m.clone());
                 });
 
                 let result = guard.join();

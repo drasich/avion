@@ -168,13 +168,13 @@ impl Decodable for Object {
 impl Encodable  for Object {
   fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Object", 1, |encoder| {
-          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
-          try!(encoder.emit_struct_field( "id", 1u, |encoder| self.id.encode(encoder)));
-          try!(encoder.emit_struct_field( "mesh_render", 2u, |encoder| self.mesh_render.encode(encoder)));
-          try!(encoder.emit_struct_field( "position", 3u, |encoder| self.position.encode(encoder)));
-          try!(encoder.emit_struct_field( "orientation", 4u, |encoder| self.orientation.encode(encoder)));
-          try!(encoder.emit_struct_field( "scale", 5u, |encoder| self.scale.encode(encoder)));
-          try!(encoder.emit_struct_field( "children", 6u, |encoder| self.children.encode(encoder)));
+          try!(encoder.emit_struct_field( "name", 0us, |encoder| self.name.encode(encoder)));
+          try!(encoder.emit_struct_field( "id", 1us, |encoder| self.id.encode(encoder)));
+          try!(encoder.emit_struct_field( "mesh_render", 2us, |encoder| self.mesh_render.encode(encoder)));
+          try!(encoder.emit_struct_field( "position", 3us, |encoder| self.position.encode(encoder)));
+          try!(encoder.emit_struct_field( "orientation", 4us, |encoder| self.orientation.encode(encoder)));
+          try!(encoder.emit_struct_field( "scale", 5us, |encoder| self.scale.encode(encoder)));
+          try!(encoder.emit_struct_field( "children", 6us, |encoder| self.children.encode(encoder)));
           //try!(encoder.emit_struct_field( "transform", 7u, |encoder| self.transform.encode(encoder)));
           //try!(encoder.emit_struct_field( "parent", 6u, |encoder| self.parent.encode(encoder)));
           Ok(())

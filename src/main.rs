@@ -1,11 +1,8 @@
-#![feature(macro_rules)]
 #![feature(log_syntax)]
 #![feature(trace_macros)]
 #![feature(slicing_syntax)]
-#![feature(associated_types)]
-#![feature(old_orphan_check)]
-#![feature(default_type_params)]
 #![feature(box_syntax)]
+#![allow(unstable)]
 
 //TODO remove
 #![allow(unused_variables)]
@@ -14,7 +11,6 @@
 //#![allow(improper_ctypes)]
 //#![allow(ctypes)]
 
-#![feature(globs)]
 //extern crate serialize;
 extern crate "rustc-serialize" as rustc_serialize;
 extern crate libc;

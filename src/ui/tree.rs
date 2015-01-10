@@ -169,13 +169,8 @@ extern fn name_get(data : *const c_void) -> *const c_char
     };
 
     //println!("name get {:?}", o);
-
     let cs = CString::from_slice(o.read().unwrap().name.as_bytes());
-
-    unsafe {
-        //TODO can use as_ptr?
-        cs.as_ptr()
-    }
+    cs.as_ptr()
 }
 
 extern fn item_selected(data : *const c_void) -> ()

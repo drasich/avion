@@ -103,7 +103,7 @@ impl Master
 {
     fn _new() -> Master
     {
-        let mut factory = factory::Factory::new();
+        let factory = factory::Factory::new();
 
         let mut m = Master {
             factory : factory,
@@ -136,7 +136,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 
 pub extern fn exit_cb(data: *mut c_void) -> () {
     let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
-    let mut master = master_rc.borrow();
+    let master = master_rc.borrow();
 
     for v in master.views.iter()
     {

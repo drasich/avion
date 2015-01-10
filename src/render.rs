@@ -308,7 +308,7 @@ impl RenderPass
                         None => {
                             match mb.draw_type {
                                 mesh::DrawType::Lines => {
-                                    let vc : uint = vertex_data_count/3;
+                                    let vc : usize = vertex_data_count/3;
                                     unsafe {
                                         cgl_draw_lines(vc as c_uint);
                                     }

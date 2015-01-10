@@ -86,7 +86,7 @@ pub trait BufferSend
 {
     fn send(&mut self) -> ();
     fn utilise(&self, att : *const shader::CglShaderAttribute) ->();
-    fn size_get(&self) -> uint;
+    fn size_get(&self) -> usize;
     fn cgl_buffer_get(&self) -> Option<*const CglBuffer>;
     //fn update(&mut self) -> ();
 }
@@ -157,7 +157,7 @@ impl<T> BufferSend for Buffer<T> {
         }
     }
 
-    fn size_get(&self) -> uint
+    fn size_get(&self) -> usize
     {
         return self.data.len();
     }
@@ -243,24 +243,24 @@ impl Mesh
        {
            let typelen = file.read_le_u16().unwrap();
            println!("number : {} ", typelen);
-           let typevec = file.read_exact(typelen as uint).unwrap();
+           let typevec = file.read_exact(typelen as usize).unwrap();
            let typename = String::from_utf8(typevec).unwrap();
            println!("type name : {} ", typename);
 
            let len = file.read_le_u16().unwrap();
            println!("number : {} ", len);
-           let namevec = file.read_exact(len as uint).unwrap();
+           let namevec = file.read_exact(len as usize).unwrap();
            let name = String::from_utf8(namevec).unwrap();
            println!("name : {} ", name);
        }
 
        {
            let vertex_count = file.read_le_u16().unwrap();
-           let count = (vertex_count as uint) * 3u;
+           let count = (vertex_count as usize) * 3us;
            let mut vvv : Vec<f32> = Vec::with_capacity(count);
 
            println!("vertex count : {} ", vertex_count);
-           for _ in range(0u, count)
+           for _ in range(0us, count)
            {
                let x = file.read_le_f32().unwrap();
                vvv.push(x);
@@ -282,11 +282,11 @@ impl Mesh
 
        {
            let faces_count = file.read_le_u16().unwrap();
-           let count = (faces_count as uint) * 3u;
+           let count = (faces_count as usize) * 3us;
            let mut fff : Vec<u32> = Vec::with_capacity(count);
 
            println!("faces count : {} ", faces_count);
-           for _ in range(0u, count)
+           for _ in range(0us, count)
            {
                let x = file.read_le_u16().unwrap();
                fff.push(x as u32);
@@ -309,11 +309,11 @@ impl Mesh
        {
            let normals_count = file.read_le_u16().unwrap();
            if normals_count > 0 {
-               let count = (normals_count as uint) * 3u;
+               let count = (normals_count as usize) * 3us;
                let mut nnn : Vec<f32> = Vec::with_capacity(count);
 
                println!("normals count : {} ", normals_count);
-               for _ in range(0u, count)
+               for _ in range(0us, count)
                {
                    let x = file.read_le_f32().unwrap();
                    nnn.push(x as f32);
@@ -331,11 +331,11 @@ impl Mesh
        {
            let uv_count = file.read_le_u16().unwrap();
            if uv_count > 0 {
-               let count = (uv_count as uint) * 2u;
+               let count = (uv_count as usize) * 2us;
                let mut uuu : Vec<f32> = Vec::with_capacity(count);
 
                println!("uvs count : {} ", uv_count);
-               for _ in range(0u, count)
+               for _ in range(0us, count)
                {
                    let x = file.read_le_f32().unwrap();
                    //TODO invert y in png
@@ -595,7 +595,7 @@ impl resource::ResourceT for Mesh
 impl Encodable for Mesh {
   fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Mesh", 1, |encoder| {
-          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
+          try!(encoder.emit_struct_field( "name", 0us, |encoder| self.name.encode(encoder)));
           Ok(())
       })
   }

@@ -202,7 +202,7 @@ pub extern fn mouse_wheel(
     )
 {
     let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
-    let mut c = control_rc.borrow_mut();
+    let c = control_rc.borrow_mut();
     c.mouse_wheel(modifiers_flag, direction, z, x, y, timestamp);
 }
 
@@ -286,7 +286,7 @@ fn create_dragger_tr(
     ori :vec::Quat,
     color : vec::Vec4) -> Arc<RwLock<object::Object>>
 {
-    let mut dragger = 
+    let dragger = 
         Arc::new(RwLock::new(factory.create_object("dragger_x")));
     let mat = create_mat_res(color, name);
 

@@ -146,7 +146,8 @@ impl Material
             let mut encoder = json::PrettyEncoder::new(&mut s);
             let _ = self.encode(&mut encoder);
         }
-        file.write_str(s.as_slice());
+
+        let result = file.write_str(s.as_slice());
     }
 
     /*
@@ -218,10 +219,10 @@ impl resource::ResourceT for Material
 impl Encodable for Material {
   fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Material", 1, |encoder| {
-          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
-          try!(encoder.emit_struct_field( "shader", 1u, |encoder| self.shader.encode(encoder)));
-          try!(encoder.emit_struct_field( "textures", 2u, |encoder| self.textures.encode(encoder)));
-          try!(encoder.emit_struct_field( "uniforms", 3u, |encoder| self.uniforms.encode(encoder)));
+          try!(encoder.emit_struct_field( "name", 0us, |encoder| self.name.encode(encoder)));
+          try!(encoder.emit_struct_field( "shader", 1us, |encoder| self.shader.encode(encoder)));
+          try!(encoder.emit_struct_field( "textures", 2us, |encoder| self.textures.encode(encoder)));
+          try!(encoder.emit_struct_field( "uniforms", 3us, |encoder| self.uniforms.encode(encoder)));
           Ok(())
       })
   }

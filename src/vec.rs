@@ -516,5 +516,5 @@ impl Mul<f64> for Quat {
 #[test]
 fn test_quat_rotate() {
     //TODO
-    assert_eq!(1i, 1i);
+    assert_eq!(1is, 1is);
 }

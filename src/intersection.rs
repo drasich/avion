@@ -72,7 +72,7 @@ pub fn ray_mesh(
         Some(v) => v
     };
 
-    fn get_vertex(v : &Vec<f32>, index: uint) -> Vec3
+    fn get_vertex(v : &Vec<f32>, index: usize) -> Vec3
     {
         Vec3::new(
             v[index*3] as f64,
@@ -85,13 +85,13 @@ pub fn ray_mesh(
         None => return out,
         Some(ref b) => {
             for i in range_step(0, b.data.len(), 3) {
-                let index = b.data[i] as uint;
+                let index = b.data[i] as usize;
                 //let v0 = get_vertex(&vertices.data, index) * *scale;
                 let v0 = get_vertex(&vertices.data, index).mul(*scale);
-                let index = b.data[i+1] as uint;
+                let index = b.data[i+1] as usize;
                 //let v1 = get_vertex(&vertices.data, index) * *scale;
                 let v1 = get_vertex(&vertices.data, index).mul(*scale);
-                let index = b.data[i+2] as uint;
+                let index = b.data[i+2] as usize;
                 //let v2 = get_vertex(&vertices.data, index)* *scale;
                 let v2 = get_vertex(&vertices.data, index).mul(*scale);
 

@@ -98,7 +98,7 @@ impl Texture
 impl Encodable for Texture {
   fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Texture", 1, |encoder| {
-          try!(encoder.emit_struct_field( "name", 0u, |encoder| self.name.encode(encoder)));
+          try!(encoder.emit_struct_field( "name", 0us, |encoder| self.name.encode(encoder)));
           Ok(())
       })
   }
