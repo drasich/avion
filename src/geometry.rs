@@ -103,21 +103,73 @@ pub struct AABox
     pub max : Vec3
 }
 
-//TODO dragon
-/*
 impl AABox
 {
-    pub fn to_obox(&self, v : Vec3, q : Quat, scale : Vec3) -> OBox
+    pub fn new(min : Vec3, max : Vec3) -> AABox
     {
-        OBox {
+        AABox {
+            min : min,
+            max : max
         }
     }
+
+    pub fn to_obox(&self, v : Vec3, q : Quat, scale : Vec3) -> OBox
+    {
+        //TODO check
+        println!("check this function before using");
+        let x = q.rotate_vec3(&Vec3::x());
+        let y = q.rotate_vec3(&Vec3::y());
+        let z = q.rotate_vec3(&Vec3::z());
+
+        let a = AABox::new(
+            self.min.mul(scale),
+            self.max.mul(scale));
+
+        let mut o : [Vec3; 8] = [Vec3::zero(); 8];
+
+        o[0] = (x * a.min.x) +
+            (y * a.min.y) +
+            (z * a.min.z);
+        o[1] = o[0] + (x * (a.max.x - a.min.x));
+        o[2] = o[0] + (y * (a.max.y - a.min.y));
+        o[3] = o[0] + (z * (a.max.z - a.min.z));
+
+        o[4] = (x * a.max.x) +
+            (y * a.max.y) +
+            (z * a.max.z);
+
+        o[5] = o[4] + (x * (a.min.x - a.max.x));
+        o[6] = o[4] + (y * (a.min.y - a.max.y));
+        o[7] = o[4] + (z * (a.min.z - a.max.z));
+
+        for oi in o.iter_mut() {
+            *oi = *oi + v;
+        }
+
+        OBox::new(o)
+    }
+
+
 }
-*/
+
+impl fmt::Show for AABox
+{
+    fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "(min : {:?}, max : {:?})", self.min, self.max)
+    }
+}
 
 pub struct OBox
 {
     pub v : [Vec3; 8]
+}
+
+impl OBox {
+
+    pub fn new(v : [Vec3; 8]) -> OBox
+    {
+        OBox { v : v }
+    }
 }
 
 pub struct Segment

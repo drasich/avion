@@ -183,7 +183,8 @@ pub struct Mesh
     //pub buffers : HashMap<String, Box<BufferSend+'static>>, //TODO check
     pub buffers_f32 : HashMap<String, Box<Buffer<f32>>>, //TODO check
     pub buffers_u32 : HashMap<String, Box<Buffer<u32>>>, //TODO check
-    pub draw_type : DrawType
+    pub draw_type : DrawType,
+    pub aabox : Option<geometry::AABox>
 }
 
 impl Mesh
@@ -196,7 +197,8 @@ impl Mesh
            buffers : HashMap::new(),
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
-           draw_type : Faces
+           draw_type : Faces,
+           aabox : None
        };
 
        /*
@@ -220,7 +222,8 @@ impl Mesh
            buffers : HashMap::new(),
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
-           draw_type : Faces
+           draw_type : Faces,
+           aabox : None
        };
         
        m
@@ -260,11 +263,33 @@ impl Mesh
            let mut vvv : Vec<f32> = Vec::with_capacity(count);
 
            println!("vertex count : {} ", vertex_count);
-           for _ in range(0us, count)
+           let mut min = vec::Vec3::zero();
+           let mut max = vec::Vec3::zero();
+           for i in range(0us, count)
            {
                let x = file.read_le_f32().unwrap();
                vvv.push(x);
+
+               let x = x as f64;
+               match i % 3 {
+                   0 => {
+                       if x < min.x { min.x = x; };
+                       if x > max.x { max.x = x; };
+                   },
+                   1 => {
+                       if x < min.y { min.y = x; };
+                       if x > max.y { max.y = x; };
+                   },
+                   2 => {
+                       if x < min.z { min.z = x; };
+                       if x > max.z { max.z = x; };
+                   },
+                   _ => {}
+               }
            }
+
+           self.aabox = Some(geometry::AABox::new(min,max));
+           println!("__________bos is : {:?}", self.aabox);
 
            let bufname = String::from_str("position");
 
@@ -610,7 +635,8 @@ impl Decodable for Mesh {
            buffers : HashMap::new(),
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
-           draw_type : Faces
+           draw_type : Faces,
+           aabox : None
         })
     })
   }

@@ -4,6 +4,7 @@ use mesh;
 use resource;
 use std::iter::range_step;
 use std::num::Float;
+use std::f64::EPSILON;
 
 use vec::{Vec3, Quat};
 
@@ -50,6 +51,18 @@ pub fn ray_object(ray : &geometry::Ray, o : &object::Object) -> IntersectionRay
         }
     }
 }
+
+/*
+pub fn ray_mesh(
+    ray : &geometry::Ray,
+    m : &::Mesh,
+    position : &Vec3,
+    rotation : &Quat,
+    scale : &Vec3
+    ) -> IntersectionRay
+{
+    let mut out = IntersectionRay::new();
+    */
 
 pub fn ray_mesh(
     ray : &geometry::Ray,
@@ -202,4 +215,174 @@ pub fn ray_triangle(r : &geometry::Ray, t : &geometry::Triangle, min : f64) -> I
 
     out
 }
+
+pub fn intersection_ray_aabox(ray : &geometry::Ray, abox : &geometry::AABox) -> IntersectionRay
+{
+  let mut out = IntersectionRay::new();
+  let mut xt;
+  let mut xn = 0f64;
+
+  if ray.start.x < abox.min.x {
+      xt = abox.min.x - ray.start.x;
+      if xt > ray.direction.x {
+          out.inside = false;
+          return out;
+      }
+      xt /= ray.direction.x;
+      out.inside = false;
+      xn = -1f64;
+  } else if ray.start.x > abox.max.x {
+      xt = abox.max.x - ray.start.x;
+      if xt < ray.direction.x {
+          out.inside = false;
+          return out;
+      }
+      xt /= ray.direction.x;
+      out.inside = false;
+      xn = 1f64;
+  } else {
+      xt = -1f64;
+  }
+
+  let mut yt;
+  let mut yn = 0f64;
+  if ray.start.y < abox.min.y {
+      yt = abox.min.y - ray.start.y;
+      if yt > ray.direction.y {
+          out.inside = false;
+          return out;
+      }
+      yt /= ray.direction.y;
+      out.inside = false;
+      yn = -1f64;
+  } else if ray.start.y > abox.max.y {
+      yt = abox.max.y - ray.start.y;
+      if yt < ray.direction.y {
+          out.inside = false;
+          return out;
+      }
+      yt /= ray.direction.y;
+      out.inside = false;
+      yn = 1f64;
+  } else {
+      yt = -1f64;
+  }
+
+  let mut zt;
+  let mut zn = 0f64;
+  if ray.start.z < abox.min.z {
+      zt = abox.min.z - ray.start.z;
+      if zt > ray.direction.z {
+          out.inside = false;
+          return out;
+      }
+      zt /= ray.direction.z;
+      out.inside = false;
+      zn = -1f64;
+  } else if ray.start.z > abox.max.z {
+      zt = abox.max.z - ray.start.z;
+      if zt < ray.direction.z {
+          out.inside = false;
+          return out;
+      }
+      zt /= ray.direction.z;
+      out.inside = false;
+      zn = 1f64;
+  } else {
+      zt = -1f64;
+  }
+
+  if out.inside {
+      out.hit = true;
+      return out;
+  }
+
+  enum Plane {
+      YZ,
+      XZ,
+      XY
+  }
+
+  let mut plane = Plane::YZ;
+  let mut t = xt;
+  if yt > t {
+      plane = Plane::XZ;
+      t = yt;
+  }
+  if zt > t {
+      plane = Plane::XY;
+      t = zt;
+  }
+
+  //printf("position %f, %f, %f \n", ir.position.x, ir.position.y, ir.position.z);
+
+  match plane {
+      Plane::YZ => { // yz plane
+          let y = ray.start.y + ray.direction.y*t;
+          if y < abox.min.y - EPSILON || y > abox.max.y + EPSILON { 
+              out.inside = false;
+              return out; 
+          }
+          let z = ray.start.z + ray.direction.z*t;
+          if z < abox.min.z - EPSILON || z > abox.max.z + EPSILON {
+              out.inside = false;
+              return out;
+          }
+          out.normal.x = xn;
+      },
+      Plane::XZ => { //xz plane
+          let x = ray.start.x + ray.direction.x*t;
+          if x < abox.min.x - EPSILON || x > abox.max.x + EPSILON { 
+              out.inside = false; return out; }
+          let z = ray.start.z + ray.direction.z*t;
+          if z < abox.min.z - EPSILON || z > abox.max.z + EPSILON {
+              out.inside = false; return out; }
+
+          out.normal.y = yn;
+      },
+      Plane::XY => {
+          let x = ray.start.x + ray.direction.x*t;
+          if x < abox.min.x - EPSILON || x > abox.max.x + EPSILON {
+              out.inside = false; return out; }
+          let y = ray.start.y + ray.direction.y*t;
+          if y < abox.min.y - EPSILON || y > abox.max.y + EPSILON { 
+              out.inside = false; return out; }
+
+          out.normal.y = zn;
+      },
+  }
+
+  out.position = ray.start + (ray.direction *t);
+  out.hit = true;
+ 
+  return out;
+}
+
+pub fn intersection_ray_box(
+    ray : &geometry::Ray,
+    abox : &geometry::AABox,
+    position : &Vec3,
+    rotation : &Quat,
+    scale : &Vec3)
+-> IntersectionRay
+{
+  let r = geometry::Repere::new(*position, *rotation);
+  //transform the ray in box/object coord
+  let start = r.world_to_local(&ray.start);
+  let direction = r.world_to_local(&(ray.direction + ray.start)) - start;
+  let newray = geometry::Ray::new(start, direction);
+
+  let box_rep = geometry::AABox::new(
+      abox.min.mul(*scale),
+      abox.max.mul(*scale));
+
+  let mut ir = intersection_ray_aabox(&newray, &box_rep);
+
+  //transform back
+  ir.position = r.local_to_world(&ir.position);
+  ir.normal = rotation.rotate_vec3(&ir.normal);
+
+  return ir;
+}
+
 
