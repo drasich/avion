@@ -52,18 +52,7 @@ pub fn ray_object(ray : &geometry::Ray, o : &object::Object) -> IntersectionRay
     }
 }
 
-/*
-pub fn ray_mesh(
-    ray : &geometry::Ray,
-    m : &::Mesh,
-    position : &Vec3,
-    rotation : &Quat,
-    scale : &Vec3
-    ) -> IntersectionRay
-{
-    let mut out = IntersectionRay::new();
-    */
-
+// test for box first, and then mesh.
 pub fn ray_mesh(
     ray : &geometry::Ray,
     m : &mesh::Mesh,
@@ -72,6 +61,13 @@ pub fn ray_mesh(
     scale : &Vec3
     ) -> IntersectionRay
 {
+    if let Some(ref b) = m.aabox {
+        let ir_box = intersection_ray_box(ray, b, position, rotation, scale);
+        if !ir_box.hit {
+            return IntersectionRay::new();
+        }
+    }
+
     let mut out = IntersectionRay::new();
     let r = geometry::Repere::new(*position, *rotation);
 
