@@ -31,12 +31,14 @@ use mesh::BufferSend;
 
 #[link(name = "cypher")]
 extern {
+    /*
     pub fn draw_callback_set(
         init_cb: extern fn(*mut Render) -> (),
         draw_cb: extern fn(*mut Render) -> (),
         resize_cb: extern fn(*mut Render, w : c_int, h : c_int) -> (),
         render: *const Render
         ) -> ();
+        */
 
     pub fn cgl_draw(vertex_count : c_uint) -> ();
     pub fn cgl_draw_lines(vertex_count : c_uint) -> ();
@@ -46,6 +48,7 @@ extern {
     pub fn cgl_clear() -> ();
 }
 
+/*
 pub extern fn init_cb(r : *mut Render) -> () {
     unsafe {
         return (*r).init();
@@ -63,6 +66,7 @@ pub extern fn resize_cb(r : *mut Render, w : c_int, h : c_int) -> () {
         return (*r).resize(w, h);
     }
 }
+*/
 
 struct CameraPass
 {
@@ -352,7 +356,7 @@ pub struct Render
     pub grid : Arc<RwLock<object::Object>>,
     pub camera_repere : Arc<RwLock<object::Object>>,
 
-    pub dragger : Arc<RwLock<object::Object>>,
+    //pub dragger : Arc<RwLock<object::Object>>,
 }
 
 impl Render {
@@ -361,7 +365,7 @@ impl Render {
     //TODO dont create the scene here
     pub fn new(factory: &mut factory::Factory,
                context: Rc<RefCell<context::Context>>,
-               dragger : Arc<RwLock<object::Object>>,
+               //dragger : Arc<RwLock<object::Object>>,
                ) -> Render
     {
         let scene_path = "scene/simple.scene";
@@ -414,7 +418,7 @@ impl Render {
             camera_repere : Arc::new(RwLock::new(
                     factory.create_object("camera_repere"))),
 
-            dragger : dragger// Arc::new(RwLock::new(
+            //dragger : dragger// Arc::new(RwLock::new(
                     //factory.create_object("dragger"))),
         };
 
@@ -486,7 +490,7 @@ impl Render {
             */
     }
 
-    fn prepare_passes(&mut self)
+    fn prepare_passes(&mut self, objects : &DList<Arc<RwLock<object::Object>>>)
     {
         for (_,p) in self.passes.iter_mut()
         {
@@ -494,7 +498,7 @@ impl Render {
             p.passes.clear();
         }
 
-        let objects = &self.scene.read().unwrap().objects;
+        //let objects = &self.scene.read().unwrap().objects;
         //self.passes.clear();
         for o in objects.iter() {
             prepare_passes_object(
@@ -529,7 +533,9 @@ impl Render {
             self.camera_ortho.clone());
     }
 
-    fn prepare_passes_selected(&mut self)
+    fn prepare_passes_selected(
+        &mut self,
+        objects : &DList<Arc<RwLock<object::Object>>>)
     {
         for (_,p) in self.passes.iter_mut()
         {
@@ -537,12 +543,14 @@ impl Render {
             p.passes.clear();
         }
 
+        /*
         let context = match self.context.try_borrow() {
             Some(c) => c,
             None => {println!("cannot borrow context"); return;}
         };
 
         let objects = &context.selected;
+        */
 
         let mut center = vec::Vec3::zero();
         let mut ori = vec::Quat::identity();
@@ -557,11 +565,13 @@ impl Render {
                 self.camera.clone());
         }
 
+        /*
         if objects.len() > 0 {
             center = center / (objects.len() as f64);
             self.dragger.write().unwrap().position = center;
             self.dragger.write().unwrap().orientation = transform::Orientation::Quat(ori);
         }
+        */
     }
 
     fn prepare_passes_objects_ortho(&mut self, list : DList<Arc<RwLock<object::Object>>>)
@@ -599,6 +609,114 @@ impl Render {
             self.material_manager.clone(),
             self.shader_manager.clone(),
             self.camera.clone());
+        }
+    }
+
+    fn draw_yep(
+        &mut self,
+        objects : &DList<Arc<RwLock<object::Object>>>,
+        selected : &DList<Arc<RwLock<object::Object>>>,
+        ) -> ()
+    {
+        self.prepare_passes_selected(selected);
+        self.fbo_selected.read().unwrap().cgl_use();
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.material_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+        fbo::Fbo::cgl_use_end();
+
+        self.prepare_passes(objects);
+
+        self.fbo_all.read().unwrap().cgl_use();
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.material_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+        fbo::Fbo::cgl_use_end();
+
+        /*
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.material_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+        */
+
+
+        //*
+        let mut l = DList::new();
+        l.push_back(self.quad_all.clone());
+        self.prepare_passes_objects_ortho(l);
+
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.material_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+        //*/
+
+        let sel_len = match self.context.try_borrow() {
+            Some(c) => c.selected.len(),
+            None => {println!("cannot borrow context"); 0}
+        };
+
+        if sel_len > 0 {
+            let mut l = DList::new();
+            l.push_back(self.quad_outline.clone());
+            self.prepare_passes_objects_ortho(l);
+
+            for p in self.passes.values()
+            {
+                p.draw_frame(
+                    self.mesh_manager.clone(),
+                    self.material_manager.clone(),
+                    self.shader_manager.clone(),
+                    self.texture_manager.clone(),
+                    self.fbo_manager.clone(),
+                    );
+            }
+
+            /* TODO dragger
+            unsafe { cgl_clear(); }
+            let mut ld = DList::new();
+            ld.push_back(self.dragger.clone());
+            self.prepare_passes_objects_per(ld);
+            //TODO draw with ortho
+
+            for p in self.passes.values()
+            {
+                p.draw_frame(
+                    self.mesh_manager.clone(),
+                    self.material_manager.clone(),
+                    self.shader_manager.clone(),
+                    self.texture_manager.clone(),
+                    self.fbo_manager.clone(),
+                    );
+            }
+            */
         }
     }
 }
@@ -726,7 +844,14 @@ impl Renderer for Render
 
     fn draw(&mut self) -> ()
     {
-        self.prepare_passes_selected();
+        let contextc = self.context.clone();
+        let context = match contextc.try_borrow() {
+            Some(c) => c,
+            None => {println!("cannot borrow context"); return;}
+        };
+        let sel = &context.selected.clone();
+
+        self.prepare_passes_selected(sel);
         self.fbo_selected.read().unwrap().cgl_use();
         for p in self.passes.values()
         {
@@ -740,7 +865,8 @@ impl Renderer for Render
         }
         fbo::Fbo::cgl_use_end();
 
-        self.prepare_passes();
+        let obs = &self.scene.read().unwrap().objects.clone();
+        self.prepare_passes(obs);
 
         self.fbo_all.read().unwrap().cgl_use();
         for p in self.passes.values()
@@ -807,6 +933,7 @@ impl Renderer for Render
                     );
             }
 
+            /* TODO dragger
             unsafe { cgl_clear(); }
             let mut ld = DList::new();
             ld.push_back(self.dragger.clone());
@@ -823,6 +950,7 @@ impl Renderer for Render
                     self.fbo_manager.clone(),
                     );
             }
+            */
         }
     }
 }

@@ -110,7 +110,19 @@ impl Master
             views : DList::new(),
         };
 
-        m.views.push_back(box View::new(&mut m.factory));
+        let v = box View::new(&mut m.factory);
+
+        unsafe {
+        ui::view::draw_callback_set(
+            ui::view::init_cb,
+            ui::view::draw_cb,
+            ui::view::resize_cb,
+            //&m.render);
+            &*v);
+        }
+
+        //m.views.push_back(box View::new(&mut m.factory));
+        m.views.push_back(v);
 
         m
     }

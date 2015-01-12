@@ -22,12 +22,24 @@ use mesh_render;
 use vec;
 use geometry;
 use material;
+//use ui::dragger;
 
 use control;
 use control::Control;
 use control::WidgetUpdate;
 
 use scene;
+use render::Renderer;
+
+#[link(name = "cypher")]
+extern {
+    pub fn draw_callback_set(
+        init_cb: extern fn(*mut View) -> (),
+        draw_cb: extern fn(*mut View) -> (),
+        resize_cb: extern fn(*mut View, w : c_int, h : c_int) -> (),
+        render: *const View
+        ) -> ();
+}
 
 pub struct View
 {
@@ -40,18 +52,18 @@ pub struct View
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
     pub scene : Option<Arc<RwLock<scene::Scene>>>,
 
-    pub dragger : Arc<RwLock<object::Object>>,
+    //pub dragger : Arc<RwLock<object::Object>>,
+    //pub dragger : Rc<RefCell<Dragger>>
 }
 
 impl View
 {
     pub fn new(factory: &mut factory::Factory) -> View
     {
-        //let dragger = Arc::new(RwLock::new(create_dragger(factory)));
-        let dragger = create_dragger(factory);
+        //let dragger = create_dragger(factory);
 
         let context = Rc::new(RefCell::new(context::Context::new()));
-        let render = box Render::new(factory, context.clone(), dragger.clone());
+        let render = box Render::new(factory, context.clone());//, dragger.clone());
         let control = Rc::new(RefCell::new(
                 Control::new(
                     render.camera.clone(),
@@ -71,11 +83,12 @@ impl View
             property: None,
 
             scene : None,
-            dragger : dragger
+            //dragger : dragger
         };
 
         v.scene = Some(v.render.scene.clone());
 
+        /*
         unsafe {
         render::draw_callback_set(
             render::init_cb,
@@ -84,6 +97,7 @@ impl View
             //&m.render);
             &*v.render);
         }
+        */
 
         return v;
 
@@ -135,6 +149,20 @@ impl View
 
         self.tree = Some(t);
         self.property = Some(p);
+    }
+
+    fn init_render(&mut self)
+    {
+        self.render.init();
+    }
+
+    fn draw(&mut self)
+    {
+        self.render.draw();
+    }
+    fn resize(&mut self, w : c_int, h : c_int)
+    {
+        self.render.resize(w, h);
     }
 
 }
@@ -264,71 +292,22 @@ fn create_repere(m : &mut mesh::Mesh, len : f64)
     m.add_line(s, blue);
 }
 
-fn create_mat_res(color : vec::Vec4, name : &str) -> resource::ResTT<material::Material>
-{
-    let mut mat : material::Material = Create::create("material/dragger.mat");
-    mat.inittt();
-    mat.set_uniform_data(
-        "color",
-        shader::UniformData::Vec4(color));
-    let matarc = Arc::new(RwLock::new(mat));
 
-    let rs = resource::ResTest::ResData(matarc);
-    let mr = resource::ResTT::new_with_res("dragger_x_mat", rs);
-    //let mr = resource::ResTT::new_with_res(name, rs);
-
-    mr
+pub extern fn init_cb(v : *mut View) -> () {
+    unsafe {
+        return (*v).init_render();
+    }
 }
 
-fn create_dragger_tr(
-    factory : &mut factory::Factory,
-    name : &str,
-    ori :vec::Quat,
-    color : vec::Vec4) -> Arc<RwLock<object::Object>>
-{
-    let dragger = 
-        Arc::new(RwLock::new(factory.create_object("dragger_x")));
-    let mat = create_mat_res(color, name);
-
-    dragger.write().unwrap().mesh_render = 
-        Some(mesh_render::MeshRender::new_with_mat(
-        "model/dragger_arrow.mesh", mat));
-
-    dragger.write().unwrap().orientation = transform::Orientation::Quat(ori);
-
-    dragger
+pub extern fn draw_cb(v : *mut View) -> () {
+    unsafe {
+        return (*v).draw();
+    }
 }
 
-fn create_dragger(factory : &mut factory::Factory) -> 
-        Arc<RwLock<object::Object>>
-{
-    let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
-    let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
-    let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
-    let dragger_parent = 
-        Arc::new(RwLock::new(factory.create_object("dragger")));
-
-    let dragger_x = create_dragger_tr(
-        factory,
-        "dragger_x",
-        vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,1f64,0f64), 90f64), 
-        red);
-
-    let dragger_y = create_dragger_tr(
-        factory,
-        "dragger_y",
-        vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64), 
-        green);
-
-    let dragger_z = create_dragger_tr(
-        factory,
-        "dragger_z",
-        vec::Quat::identity(), 
-        blue);
-
-    object::child_add(dragger_parent.clone(), dragger_x);
-    object::child_add(dragger_parent.clone(), dragger_y);
-    object::child_add(dragger_parent.clone(), dragger_z);
-
-    dragger_parent
+pub extern fn resize_cb(v : *mut View, w : c_int, h : c_int) -> () {
+    unsafe {
+        return (*v).resize(w, h);
+    }
 }
+
