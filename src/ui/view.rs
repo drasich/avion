@@ -29,7 +29,6 @@ use control::Control;
 use control::WidgetUpdate;
 
 use scene;
-use render::Renderer;
 
 #[link(name = "cypher")]
 extern {
@@ -158,8 +157,28 @@ impl View
 
     fn draw(&mut self)
     {
-        self.render.draw();
+        let scene = match self.scene {
+            Some(ref s) => s.read().unwrap(),
+            None => return
+        };
+
+        let obs = &scene.objects;
+
+        let contextc = match self.control {
+            Some(ref control) => control.borrow().context.clone(),
+            None => return
+        };
+
+        let context = match contextc.try_borrow() {
+            Some(c) => c,
+            None => {println!("cannot borrow context"); return;}
+        };
+        let sel = &context.selected;
+
+        self.render.draw(obs, sel);
+
     }
+
     fn resize(&mut self, w : c_int, h : c_int)
     {
         self.render.resize(w, h);

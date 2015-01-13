@@ -477,6 +477,35 @@ impl Render {
         r
     }
 
+    pub fn init(&mut self)
+    {
+        self.fbo_all.write().unwrap().cgl_create();
+        self.fbo_selected.write().unwrap().cgl_create();
+    }
+
+    pub fn resize(&mut self, w : c_int, h : c_int)
+    {
+        {
+            self.quad_outline.write().unwrap().scale = 
+                vec::Vec3::new(w as f64, h as f64, 1f64);
+
+            self.quad_all.write().unwrap().scale = 
+                vec::Vec3::new(w as f64, h as f64, 1f64);
+
+            let mut cam = self.camera.borrow_mut();
+            cam.resolution_set(w, h);
+
+            let mut cam_ortho = self.camera_ortho.borrow_mut();
+            cam_ortho.resolution_set(w, h);
+
+            self.fbo_all.write().unwrap().cgl_resize(w, h);
+            self.fbo_selected.write().unwrap().cgl_resize(w, h);
+        }
+
+        self.resolution_set(w,h);
+    }
+
+
     fn resolution_set(&mut self, w : c_int, h : c_int)
     {
         self.quad_outline.clone().read().unwrap().set_uniform_data(
@@ -539,18 +568,8 @@ impl Render {
     {
         for (_,p) in self.passes.iter_mut()
         {
-            //p.objects.clear();
             p.passes.clear();
         }
-
-        /*
-        let context = match self.context.try_borrow() {
-            Some(c) => c,
-            None => {println!("cannot borrow context"); return;}
-        };
-
-        let objects = &context.selected;
-        */
 
         let mut center = vec::Vec3::zero();
         let mut ori = vec::Quat::identity();
@@ -612,7 +631,7 @@ impl Render {
         }
     }
 
-    fn draw_yep(
+    pub fn draw(
         &mut self,
         objects : &DList<Arc<RwLock<object::Object>>>,
         selected : &DList<Arc<RwLock<object::Object>>>,
@@ -803,156 +822,6 @@ fn prepare_passes_object(
         }
     }
     */
-}
-
-pub trait Renderer
-{
-    fn init(&mut self);
-    fn draw(&mut self);
-    fn resize(&mut self, w : c_int, h : c_int);
-}
-
-impl Renderer for Render
-{
-    fn init(&mut self)
-    {
-        self.fbo_all.write().unwrap().cgl_create();
-        self.fbo_selected.write().unwrap().cgl_create();
-    }
-
-    fn resize(&mut self, w : c_int, h : c_int)
-    {
-        {
-            self.quad_outline.write().unwrap().scale = 
-                vec::Vec3::new(w as f64, h as f64, 1f64);
-
-            self.quad_all.write().unwrap().scale = 
-                vec::Vec3::new(w as f64, h as f64, 1f64);
-
-            let mut cam = self.camera.borrow_mut();
-            cam.resolution_set(w, h);
-
-            let mut cam_ortho = self.camera_ortho.borrow_mut();
-            cam_ortho.resolution_set(w, h);
-
-            self.fbo_all.write().unwrap().cgl_resize(w, h);
-            self.fbo_selected.write().unwrap().cgl_resize(w, h);
-        }
-
-        self.resolution_set(w,h);
-    }
-
-    fn draw(&mut self) -> ()
-    {
-        let contextc = self.context.clone();
-        let context = match contextc.try_borrow() {
-            Some(c) => c,
-            None => {println!("cannot borrow context"); return;}
-        };
-        let sel = &context.selected.clone();
-
-        self.prepare_passes_selected(sel);
-        self.fbo_selected.read().unwrap().cgl_use();
-        for p in self.passes.values()
-        {
-            p.draw_frame(
-                self.mesh_manager.clone(),
-                self.material_manager.clone(),
-                self.shader_manager.clone(),
-                self.texture_manager.clone(),
-                self.fbo_manager.clone(),
-                );
-        }
-        fbo::Fbo::cgl_use_end();
-
-        let obs = &self.scene.read().unwrap().objects.clone();
-        self.prepare_passes(obs);
-
-        self.fbo_all.read().unwrap().cgl_use();
-        for p in self.passes.values()
-        {
-            p.draw_frame(
-                self.mesh_manager.clone(),
-                self.material_manager.clone(),
-                self.shader_manager.clone(),
-                self.texture_manager.clone(),
-                self.fbo_manager.clone(),
-                );
-        }
-        fbo::Fbo::cgl_use_end();
-
-        /*
-        for p in self.passes.values()
-        {
-            p.draw_frame(
-                self.mesh_manager.clone(),
-                self.material_manager.clone(),
-                self.shader_manager.clone(),
-                self.texture_manager.clone(),
-                self.fbo_manager.clone(),
-                );
-        }
-        */
-
-
-        //*
-        let mut l = DList::new();
-        l.push_back(self.quad_all.clone());
-        self.prepare_passes_objects_ortho(l);
-
-        for p in self.passes.values()
-        {
-            p.draw_frame(
-                self.mesh_manager.clone(),
-                self.material_manager.clone(),
-                self.shader_manager.clone(),
-                self.texture_manager.clone(),
-                self.fbo_manager.clone(),
-                );
-        }
-        //*/
-
-        let sel_len = match self.context.try_borrow() {
-            Some(c) => c.selected.len(),
-            None => {println!("cannot borrow context"); 0}
-        };
-
-        if sel_len > 0 {
-            let mut l = DList::new();
-            l.push_back(self.quad_outline.clone());
-            self.prepare_passes_objects_ortho(l);
-
-            for p in self.passes.values()
-            {
-                p.draw_frame(
-                    self.mesh_manager.clone(),
-                    self.material_manager.clone(),
-                    self.shader_manager.clone(),
-                    self.texture_manager.clone(),
-                    self.fbo_manager.clone(),
-                    );
-            }
-
-            /* TODO dragger
-            unsafe { cgl_clear(); }
-            let mut ld = DList::new();
-            ld.push_back(self.dragger.clone());
-            self.prepare_passes_objects_per(ld);
-            //TODO draw with ortho
-
-            for p in self.passes.values()
-            {
-                p.draw_frame(
-                    self.mesh_manager.clone(),
-                    self.material_manager.clone(),
-                    self.shader_manager.clone(),
-                    self.texture_manager.clone(),
-                    self.fbo_manager.clone(),
-                    );
-            }
-            */
-        }
-    }
 }
 
 fn create_grid(m : &mut mesh::Mesh, num : i32, space : i32)
