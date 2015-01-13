@@ -52,14 +52,15 @@ pub struct View
     pub scene : Option<Arc<RwLock<scene::Scene>>>,
 
     //pub dragger : Arc<RwLock<object::Object>>,
-    //pub dragger : Rc<RefCell<Dragger>>
+    //pub dragger : Box<Dragger>
 }
 
 impl View
 {
     pub fn new(factory: &mut factory::Factory) -> View
     {
-        //let dragger = create_dragger(factory);
+        let scene_path = "scene/simple.scene";
+        let scene = Arc::new(RwLock::new(scene::Scene::new_from_file(scene_path)));
 
         let context = Rc::new(RefCell::new(context::Context::new()));
         let render = box Render::new(factory, context.clone());//, dragger.clone());
@@ -71,7 +72,7 @@ impl View
                 )
             );
 
-        control.borrow_mut().context.borrow_mut().scene = Some(render.scene.clone());
+        control.borrow_mut().context.borrow_mut().scene = Some(scene.clone());
 
         let mut v = View {
             render : render,
@@ -85,7 +86,7 @@ impl View
             //dragger : dragger
         };
 
-        v.scene = Some(v.render.scene.clone());
+        v.scene = Some(scene.clone());
 
         /*
         unsafe {

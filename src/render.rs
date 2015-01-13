@@ -16,7 +16,6 @@ use object;
 use camera;
 use matrix;
 use texture;
-use scene;
 use mesh_render;
 use fbo;
 use vec;
@@ -341,7 +340,6 @@ pub struct Render
     pub material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
     pub fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>,
 
-    pub scene : Arc<RwLock<scene::Scene>>,
     pub camera : Rc<RefCell<camera::Camera>>,
     pub camera_ortho : Rc<RefCell<camera::Camera>>,
 
@@ -362,14 +360,11 @@ pub struct Render
 impl Render {
 
     //TODO remove dragger and put "view_objects"
-    //TODO dont create the scene here
     pub fn new(factory: &mut factory::Factory,
                context: Rc<RefCell<context::Context>>,
                //dragger : Arc<RwLock<object::Object>>,
                ) -> Render
     {
-        let scene_path = "scene/simple.scene";
-
         let fbo_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
         let fbo_all = fbo_manager.write().unwrap().request_use_no_proc("fbo_all");
         /*
@@ -403,8 +398,6 @@ impl Render {
             texture_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
             material_manager : material_manager.clone(),
             fbo_manager : fbo_manager.clone(),
-            //scene : box scene::Scene::new_from_file(scene_path)
-            scene : Arc::new(RwLock::new(scene::Scene::new_from_file(scene_path))),
             camera : camera,
             camera_ortho : camera_ortho,
             fbo_all : fbo_all,
@@ -527,7 +520,6 @@ impl Render {
             p.passes.clear();
         }
 
-        //let objects = &self.scene.read().unwrap().objects;
         //self.passes.clear();
         for o in objects.iter() {
             prepare_passes_object(
