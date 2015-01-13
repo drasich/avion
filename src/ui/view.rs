@@ -63,7 +63,7 @@ impl View
         let scene = Arc::new(RwLock::new(scene::Scene::new_from_file(scene_path)));
 
         let context = Rc::new(RefCell::new(context::Context::new()));
-        let render = box Render::new(factory, context.clone());//, dragger.clone());
+        let render = box Render::new(factory);
         let control = Rc::new(RefCell::new(
                 Control::new(
                     render.camera.clone(),

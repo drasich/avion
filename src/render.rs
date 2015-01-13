@@ -20,7 +20,6 @@ use mesh_render;
 use fbo;
 use vec;
 use factory;
-use context;
 use transform;
 use uniform;
 
@@ -349,8 +348,6 @@ pub struct Render
     pub quad_outline : Arc<RwLock<object::Object>>,
     pub quad_all : Arc<RwLock<object::Object>>,
 
-    pub context : Rc<RefCell<context::Context>>,
-
     pub grid : Arc<RwLock<object::Object>>,
     pub camera_repere : Arc<RwLock<object::Object>>,
 
@@ -361,17 +358,11 @@ impl Render {
 
     //TODO remove dragger and put "view_objects"
     pub fn new(factory: &mut factory::Factory,
-               context: Rc<RefCell<context::Context>>,
                //dragger : Arc<RwLock<object::Object>>,
                ) -> Render
     {
         let fbo_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
         let fbo_all = fbo_manager.write().unwrap().request_use_no_proc("fbo_all");
-        /*
-        let fc = fbo_all.clone();
-        let f : &mut fbo::Fbo = &mut *fc.write().unwrap();
-        f.to_send = fbo::ToSend::Color;
-        */
         let fbo_selected = fbo_manager.write().unwrap().request_use_no_proc("fbo_selected");
 
         let camera = Rc::new(RefCell::new(factory.create_camera()));
@@ -405,7 +396,6 @@ impl Render {
             quad_outline : Arc::new(RwLock::new(factory.create_object("quad_outline"))),
             quad_all : Arc::new(RwLock::new(factory.create_object("quad_all"))),
 
-            context : context,
 
             grid : Arc::new(RwLock::new(factory.create_object("grid"))),
             camera_repere : Arc::new(RwLock::new(
@@ -689,10 +679,7 @@ impl Render {
         }
         //*/
 
-        let sel_len = match self.context.try_borrow() {
-            Some(c) => c.selected.len(),
-            None => {println!("cannot borrow context"); 0}
-        };
+        let sel_len = selected.len();
 
         if sel_len > 0 {
             let mut l = DList::new();
