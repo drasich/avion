@@ -43,13 +43,13 @@ extern {
 pub struct View
 {
     render : Box<Render>,
-    pub control : Option<Rc<RefCell<Control>>>,
+    pub control : Rc<RefCell<Control>>,
+    pub context : Rc<RefCell<context::Context>>,
 
     pub window : Option<*const ui::Window>,
     //pub tree : Option<Box<Tree>>,
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>,
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
-    pub scene : Option<Arc<RwLock<scene::Scene>>>,
 
     //pub dragger : Arc<RwLock<object::Object>>,
     //pub dragger : Box<Dragger>
@@ -62,55 +62,43 @@ impl View
         let scene_path = "scene/simple.scene";
         let scene = Arc::new(RwLock::new(scene::Scene::new_from_file(scene_path)));
 
+        let camera = Rc::new(RefCell::new(factory.create_camera()));
+        {
+            let mut cam = camera.borrow_mut();
+            cam.pan(&vec::Vec3::new(100f64,20f64,100f64));
+            cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
+        }
+
         let context = Rc::new(RefCell::new(context::Context::new()));
-        let render = box Render::new(factory);
+        context.borrow_mut().scene = Some(scene.clone());
+
         let control = Rc::new(RefCell::new(
                 Control::new(
-                    render.camera.clone(),
-                    context.clone()
-                    )
-                )
-            );
+                    camera.clone(),
+                    context.clone())));
 
-        control.borrow_mut().context.borrow_mut().scene = Some(scene.clone());
+        let render = box Render::new(factory, camera.clone());
 
-        let mut v = View {
+        let v = View {
             render : render,
-            control : Some(control),
+            control : control,
+            context : context,
             
             window : None,
             tree : None,
             property: None,
 
-            scene : None,
             //dragger : dragger
         };
 
-        v.scene = Some(scene.clone());
-
-        /*
-        unsafe {
-        render::draw_callback_set(
-            render::init_cb,
-            render::draw_cb,
-            render::resize_cb,
-            //&m.render);
-            &*v.render);
-        }
-        */
-
         return v;
-
     }
 
     pub fn init(&mut self) -> () {
         let w = unsafe {ui::window_new()};
         self.window = Some(w);
 
-        let control = match self.control {
-            Some(ref c) => c.clone(),
-            None => { println!("no control"); return; }
-        };   
+        let control = &self.control;
 
         unsafe {
             ui::window_callback_set(
@@ -132,7 +120,7 @@ impl View
                     w,
                     control.clone())));
 
-        match self.scene {
+        match self.context.borrow().scene {
             Some(ref s) => {
                 t.borrow_mut().set_scene(&*s.read().unwrap());
             },
@@ -158,26 +146,17 @@ impl View
 
     fn draw(&mut self)
     {
-        let scene = match self.scene {
+        let context = self.context.borrow();
+
+        let scene = match context.scene {
             Some(ref s) => s.read().unwrap(),
             None => return
         };
 
         let obs = &scene.objects;
-
-        let contextc = match self.control {
-            Some(ref control) => control.borrow().context.clone(),
-            None => return
-        };
-
-        let context = match contextc.try_borrow() {
-            Some(c) => c,
-            None => {println!("cannot borrow context"); return;}
-        };
         let sel = &context.selected;
 
         self.render.draw(obs, sel);
-
     }
 
     fn resize(&mut self, w : c_int, h : c_int)

@@ -358,6 +358,7 @@ impl Render {
 
     //TODO remove dragger and put "view_objects"
     pub fn new(factory: &mut factory::Factory,
+               camera : Rc<RefCell<camera::Camera>>,
                //dragger : Arc<RwLock<object::Object>>,
                ) -> Render
     {
@@ -365,12 +366,6 @@ impl Render {
         let fbo_all = fbo_manager.write().unwrap().request_use_no_proc("fbo_all");
         let fbo_selected = fbo_manager.write().unwrap().request_use_no_proc("fbo_selected");
 
-        let camera = Rc::new(RefCell::new(factory.create_camera()));
-        {
-            let mut cam = camera.borrow_mut();
-            cam.pan(&vec::Vec3::new(100f64,20f64,100f64));
-            cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
-        }
         let camera_ortho = Rc::new(RefCell::new(factory.create_camera()));
         {
             let mut cam = camera_ortho.borrow_mut();
