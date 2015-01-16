@@ -22,7 +22,7 @@ use mesh_render;
 use vec;
 use geometry;
 use material;
-//use ui::dragger;
+use ui::dragger;
 
 use control;
 use control::Control;
@@ -52,7 +52,7 @@ pub struct View
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
 
     //pub dragger : Arc<RwLock<object::Object>>,
-    //pub dragger : Box<Dragger>
+    pub dragger : Box<dragger::Dragger>
 }
 
 impl View
@@ -78,6 +78,7 @@ impl View
                     context.clone())));
 
         let render = box Render::new(factory, camera.clone());
+        let dragger = box dragger::Dragger::new(factory);
 
         let v = View {
             render : render,
@@ -88,7 +89,7 @@ impl View
             tree : None,
             property: None,
 
-            //dragger : dragger
+            dragger : dragger
         };
 
         return v;

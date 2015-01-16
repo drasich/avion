@@ -21,3 +21,4 @@ mod tree;
 pub mod def;
 pub mod property;
 pub mod view;
+pub mod dragger;
