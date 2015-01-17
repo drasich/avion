@@ -589,7 +589,7 @@ impl Render {
         }
     }
 
-    fn prepare_passes_objects_per(&mut self, list : DList<Arc<RwLock<object::Object>>>)
+    fn prepare_passes_objects_per(&mut self, list : &DList<Arc<RwLock<object::Object>>>)
     {
         for (_,p) in self.passes.iter_mut()
         {
@@ -612,6 +612,7 @@ impl Render {
         &mut self,
         objects : &DList<Arc<RwLock<object::Object>>>,
         selected : &DList<Arc<RwLock<object::Object>>>,
+        draggers : &DList<Arc<RwLock<object::Object>>>,
         ) -> ()
     {
         self.prepare_passes_selected(selected);
@@ -692,11 +693,12 @@ impl Render {
                     );
             }
 
-            /* TODO dragger
+            //* TODO dragger
             unsafe { cgl_clear(); }
-            let mut ld = DList::new();
-            ld.push_back(self.dragger.clone());
-            self.prepare_passes_objects_per(ld);
+            //let mut ld = DList::new();
+            //ld.push_back(self.dragger.clone());
+            //self.prepare_passes_objects_per(ld);
+            self.prepare_passes_objects_per(draggers);
             //TODO draw with ortho
 
             for p in self.passes.values()
@@ -709,7 +711,7 @@ impl Render {
                     self.fbo_manager.clone(),
                     );
             }
-            */
+            //*/
         }
     }
 }

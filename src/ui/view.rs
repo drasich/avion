@@ -157,7 +157,7 @@ impl View
         let obs = &scene.objects;
         let sel = &context.selected;
 
-        self.render.draw(obs, sel);
+        self.render.draw(obs, sel, &self.dragger.draggers);
     }
 
     fn resize(&mut self, w : c_int, h : c_int)
