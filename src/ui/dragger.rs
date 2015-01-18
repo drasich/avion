@@ -40,7 +40,7 @@ pub enum Kind
     Rotate
 }
 
-pub struct RealDragger
+pub struct Dragger
 {
     pub aabox : geometry::AABox,
     pub scale : f64,
@@ -170,15 +170,15 @@ fn create_mat_res(color : vec::Vec4, name : &str) -> resource::ResTT<material::M
     mr
 }
 
-impl RealDragger
+impl Dragger
 {
     pub fn new(
         aabox : geometry::AABox,
         constraint : vec::Vec3,
         kind : Kind,
-        ) -> RealDragger
+        ) -> Dragger
     {
-        RealDragger {
+        Dragger {
             aabox : aabox,
             scale : 1f64,
             constraint : constraint,
