@@ -52,7 +52,7 @@ pub struct View
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
 
     //pub dragger : Arc<RwLock<object::Object>>,
-    pub dragger : Box<dragger::Dragger>
+    pub dragger : Rc<RefCell<dragger::DraggerManager>>
 }
 
 impl View
@@ -71,14 +71,16 @@ impl View
 
         let context = Rc::new(RefCell::new(context::Context::new()));
         context.borrow_mut().scene = Some(scene.clone());
+        let dragger = Rc::new(RefCell::new(dragger::DraggerManager::new(factory)));
 
         let control = Rc::new(RefCell::new(
                 Control::new(
                     camera.clone(),
-                    context.clone())));
+                    context.clone(),
+                    dragger.clone()
+                    )));
 
         let render = box Render::new(factory, camera.clone());
-        let dragger = box dragger::Dragger::new(factory);
 
         let v = View {
             render : render,
@@ -157,7 +159,7 @@ impl View
         let obs = &scene.objects;
         let sel = &context.selected;
 
-        self.render.draw(obs, sel, &self.dragger.draggers);
+        self.render.draw(obs, sel, &self.dragger.borrow().draggers);
     }
 
     fn resize(&mut self, w : c_int, h : c_int)

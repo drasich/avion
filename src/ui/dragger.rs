@@ -11,23 +11,52 @@ use shader;
 use material;
 use transform;
 use mesh_render;
-
+use geometry;
+use intersection;
+use matrix;
 use factory;
 
-pub struct Dragger
+pub struct DraggerManager
 {
     //pub parent : Option<Arc<RwLock<object::Object>>>,
     pub draggers : DList<Arc<RwLock<object::Object>>>,
+    pub scale: f64
 }
 
-impl Dragger
+pub enum State
 {
-    pub fn new(factory : &mut factory::Factory) -> Dragger
+    Idle,
+    Highlight,
+    Selected,
+    LowLight,
+    Hide,
+    ShowSecond
+}
+
+pub enum Kind
+{
+    Translate,
+    Scale,
+    Rotate
+}
+
+pub struct RealDragger
+{
+    pub aabox : geometry::AABox,
+    pub scale : f64,
+    constraint : vec::Vec3,
+    kind : Kind,
+}
+
+impl DraggerManager
+{
+    pub fn new(factory : &mut factory::Factory) -> DraggerManager
     {
         let mut draggers = DList::new();
-        draggers.push_back(Dragger::create_dragger(factory));
-        Dragger {
-            draggers : draggers
+        draggers.push_back(DraggerManager::create_dragger(factory));
+        DraggerManager {
+            draggers : draggers,
+            scale : 1f64
         }
     }
 
@@ -64,6 +93,46 @@ impl Dragger
 
             dragger_parent
         }
+
+    pub fn check_collision(&self, r: geometry::Ray)
+    {
+        let mut found_length = 0f64;
+        let mut closest_obj = None;
+        fn _check(
+            r : &geometry::Ray,
+            objs : &DList<Arc<RwLock<object::Object>>>,
+            found_length : &mut f64,
+            closest_obj : &mut Option<Arc<RwLock<object::Object>>>)
+            {
+                for o in objs.iter() {
+                    let ir = intersection::ray_object(r, &*o.read().unwrap());
+                    if ir.hit {
+                        let length = (ir.position - r.start).length2();
+                        match *closest_obj {
+                            None => {
+                                *closest_obj = Some(o.clone());
+                                *found_length = length;
+                            }
+                            Some(_) => {
+                                if length < *found_length {
+                                    *closest_obj = Some(o.clone());
+                                    *found_length = length;
+                                }
+                            }
+                        }
+                    }
+                    let children = &o.read().unwrap().children;
+                    _check(r, children, found_length, closest_obj);
+                }
+            }
+
+        _check(&r, &self.draggers, &mut found_length, &mut closest_obj);
+
+        match closest_obj {
+            None => {},
+            Some(o) => println!("dragger collision")
+        }
+    }
 }
 
 fn create_dragger_tr(
@@ -100,4 +169,45 @@ fn create_mat_res(color : vec::Vec4, name : &str) -> resource::ResTT<material::M
 
     mr
 }
+
+impl RealDragger
+{
+    pub fn new(
+        aabox : geometry::AABox,
+        constraint : vec::Vec3,
+        kind : Kind,
+        ) -> RealDragger
+    {
+        RealDragger {
+            aabox : aabox,
+            scale : 1f64,
+            constraint : constraint,
+            kind : kind
+        }
+    }
+
+    pub fn update_scale(
+        &mut self,
+        world : &matrix::Matrix4,
+        projection : &matrix::Matrix4)
+    {
+        
+    }
+}
+
+/*
+fn _resize_to_cam(
+    world : &matrix::Matrix4, 
+    projection : &matrix::Matrix4,
+    factor : f64)
+{
+  let tm = projection * world;
+  tm = tm.transpose();
+
+  let zero = vec::Vec4::new(0f64,0f64,0f64,1f64);
+  let vw = tm * zero;
+  let w = vw.w * factor;
+  return w;
+}
+*/
 

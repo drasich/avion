@@ -14,6 +14,7 @@ use context;
 use ui;
 //use ui::property;
 //use ui::tree;
+use ui::dragger;
 use intersection;
 use vec;
 use object;
@@ -38,6 +39,7 @@ pub struct Control
     //pub tree : Option<Rc<RefCell<ui::Tree>>>, //TODO change to weak
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>, //TODO change to weak
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO change to weak
+    pub dragger : Rc<RefCell<ui::dragger::DraggerManager>>
 }
 
 impl Control
@@ -45,6 +47,7 @@ impl Control
     pub fn new(
         camera : Rc<RefCell<camera::Camera>>,
         context : Rc<RefCell<context::Context>>,
+        dragger : Rc<RefCell<dragger::DraggerManager>>,
         ) -> Control
     {
         Control {
@@ -53,7 +56,8 @@ impl Control
             property : None,
             tree : None,
             state : State::Idle,
-            context : context
+            context : context,
+            dragger : dragger
         }
     }
 
@@ -430,6 +434,17 @@ impl Control
         timestamp : i32)
     {
         if button == 0 {
+            let x : f64 = curx as f64;
+            let y : f64 = cury as f64;
+            let r = match self.camera.try_borrow(){
+                Some(c) => {
+                    c.ray_from_screen(x as f64, y as f64, 10000f64)
+                },
+                None => { println!("cannot borrow camera"); return; }
+            };
+
+            self.dragger.borrow().check_collision(r);
+
             return;
         }
 
