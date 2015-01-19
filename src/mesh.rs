@@ -504,6 +504,14 @@ impl Mesh
         self.state = 1;
     }
 
+    pub fn clear_lines(&mut self)
+    {
+        let name = String::from_str("position");
+        self.buffers_f32.remove(&name);
+        let name = String::from_str("color");
+        self.buffers_f32.remove(&name);
+    }
+
     pub fn add_quad(&mut self, w : f32, h : f32)
     {
         {

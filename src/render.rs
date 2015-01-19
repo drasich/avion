@@ -351,6 +351,8 @@ pub struct Render
     pub grid : Arc<RwLock<object::Object>>,
     pub camera_repere : Arc<RwLock<object::Object>>,
 
+    pub line : Arc<RwLock<object::Object>>
+
     //pub dragger : Arc<RwLock<object::Object>>,
 }
 
@@ -398,6 +400,7 @@ impl Render {
 
             //dragger : dragger// Arc::new(RwLock::new(
                     //factory.create_object("dragger"))),
+            line : Arc::new(RwLock::new(factory.create_object("line"))),
         };
 
         {
@@ -450,6 +453,15 @@ impl Render {
                 mesh_render::MeshRender::new_with_mesh_and_mat(
                     mr,
                     all_res));
+        }
+
+        {
+            let m = Arc::new(RwLock::new(mesh::Mesh::new()));
+            let rs = resource::ResTest::ResData(m);
+            let mr = resource::ResTT::new_with_res("line", rs);
+
+            r.line.write().unwrap().mesh_render =
+                Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
         }
 
         r
@@ -701,6 +713,15 @@ impl Render {
             self.prepare_passes_objects_per(draggers);
             //TODO draw with ortho
 
+            add_box(&mut *self.line.write().unwrap(), selected);
+
+            prepare_passes_object(
+                self.line.clone(),
+                &mut self.passes,
+                self.material_manager.clone(),
+                self.shader_manager.clone(),
+                self.camera.clone());
+
             for p in self.passes.values()
             {
                 p.draw_frame(
@@ -851,5 +872,113 @@ fn create_repere(m : &mut mesh::Mesh, len : f64)
     let s = geometry::Segment::new(
         vec::Vec3::zero(), vec::Vec3::new(0f64, 0f64, len));
     m.add_line(s, blue);
+}
+
+
+fn add_box(
+    line : &mut object::Object, 
+    objects : &DList<Arc<RwLock<object::Object>>>, 
+    )
+{
+    let mut m = if let Some(ref mr) = line.mesh_render {
+        if let resource::ResTest::ResData(ref mesh_arc) = mr.mesh.resource {
+            mesh_arc.write().unwrap()
+        }
+        else  {
+            return;
+        }
+    }
+    else {
+        return;
+    };
+
+    let color = vec::Vec4::new(0f64,1f64,0f64,0.7f64);
+
+    m.clear_lines();
+
+    for o in objects.iter() {
+        let ob = o.read().unwrap();
+        line.position = ob.world_position();
+        line.orientation = transform::Orientation::Quat(ob.world_orientation());
+        line.scale = ob.world_scale();
+
+        let obm = if let Some(ref mr) = ob.mesh_render {
+            if let resource::ResTest::ResData(ref mesh_arc) = mr.mesh.resource {
+                mesh_arc.read().unwrap()
+            }
+            else  {
+                break;
+            }
+        }
+        else {
+            break;
+        };
+
+        let aabox = if let Some(ref m) = obm.aabox {
+            m
+        }
+        else {
+            break;
+        };
+
+        let s = geometry::Segment::new(
+            aabox.min,
+            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.min.z));
+        m.add_line(s, color);
+        let s = geometry::Segment::new(
+            aabox.min,
+            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.min.z));
+        m.add_line(s, color);
+        let s = geometry::Segment::new(
+            aabox.min,
+            vec::Vec3::new(aabox.min.x, aabox.min.y, aabox.max.z));
+        m.add_line(s, color);
+        let s = geometry::Segment::new(
+            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.min.z),
+            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.min.z));
+        m.add_line(s, color);
+
+        let s = geometry::Segment::new(
+            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.min.z),
+            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.max.z));
+        m.add_line(s, color);
+
+        let s = geometry::Segment::new(
+            vec::Vec3::new(aabox.min.x, aabox.min.y, aabox.max.z),
+            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.max.z));
+        m.add_line(s, color);
+
+        let s = geometry::Segment::new(
+            vec::Vec3::new(aabox.min.x, aabox.min.y, aabox.max.z),
+            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.max.z));
+        m.add_line(s, color);
+
+        let s = geometry::Segment::new(
+            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.max.z),
+            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.max.z));
+        m.add_line(s, color);
+
+        let s = geometry::Segment::new(
+            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.min.z),
+            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.min.z));
+        m.add_line(s, color);
+
+        let s = geometry::Segment::new(
+            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.max.z),
+            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.max.z));
+        m.add_line(s, color);
+
+        let s = geometry::Segment::new(
+            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.min.z),
+            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.max.z));
+        m.add_line(s, color);
+
+        let s = geometry::Segment::new(
+            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.min.z),
+            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.max.z));
+        m.add_line(s, color);
+
+        break;
+    }
 }
 
