@@ -572,14 +572,6 @@ impl Render {
                 self.shader_manager.clone(),
                 self.camera.clone());
         }
-
-        /*
-        if objects.len() > 0 {
-            center = center / (objects.len() as f64);
-            self.dragger.write().unwrap().position = center;
-            self.dragger.write().unwrap().orientation = transform::Orientation::Quat(ori);
-        }
-        */
     }
 
     fn prepare_passes_objects_ortho(&mut self, list : DList<Arc<RwLock<object::Object>>>)

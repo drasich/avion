@@ -133,6 +133,18 @@ impl DraggerManager
             Some(o) => println!("dragger collision")
         }
     }
+
+    pub fn set_position(&mut self, p : vec::Vec3) {
+        for o in self.draggers.iter_mut() {
+            o.write().unwrap().position = p;
+        }
+    }
+
+    pub fn set_orientation(&mut self, ori : transform::Orientation) {
+        for o in self.draggers.iter_mut() {
+            o.write().unwrap().orientation = ori;
+        }
+    }
 }
 
 fn create_dragger_tr(

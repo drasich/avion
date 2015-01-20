@@ -159,6 +159,20 @@ impl View
         let obs = &scene.objects;
         let sel = &context.selected;
 
+        let mut center = vec::Vec3::zero();
+        let mut ori = vec::Quat::identity();
+        for o in sel.iter() {
+            center = center + o.read().unwrap().position;
+            ori = ori * o.read().unwrap().world_orientation();
+        }
+
+        if sel.len() > 0 {
+            center = center / (sel.len() as f64);
+            let mut dragger = self.dragger.borrow_mut();
+            dragger.set_position(center);
+            dragger.set_orientation(transform::Orientation::Quat(ori));
+        }
+
         self.render.draw(obs, sel, &self.dragger.borrow().draggers);
     }
 
