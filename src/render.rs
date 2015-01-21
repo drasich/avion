@@ -913,62 +913,7 @@ fn add_box(
             break;
         };
 
-        let s = geometry::Segment::new(
-            aabox.min,
-            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.min.z));
-        m.add_line(s, color);
-        let s = geometry::Segment::new(
-            aabox.min,
-            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.min.z));
-        m.add_line(s, color);
-        let s = geometry::Segment::new(
-            aabox.min,
-            vec::Vec3::new(aabox.min.x, aabox.min.y, aabox.max.z));
-        m.add_line(s, color);
-        let s = geometry::Segment::new(
-            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.min.z),
-            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.min.z));
-        m.add_line(s, color);
-
-        let s = geometry::Segment::new(
-            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.min.z),
-            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.max.z));
-        m.add_line(s, color);
-
-        let s = geometry::Segment::new(
-            vec::Vec3::new(aabox.min.x, aabox.min.y, aabox.max.z),
-            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.max.z));
-        m.add_line(s, color);
-
-        let s = geometry::Segment::new(
-            vec::Vec3::new(aabox.min.x, aabox.min.y, aabox.max.z),
-            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.max.z));
-        m.add_line(s, color);
-
-        let s = geometry::Segment::new(
-            vec::Vec3::new(aabox.min.x, aabox.max.y, aabox.max.z),
-            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.max.z));
-        m.add_line(s, color);
-
-        let s = geometry::Segment::new(
-            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.min.z),
-            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.min.z));
-        m.add_line(s, color);
-
-        let s = geometry::Segment::new(
-            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.max.z),
-            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.max.z));
-        m.add_line(s, color);
-
-        let s = geometry::Segment::new(
-            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.min.z),
-            vec::Vec3::new(aabox.max.x, aabox.min.y, aabox.max.z));
-        m.add_line(s, color);
-
-        let s = geometry::Segment::new(
-            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.min.z),
-            vec::Vec3::new(aabox.max.x, aabox.max.y, aabox.max.z));
-        m.add_line(s, color);
+        m.add_aabox(aabox, color);
 
         break;
     }
