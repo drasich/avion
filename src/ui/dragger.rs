@@ -207,19 +207,3 @@ impl Dragger
     }
 }
 
-/*
-fn _resize_to_cam(
-    world : &matrix::Matrix4, 
-    projection : &matrix::Matrix4,
-    factor : f64)
-{
-  let tm = projection * world;
-  tm = tm.transpose();
-
-  let zero = vec::Vec4::new(0f64,0f64,0f64,1f64);
-  let vw = tm * zero;
-  let w = vw.w * factor;
-  return w;
-}
-*/
-

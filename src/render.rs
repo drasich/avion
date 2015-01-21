@@ -133,7 +133,7 @@ impl RenderPass
         for (_,p) in self.passes.iter() {
             let cam_mat = p.camera.borrow().object.read().unwrap().get_world_matrix();
             let cam_projection = p.camera.borrow().perspective_get();
-            let cam_mat_inv = cam_mat.inverse_get();
+            let cam_mat_inv = cam_mat.get_inverse();
             let matrix = &cam_projection * &cam_mat_inv;
 
             for o in p.objects.iter() {
@@ -703,9 +703,10 @@ impl Render {
             //ld.push_back(self.dragger.clone());
             //self.prepare_passes_objects_per(ld);
             self.prepare_passes_objects_per(draggers);
-            //TODO draw with ortho
 
-            add_box(&mut *self.line.write().unwrap(), selected);
+            let scale = get_camera_resize_w(&*self.camera.borrow(), 0.05f64);
+            //add_box(&mut *self.line.write().unwrap(), selected, scale as f32);
+            add_box(&mut *self.line.write().unwrap(), draggers, scale as f32);
 
             prepare_passes_object(
                 self.line.clone(),
@@ -870,6 +871,7 @@ fn create_repere(m : &mut mesh::Mesh, len : f64)
 fn add_box(
     line : &mut object::Object, 
     objects : &DList<Arc<RwLock<object::Object>>>, 
+    scale : f32
     )
 {
     let mut m = if let Some(ref mr) = line.mesh_render {
@@ -892,7 +894,7 @@ fn add_box(
         let ob = o.read().unwrap();
         line.position = ob.world_position();
         line.orientation = transform::Orientation::Quat(ob.world_orientation());
-        line.scale = ob.world_scale();
+        //line.scale = ob.world_scale();
 
         let obm = if let Some(ref mr) = ob.mesh_render {
             if let resource::ResTest::ResData(ref mesh_arc) = mr.mesh.resource {
@@ -913,9 +915,29 @@ fn add_box(
             break;
         };
 
-        m.add_aabox(aabox, color);
+        let scaled_box = aabox * scale;
+
+        m.add_aabox(&scaled_box, color);
 
         break;
     }
+}
+
+
+fn get_camera_resize_w(camera : &camera::Camera, factor : f64) -> f64
+{
+    //TODO compute matrix only one time per frame
+    let world = camera.object.read().unwrap().get_world_matrix();
+    let projection = camera.perspective_get();
+
+    let world_inv = world.get_inverse();
+
+    let mut tm = &projection * &world_inv;
+    tm = tm.transpose();
+
+    let zero = vec::Vec4::new(0f64,0f64,0f64,1f64);
+    let vw = &tm * zero;
+    let w = vw.w * factor;
+    return w;
 }
 
