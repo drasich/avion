@@ -225,7 +225,7 @@ impl Matrix4
     }
 
 
-    pub fn inverse_get(&self) -> Matrix4
+    pub fn get_inverse(&self) -> Matrix4
     {
         let m = &self.data;
 
@@ -362,6 +362,21 @@ impl<'a> Mul for &'a Matrix4 {
         out[15] = m[3] * n[12] + m[7] * n[13] + m[11] * n[14] + m[15] * n[15];
 
         Matrix4 { data : out }
+    }
+}
+
+impl<'a> Mul<vec::Vec4> for &'a Matrix4 {
+    type Output = vec::Vec4;
+    fn mul(self, v : vec::Vec4) -> vec::Vec4
+    {
+        let m = self.data;
+
+        vec::Vec4::new(
+            m[0]*v.x + m[4]*v.y + m[8]*v.z + m[12]*v.w,
+            m[1]*v.x + m[5]*v.y + m[9]*v.z + m[13]*v.w,
+            m[2]*v.x + m[6]*v.y + m[10]*v.z + m[14]*v.w,
+            m[3]*v.x + m[7]*v.y + m[11]*v.z + m[15]*v.w
+            )
     }
 }
 

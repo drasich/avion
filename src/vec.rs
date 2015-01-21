@@ -403,6 +403,13 @@ impl fmt::Show for Vec3
     }
 }
 
+impl fmt::Show for Vec4
+{
+    fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "({}, {}, {}, {})", self.x, self.y, self.z, self.w)
+    }
+}
+
 
 impl fmt::Show for Quat
 {
@@ -455,6 +462,16 @@ impl Mul<f64> for Vec3 {
         Vec3::new(self.x*f, self.y*f, self.z*f)
     }
 }
+
+impl Mul<f32> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, f: f32) -> Vec3 {
+        let f = f as f64;
+        Vec3::new(self.x*f, self.y*f, self.z*f)
+    }
+}
+
 
 //impl Mul<Vec3, f64> for Vec3 {
 impl Mul<Vec3> for Vec3 {

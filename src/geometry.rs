@@ -1,5 +1,6 @@
 use vec::{Vec3, Quat};
 use std::fmt;
+use std::ops::{Mul};//, BitXor, Add, Sub, Div};
 
 pub struct Ray
 {
@@ -148,8 +149,22 @@ impl AABox
 
         OBox::new(o)
     }
+}
 
+impl<'a> Mul<f64> for &'a AABox {
+    type Output = AABox;
 
+    fn mul(self, f: f64) -> AABox {
+        AABox::new(self.min * f, self.max * f)
+    }
+}
+
+impl<'a> Mul<f32> for &'a AABox {
+    type Output = AABox;
+
+    fn mul(self, f: f32) -> AABox {
+        AABox::new(self.min * f, self.max * f)
+    }
 }
 
 impl fmt::Show for AABox

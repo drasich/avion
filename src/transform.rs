@@ -6,6 +6,7 @@ use std::ptr;
 use libc::{c_char, c_void, c_int, c_float};
 use std::ffi::CString;
 //use std::c_str::ToCStr;
+use std::ops::{Mul};//, BitXor, Add, Sub, Div};
 
 
 #[link(name = "joker")]
@@ -140,4 +141,11 @@ impl ui::PropertyShow for Orientation {
 
 }
 
+
+impl Mul<Orientation> for Orientation {
+    type Output = Orientation;
+    fn mul(self, other: Orientation) -> Orientation {
+        Orientation::Quat(self.as_quat() * other.as_quat())
+    }
+}
 
