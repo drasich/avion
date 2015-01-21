@@ -107,21 +107,18 @@ impl<T> BufferSend for Buffer<T> {
 
         match self.buffer_type {
             BufferType::Vertex => unsafe {
-                println!("sending buffersend vertex '{}'", self.name);
                 let cgl_buffer = cgl_buffer_init(
                     mem::transmute(self.data.as_ptr()),
                     self.data.len() as c_uint);
                 self.cgl_buffer = Some(cgl_buffer);
             },
             BufferType::Index => unsafe {
-                println!("sending buffersend index '{}'", self.name);
                 let cgl_buffer = cgl_buffer_index_init(
                     mem::transmute(self.data.as_ptr()),
                     self.data.len() as c_uint);
                 self.cgl_buffer = Some(cgl_buffer);
             },
             _ => unsafe {
-                println!("sending buffersend '{}'", self.name);
                 let cgl_buffer = cgl_buffer_init(
                     mem::transmute(self.data.as_ptr()),
                     self.data.len() as c_uint);
@@ -401,10 +398,8 @@ impl Mesh
     */
     pub fn init_buffers(&mut self)
     {
-        println!("init buffers : {} ", self.name);
         if self.state == 1 {
             for (_,b) in self.buffers.iter_mut() {
-                //Some(b.send());
                 b.send();
             }
             for (_,b) in self.buffers_u32.iter_mut() {
