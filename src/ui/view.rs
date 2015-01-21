@@ -173,7 +173,7 @@ impl View
             dragger.set_orientation(transform::Orientation::Quat(ori));
         }
 
-        self.render.draw(obs, sel, &self.dragger.borrow().draggers);
+        self.render.draw(obs, sel, &self.dragger.borrow().get_objects());
     }
 
     fn resize(&mut self, w : c_int, h : c_int)
