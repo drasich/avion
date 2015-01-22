@@ -4,6 +4,7 @@ use mesh_render;
 use transform;
 use shader;
 use resource;
+use material;
 
 use std::collections::{DList};
 use std::sync::{RwLock, Arc};//,RWLockReadGuard};
@@ -127,6 +128,22 @@ impl Object
             _ => {}
         }
     }
+
+    pub fn get_material(&self) -> Option<Arc<RwLock<material::Material>>>
+    {
+        let render = match self.mesh_render {
+            Some(ref r) => r,
+            None => return None
+        };
+
+        match render.material.resource {
+            resource::ResTest::ResData(ref d) => {
+                Some(d.clone())
+            },
+            _ => None
+        }
+    }
+
 
 }
 

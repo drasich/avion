@@ -443,7 +443,7 @@ impl Control
                 None => { println!("cannot borrow camera"); return; }
             };
 
-            self.dragger.borrow().check_collision(r);
+            self.dragger.borrow_mut().check_collision(r);
 
             return;
         }

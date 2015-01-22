@@ -48,6 +48,7 @@ pub struct Dragger
     pub ori : transform::Orientation,
     constraint : vec::Vec3,
     kind : Kind,
+    color : vec::Vec4
 }
 
 impl DraggerManager
@@ -65,114 +66,65 @@ impl DraggerManager
     }
 
     fn create_dragger(&mut self, factory : &mut factory::Factory)
-        {
-            let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
-            let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
-            let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
-            let dragger_parent = 
-                Arc::new(RwLock::new(factory.create_object("dragger")));
-
-            let dragger_x = Dragger::new(
-                factory,
-                "dragger_x",
-                vec::Vec3::new(1f64,0f64,0f64),
-                transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,1f64,0f64), 90f64)),
-                Kind::Translate,
-                red);
-
-            let dragger_y = Dragger::new(
-                factory,
-                "dragger_y",
-                vec::Vec3::new(0f64,1f64,0f64),
-                transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64)), 
-                Kind::Translate,
-                green);
-
-            let dragger_z = Dragger::new(
-                factory,
-                "dragger_z",
-                vec::Vec3::new(0f64,0f64,1f64),
-                transform::Orientation::Quat(vec::Quat::identity()), 
-                Kind::Translate,
-                blue);
-
-            /*
-            object::child_add(dragger_parent.clone(), dragger_x);
-            object::child_add(dragger_parent.clone(), dragger_y);
-            object::child_add(dragger_parent.clone(), dragger_z);
-            */
-
-            self.draggers.push_back(dragger_x);
-            self.draggers.push_back(dragger_y);
-            self.draggers.push_back(dragger_z);
-
-            //dragger_parent
-        }
-
-    pub fn check_collision(&self, r: geometry::Ray)
     {
-        //TODO
-        //*
+        let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
+        let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
+        let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
+        let dragger_parent = 
+            Arc::new(RwLock::new(factory.create_object("dragger")));
+
+        let dragger_x = Dragger::new(
+            factory,
+            "dragger_x",
+            vec::Vec3::new(1f64,0f64,0f64),
+            transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,1f64,0f64), 90f64)),
+            Kind::Translate,
+            red);
+
+        let dragger_y = Dragger::new(
+            factory,
+            "dragger_y",
+            vec::Vec3::new(0f64,1f64,0f64),
+            transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64)), 
+            Kind::Translate,
+            green);
+
+        let dragger_z = Dragger::new(
+            factory,
+            "dragger_z",
+            vec::Vec3::new(0f64,0f64,1f64),
+            transform::Orientation::Quat(vec::Quat::identity()), 
+            Kind::Translate,
+            blue);
+
+        self.draggers.push_back(dragger_x);
+        self.draggers.push_back(dragger_y);
+        self.draggers.push_back(dragger_z);
+    }
+
+
+    pub fn check_collision(&mut self, r: geometry::Ray)
+    {
         let mut found_length = 0f64;
-        let mut closest_obj = None;
-        fn _check(
-            r : &geometry::Ray,
-            objs : &DList<Arc<RwLock<object::Object>>>,
-            found_length : &mut f64,
-            closest_obj : &mut Option<Arc<RwLock<object::Object>>>,
-            s : f64)
-            {
-                for o in objs.iter() {
-                    let ob = o.read().unwrap();
-                    let position = ob.position;
-                    let rotation = ob.orientation.as_quat();
-                    let scale = vec::Vec3::new(s, s, s);
-                    let mesh = match ob.mesh_render {
-                        None => continue,
-                        Some(ref mr) => {
-                            match mr.mesh.resource {
-                                resource::ResTest::ResData(ref m) => {
-                                    m.read().unwrap()
-                                },
-                                _ => continue
-                            }
-                        }
-                    };
-
-                    let aabox = match mesh.aabox {
-                        None => continue,
-                        Some(ref aa) => aa
-                    };
-
-                    let ir = intersection::intersection_ray_box(r, aabox, &position, &rotation, &scale);
-                    //let ir = intersection::ray_object(r, &*o.read().unwrap());
-                    if ir.hit {
-                        let length = (ir.position - r.start).length2();
-                        match *closest_obj {
-                            None => {
-                                *closest_obj = Some(o.clone());
-                                *found_length = length;
-                            }
-                            Some(_) => {
-                                if length < *found_length {
-                                    *closest_obj = Some(o.clone());
-                                    *found_length = length;
-                                }
-                            }
-                        }
-                    }
-                    let children = &o.read().unwrap().children;
-                    _check(r, children, found_length, closest_obj, s);
+        let mut closest_dragger = None;
+        for d in self.draggers.iter_mut() {
+            d.set_state(State::Idle);
+            let (hit, len) =d.check_collision(&r, self.scale);
+            if hit {
+                if let None = closest_dragger {
+                    closest_dragger = Some(d);
+                    found_length = len;
+                }
+                else if len < found_length {
+                    closest_dragger = Some(d);
+                    found_length = len;
                 }
             }
-
-        _check(&r, &self.get_objects(), &mut found_length, &mut closest_obj, self.scale);
-
-        match closest_obj {
-            None => {},
-            Some(o) => println!("dragger collision")
         }
-        //*/
+
+        if let Some(d) = closest_dragger {
+            d.set_state(State::Highlight);
+        }
     }
 
     pub fn set_position(&mut self, p : vec::Vec3) {
@@ -253,7 +205,8 @@ impl Dragger
             //aabox : aabox,
             constraint : constraint,
             ori : ori,
-            kind : kind
+            kind : kind,
+            color : color
         }
     }
 
@@ -264,5 +217,62 @@ impl Dragger
     {
         
     }
+
+    fn set_state(&mut self, state : State)
+    {
+        let set_color = |&: color : vec::Vec4|
+        {
+            if let Some(mat) = self.object.write().unwrap().get_material() {
+                mat.write().unwrap().set_uniform_data(
+                    "color",
+                    shader::UniformData::Vec4(color));
+            }
+        };
+
+        match state {
+            State::Highlight => {
+                set_color(vec::Vec4::new(1f64,1f64,0f64, 1f64));
+            },
+            State::Idle => {
+                set_color(self.color);
+            }
+            _ => {}
+        }
+    }
+
+    fn check_collision(&self, r : &geometry::Ray, s : f64) -> (bool, f64)
+    {
+        let ob = self.object.read().unwrap();
+        let position = ob.position;
+        let rotation = ob.orientation.as_quat();
+        let scale = vec::Vec3::new(s, s, s);
+        let mesh = match ob.mesh_render {
+            None => return (false,0f64),
+            Some(ref mr) => {
+                match mr.mesh.resource {
+                    resource::ResTest::ResData(ref m) => {
+                        m.read().unwrap()
+                    },
+                    _ => return (false,0f64)
+                }
+            }
+        };
+
+        let aabox = match mesh.aabox {
+            None => return (false,0f64),
+            Some(ref aa) => aa
+        };
+
+        let ir = intersection::intersection_ray_box(r, aabox, &position, &rotation, &scale);
+        //let ir = intersection::ray_object(r, &*o.read().unwrap());
+        if ir.hit {
+            let length = (ir.position - r.start).length2();
+            return (true, length);
+        }
+        else {
+            return (false,0f64);
+        }
+    }
+
 }
 
