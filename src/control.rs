@@ -24,7 +24,8 @@ use property::PropertyWrite;
 pub enum State
 {
     Idle,
-    CameraRotation
+    CameraRotation,
+    Dragger
 }
 
 pub struct Control
@@ -59,6 +60,26 @@ impl Control
             context : context,
             dragger : dragger
         }
+    }
+
+    pub fn mouse_down(
+            &mut self, 
+            button : i32,
+            x : i32, 
+            y : i32,
+            timestamp : i32)
+    {
+        let r = match self.camera.try_borrow(){
+            Some(c) => {
+                c.ray_from_screen(x as f64, y as f64, 10000f64)
+            },
+            None => { println!("cannot borrow camera"); return; }
+        };
+
+        if self.dragger.borrow_mut().check_collision(r, button) {
+            self.state = State::Dragger;
+        }
+
     }
 
     pub fn mouse_up(
@@ -433,31 +454,42 @@ impl Control
         prevy : i32,
         timestamp : i32)
     {
-        if button == 0 {
-            let x : f64 = curx as f64;
-            let y : f64 = cury as f64;
-            let r = match self.camera.try_borrow(){
-                Some(c) => {
-                    c.ray_from_screen(x as f64, y as f64, 10000f64)
-                },
-                None => { println!("cannot borrow camera"); return; }
-            };
+        match self.state {
+            State::Idle | State::CameraRotation => {
+                let x : f64 = curx as f64;
+                let y : f64 = cury as f64;
+                let r = match self.camera.try_borrow(){
+                    Some(c) => {
+                        c.ray_from_screen(x as f64, y as f64, 10000f64)
+                    },
+                    None => { println!("cannot borrow camera"); return; }
+                };
 
-            self.dragger.borrow_mut().check_collision(r);
+                self.dragger.borrow_mut().check_collision(r, button);
+                
+                if button == 1 {
 
-            return;
-        }
+                    self.dragger.borrow_mut().set_state(dragger::State::Idle);
 
-        let x : f64 = curx as f64 - prevx as f64;
-        let y : f64 = cury as f64 - prevy as f64;
+                    let x : f64 = curx as f64 - prevx as f64;
+                    let y : f64 = cury as f64 - prevy as f64;
 
-        if (mod_flag & (1 << 0)) != 0 {
-            let t = vec::Vec3::new(-x*0.5f64, y*0.5f64, 0f64);
-            let mut camera = self.camera.borrow_mut();
-            camera.pan(&t);
-        }
-        else {
-            self.rotate_camera(x, y);
+                    if (mod_flag & (1 << 0)) != 0 {
+                        let t = vec::Vec3::new(-x*0.5f64, y*0.5f64, 0f64);
+                        let mut camera = self.camera.borrow_mut();
+                        camera.pan(&t);
+                    }
+                    else {
+                        self.rotate_camera(x, y);
+                    }
+                }
+            },
+            State::Dragger =>
+            {
+                let x : f64 = curx as f64 - prevx as f64;
+                let y : f64 = cury as f64 - prevy as f64;
+                self.dragger.borrow_mut().mouse_move(x,y);
+            }
         }
     }
 

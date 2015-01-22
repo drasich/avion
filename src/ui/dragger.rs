@@ -21,9 +21,10 @@ pub struct DraggerManager
     //pub parent : Option<Arc<RwLock<object::Object>>>,
     //pub draggers : DList<Arc<RwLock<object::Object>>>,
     pub draggers : DList<Dragger>,
-    pub scale : f64
+    pub scale : f64,
 }
 
+#[derive(Copy)]
 pub enum State
 {
     Idle,
@@ -103,7 +104,7 @@ impl DraggerManager
     }
 
 
-    pub fn check_collision(&mut self, r: geometry::Ray)
+    pub fn check_collision(&mut self, r: geometry::Ray, button : i32) -> bool
     {
         let mut found_length = 0f64;
         let mut closest_dragger = None;
@@ -123,7 +124,15 @@ impl DraggerManager
         }
 
         if let Some(d) = closest_dragger {
-            d.set_state(State::Highlight);
+            match button {
+                0i32 => d.set_state(State::Highlight),
+                1i32 => d.set_state(State::Selected),
+                _ => {}
+            };
+            return true;
+        }
+        else {
+            return false;
         }
     }
 
@@ -151,6 +160,17 @@ impl DraggerManager
         }
 
         l
+    }
+
+    pub fn set_state(&mut self, state : State) {
+        for d in self.draggers.iter_mut() {
+            d.set_state(state);
+        }
+    }
+
+    pub fn mouse_move(&mut self, move_x : f64, move_y : f64) 
+    {
+
     }
 }
 
@@ -232,6 +252,9 @@ impl Dragger
         match state {
             State::Highlight => {
                 set_color(vec::Vec4::new(1f64,1f64,0f64, 1f64));
+            },
+            State::Selected => {
+                set_color(vec::Vec4::new(1f64,1f64,1f64, 1f64));
             },
             State::Idle => {
                 set_color(self.color);

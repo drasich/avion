@@ -208,6 +208,9 @@ pub extern fn mouse_down(
     )
 {
     //println!("rust mouse down button {}, pos: {}, {}", button, x, y);
+    let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
+    let mut c = control_rc.borrow_mut();
+    c.mouse_down(button,x,y,timestamp);
 }
 
 pub extern fn mouse_up(
@@ -219,7 +222,6 @@ pub extern fn mouse_up(
     timestamp : c_int
     )
 {
-    println!("view control fn mouse up");
     let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let mut c = control_rc.borrow_mut();
     c.mouse_up(button,x,y,timestamp);
