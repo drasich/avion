@@ -1,6 +1,6 @@
 use std::collections::DList;
-//use std::rc::Rc;
-//use std::cell::RefCell;
+use std::rc::Rc;
+use std::cell::RefCell;
 use std::sync::{RwLock, Arc};
 use object;
 use mesh;
@@ -20,7 +20,7 @@ pub struct DraggerManager
 {
     //pub parent : Option<Arc<RwLock<object::Object>>>,
     //pub draggers : DList<Arc<RwLock<object::Object>>>,
-    pub draggers : DList<Dragger>,
+    pub draggers : DList<Rc<RefCell<Dragger>>>,
     pub scale : f64,
 }
 
@@ -98,9 +98,9 @@ impl DraggerManager
             Kind::Translate,
             blue);
 
-        self.draggers.push_back(dragger_x);
-        self.draggers.push_back(dragger_y);
-        self.draggers.push_back(dragger_z);
+        self.draggers.push_back(Rc::new(RefCell::new(dragger_x)));
+        self.draggers.push_back(Rc::new(RefCell::new(dragger_y)));
+        self.draggers.push_back(Rc::new(RefCell::new(dragger_z)));
     }
 
 
@@ -108,16 +108,17 @@ impl DraggerManager
     {
         let mut found_length = 0f64;
         let mut closest_dragger = None;
-        for d in self.draggers.iter_mut() {
+        for dragger in self.draggers.iter_mut() {
+            let mut d = dragger.borrow_mut();
             d.set_state(State::Idle);
-            let (hit, len) =d.check_collision(&r, self.scale);
+            let (hit, len) = d.check_collision(&r, self.scale);
             if hit {
                 if let None = closest_dragger {
-                    closest_dragger = Some(d);
+                    closest_dragger = Some(dragger.clone());
                     found_length = len;
                 }
                 else if len < found_length {
-                    closest_dragger = Some(d);
+                    closest_dragger = Some(dragger.clone());
                     found_length = len;
                 }
             }
@@ -125,8 +126,8 @@ impl DraggerManager
 
         if let Some(d) = closest_dragger {
             match button {
-                0i32 => d.set_state(State::Highlight),
-                1i32 => d.set_state(State::Selected),
+                0i32 => d.borrow_mut().set_state(State::Highlight),
+                1i32 => d.borrow_mut().set_state(State::Selected),
                 _ => {}
             };
             return true;
@@ -138,12 +139,13 @@ impl DraggerManager
 
     pub fn set_position(&mut self, p : vec::Vec3) {
         for d in self.draggers.iter_mut() {
-            d.object.write().unwrap().position = p;
+            d.borrow_mut().object.write().unwrap().position = p;
         }
     }
 
     pub fn set_orientation(&mut self, ori : transform::Orientation) {
         for d in self.draggers.iter_mut() {
+            let mut d = d.borrow_mut();
             d.object.write().unwrap().orientation = ori * d.ori;
         }
     }
@@ -156,7 +158,7 @@ impl DraggerManager
     {
         let mut l = DList::new();
         for d in self.draggers.iter() {
-            l.push_back(d.object.clone());
+            l.push_back(d.borrow().object.clone());
         }
 
         l
@@ -164,7 +166,7 @@ impl DraggerManager
 
     pub fn set_state(&mut self, state : State) {
         for d in self.draggers.iter_mut() {
-            d.set_state(state);
+            d.borrow_mut().set_state(state);
         }
     }
 
