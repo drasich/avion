@@ -43,6 +43,12 @@ pub enum Kind
     Rotate
 }
 
+pub enum Repere
+{
+    Global,
+    Local
+}
+
 pub struct Dragger
 {
     pub object : Arc<RwLock<object::Object>>,
@@ -50,7 +56,8 @@ pub struct Dragger
     pub ori : transform::Orientation,
     constraint : vec::Vec3,
     kind : Kind,
-    color : vec::Vec4
+    color : vec::Vec4,
+    repere : Repere
 }
 
 impl DraggerManager
@@ -63,12 +70,12 @@ impl DraggerManager
             current : None
         };
 
-        dm.create_dragger(factory);
+        dm.create_draggers(factory);
 
         dm
     }
 
-    fn create_dragger(&mut self, factory : &mut factory::Factory)
+    fn create_draggers(&mut self, factory : &mut factory::Factory)
     {
         let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
         let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
@@ -242,7 +249,8 @@ impl Dragger
             constraint : constraint,
             ori : ori,
             kind : kind,
-            color : color
+            color : color,
+            repere : Repere::Global
         }
     }
 
