@@ -94,7 +94,7 @@ impl Camera
     }
     */
 
-    pub fn perspective_get(&self) -> matrix::Matrix4
+    pub fn get_perspective(&self) -> matrix::Matrix4
     {
         //TODO
         //matrix::Matrix4::perspective(0.4f64,1f64,1f64,10000f64)
@@ -151,7 +151,7 @@ impl Camera
         }
     }
 
-    pub fn resolution_set(&mut self, w : i32, h : i32)
+    pub fn set_resolution(&mut self, w : i32, h : i32)
     {
         if w as f64 != self.data.width || h as f64 != self.data.height {
             self.data.width = w as f64;
@@ -233,5 +233,24 @@ impl Camera
 
         self.recalculate_origin();
     }
+
+    pub fn get_camera_resize_w(&self, factor : f64) -> f64
+    {
+        //TODO compute matrix only one time per frame
+        let world = self.object.read().unwrap().get_world_matrix();
+        let projection = self.get_perspective();
+
+        let world_inv = world.get_inverse();
+
+        let mut tm = &projection * &world_inv;
+        tm = tm.transpose();
+
+        let zero = vec::Vec4::new(0f64,0f64,0f64,1f64);
+        let vw = &tm * zero;
+        let w = vw.w * factor;
+        return w;
+}
+
+
 }
 

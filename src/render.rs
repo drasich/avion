@@ -132,7 +132,7 @@ impl RenderPass
 
         for (_,p) in self.passes.iter() {
             let cam_mat = p.camera.borrow().object.read().unwrap().get_world_matrix();
-            let cam_projection = p.camera.borrow().perspective_get();
+            let cam_projection = p.camera.borrow().get_perspective();
             let cam_mat_inv = cam_mat.get_inverse();
             let matrix = &cam_projection * &cam_mat_inv;
 
@@ -245,7 +245,6 @@ impl RenderPass
             Some(ref m) => {
                 let mut mb = m.write().unwrap();
                 if mb.state == 1 {
-                    println!("init buffers");
                     mb.init_buffers();
                 }
                 let mut can_render = true;
@@ -483,10 +482,10 @@ impl Render {
                 vec::Vec3::new(w as f64, h as f64, 1f64);
 
             let mut cam = self.camera.borrow_mut();
-            cam.resolution_set(w, h);
+            cam.set_resolution(w, h);
 
             let mut cam_ortho = self.camera_ortho.borrow_mut();
-            cam_ortho.resolution_set(w, h);
+            cam_ortho.set_resolution(w, h);
 
             self.fbo_all.write().unwrap().cgl_resize(w, h);
             self.fbo_selected.write().unwrap().cgl_resize(w, h);
@@ -704,7 +703,7 @@ impl Render {
             //self.prepare_passes_objects_per(ld);
             self.prepare_passes_objects_per(draggers);
 
-            let scale = get_camera_resize_w(&*self.camera.borrow(), 0.05f64);
+            let scale = self.camera.borrow().get_camera_resize_w(0.05f64);
             //add_box(&mut *self.line.write().unwrap(), selected, scale as f32);
             add_box(&mut *self.line.write().unwrap(), draggers, scale as f32);
 
@@ -923,21 +922,4 @@ fn add_box(
     }
 }
 
-
-fn get_camera_resize_w(camera : &camera::Camera, factor : f64) -> f64
-{
-    //TODO compute matrix only one time per frame
-    let world = camera.object.read().unwrap().get_world_matrix();
-    let projection = camera.perspective_get();
-
-    let world_inv = world.get_inverse();
-
-    let mut tm = &projection * &world_inv;
-    tm = tm.transpose();
-
-    let zero = vec::Vec4::new(0f64,0f64,0f64,1f64);
-    let vw = &tm * zero;
-    let w = vw.w * factor;
-    return w;
-}
 

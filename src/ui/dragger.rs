@@ -21,6 +21,7 @@ pub struct DraggerManager
     //pub parent : Option<Arc<RwLock<object::Object>>>,
     //pub draggers : DList<Arc<RwLock<object::Object>>>,
     pub draggers : DList<Dragger>,
+    pub scale : f64
 }
 
 pub enum State
@@ -54,7 +55,8 @@ impl DraggerManager
     pub fn new(factory : &mut factory::Factory) -> DraggerManager
     {
         let mut dm = DraggerManager {
-            draggers : DList::new()
+            draggers : DList::new(),
+            scale : 1f64
         };
 
         dm.create_dragger(factory);
@@ -110,17 +112,40 @@ impl DraggerManager
     pub fn check_collision(&self, r: geometry::Ray)
     {
         //TODO
-        /*
+        //*
         let mut found_length = 0f64;
         let mut closest_obj = None;
         fn _check(
             r : &geometry::Ray,
             objs : &DList<Arc<RwLock<object::Object>>>,
             found_length : &mut f64,
-            closest_obj : &mut Option<Arc<RwLock<object::Object>>>)
+            closest_obj : &mut Option<Arc<RwLock<object::Object>>>,
+            s : f64)
             {
                 for o in objs.iter() {
-                    let ir = intersection::ray_object(r, &*o.read().unwrap());
+                    let ob = o.read().unwrap();
+                    let position = ob.position;
+                    let rotation = ob.orientation.as_quat();
+                    let scale = vec::Vec3::new(s, s, s);
+                    let mesh = match ob.mesh_render {
+                        None => continue,
+                        Some(ref mr) => {
+                            match mr.mesh.resource {
+                                resource::ResTest::ResData(ref m) => {
+                                    m.read().unwrap()
+                                },
+                                _ => continue
+                            }
+                        }
+                    };
+
+                    let aabox = match mesh.aabox {
+                        None => continue,
+                        Some(ref aa) => aa
+                    };
+
+                    let ir = intersection::intersection_ray_box(r, aabox, &position, &rotation, &scale);
+                    //let ir = intersection::ray_object(r, &*o.read().unwrap());
                     if ir.hit {
                         let length = (ir.position - r.start).length2();
                         match *closest_obj {
@@ -137,17 +162,17 @@ impl DraggerManager
                         }
                     }
                     let children = &o.read().unwrap().children;
-                    _check(r, children, found_length, closest_obj);
+                    _check(r, children, found_length, closest_obj, s);
                 }
             }
 
-        _check(&r, &self.draggers, &mut found_length, &mut closest_obj);
+        _check(&r, &self.get_objects(), &mut found_length, &mut closest_obj, self.scale);
 
         match closest_obj {
             None => {},
             Some(o) => println!("dragger collision")
         }
-        */
+        //*/
     }
 
     pub fn set_position(&mut self, p : vec::Vec3) {
@@ -160,6 +185,10 @@ impl DraggerManager
         for d in self.draggers.iter_mut() {
             d.object.write().unwrap().orientation = ori * d.ori;
         }
+    }
+
+    pub fn set_scale(&mut self, scale : f64) {
+        self.scale = scale;
     }
 
     pub fn get_objects(&self) -> DList<Arc<RwLock<object::Object>>>

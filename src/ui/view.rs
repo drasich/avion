@@ -23,6 +23,7 @@ use vec;
 use geometry;
 use material;
 use ui::dragger;
+use camera;
 
 use control;
 use control::Control;
@@ -52,7 +53,9 @@ pub struct View
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
 
     //pub dragger : Arc<RwLock<object::Object>>,
-    pub dragger : Rc<RefCell<dragger::DraggerManager>>
+    pub dragger : Rc<RefCell<dragger::DraggerManager>>,
+
+    pub camera : Rc<RefCell<camera::Camera>>
 }
 
 impl View
@@ -91,7 +94,9 @@ impl View
             tree : None,
             property: None,
 
-            dragger : dragger
+            dragger : dragger,
+
+            camera : camera
         };
 
         return v;
@@ -171,6 +176,8 @@ impl View
             let mut dragger = self.dragger.borrow_mut();
             dragger.set_position(center);
             dragger.set_orientation(transform::Orientation::Quat(ori));
+            let scale = self.camera.borrow().get_camera_resize_w(0.05f64);
+            dragger.set_scale(scale);
         }
 
         self.render.draw(obs, sel, &self.dragger.borrow().get_objects());
