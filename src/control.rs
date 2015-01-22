@@ -260,6 +260,7 @@ impl Control
         old : Box<T>,
         new : Box<T>)
     {
+        println!("request operation");
         if *old == *new {
             return;
         }
@@ -290,6 +291,7 @@ impl Control
         name : Vec<String>,
         new : &Any)
     {
+        println!("request direct change {:?}", name);
         let o = match self.get_selected_object() {
             Some(ob) => ob,
             None => {
@@ -488,7 +490,12 @@ impl Control
             {
                 let x : f64 = curx as f64 - prevx as f64;
                 let y : f64 = cury as f64 - prevy as f64;
-                self.dragger.borrow_mut().mouse_move(x,y);
+                if let Some(f) = self.dragger.borrow_mut().mouse_move(x,y) {
+                    //todo chris
+                    let prop = vec!["object".to_string(),"position".to_string(), "x".to_string()];
+                    println!("ffff : {}", f);
+                    self.request_direct_change(prop, &f);
+                }
             }
         }
     }

@@ -1,5 +1,5 @@
 use std::collections::DList;
-use std::rc::Rc;
+use std::rc::{Rc,Weak};
 use std::cell::RefCell;
 use std::sync::{RwLock, Arc};
 use object;
@@ -22,6 +22,7 @@ pub struct DraggerManager
     //pub draggers : DList<Arc<RwLock<object::Object>>>,
     pub draggers : DList<Rc<RefCell<Dragger>>>,
     pub scale : f64,
+    current : Option<Weak<RefCell<Dragger>>>
 }
 
 #[derive(Copy)]
@@ -58,7 +59,8 @@ impl DraggerManager
     {
         let mut dm = DraggerManager {
             draggers : DList::new(),
-            scale : 1f64
+            scale : 1f64,
+            current : None
         };
 
         dm.create_dragger(factory);
@@ -127,7 +129,10 @@ impl DraggerManager
         if let Some(d) = closest_dragger {
             match button {
                 0i32 => d.borrow_mut().set_state(State::Highlight),
-                1i32 => d.borrow_mut().set_state(State::Selected),
+                1i32 => {
+                    d.borrow_mut().set_state(State::Selected);
+                    self.current = Some(d.downgrade());
+                }
                 _ => {}
             };
             return true;
@@ -170,9 +175,18 @@ impl DraggerManager
         }
     }
 
-    pub fn mouse_move(&mut self, move_x : f64, move_y : f64) 
+    pub fn mouse_move(&mut self, move_x : f64, move_y : f64) -> Option<f64>
     {
+        if let Some(ref d) = self.current {
+            if let Some(dd) = d.upgrade() {
+                let dragger = dd.borrow_mut();
+                let mut o = dragger.object.write().unwrap();
+                o.position.x += move_x;
+                return Some(o.position.x);
+            }
+        }
 
+        None
     }
 }
 
