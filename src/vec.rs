@@ -474,6 +474,7 @@ impl Mul<f32> for Vec3 {
 
 
 //impl Mul<Vec3, f64> for Vec3 {
+/*
 impl Mul<Vec3> for Vec3 {
     type Output = f64;
 
@@ -481,8 +482,8 @@ impl Mul<Vec3> for Vec3 {
         self.x*v.x + self.y*v.y + self.z*v.z
     }
 }
+*/
 
-/*
 //impl Mul<Vec3, Vec3> for Vec3 {
 impl Mul<Vec3> for Vec3 {
     type Output = Vec3;
@@ -491,7 +492,6 @@ impl Mul<Vec3> for Vec3 {
         Vec3::new(self.x*v.x, self.y*v.y, self.z*v.z)
     }
 }
-*/
 
 
 //impl Div<f64, Vec3> for Vec3 {
