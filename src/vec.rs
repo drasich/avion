@@ -214,9 +214,11 @@ impl Vec3
         self.x*self.x + self.y*self.y + self.z*self.z
     }
 
+    /*
     pub fn mul(self, v: Vec3) -> Vec3 {
         Vec3::new(self.x*v.x, self.y*v.y, self.z*v.z)
     }
+    */
 
     pub fn normalized(&self) -> Vec3
     {

@@ -95,14 +95,14 @@ pub fn ray_mesh(
         Some(ref b) => {
             for i in range_step(0, b.data.len(), 3) {
                 let index = b.data[i] as usize;
-                //let v0 = get_vertex(&vertices.data, index) * *scale;
-                let v0 = get_vertex(&vertices.data, index).mul(*scale);
+                let v0 = get_vertex(&vertices.data, index) * *scale;
+                //let v0 = get_vertex(&vertices.data, index).mul(*scale);
                 let index = b.data[i+1] as usize;
-                //let v1 = get_vertex(&vertices.data, index) * *scale;
-                let v1 = get_vertex(&vertices.data, index).mul(*scale);
+                let v1 = get_vertex(&vertices.data, index) * *scale;
+                //let v1 = get_vertex(&vertices.data, index).mul(*scale);
                 let index = b.data[i+2] as usize;
-                //let v2 = get_vertex(&vertices.data, index)* *scale;
-                let v2 = get_vertex(&vertices.data, index).mul(*scale);
+                let v2 = get_vertex(&vertices.data, index)* *scale;
+                //let v2 = get_vertex(&vertices.data, index).mul(*scale);
 
                 let tri = geometry::Triangle::new(v0,v1,v2);
 
@@ -369,8 +369,8 @@ pub fn intersection_ray_box(
   let newray = geometry::Ray::new(start, direction);
 
   let box_rep = geometry::AABox::new(
-      abox.min.mul(*scale),
-      abox.max.mul(*scale));
+      abox.min * *scale,
+      abox.max * *scale);
 
   let mut ir = intersection_ray_aabox(&newray, &box_rep);
 

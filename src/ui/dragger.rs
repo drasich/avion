@@ -371,7 +371,7 @@ fn translation_global(
 
     if ir.hit && irstart.hit {
         let mut translation = ir.position - irstart.position;
-        translation = translation.mul(constraint);
+        translation = translation * constraint;
         return Some(translation);
     }
     else {

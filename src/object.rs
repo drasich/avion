@@ -107,8 +107,8 @@ impl Object
         match self.parent {
             None => return self.scale,
             Some(ref p) => {
-                //return self.scale * p.read().unwrap().world_scale();
-                return self.scale.mul(p.read().unwrap().world_scale());
+                return self.scale * p.read().unwrap().world_scale();
+                //return self.scale.mul(p.read().unwrap().world_scale());
             }
         }
     }
