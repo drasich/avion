@@ -43,6 +43,13 @@ pub enum Kind
     Rotate
 }
 
+pub enum Operation
+{
+    Translation(vec::Vec3),
+    Scale(vec::Vec3),
+    Rotation(transform::Orientation)
+}
+
 pub enum Repere
 {
     Global,
@@ -182,14 +189,14 @@ impl DraggerManager
         }
     }
 
-    pub fn mouse_move(&mut self, move_x : f64, move_y : f64) -> Option<f64>
+    pub fn mouse_move(&mut self, move_x : f64, move_y : f64) -> Option<Operation>
     {
         if let Some(ref d) = self.current {
             if let Some(dd) = d.upgrade() {
                 let dragger = dd.borrow_mut();
                 let mut o = dragger.object.write().unwrap();
                 o.position.x += move_x;
-                return Some(o.position.x);
+                return Some(Operation::Translation(o.position));
             }
         }
 

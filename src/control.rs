@@ -490,11 +490,14 @@ impl Control
             {
                 let x : f64 = curx as f64 - prevx as f64;
                 let y : f64 = cury as f64 - prevy as f64;
-                if let Some(f) = self.dragger.borrow_mut().mouse_move(x,y) {
-                    //todo chris
-                    let prop = vec!["object".to_string(),"position".to_string(), "x".to_string()];
-                    println!("ffff : {}", f);
-                    self.request_direct_change(prop, &f);
+                if let Some(op) = self.dragger.borrow_mut().mouse_move(x,y) {
+                    match op {
+                        dragger::Operation::Translation(v) => {
+                            let prop = vec!["object".to_string(),"position".to_string()];
+                            self.request_direct_change(prop, &v);
+                        },
+                        _ => {}
+                    }
                 }
             }
         }
