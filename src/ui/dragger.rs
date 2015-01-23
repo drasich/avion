@@ -15,6 +15,7 @@ use geometry;
 use intersection;
 use matrix;
 use factory;
+use camera;
 
 pub struct DraggerManager
 {
@@ -328,5 +329,53 @@ impl Dragger
         }
     }
 
+}
+
+
+fn translation_global(
+    start : vec::Vec3,
+    mouse_start : vec::Vec2,
+    mouse_end : vec::Vec2,
+    constraint : vec::Vec3,
+    camera : &camera::Camera) -> Option<vec::Vec3>
+{
+    let mut p = geometry::Plane {
+        point : start,
+        normal : camera.object.read().unwrap().orientation.rotate_vec3(&vec::Vec3::new(0f64,0f64,-1f64))
+    };
+
+    //if (!vec3_equal(constraint, vec3(1,1,1))) {
+    if constraint != vec::Vec3::new(1f64,1f64,1f64) {
+        if constraint.z == 1f64 {
+            p.normal.z = 0f64;
+        }
+        if constraint.y == 1f64 {
+            p.normal.y = 0f64;
+        }
+        if constraint.x == 1f64 {
+            p.normal.x = 0f64;
+        }
+    }
+
+    p.normal = p.normal.normalized();
+
+    let rstart = camera.ray_from_screen(mouse_start.x, mouse_start.y, 1f64);
+
+    let x = mouse_end.x;
+    let y = mouse_end.y;
+
+    let r = camera.ray_from_screen(x, y, 1f64);
+
+    let ir = intersection::intersection_ray_plane(&r, &p);
+    let irstart = intersection::intersection_ray_plane(&rstart, &p);
+
+    if ir.hit && irstart.hit {
+        let mut translation = ir.position - irstart.position;
+        translation = translation.mul(constraint);
+        return Some(translation);
+    }
+    else {
+        return None;
+    }
 }
 

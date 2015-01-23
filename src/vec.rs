@@ -530,6 +530,14 @@ impl Mul<f64> for Quat {
     }
 }
 
+impl PartialEq for Vec3 {
+
+    fn eq(&self, other: &Vec3) -> bool
+    {
+        self.x == other.x && self.y == other.y && self.z == other.z
+    }
+}
+
 #[test]
 fn test_quat_rotate() {
     //TODO

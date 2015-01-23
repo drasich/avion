@@ -381,4 +381,21 @@ pub fn intersection_ray_box(
   return ir;
 }
 
+pub fn intersection_ray_plane(ray : &geometry::Ray, plane : &geometry::Plane) -> IntersectionRay
+{
+  let dn = ray.direction * plane.normal;
+  let mut out = IntersectionRay::new();
+
+  if dn != 0f64 {
+      let d = plane.normal * plane.point;
+      let p0n = ray.start * plane.normal;
+      let t = (d - p0n) / dn;
+      out.hit = true;
+      out.position = ray.start + (ray.direction * t);
+  }
+
+  return out;
+}
+
+
 
