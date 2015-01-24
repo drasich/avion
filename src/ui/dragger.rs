@@ -19,13 +19,10 @@ use camera;
 
 pub struct DraggerManager
 {
-    //pub parent : Option<Arc<RwLock<object::Object>>>,
-    //pub draggers : DList<Arc<RwLock<object::Object>>>,
-    //pub draggers : DList<Rc<RefCell<Box<DraggerMouse>>>>,
     pub draggers : DList<Rc<RefCell<Dragger>>>,
     pub scale : f64,
-    current : Option<Weak<RefCell<Dragger>>>,
     mouse_start : vec::Vec2,
+    mouse : Option<Box<DraggerMouse+'static>>
 }
 
 #[derive(Copy)]
@@ -68,7 +65,23 @@ pub struct Dragger
     kind : Kind,
     color : vec::Vec4,
     repere : Repere,
-    translation_start : vec::Vec3
+    translation_start : vec::Vec3,
+}
+
+pub struct TranslationMove
+{
+    translation_start : vec::Vec3,
+    constraint : vec::Vec3,
+}
+
+impl TranslationMove {
+    fn new(start : vec::Vec3, constraint : vec::Vec3) -> TranslationMove
+    {
+        TranslationMove {
+            translation_start : start,
+            constraint : constraint
+        }
+    }
 }
 
 impl DraggerManager
@@ -78,8 +91,8 @@ impl DraggerManager
         let mut dm = DraggerManager {
             draggers : DList::new(),
             scale : 1f64,
-            current : None,
             mouse_start : vec::Vec2::zero(),
+            mouse : None
         };
 
         dm.create_draggers(factory);
@@ -158,7 +171,9 @@ impl DraggerManager
                 0i32 => d.borrow_mut().set_state(State::Highlight),
                 1i32 => {
                     d.borrow_mut().set_state(State::Selected);
-                    self.current = Some(d.downgrade());
+                    self.mouse = Some(box TranslationMove::new(
+                        d.borrow().object.read().unwrap().position.clone(),
+                        d.borrow().constraint) as Box<DraggerMouse>);
                 }
                 _ => {}
             };
@@ -200,6 +215,10 @@ impl DraggerManager
         for d in self.draggers.iter_mut() {
             d.borrow_mut().set_state(state);
         }
+
+        if let State::Idle = state {
+            self.mouse = None;
+        }
     }
 
     pub fn mouse_move(
@@ -208,14 +227,11 @@ impl DraggerManager
         cur_x : f64,
         cur_y : f64) -> Option<Operation>
     {
-        if let Some(ref d) = self.current {
-            if let Some(dd) = d.upgrade() {
-                let dragger = dd.borrow_mut();
-                return dragger.mouse_move(
-                    camera,
-                    self.mouse_start,
-                    vec::Vec2::new(cur_x, cur_y));
-            }
+        if let Some(ref m) = self.mouse {
+            return m.mouse_move(
+                camera,
+                self.mouse_start,
+                vec::Vec2::new(cur_x, cur_y));
         }
 
         None
@@ -276,7 +292,7 @@ impl Dragger
             kind : kind,
             color : color,
             repere : Repere::Global,
-            translation_start : vec::Vec3::zero()
+            translation_start : vec::Vec3::zero(),
         }
     }
 
@@ -360,7 +376,7 @@ trait DraggerMouse
         -> Option<Operation>;
 }
 
-impl DraggerMouse for Dragger {
+impl DraggerMouse for TranslationMove {
 fn mouse_move(
     &self,
     camera : &camera::Camera,
