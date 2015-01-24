@@ -170,10 +170,16 @@ impl DraggerManager
             match button {
                 0i32 => d.borrow_mut().set_state(State::Highlight),
                 1i32 => {
-                    d.borrow_mut().set_state(State::Selected);
-                    self.mouse = Some(box TranslationMove::new(
-                        d.borrow().object.read().unwrap().position.clone(),
-                        d.borrow().constraint) as Box<DraggerMouse>);
+                    let mut dragger = d.borrow_mut();
+                    dragger.set_state(State::Selected);
+                    match dragger.kind {
+                        Kind::Translate => {
+                            self.mouse = Some(box TranslationMove::new(
+                                    dragger.object.read().unwrap().position.clone(),
+                                    dragger.constraint) as Box<DraggerMouse>);
+                        }
+                        _ => {println!("todo");}
+                    }
                 }
                 _ => {}
             };
