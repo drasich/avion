@@ -145,6 +145,24 @@ impl DraggerManager
         return self.check_collision(r, button);
     }
 
+    pub fn mouse_up(&mut self, c : &camera::Camera, button : i32, x : i32, y : i32)
+        -> Option<Operation>
+    {
+        self.set_state(State::Idle);
+
+        let op = if let Some(ref m) = self.mouse {
+            m.mouse_move(
+                c,
+                self.mouse_start,
+                vec::Vec2::new(x as f64, y as f64))
+        }
+        else  {
+            return None;
+        };
+
+        self.mouse = None;
+        return op;
+    }
 
     pub fn check_collision(&mut self, r: geometry::Ray, button : i32) -> bool
     {
@@ -220,10 +238,6 @@ impl DraggerManager
     pub fn set_state(&mut self, state : State) {
         for d in self.draggers.iter_mut() {
             d.borrow_mut().set_state(state);
-        }
-
-        if let State::Idle = state {
-            self.mouse = None;
         }
     }
 

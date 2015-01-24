@@ -40,7 +40,9 @@ pub struct Control
     //pub tree : Option<Rc<RefCell<ui::Tree>>>, //TODO change to weak
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>, //TODO change to weak
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO change to weak
-    pub dragger : Rc<RefCell<ui::dragger::DraggerManager>>
+    pub dragger : Rc<RefCell<ui::dragger::DraggerManager>>,
+
+    pub saved_positions : Option<DList<vec::Vec3>>
 }
 
 impl Control
@@ -58,7 +60,9 @@ impl Control
             tree : None,
             state : State::Idle,
             context : context,
-            dragger : dragger
+            dragger : dragger,
+
+            saved_positions : None
         }
     }
 
@@ -69,8 +73,19 @@ impl Control
             y : i32,
             timestamp : i32)
     {
-        if self.dragger.borrow_mut().mouse_down(&*self.camera.borrow(),button, x, y) {
+        let click = self.dragger.borrow_mut().mouse_down(
+            &*self.camera.borrow(),button, x, y);
+        if click {
             self.state = State::Dragger;
+            let objs = self.context.borrow().selected.clone();
+            if objs.len() > 0 {
+                let mut l = DList::new();
+                for o in objs.iter() {
+                    l.push_back(o.read().unwrap().position);
+                }
+                self.saved_positions = Some(l);
+                //todo save the position if translation
+            }
         }
     }
 
@@ -90,7 +105,37 @@ impl Control
             },
             State::Dragger => {
                 self.state = State::Idle;
-                self.dragger.borrow_mut().set_state(dragger::State::Idle);
+                let o = self.dragger.borrow_mut().mouse_up(
+                    &*self.camera.borrow(),
+                    button,
+                    x,
+                    y);
+
+                if let Some(op) = o {
+                    match op {
+                        dragger::Operation::Translation(v) => {
+                            let prop = vec!["object".to_string(),"position".to_string()];
+                            let pos = if let Some(ref p) = self.saved_positions {
+                                if let Some(pp) = p.front() {
+                                    Some(pp.clone())
+                                }
+                                else {
+                                    None
+                                }
+                            }
+                            else {
+                                None
+                            };
+
+                            if let Some(p) = pos {
+                                //TODO
+                                println!("todo multiple objects");
+                                self.request_operation(prop, box p, box v);
+                            }
+                        },
+                        _ => {}
+                    }
+                }
                 return;
             },
             _ => {}

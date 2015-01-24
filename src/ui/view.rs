@@ -271,7 +271,7 @@ pub extern fn key_down(
     let mut c = control_rc.borrow_mut();
 
     let key_str = {
-        let s = unsafe {ffi::c_str_to_bytes_with_nul(&key)};
+        let s = unsafe {ffi::c_str_to_bytes(&key)};
         match str::from_utf8(s) {
             Ok(ss) => ss.to_string(),
             _ => {
@@ -283,7 +283,7 @@ pub extern fn key_down(
 
     let keyname_str = {
         let keynameconst = keyname as *const c_char;
-        let s = unsafe {ffi::c_str_to_bytes_with_nul(&keynameconst)};
+        let s = unsafe {ffi::c_str_to_bytes(&keynameconst)};
         match str::from_utf8(s) {
             Ok(ss) => ss.to_string(),
             _ => {
