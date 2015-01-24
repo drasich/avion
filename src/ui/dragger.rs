@@ -23,7 +23,8 @@ pub struct DraggerManager
     //pub draggers : DList<Arc<RwLock<object::Object>>>,
     pub draggers : DList<Rc<RefCell<Dragger>>>,
     pub scale : f64,
-    current : Option<Weak<RefCell<Dragger>>>
+    current : Option<Weak<RefCell<Dragger>>>,
+    mouse_start : vec::Vec2,
 }
 
 #[derive(Copy)]
@@ -65,7 +66,8 @@ pub struct Dragger
     constraint : vec::Vec3,
     kind : Kind,
     color : vec::Vec4,
-    repere : Repere
+    repere : Repere,
+    translation_start : vec::Vec3
 }
 
 impl DraggerManager
@@ -75,7 +77,8 @@ impl DraggerManager
         let mut dm = DraggerManager {
             draggers : DList::new(),
             scale : 1f64,
-            current : None
+            current : None,
+            mouse_start : vec::Vec2::zero(),
         };
 
         dm.create_draggers(factory);
@@ -118,6 +121,14 @@ impl DraggerManager
         self.draggers.push_back(Rc::new(RefCell::new(dragger_x)));
         self.draggers.push_back(Rc::new(RefCell::new(dragger_y)));
         self.draggers.push_back(Rc::new(RefCell::new(dragger_z)));
+    }
+
+    pub fn mouse_down(&mut self, c : &camera::Camera, button : i32, x : i32, y : i32) -> bool
+    {
+        self.mouse_start.x = x as f64;
+        self.mouse_start.y = y as f64;
+        let r = c.ray_from_screen(x as f64, y as f64, 10000f64);
+        return self.check_collision(r, button);
     }
 
 
@@ -190,14 +201,27 @@ impl DraggerManager
         }
     }
 
-    pub fn mouse_move(&mut self, move_x : f64, move_y : f64) -> Option<Operation>
+    pub fn mouse_move(
+        &mut self,
+        camera : &camera::Camera,
+        cur_x : f64,
+        cur_y : f64) -> Option<Operation>
     {
         if let Some(ref d) = self.current {
             if let Some(dd) = d.upgrade() {
                 let dragger = dd.borrow_mut();
-                let mut o = dragger.object.write().unwrap();
-                o.position.x += move_x;
-                return Some(Operation::Translation(o.position));
+                let t = translation_global(
+                    dragger.translation_start,
+                    self.mouse_start,
+                    vec::Vec2::new(cur_x, cur_y),
+                    dragger.constraint,
+                    camera);
+
+                if let Some(tr) = t {
+                    let mut o = dragger.object.write().unwrap();
+                    o.position = dragger.translation_start + tr;
+                    return Some(Operation::Translation(o.position));
+                }
             }
         }
 
@@ -258,7 +282,8 @@ impl Dragger
             ori : ori,
             kind : kind,
             color : color,
-            repere : Repere::Global
+            repere : Repere::Global,
+            translation_start : vec::Vec3::zero()
         }
     }
 
@@ -272,24 +297,24 @@ impl Dragger
 
     fn set_state(&mut self, state : State)
     {
-        let set_color = |&: color : vec::Vec4|
-        {
-            if let Some(mat) = self.object.write().unwrap().get_material() {
+        fn set_color(s : &Self, color : vec::Vec4){
+            if let Some(mat) = s.object.write().unwrap().get_material() {
                 mat.write().unwrap().set_uniform_data(
                     "color",
                     shader::UniformData::Vec4(color));
             }
-        };
+        }
 
         match state {
             State::Highlight => {
-                set_color(vec::Vec4::new(1f64,1f64,0f64, 1f64));
+                set_color(self, vec::Vec4::new(1f64,1f64,0f64, 1f64));
             },
             State::Selected => {
-                set_color(vec::Vec4::new(1f64,1f64,1f64, 1f64));
+                set_color(self, vec::Vec4::new(1f64,1f64,1f64, 1f64));
+                self.translation_start = self.object.read().unwrap().position.clone();
             },
             State::Idle => {
-                set_color(self.color);
+                set_color(self, self.color);
             }
             _ => {}
         }
@@ -341,7 +366,8 @@ fn translation_global(
 {
     let mut p = geometry::Plane {
         point : start,
-        normal : camera.object.read().unwrap().orientation.rotate_vec3(&vec::Vec3::new(0f64,0f64,-1f64))
+        normal : camera.object.read().unwrap().orientation.rotate_vec3(
+            &vec::Vec3::new(0f64,0f64,-1f64))
     };
 
     //if (!vec3_equal(constraint, vec3(1,1,1))) {

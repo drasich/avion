@@ -69,17 +69,9 @@ impl Control
             y : i32,
             timestamp : i32)
     {
-        let r = match self.camera.try_borrow(){
-            Some(c) => {
-                c.ray_from_screen(x as f64, y as f64, 10000f64)
-            },
-            None => { println!("cannot borrow camera"); return; }
-        };
-
-        if self.dragger.borrow_mut().check_collision(r, button) {
+        if self.dragger.borrow_mut().mouse_down(&*self.camera.borrow(),button, x, y) {
             self.state = State::Dragger;
         }
-
     }
 
     pub fn mouse_up(
@@ -94,6 +86,11 @@ impl Control
             State::CameraRotation => {
                 self.state = State::Idle;
                 println!("state was cam rotate ");
+                return;
+            },
+            State::Dragger => {
+                self.state = State::Idle;
+                self.dragger.borrow_mut().set_state(dragger::State::Idle);
                 return;
             },
             _ => {}
@@ -460,6 +457,7 @@ impl Control
             State::Idle | State::CameraRotation => {
                 let x : f64 = curx as f64;
                 let y : f64 = cury as f64;
+
                 let r = match self.camera.try_borrow(){
                     Some(c) => {
                         c.ray_from_screen(x as f64, y as f64, 10000f64)
@@ -488,9 +486,15 @@ impl Control
             },
             State::Dragger =>
             {
-                let x : f64 = curx as f64 - prevx as f64;
-                let y : f64 = cury as f64 - prevy as f64;
-                if let Some(op) = self.dragger.borrow_mut().mouse_move(x,y) {
+                let camera_clone = self.camera.clone();
+                let camera = match camera_clone.try_borrow(){
+                    Some(c) =>c,
+                    None => { println!("cannot borrow camera"); return; }
+                };
+
+                let x : f64 = curx as f64;// - prevx as f64;
+                let y : f64 = cury as f64;// - prevy as f64;
+                if let Some(op) = self.dragger.borrow_mut().mouse_move(&*camera,x,y) {
                     match op {
                         dragger::Operation::Translation(v) => {
                             let prop = vec!["object".to_string(),"position".to_string()];
