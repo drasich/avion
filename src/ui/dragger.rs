@@ -21,6 +21,7 @@ pub struct DraggerManager
 {
     //pub parent : Option<Arc<RwLock<object::Object>>>,
     //pub draggers : DList<Arc<RwLock<object::Object>>>,
+    //pub draggers : DList<Rc<RefCell<Box<DraggerMouse>>>>,
     pub draggers : DList<Rc<RefCell<Dragger>>>,
     pub scale : f64,
     current : Option<Weak<RefCell<Dragger>>>,
@@ -210,18 +211,10 @@ impl DraggerManager
         if let Some(ref d) = self.current {
             if let Some(dd) = d.upgrade() {
                 let dragger = dd.borrow_mut();
-                let t = translation_global(
-                    dragger.translation_start,
+                return dragger.mouse_move(
+                    camera,
                     self.mouse_start,
-                    vec::Vec2::new(cur_x, cur_y),
-                    dragger.constraint,
-                    camera);
-
-                if let Some(tr) = t {
-                    let mut o = dragger.object.write().unwrap();
-                    o.position = dragger.translation_start + tr;
-                    return Some(Operation::Translation(o.position));
-                }
+                    vec::Vec2::new(cur_x, cur_y));
             }
         }
 
@@ -357,20 +350,31 @@ impl Dragger
 }
 
 
-fn translation_global(
-    start : vec::Vec3,
+trait DraggerMouse
+{
+    fn mouse_move(
+        &self,
+        camera : &camera ::Camera,
+        mouse_start : vec::Vec2,
+        mouse_end : vec::Vec2)
+        -> Option<Operation>;
+}
+
+impl DraggerMouse for Dragger {
+fn mouse_move(
+    &self,
+    camera : &camera::Camera,
     mouse_start : vec::Vec2,
-    mouse_end : vec::Vec2,
-    constraint : vec::Vec3,
-    camera : &camera::Camera) -> Option<vec::Vec3>
+    mouse_end : vec::Vec2) -> Option<Operation>
 {
     let mut p = geometry::Plane {
-        point : start,
+        point : self.translation_start,
         normal : camera.object.read().unwrap().orientation.rotate_vec3(
             &vec::Vec3::new(0f64,0f64,-1f64))
     };
 
-    //if (!vec3_equal(constraint, vec3(1,1,1))) {
+    let constraint = self.constraint;
+
     if constraint != vec::Vec3::new(1f64,1f64,1f64) {
         if constraint.z == 1f64 {
             p.normal.z = 0f64;
@@ -386,22 +390,20 @@ fn translation_global(
     p.normal = p.normal.normalized();
 
     let rstart = camera.ray_from_screen(mouse_start.x, mouse_start.y, 1f64);
+    let r = camera.ray_from_screen(mouse_end.x, mouse_end.y, 1f64);
 
-    let x = mouse_end.x;
-    let y = mouse_end.y;
-
-    let r = camera.ray_from_screen(x, y, 1f64);
-
-    let ir = intersection::intersection_ray_plane(&r, &p);
     let irstart = intersection::intersection_ray_plane(&rstart, &p);
+    let ir = intersection::intersection_ray_plane(&r, &p);
 
     if ir.hit && irstart.hit {
         let mut translation = ir.position - irstart.position;
         translation = translation * constraint;
-        return Some(translation);
+
+        let pos = self.translation_start + translation;
+        return Some(Operation::Translation(pos));
     }
     else {
         return None;
     }
 }
-
+}

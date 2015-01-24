@@ -176,7 +176,8 @@ pub struct Mesh
 {
     pub name : String,
     pub state : i32,
-    pub buffers : HashMap<String, Box<BufferSend+'static+Send+Sync>>, //TODO check
+    //pub buffers : HashMap<String, Box<BufferSend+'static+Send+Sync>>, //TODO check
+    pub buffers : HashMap<String, Box<BufferSend+Send+Sync>>, //TODO check
     //pub buffers : HashMap<String, Box<BufferSend+'static>>, //TODO check
     pub buffers_f32 : HashMap<String, Box<Buffer<f32>>>, //TODO check
     pub buffers_u32 : HashMap<String, Box<Buffer<u32>>>, //TODO check
