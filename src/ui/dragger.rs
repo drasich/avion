@@ -365,7 +365,6 @@ impl Dragger
 
 }
 
-
 trait DraggerMouse
 {
     fn mouse_move(
@@ -377,49 +376,49 @@ trait DraggerMouse
 }
 
 impl DraggerMouse for TranslationMove {
-fn mouse_move(
-    &self,
-    camera : &camera::Camera,
-    mouse_start : vec::Vec2,
-    mouse_end : vec::Vec2) -> Option<Operation>
-{
-    let mut p = geometry::Plane {
-        point : self.translation_start,
-        normal : camera.object.read().unwrap().orientation.rotate_vec3(
-            &vec::Vec3::new(0f64,0f64,-1f64))
-    };
+    fn mouse_move(
+        &self,
+        camera : &camera::Camera,
+        mouse_start : vec::Vec2,
+        mouse_end : vec::Vec2) -> Option<Operation>
+    {
+        let mut p = geometry::Plane {
+            point : self.translation_start,
+            normal : camera.object.read().unwrap().orientation.rotate_vec3(
+                &vec::Vec3::new(0f64,0f64,-1f64))
+        };
 
-    let constraint = self.constraint;
+        let constraint = self.constraint;
 
-    if constraint != vec::Vec3::new(1f64,1f64,1f64) {
-        if constraint.z == 1f64 {
-            p.normal.z = 0f64;
+        if constraint != vec::Vec3::new(1f64,1f64,1f64) {
+            if constraint.z == 1f64 {
+                p.normal.z = 0f64;
+            }
+            if constraint.y == 1f64 {
+                p.normal.y = 0f64;
+            }
+            if constraint.x == 1f64 {
+                p.normal.x = 0f64;
+            }
         }
-        if constraint.y == 1f64 {
-            p.normal.y = 0f64;
+
+        p.normal = p.normal.normalized();
+
+        let rstart = camera.ray_from_screen(mouse_start.x, mouse_start.y, 1f64);
+        let r = camera.ray_from_screen(mouse_end.x, mouse_end.y, 1f64);
+
+        let irstart = intersection::intersection_ray_plane(&rstart, &p);
+        let ir = intersection::intersection_ray_plane(&r, &p);
+
+        if ir.hit && irstart.hit {
+            let mut translation = ir.position - irstart.position;
+            translation = translation * constraint;
+
+            let pos = self.translation_start + translation;
+            return Some(Operation::Translation(pos));
         }
-        if constraint.x == 1f64 {
-            p.normal.x = 0f64;
-        }
-    }
-
-    p.normal = p.normal.normalized();
-
-    let rstart = camera.ray_from_screen(mouse_start.x, mouse_start.y, 1f64);
-    let r = camera.ray_from_screen(mouse_end.x, mouse_end.y, 1f64);
-
-    let irstart = intersection::intersection_ray_plane(&rstart, &p);
-    let ir = intersection::intersection_ray_plane(&r, &p);
-
-    if ir.hit && irstart.hit {
-        let mut translation = ir.position - irstart.position;
-        translation = translation * constraint;
-
-        let pos = self.translation_start + translation;
-        return Some(Operation::Translation(pos));
-    }
-    else {
+        else {
         return None;
+        }
     }
-}
 }
