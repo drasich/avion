@@ -375,6 +375,7 @@ impl Control
             Some(ref mut pp) =>
                 match pp.try_borrow_mut() {
                     Some(ref mut p) => {
+                        println!("direct change : {}", s);
                         p.update_object(&*o.read().unwrap(), s.as_slice());
                     },
                     None=> {}
@@ -413,14 +414,22 @@ impl Control
 
         let s = join_string(&op.name);
 
-        match self.get_selected_object() {
-            Some(o) => {
+        let o = if let Some(sel) = self.get_selected_object(){
+            sel
+        }
+        else {
+            return;
+        } ;
+
+        //match self.get_selected_object() {
+        //    Some(o) => {
                 if op.object.read().unwrap().id == o.read().unwrap().id  {
-                    match self.property {
+                    match self.property.clone() {
                         Some(ref mut pp) =>
                             match pp.try_borrow_mut() {
                                 Some(ref mut p) => {
                                     //p.update_changed(s.as_slice(), &*op.old);
+                                    println!("join string : {}", s);
                                     p.update_object(&*o.read().unwrap(), "");
                                     
                                     //not working TEST
@@ -440,13 +449,13 @@ impl Control
                             None => {}
                     };
                 }
-            },
-            None => {
-            }
-        }
+            //},
+            //None => {
+            //}
+        //}
 
         if s.as_slice() == "object/name" {
-            match self.tree {
+            match self.tree.clone() {
                 Some(ref mut tt) =>
                     match tt.try_borrow_mut() {
                         Some(ref mut t) => {

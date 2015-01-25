@@ -232,12 +232,18 @@ impl Property
     pub fn update_object(&mut self, object : &PropertyShow, but : &str)
     {
         for (f,pv) in self.pv.iter() {
+            println!("UPDATEOBJECt contains property : Val : {}", f);
+        }
+
+        for (f,pv) in self.pv.iter() {
             if f.as_slice() == but {
+                println!("buuuuuuuuuuuuuuuuuuuuuuuuuut: {} ", f);
                 continue;
             }
             let yep = make_vec_from_string(f).tail().to_vec();
             match find_property_show(object, yep.clone()) {
                 Some(ppp) => {
+                    println!("I find the property : {:?}", yep);
                     ppp.update_widget(*pv);
                 },
                 None => {
@@ -469,13 +475,17 @@ extern fn expand(
 
             let o = match c.get_selected_object() {
                 Some(ob) => ob,
-                None => return
+                None => {
+                    println!("no selected objectttttttttttttt");
+                    return;
+                }
             };
 
             //match property::find_property(&*o.read(), yep.clone()) {
             match find_property_show(&*o.read().unwrap(), yep.clone()) {
                 Some(ppp) => {
                     //p.create_entries(&*ppp, vs.clone());
+                    println!("I found and create {:?} ", vs);
                     ppp.create_widget(p, path , 1);
                 },
                 None => {
@@ -483,7 +493,10 @@ extern fn expand(
                 }
             }
         },
-        None => return
+        None => {
+            println!("cannot borrow control, might be already borrowed...");
+            return;
+        }
     };
 
 }
@@ -522,8 +535,8 @@ extern fn contract(
     let clone = p.pv.clone();
 
     for (key,pv) in clone.iter() {
-        println!("start with key '{}' ", key);
-        if key.as_slice().starts_with(path) {
+        println!("cccccccccccccccccontract  start with key '{}' ", key);
+        if key.as_slice().starts_with(path) && key.as_slice() != path  {
             println!("yes, '{}' starts with '{}'", key, path);
             match p.pv.remove(key) {
                 Some(_) => println!("yes I removed {}", key),

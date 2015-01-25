@@ -17,6 +17,10 @@ extern {
         possible_values : *const c_char,
         value : *const c_char
         ) -> *const ui::PropertyValue;
+
+     fn property_list_enum_update(
+        pv : *const ui::PropertyValue,
+        value : *const c_char);
 }
 
 
@@ -102,6 +106,7 @@ impl ui::PropertyShow for Orientation {
 
     fn create_widget(&self, property : &mut ui::Property, field : &str, depth : i32)
     {
+        println!("...................DEPTH, field  : {}, {}", depth, field);
         if depth == 0 {
             //let yep = field.to_string() + "/type";
             let f = CString::from_slice(field.as_bytes());
@@ -122,6 +127,7 @@ impl ui::PropertyShow for Orientation {
                     v.as_ptr());
 
                 if pv != ptr::null() {
+                    println!("ADDING : {}", field);
                     property.pv.insert(field.to_string(), pv);
                 }
             }
@@ -136,6 +142,42 @@ impl ui::PropertyShow for Orientation {
                     q.create_widget(property, field, depth)
                 }
             };
+        }
+    }
+
+    fn update_widget(&self, pv : *const ui::property::PropertyValue) {
+        println!("TODODODODODO DO YOU CALL ME");
+        let type_value = match *self {
+            Orientation::AngleXYZ(_) => "AngleXYZ",
+            Orientation::Quat(_) => "Quat"
+        };
+
+        let v = CString::from_slice(type_value.as_bytes());
+        unsafe {
+            property_list_enum_update(pv, v.as_ptr());
+        }
+    }
+
+    fn get_property(&self, field : &str) -> Option<&ui::PropertyShow>
+    {
+        match *self {
+            Orientation::AngleXYZ(ref v) =>  {
+                match field {
+                    "x" => Some(&v.x as &ui::PropertyShow),
+                    "y" => Some(&v.y as &ui::PropertyShow),
+                    "z" => Some(&v.z as &ui::PropertyShow),
+                    _ => None
+                }
+            },
+            Orientation::Quat(ref q) => {
+                match field {
+                    "x" => Some(&q.x as &ui::PropertyShow),
+                    "y" => Some(&q.y as &ui::PropertyShow),
+                    "z" => Some(&q.z as &ui::PropertyShow),
+                    "w" => Some(&q.w as &ui::PropertyShow),
+                    _ => None
+                }
+            }
         }
     }
 
