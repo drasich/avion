@@ -731,6 +731,23 @@ pub macro_rules! property_show_impl(
                 }
             }
 
+            /*
+            fn get_children(&self) -> Option<DList<&PropertyShow>>
+            {
+                let mut list = DList::new();
+                $(
+                    list.push_back(&self.$member as &PropertyShow);
+                 )+
+
+                if list.len() > 0 {
+                    Some(list)
+                }
+                else {
+                    None
+                }
+            }
+            */
+
             fn get_property(&self, field : &str) -> Option<&PropertyShow>
             {
                 match field {

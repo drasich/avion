@@ -419,7 +419,20 @@ impl Control
                             match pp.try_borrow_mut() {
                                 Some(ref mut p) => {
                                     println!("join string : {}", s);
-                                    p.update_changed(s.as_slice(), &*op.old);
+                                    //p.update_changed(s.as_slice(), &*op.old);
+                                    p.update_object(&*o.read().unwrap(), "");
+                                    
+                                    //not working TEST
+                                    /*
+                                    if let Some(yyy) = 
+                                        ui::property::find_property_show(&*o.read().unwrap(), op.name.tail().to_vec()) {
+                                            println!("yes I found but hey");
+                                            p.update_object(yyy, "");
+                                    }
+                                    else {
+                                            println!("cannot find {:?}", op.name);
+                                    }
+                                    */
                                 },
                                 None=> {}
                             },
