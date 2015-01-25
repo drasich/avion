@@ -302,7 +302,6 @@ impl Control
         old : Box<T>,
         new : Box<T>)
     {
-        println!("request operation");
         if *old == *new {
             return;
         }
@@ -404,7 +403,10 @@ impl Control
     {
         let op = match self.op_mgr.pop_undo() {
             Some(o) => o,
-            None => return
+            None => {
+                println!("nothing to undo");
+                return;
+            }
         };
 
         op.undo();
@@ -418,7 +420,6 @@ impl Control
                         Some(ref mut pp) =>
                             match pp.try_borrow_mut() {
                                 Some(ref mut p) => {
-                                    println!("join string : {}", s);
                                     //p.update_changed(s.as_slice(), &*op.old);
                                     p.update_object(&*o.read().unwrap(), "");
                                     

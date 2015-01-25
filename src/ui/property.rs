@@ -313,7 +313,7 @@ pub extern fn register_change_string(
 
     //println!("the string is {}", ss);
     if action == 1 && old != ptr::null() {
-        let oldchar = new as *const i8;
+        let oldchar = old as *const i8;
         let so = unsafe {ffi::c_str_to_bytes(&oldchar)};
         let sso = match str::from_utf8(so) {
             Ok(ssso) => ssso.to_string(),
@@ -322,6 +322,7 @@ pub extern fn register_change_string(
                 return;
             }
         };
+
         changed_set(property, name, Some(&sso), &ss, action);
     }
     else {
@@ -592,6 +593,7 @@ pub trait PropertyShow
         );
 
     fn update_widget(&self, pv : *const PropertyValue) {
+        println!("update_widget not implemented for this type");
     }
 
       fn get_property(&self, field : &str) -> Option<&PropertyShow>
@@ -655,6 +657,15 @@ impl PropertyShow for String {
                 property.pv.insert(field.to_string(), pv);
             }
         }
+    }
+
+    fn update_widget(&self, pv : *const PropertyValue) {
+        let v = CString::from_slice(self.as_bytes());
+        unsafe {
+            property_list_string_update(
+                pv,
+                v.as_ptr());
+        };
     }
 }
 

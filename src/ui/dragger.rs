@@ -72,14 +72,19 @@ pub struct TranslationMove
 {
     translation_start : vec::Vec3,
     constraint : vec::Vec3,
+    repere : Repere
 }
 
 impl TranslationMove {
-    fn new(start : vec::Vec3, constraint : vec::Vec3) -> TranslationMove
+    fn new(
+        start : vec::Vec3,
+        constraint : vec::Vec3, 
+        repere : Repere) -> TranslationMove
     {
         TranslationMove {
             translation_start : start,
-            constraint : constraint
+            constraint : constraint,
+            repere : repere
         }
     }
 }
@@ -194,7 +199,8 @@ impl DraggerManager
                         Kind::Translate => {
                             self.mouse = Some(box TranslationMove::new(
                                     dragger.object.read().unwrap().position.clone(),
-                                    dragger.constraint) as Box<DraggerMouse>);
+                                    dragger.constraint,
+                                    Repere::Global) as Box<DraggerMouse>);
                         }
                         _ => {println!("todo");}
                     }
