@@ -27,6 +27,7 @@ pub enum Change
     Property,
     Tree,
     Objects(String, DList<uuid::Uuid>),
+    DirectChange(String),
     All
 }
 
@@ -113,6 +114,12 @@ impl OperationManager
 
     pub fn add(&mut self, op : Operation)
     {
+        self.add_undo(op);
+        self.redo.clear();
+    }
+
+    fn add_undo(&mut self, op : Operation)
+    {
         self.undo.push(op);
     }
 
@@ -171,7 +178,7 @@ impl OperationManager
 
         let s = join_string(&op.name);
 
-        self.add(op);
+        self.add_undo(op);
 
         return Change::Objects(s,list);
     }

@@ -207,46 +207,91 @@ impl View
         };
     }
 
+    fn handle_direct_change(&self, s: &str)
+    {
+        let o = match self.get_selected_object() {
+            Some(ob) => ob,
+            None => {
+                println!("direct change, no objetcs selected");
+                return;
+            }
+        };
+
+        println!("we have a direct change: {}", s);
+
+        if s == "object/name" {
+            match self.tree {
+                Some(ref tt) =>
+                    match tt.try_borrow() {
+                        Some(ref t) => {
+                            t.update_object(&o.read().unwrap().id);
+                        },
+                        None=> {}
+                    },
+                    None => {}
+            };
+        }
+            
+        match self.property {
+            Some(ref pp) =>
+                match pp.try_borrow() {
+                    Some(ref p) => {
+                        println!("direct change : {}", s);
+                        p.update_object(&*o.read().unwrap(), s);
+                    },
+                    None=> {}
+                },
+                None => {}
+        };
+    }
+
+
     fn handle_control_change(&self, change : operation::Change)
     {
+        if change == operation::Change::None {
+            return;
+        }
+
         let sel = self.get_selected_object();
 
-        let (name,id_list) = if let operation::Change::Objects(name, id_list) = change {
-            (name,id_list)
-        }
-        else {
-            return;
-        };
-        
-        for id in id_list.iter() {
-            if let Some(ref o) = sel {
-                if *id == o.read().unwrap().id  {
-                    match self.property.clone() {
-                        Some(ref mut pp) =>
-                            match pp.try_borrow_mut() {
-                                Some(ref mut p) => {
-                                    p.update_object(&*o.read().unwrap(), "");
+        match change {
+            operation::Change::Objects(name, id_list) => {
 
+                for id in id_list.iter() {
+                    if let Some(ref o) = sel {
+                        if *id == o.read().unwrap().id  {
+                            match self.property.clone() {
+                                Some(ref mut pp) =>
+                                    match pp.try_borrow_mut() {
+                                        Some(ref mut p) => {
+                                            p.update_object(&*o.read().unwrap(), "");
+
+                                        },
+                                        None=> {}
+                                    },
+                                    None => {}
+                            };
+                        }
+                    }
+
+                    if name.as_slice() == "object/name" {
+                        match self.tree.clone() {
+                            Some(ref mut tt) =>
+                                match tt.try_borrow_mut() {
+                                    Some(ref mut t) => {
+                                        t.update_object(id);
+                                    },
+                                    None=> {}
                                 },
-                                None=> {}
-                            },
-                            None => {}
-                    };
+                                None => {}
+                        };
+                    }
                 }
-            }
-
-            if name.as_slice() == "object/name" {
-                match self.tree.clone() {
-                    Some(ref mut tt) =>
-                        match tt.try_borrow_mut() {
-                            Some(ref mut t) => {
-                                t.update_object(id);
-                            },
-                            None=> {}
-                        },
-                        None => {}
-                };
-            }
+            },
+            operation::Change::DirectChange(name) => {
+                self.handle_direct_change(name.as_slice());
+            },
+            _ => {}
         }
     }
 
@@ -309,9 +354,13 @@ pub extern fn mouse_move(
     let view : &Box<View> = unsafe {mem::transmute(data)};
     let control_rc = view.control.clone();
 
-    //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
-    let mut c = control_rc.borrow_mut();
-    c.mouse_move(modifiers_flag, button, curx, cury, prevx, prevy, timestamp);
+    let change = {
+        //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
+        let mut c = control_rc.borrow_mut();
+        c.mouse_move(modifiers_flag, button, curx, cury, prevx, prevy, timestamp)
+    };
+
+    view.handle_control_change(change);
     
 }
 

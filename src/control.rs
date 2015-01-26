@@ -301,23 +301,23 @@ impl Control
         &mut self,  
         name : Vec<String>,
         old : Box<T>,
-        new : Box<T>)
+        new : Box<T>) -> operation::Change
     {
         if *old == *new {
-            return;
+            return operation::Change::None;
         }
 
         let o = match self.get_selected_object() {
             Some(o) => o.clone(),
             None => {
                 println!("no objetcs selected");
-                return;
+                return operation::Change::None;
             }
         };
 
         let op = operation::Operation::new(
             o.clone(), 
-            name,
+            name.clone(),
             old,
             new); 
 
@@ -326,19 +326,24 @@ impl Control
         //TODO update the widget that has this object/property
 
         self.op_mgr.add(op);
+
+        let mut list = DList::new();
+        list.push_back(o.read().unwrap().id.clone());
+        let s = join_string(&name);
+        return operation::Change::Objects(s,list);
     }
 
     pub fn request_direct_change(
         &mut self,  
         name : Vec<String>,
-        new : &Any)
+        new : &Any) -> operation::Change
     {
         println!("request direct change {:?}", name);
         let o = match self.get_selected_object() {
             Some(ob) => ob,
             None => {
                 println!("direct change, no objetcs selected");
-                return;
+                return operation::Change::None;
             }
         };
 
@@ -347,6 +352,10 @@ impl Control
         //o.write().set_property_hier(vs, new);
         o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), new);
 
+        let s = join_string(&name);
+        return operation::Change::DirectChange(s);
+
+        /*
         //TODO it might do more than just update this property
         // for example for orientation enum, you change the enum
         // the widget must change.
@@ -383,6 +392,7 @@ impl Control
                 },
                 None => {}
         };
+        */
     }
 
     pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
@@ -409,25 +419,6 @@ impl Control
     pub fn redo(&mut self) -> operation::Change
     {
         self.op_mgr.redo()
-
-            /*
-        let op = match self.op_mgr.pop_redo() {
-            Some(o) => o,
-            None => {
-                println!("nothing to redo");
-                return operation::Change::None;
-            }
-        };
-
-        op.apply();
-
-        let mut list = DList::new();
-        list.push_back(op.object.read().unwrap().id.clone());
-
-        let s = join_string(&op.name);
-
-        return operation::Change::Objects(s,list);
-        */
     }
 
 
@@ -482,7 +473,7 @@ impl Control
         cury : i32,
         prevx : i32, 
         prevy : i32,
-        timestamp : i32)
+        timestamp : i32) -> operation::Change
     {
         match self.state {
             State::Idle | State::CameraRotation => {
@@ -493,7 +484,10 @@ impl Control
                     Some(c) => {
                         c.ray_from_screen(x as f64, y as f64, 10000f64)
                     },
-                    None => { println!("cannot borrow camera"); return; }
+                    None => {
+                        println!("cannot borrow camera"); 
+                        return operation::Change::None;
+                    }
                 };
 
                 self.dragger.borrow_mut().check_collision(r, button);
@@ -520,7 +514,10 @@ impl Control
                 let camera_clone = self.camera.clone();
                 let camera = match camera_clone.try_borrow(){
                     Some(c) =>c,
-                    None => { println!("cannot borrow camera"); return; }
+                    None => { 
+                        println!("cannot borrow camera");
+                        return operation::Change::None;
+                    }
                 };
 
                 let x : f64 = curx as f64;// - prevx as f64;
@@ -529,13 +526,15 @@ impl Control
                     match op {
                         dragger::Operation::Translation(v) => {
                             let prop = vec!["object".to_string(),"position".to_string()];
-                            self.request_direct_change(prop, &v);
+                            return self.request_direct_change(prop, &v);
                         },
                         _ => {}
                     }
                 }
             }
         }
+
+        return operation::Change::None;
     }
 
     pub fn mouse_wheel(

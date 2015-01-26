@@ -151,7 +151,7 @@ impl Tree
         unsafe { tree_update(self.jk_tree); }
     }
 
-    pub fn update_object(&mut self, id: &Uuid)
+    pub fn update_object(& self, id: &Uuid)
     {
         match self.objects.get(id) {
             Some(item) => {

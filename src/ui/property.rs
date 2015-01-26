@@ -229,7 +229,7 @@ impl Property
         //unsafe { property_data_set(self.jk_property, data); }
     }
 
-    pub fn update_object(&mut self, object : &PropertyShow, but : &str)
+    pub fn update_object(&self, object : &PropertyShow, but : &str)
     {
         for (f,pv) in self.pv.iter() {
             println!("UPDATEOBJECt contains property : Val : {}", f);
@@ -429,18 +429,45 @@ fn changed_set<T : Any+Clone+PartialEq>(
         None => { println!("cannot borrow control"); return; }
     };
 
-    match (old, action) {
+    let change = match (old, action) {
         (Some(oldd), 1) => {
+            println!(".....adding operation!!");
             control.request_operation(
                 vs,
                 box oldd.clone(),
-                box new.clone());
-            println!(".....adding operation!!");
+                box new.clone())
         },
         _ => {
-            control.request_direct_change(vs, new);
+            control.request_direct_change(vs, new)
         }
     };
+
+    let id = if let Some(o) = control.get_selected_object(){
+        o.read().unwrap().id.clone()
+    }
+    else { 
+        return;
+    };
+
+    match change {
+        operation::Change::DirectChange(s) |
+        operation::Change::Objects(s, _) => {
+            if s == "object/name" {
+                match control.tree {
+                    Some(ref tt) =>
+                        match tt.try_borrow() {
+                            Some(ref t) => {
+                                t.update_object(&id);
+                            },
+                            None=> {}
+                        },
+                        None => {}
+                };
+            }
+        },
+        _ => {}
+    }
+            
 }
 
 
