@@ -108,6 +108,7 @@ impl View
 
         let control = &self.control;
 
+        /*
         unsafe {
             ui::window_callback_set(
                 w,
@@ -119,6 +120,7 @@ impl View
                 key_down
                 );
         }
+        */
 
         let p = Rc::new(RefCell::new(ui::Property::new(
                     w,
@@ -188,6 +190,65 @@ impl View
         self.render.resize(w, h);
     }
 
+    fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
+    {
+        let c = match self.context.try_borrow(){
+            Some(con) => con,
+            None => { println!("cannot borrow context"); return None; }
+        };
+
+        match c.selected.front() {
+            Some(o) => return Some(o.clone()),
+            None => {
+                println!("no objetcs selected");
+                return None;
+            }
+        };
+    }
+
+    fn handle_control_change(&self, change : control::Change)
+    {
+        let sel = self.get_selected_object();
+
+        let (name,id_list) = if let control::Change::Objects(name, id_list) = change {
+            (name,id_list)
+        }
+        else {
+            return;
+        };
+        
+        for id in id_list.iter() {
+            if let Some(ref o) = sel {
+                if *id == o.read().unwrap().id  {
+                    match self.property.clone() {
+                        Some(ref mut pp) =>
+                            match pp.try_borrow_mut() {
+                                Some(ref mut p) => {
+                                    p.update_object(&*o.read().unwrap(), "");
+
+                                },
+                                None=> {}
+                            },
+                            None => {}
+                    };
+                }
+            }
+
+            if name.as_slice() == "object/name" {
+                match self.tree.clone() {
+                    Some(ref mut tt) =>
+                        match tt.try_borrow_mut() {
+                            Some(ref mut t) => {
+                                t.update_object(id);
+                            },
+                            None=> {}
+                        },
+                        None => {}
+                };
+            }
+        }
+    }
+
 }
 
 /*
@@ -207,8 +268,11 @@ pub extern fn mouse_down(
     timestamp : c_int
     )
 {
+    let view : &Box<View> = unsafe {mem::transmute(data)};
+    let control_rc = view.control.clone();
+
     //println!("rust mouse down button {}, pos: {}, {}", button, x, y);
-    let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
+    //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let mut c = control_rc.borrow_mut();
     c.mouse_down(button,x,y,timestamp);
 }
@@ -222,7 +286,9 @@ pub extern fn mouse_up(
     timestamp : c_int
     )
 {
-    let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
+    let view : &Box<View> = unsafe {mem::transmute(data)};
+    let control_rc = view.control.clone();
+    //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let mut c = control_rc.borrow_mut();
     c.mouse_up(button,x,y,timestamp);
 }
@@ -239,9 +305,13 @@ pub extern fn mouse_move(
     timestamp : c_int
     )
 {
-    let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
+    let view : &Box<View> = unsafe {mem::transmute(data)};
+    let control_rc = view.control.clone();
+
+    //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let mut c = control_rc.borrow_mut();
     c.mouse_move(modifiers_flag, button, curx, cury, prevx, prevy, timestamp);
+    
 }
 
 pub extern fn mouse_wheel(
@@ -254,7 +324,10 @@ pub extern fn mouse_wheel(
     timestamp : c_int
     )
 {
-    let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
+    let view : &Box<View> = unsafe {mem::transmute(data)};
+    let control_rc = view.control.clone();
+
+    //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let c = control_rc.borrow_mut();
     c.mouse_wheel(modifiers_flag, direction, z, x, y, timestamp);
 }
@@ -267,33 +340,41 @@ pub extern fn key_down(
     timestamp : c_int
     )
 {
-    let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
-    let mut c = control_rc.borrow_mut();
+    let view : &Box<View> = unsafe {mem::transmute(data)};
 
-    let key_str = {
-        let s = unsafe {ffi::c_str_to_bytes(&key)};
-        match str::from_utf8(s) {
-            Ok(ss) => ss.to_string(),
-            _ => {
-                println!("error");
-                return;
+    let change = {
+        let control_rc = view.control.clone();
+        //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
+        let mut c = control_rc.borrow_mut();
+
+        let key_str = {
+            let s = unsafe {ffi::c_str_to_bytes(&key)};
+            match str::from_utf8(s) {
+                Ok(ss) => ss.to_string(),
+                _ => {
+                    println!("error");
+                    return;
+                }
             }
-        }
+        };
+
+        let keyname_str = {
+            let keynameconst = keyname as *const c_char;
+            let s = unsafe {ffi::c_str_to_bytes(&keynameconst)};
+            match str::from_utf8(s) {
+                Ok(ss) => ss.to_string(),
+                _ => {
+                    println!("error");
+                    return
+                }
+            }
+        };
+
+        c.key_down(modifier, keyname_str.as_slice(), key_str.as_slice(), timestamp)
     };
 
-    let keyname_str = {
-        let keynameconst = keyname as *const c_char;
-        let s = unsafe {ffi::c_str_to_bytes(&keynameconst)};
-        match str::from_utf8(s) {
-            Ok(ss) => ss.to_string(),
-            _ => {
-                println!("error");
-                return
-            }
-        }
-    };
+    view.handle_control_change(change);
 
-    c.key_down(modifier, keyname_str.as_slice(), key_str.as_slice(), timestamp);
 }
 
 

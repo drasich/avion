@@ -143,6 +143,22 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     for v in master.views.iter_mut()
     {
         v.init();
+
+        if let Some(w) = v.window {
+
+            unsafe {
+                ui::window_callback_set(
+                    w,
+                    mem::transmute(v),
+                    ui::view::mouse_down,
+                    ui::view::mouse_up,
+                    ui::view::mouse_move,
+                    ui::view::mouse_wheel,
+                    ui::view::key_down
+                    );
+            }
+        };
+
     }
 }
 

@@ -20,12 +20,23 @@ use vec;
 use object;
 use property;
 use property::PropertyWrite;
+use uuid;
 
 pub enum State
 {
     Idle,
     CameraRotation,
     Dragger
+}
+
+#[derive(PartialEq)]
+pub enum Change
+{
+    None,
+    Property,
+    Tree,
+    Objects(String, DList<uuid::Uuid>),
+    All
 }
 
 pub struct Control
@@ -400,72 +411,24 @@ impl Control
         };
     }
 
-    pub fn undo(&mut self)
+    pub fn undo(&mut self) -> Change
     {
         let op = match self.op_mgr.pop_undo() {
             Some(o) => o,
             None => {
                 println!("nothing to undo");
-                return;
+                return Change::None;
             }
         };
 
         op.undo();
 
+        let mut list = DList::new();
+        list.push_back(op.object.read().unwrap().id.clone());
+
         let s = join_string(&op.name);
 
-        let o = if let Some(sel) = self.get_selected_object(){
-            sel
-        }
-        else {
-            return;
-        } ;
-
-        //match self.get_selected_object() {
-        //    Some(o) => {
-                if op.object.read().unwrap().id == o.read().unwrap().id  {
-                    match self.property.clone() {
-                        Some(ref mut pp) =>
-                            match pp.try_borrow_mut() {
-                                Some(ref mut p) => {
-                                    //p.update_changed(s.as_slice(), &*op.old);
-                                    println!("join string : {}", s);
-                                    p.update_object(&*o.read().unwrap(), "");
-                                    
-                                    //not working TEST
-                                    /*
-                                    if let Some(yyy) = 
-                                        ui::property::find_property_show(&*o.read().unwrap(), op.name.tail().to_vec()) {
-                                            println!("yes I found but hey");
-                                            p.update_object(yyy, "");
-                                    }
-                                    else {
-                                            println!("cannot find {:?}", op.name);
-                                    }
-                                    */
-                                },
-                                None=> {}
-                            },
-                            None => {}
-                    };
-                }
-            //},
-            //None => {
-            //}
-        //}
-
-        if s.as_slice() == "object/name" {
-            match self.tree.clone() {
-                Some(ref mut tt) =>
-                    match tt.try_borrow_mut() {
-                        Some(ref mut t) => {
-                            t.update_object(&op.object.read().unwrap().id);
-                        },
-                        None=> {}
-                    },
-                    None => {}
-            };
-        }
+        return Change::Objects(s,list);
     }
 
     fn rotate_camera(&mut self, x : f64, y : f64)
@@ -597,7 +560,7 @@ impl Control
         keyname : &str,
         key : &str,
         timestamp : i32
-        )
+        ) ->  Change
     {
         let mut t = vec::Vec3::zero();
 
@@ -607,7 +570,10 @@ impl Control
             "f" => t.x = 50f64,
             "s" => t.x = -50f64,
             "z" => {
-                self.undo();
+                return self.undo();
+            },
+            "r" => {
+                //return self.redo();
             },
             _ => {}
         }
@@ -617,6 +583,8 @@ impl Control
             let p = camera.object.read().unwrap().position;
             camera.object.write().unwrap().position = p + t;
         }
+
+        return Change::None;
     }
 
 }
