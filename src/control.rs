@@ -29,16 +29,6 @@ pub enum State
     Dragger
 }
 
-#[derive(PartialEq)]
-pub enum Change
-{
-    None,
-    Property,
-    Tree,
-    Objects(String, DList<uuid::Uuid>),
-    All
-}
-
 pub struct Control
 {
     pub op_mgr : operation::OperationManager,
@@ -411,25 +401,35 @@ impl Control
         };
     }
 
-    pub fn undo(&mut self) -> Change
+    pub fn undo(&mut self) -> operation::Change
     {
-        let op = match self.op_mgr.pop_undo() {
+        self.op_mgr.undo()
+    }
+
+    pub fn redo(&mut self) -> operation::Change
+    {
+        self.op_mgr.redo()
+
+            /*
+        let op = match self.op_mgr.pop_redo() {
             Some(o) => o,
             None => {
-                println!("nothing to undo");
-                return Change::None;
+                println!("nothing to redo");
+                return operation::Change::None;
             }
         };
 
-        op.undo();
+        op.apply();
 
         let mut list = DList::new();
         list.push_back(op.object.read().unwrap().id.clone());
 
         let s = join_string(&op.name);
 
-        return Change::Objects(s,list);
+        return operation::Change::Objects(s,list);
+        */
     }
+
 
     fn rotate_camera(&mut self, x : f64, y : f64)
     {
@@ -560,7 +560,7 @@ impl Control
         keyname : &str,
         key : &str,
         timestamp : i32
-        ) ->  Change
+        ) ->  operation::Change
     {
         let mut t = vec::Vec3::zero();
 
@@ -573,7 +573,7 @@ impl Control
                 return self.undo();
             },
             "r" => {
-                //return self.redo();
+                return self.redo();
             },
             _ => {}
         }
@@ -584,7 +584,7 @@ impl Control
             camera.object.write().unwrap().position = p + t;
         }
 
-        return Change::None;
+        return operation::Change::None;
     }
 
 }

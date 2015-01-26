@@ -24,6 +24,7 @@ use geometry;
 use material;
 use ui::dragger;
 use camera;
+use operation;
 
 use control;
 use control::Control;
@@ -206,11 +207,11 @@ impl View
         };
     }
 
-    fn handle_control_change(&self, change : control::Change)
+    fn handle_control_change(&self, change : operation::Change)
     {
         let sel = self.get_selected_object();
 
-        let (name,id_list) = if let control::Change::Objects(name, id_list) = change {
+        let (name,id_list) = if let operation::Change::Objects(name, id_list) = change {
             (name,id_list)
         }
         else {

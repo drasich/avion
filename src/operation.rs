@@ -3,6 +3,8 @@ use std::sync::{RwLock, Arc};
 use std::cell::RefCell;
 use std::rc::Weak;
 use std::fmt;
+use std::collections::DList;
+use uuid;
 
 use object;
 use property;
@@ -17,6 +19,17 @@ pub struct Operation
     pub old : Box<Any>,
     pub new : Box<Any>,
 }
+
+#[derive(PartialEq)]
+pub enum Change
+{
+    None,
+    Property,
+    Tree,
+    Objects(String, DList<uuid::Uuid>),
+    All
+}
+
 
 impl Operation
 {
@@ -103,32 +116,67 @@ impl OperationManager
         self.undo.push(op);
     }
 
-    pub fn pop_undo(&mut self) -> Option<Operation>
+    fn add_redo(&mut self, op : Operation)
+    {
+        self.redo.push(op);
+    }
+
+
+    fn pop_undo(&mut self) -> Option<Operation>
     {
         self.undo.pop()
     }
 
-    /*
-    pub fn undo(&mut self)
+    fn pop_redo(&mut self) -> Option<Operation>
     {
-        let op = match self.undo.pop() {
+        self.redo.pop()
+    }
+
+    pub fn undo(&mut self) -> Change
+    {
+        let op = match self.pop_undo() {
             Some(o) => o,
-            None => return
+            None => {
+                println!("nothing to undo");
+                return Change::None;
+            }
         };
 
         op.undo();
-    }
-    */
 
-    pub fn redo(&mut self)
+        let mut list = DList::new();
+        list.push_back(op.object.read().unwrap().id.clone());
+
+        let s = join_string(&op.name);
+
+        self.add_redo(op);
+
+        return Change::Objects(s,list);
+    }
+
+    pub fn redo(&mut self) -> Change
     {
-        let op = match self.redo.pop() {
+        let op = match self.pop_redo() {
             Some(o) => o,
-            None => return
+            None => {
+                println!("nothing to redo");
+                return Change::None;
+            }
         };
 
         op.apply();
+
+        let mut list = DList::new();
+        list.push_back(op.object.read().unwrap().id.clone());
+
+        let s = join_string(&op.name);
+
+        self.add(op);
+
+        return Change::Objects(s,list);
     }
+
+
 }
 
 //TODO remove

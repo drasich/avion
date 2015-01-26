@@ -145,7 +145,6 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         v.init();
 
         if let Some(w) = v.window {
-
             unsafe {
                 ui::window_callback_set(
                     w,
@@ -158,7 +157,6 @@ pub extern fn init_cb(data: *mut c_void) -> () {
                     );
             }
         };
-
     }
 }
 
