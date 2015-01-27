@@ -225,6 +225,11 @@ impl Vec3
         *self * (1f64/ self.length())
     }
 
+    pub fn normalize(&mut self)
+    {
+        *self = *self * (1f64/ self.length())
+    }
+
     pub fn dot(&self, other : &Vec3) -> f64
     {
         self.x * other.x + self.y * other.y + self.z * other.z
