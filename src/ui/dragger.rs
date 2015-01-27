@@ -22,7 +22,8 @@ pub struct DraggerManager
     pub draggers : DList<Rc<RefCell<Dragger>>>,
     pub scale : f64,
     mouse_start : vec::Vec2,
-    mouse : Option<Box<DraggerMouse+'static>>
+    mouse : Option<Box<DraggerMouse+'static>>,
+    pub ori : vec::Quat
 }
 
 #[derive(Copy)]
@@ -160,7 +161,7 @@ impl TranslationMove {
         //printf("ca %f, %f, %f \n", ca.x, ca.y, ca.z);
         let mut n = camup ^ ca;
         if constraint == vec::Vec3::new(1f64,1f64,0f64) {
-            n = self.ori.rotate_vec3(&vec::Vec3::new(0f64,0f64,1f64));
+            n = ori.rotate_vec3(&vec::Vec3::new(0f64,0f64,1f64));
         }
         else if constraint == vec::Vec3::new(1f64,0f64,1f64) {
             n = ori.rotate_vec3(&vec::Vec3::new(0f64,1f64,0f64));
@@ -212,7 +213,8 @@ impl DraggerManager
             draggers : DList::new(),
             scale : 1f64,
             mouse_start : vec::Vec2::zero(),
-            mouse : None
+            mouse : None,
+            ori : vec::Quat::identity()
         };
 
         dm.create_draggers(factory);
@@ -312,11 +314,14 @@ impl DraggerManager
                     dragger.set_state(State::Selected);
                     match dragger.kind {
                         Kind::Translate => {
+                            let ob = dragger.object.read().unwrap();
+                            //println!("ori : {:?}", self.ori);
+
                             self.mouse = Some(box TranslationMove::new(
-                                    dragger.object.read().unwrap().position.clone(),
+                                    ob.position.clone(),
                                     dragger.constraint,
                                     dragger.repere,
-                                    dragger.object.read().unwrap().orientation.as_quat(),
+                                    self.ori
                                     ) as Box<DraggerMouse>);
                         }
                         _ => {println!("todo");}
@@ -338,6 +343,7 @@ impl DraggerManager
     }
 
     pub fn set_orientation(&mut self, ori : transform::Orientation) {
+        self.ori = ori.as_quat();
         for d in self.draggers.iter_mut() {
             let mut d = d.borrow_mut();
             d.object.write().unwrap().orientation = ori * d.ori;

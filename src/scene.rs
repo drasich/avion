@@ -56,6 +56,18 @@ impl Scene
         //println!("scene : \n\n {}", json::encode(&scene));
         self.encode(&mut encoder).unwrap();
         */
+
+        /*
+        let mut file = File::create(&Path::new(self.name.as_slice()));
+        let encoded = json::encode(self);
+        let mut s = String::new();
+        {
+            let mut encoder = json::PrettyEncoder::new(&mut s);
+            let _ = self.encode(&mut encoder);
+        }
+
+        let result = file.write_str(s.as_slice());
+        */
     }
 
     pub fn object_find(&self, name : &str) -> Option<Arc<RwLock<object::Object>>>
