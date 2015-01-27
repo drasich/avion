@@ -229,6 +229,21 @@ impl Property
         //unsafe { property_data_set(self.jk_property, data); }
     }
 
+    pub fn update_object_property(&self, object : &PropertyShow, prop : &str)
+    {
+        for (f,pv) in self.pv.iter() {
+            if f.as_slice().starts_with(prop) {
+                let yep = make_vec_from_string(f).tail().to_vec();
+                match find_property_show(object, yep.clone()) {
+                    Some(ppp) => {
+                        ppp.update_widget(*pv);
+                    },
+                    None => {}
+                }
+            }
+        }
+    }
+
     pub fn update_object(&self, object : &PropertyShow, but : &str)
     {
         for (f,pv) in self.pv.iter() {

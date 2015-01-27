@@ -237,7 +237,8 @@ impl View
                 match pp.try_borrow() {
                     Some(ref p) => {
                         println!("direct change : {}", s);
-                        p.update_object(&*o.read().unwrap(), s);
+                        //p.update_object(&*o.read().unwrap(), s);
+                        p.update_object_property(&*o.read().unwrap(), s);
                     },
                     None=> {}
                 },
