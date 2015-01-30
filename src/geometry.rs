@@ -19,11 +19,32 @@ impl Ray
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct Plane
 {
     pub point : Vec3,
     pub normal : Vec3
 }
+
+impl Plane
+{
+    pub fn new(point : Vec3, normal : Vec3) -> Plane
+    {
+        Plane {
+            point : point,
+            normal : normal
+        }
+    }
+
+    pub fn xz() -> Plane
+    {
+        Plane {
+            point : Vec3::zero(),
+            normal : Vec3::y()
+        }
+    }
+}
+
 
 pub struct Sphere
 {

@@ -249,8 +249,84 @@ impl Camera
         let vw = &tm * zero;
         let w = vw.w * factor;
         return w;
-}
+    }
 
+    pub fn get_frustum_planes_rect(
+        /*
+           ViewCamera* cam,
+           Plane* p,
+           float left, float top, float width, float height)
+           */
+        &self,
+        left : f64, top : f64, width : f64, height : f64) -> [geometry::Plane;6]
+    {
+
+        let o = self.object.read().unwrap();
+        let c = &self.data;
+
+        let direction = o.orientation.rotate_vec3(&vec::Vec3::new(0f64,0f64,-1f64));
+        let right = o.orientation.rotate_vec3(&vec::Vec3::new(1f64,0f64,0f64));
+        let up = o.orientation.rotate_vec3(&vec::Vec3::new(0f64,1f64,0f64));
+
+        //plane order:
+        //near, far, up, down, right, left
+        let mut p = [geometry::Plane::xz();6];
+
+        //near plane
+        p[0].point = o.position + (direction * c.near);
+        p[0].normal = direction;
+
+        //far plane
+        p[1].point = o.position + (direction * c.far);
+        p[1].normal = direction * -1f64;
+
+        //up plane
+        let hh = (c.fovy/2f64).tan()* c.near;
+        let top = top * hh / (c.height/2.0f64);
+        let height = height * hh / (c.height/2.0f64);
+
+        let th = hh - top;
+        let upd = (direction * c.near) + (up * th);
+
+        p[2].point = o.position;
+        let nn = (right ^ upd).normalized();
+        p[2].normal = nn * -1f64;
+
+        //down plane
+        let bh = hh - (top + height);
+        p[3].point = o.position;
+        let downd = (direction * c.near) + (up * bh);
+        let nn = (right ^ downd).normalized();
+        //p[3].normal = vec3_mul(nn, -1);
+        p[3].normal = nn;
+
+
+        //right plane
+        let hw = hh * c.aspect;
+        let left = left * hw / (c.width/2.0f64);
+        let width = width * hw / (c.width/2.0f64);
+        
+        let rw = -hw + (left + width);
+        p[4].point = o.position;
+        let rightd = (direction * c.near) + (right* rw);
+        let nn = (up ^ rightd).normalized();
+        //p[4].normal = vec3_mul(nn, -1);
+        p[4].normal = nn;
+
+        //left plane
+        let lw = -hw + left;
+        p[5].point = o.position;
+        let leftd = (direction* c.near) + (right* lw);
+        let nn = (up ^ leftd).normalized();
+        p[5].normal = nn * -1f64;
+
+        /*
+           printf(" leftd : %f, %f, %f \n", leftd.x, leftd.y, leftd.z);
+           printf(" up : %f, %f, %f \n", up.x, up.y, up.z);
+           printf(" up plane normal : %f, %f, %f \n", nn.x, nn.y, nn.z);
+           */
+        return p;
+    }
 
 }
 
