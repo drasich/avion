@@ -28,6 +28,8 @@ pub enum Change
     Tree,
     Objects(String, DList<uuid::Uuid>),
     DirectChange(String),
+    RectVisibleSet(bool),
+    RectSet(f32, f32, f32, f32),
     All
 }
 

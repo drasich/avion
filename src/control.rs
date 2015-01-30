@@ -26,7 +26,8 @@ pub enum State
 {
     Idle,
     CameraRotation,
-    Dragger
+    Dragger,
+    MultipleSelect
 }
 
 pub struct Control
@@ -43,7 +44,8 @@ pub struct Control
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO change to weak
     pub dragger : Rc<RefCell<ui::dragger::DraggerManager>>,
 
-    pub saved_positions : Option<DList<vec::Vec3>>
+    pub saved_positions : Option<DList<vec::Vec3>>,
+    pub mouse_start : Option<vec::Vec2>
 }
 
 impl Control
@@ -63,17 +65,33 @@ impl Control
             context : context,
             dragger : dragger,
 
-            saved_positions : None
+            saved_positions : None,
+            mouse_start : None
         }
     }
 
     pub fn mouse_down(
             &mut self, 
+            modifier : i32,
             button : i32,
             x : i32, 
             y : i32,
-            timestamp : i32)
+            timestamp : i32) -> DList<operation::Change>
     {
+        let mut list = DList::new();
+
+        if modifier & (1 << 0) != 0 {
+            self.mouse_start = Some(vec::Vec2::new(x as f64, y as f64));
+            self.state = State::MultipleSelect;
+            list.push_back(operation::Change::RectVisibleSet(true));
+            list.push_back(operation::Change::RectSet(x as f32, y as f32, 1f32, 1f32));
+            println!("pressed shift");
+            return list;
+        }
+        else if modifier & (1 << 1) != 0 {
+            println!("pressed control");
+        }
+
         let click = self.dragger.borrow_mut().mouse_down(
             &*self.camera.borrow(),button, x, y);
         if click {
@@ -88,6 +106,8 @@ impl Control
                 //todo save the position if translation
             }
         }
+
+        return list;
     }
 
     pub fn mouse_up(
@@ -95,14 +115,14 @@ impl Control
             button : i32,
             x : i32, 
             y : i32,
-            timestamp : i32)
+            timestamp : i32) -> operation::Change
     {
         println!("control fn mouse up");
         match self.state {
             State::CameraRotation => {
                 self.state = State::Idle;
                 println!("state was cam rotate ");
-                return;
+                return operation::Change::None;
             },
             State::Dragger => {
                 self.state = State::Idle;
@@ -137,7 +157,11 @@ impl Control
                         _ => {}
                     }
                 }
-                return;
+                return operation::Change::None;
+            },
+            State::MultipleSelect => {
+                self.state = State::Idle;
+                return operation::Change::RectVisibleSet(false);
             },
             _ => {}
         }
@@ -147,7 +171,7 @@ impl Control
             Some(c) => {
                 c.ray_from_screen(x as f64, y as f64, 10000f64)
             },
-            None => { println!("cannot borrow camera"); return; }
+            None => { println!("cannot borrow camera"); return operation::Change::None; }
         };
 
         //TODO
@@ -168,7 +192,7 @@ impl Control
 
         let mut c = match self.context.try_borrow_mut(){
             Some(con) => con,
-            None => { println!("cannot borrow context"); return; }
+            None => { println!("cannot borrow context"); return operation::Change::None; }
         };
 
         c.selected.clear();
@@ -177,7 +201,7 @@ impl Control
             Some(ref s) => s.clone(),
             None => {
                 println!("no scene ");
-                return;
+                return operation::Change::None;
             }
         };
 
@@ -261,6 +285,8 @@ impl Control
                 _ => {},
             }
         }
+
+        return operation::Change::None;
     }
 
     pub fn select(&mut self, id : &Uuid)
@@ -530,6 +556,17 @@ impl Control
                         },
                         _ => {}
                     }
+                }
+            }
+            State::MultipleSelect => {
+                if let Some(ms) = self.mouse_start {
+                    let x = curx as f32;
+                    let y = cury as f32;
+                    let ex = ms.x as f32;
+                    let ey = ms.y as f32;
+                    let (startx, endx) = if x < ex {(x, ex - x)} else {(ex, x - ex)};
+                    let (starty, endy) = if y < ey {(y, ey - y)} else {(ey, y - ey)};
+                    return operation::Change::RectSet(startx, starty, endx, endy);
                 }
             }
         }

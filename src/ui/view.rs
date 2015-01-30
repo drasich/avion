@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::sync::{RwLock, Arc};
-use libc::{c_char, c_void, c_int};
+use libc::{c_char, c_void, c_int, c_float};
 use std::mem;
 use std::ffi;
 use std::ffi::CString;
@@ -41,6 +41,18 @@ extern {
         render: *const View
         ) -> ();
 }
+
+#[link(name = "joker")]
+extern {
+    pub fn window_rect_visible_set(win :*const ui::Window, b : bool);
+    pub fn window_rect_set(
+        win :*const ui::Window,
+        x : c_float,
+        y : c_float,
+        w : c_float,
+        h : c_float);
+}
+
 
 pub struct View
 {
@@ -108,20 +120,6 @@ impl View
         self.window = Some(w);
 
         let control = &self.control;
-
-        /*
-        unsafe {
-            ui::window_callback_set(
-                w,
-                mem::transmute(box control.clone()),
-                mouse_down,
-                mouse_up,
-                mouse_move,
-                mouse_wheel,
-                key_down
-                );
-        }
-        */
 
         let p = Rc::new(RefCell::new(ui::Property::new(
                     w,
@@ -247,16 +245,16 @@ impl View
     }
 
 
-    fn handle_control_change(&self, change : operation::Change)
+    fn handle_control_change(&self, change : &operation::Change)
     {
-        if change == operation::Change::None {
+        if *change == operation::Change::None {
             return;
         }
 
         let sel = self.get_selected_object();
 
-        match change {
-            operation::Change::Objects(name, id_list) => {
+        match *change {
+            operation::Change::Objects(ref name, ref id_list) => {
 
                 for id in id_list.iter() {
                     if let Some(ref o) = sel {
@@ -289,8 +287,22 @@ impl View
                     }
                 }
             },
-            operation::Change::DirectChange(name) => {
+            operation::Change::DirectChange(ref name) => {
                 self.handle_direct_change(name.as_slice());
+            },
+            operation::Change::RectVisibleSet(b) => {
+                if let Some(w) = self.window {
+                    unsafe {
+                        window_rect_visible_set(w, b);
+                    }
+                }
+            },
+            operation::Change::RectSet(x,y,w,h) => {
+                if let Some(win) = self.window {
+                    unsafe {
+                        window_rect_set(win, x,y,w,h);
+                    }
+                }
             },
             _ => {}
         }
@@ -321,7 +333,11 @@ pub extern fn mouse_down(
     //println!("rust mouse down button {}, pos: {}, {}", button, x, y);
     //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let mut c = control_rc.borrow_mut();
-    c.mouse_down(button,x,y,timestamp);
+    let op_list = c.mouse_down(modifier, button,x,y,timestamp);
+
+    for op in op_list.iter() {
+        view.handle_control_change(op);
+    }
 }
 
 pub extern fn mouse_up(
@@ -337,7 +353,9 @@ pub extern fn mouse_up(
     let control_rc = view.control.clone();
     //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let mut c = control_rc.borrow_mut();
-    c.mouse_up(button,x,y,timestamp);
+    let change = c.mouse_up(button,x,y,timestamp);
+
+    view.handle_control_change(&change);
 }
 
 pub extern fn mouse_move(
@@ -361,7 +379,7 @@ pub extern fn mouse_move(
         c.mouse_move(modifiers_flag, button, curx, cury, prevx, prevy, timestamp)
     };
 
-    view.handle_control_change(change);
+    view.handle_control_change(&change);
     
 }
 
@@ -424,7 +442,7 @@ pub extern fn key_down(
         c.key_down(modifier, keyname_str.as_slice(), key_str.as_slice(), timestamp)
     };
 
-    view.handle_control_change(change);
+    view.handle_control_change(&change);
 
 }
 
