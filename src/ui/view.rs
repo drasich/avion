@@ -25,6 +25,7 @@ use material;
 use ui::dragger;
 use camera;
 use operation;
+use intersection;
 
 use control;
 use control::Control;
@@ -302,6 +303,23 @@ impl View
                     unsafe {
                         window_rect_set(win, x,y,w,h);
                     }
+
+                    let planes = self.camera.borrow().get_frustum_planes_rect(x as f64, y as f64, w as f64, h as f64);
+
+                    let c = match self.context.try_borrow(){
+                        Some(con) => con,
+                        None => { println!("cannot borrow context"); return; }
+                    };
+
+                    let s = match c.scene {
+                        Some(ref s) => s,
+                        None => return
+                    };
+
+                    for o in s.read().unwrap().objects.iter() {
+                        let b = intersection::is_object_in_planes(planes.as_slice(), &*o.read().unwrap());
+                    }
+
                 }
             },
             _ => {}
