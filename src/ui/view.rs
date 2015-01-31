@@ -327,6 +327,66 @@ impl View
 
                 }
             },
+            operation::Change::SelectedChange => {
+
+                let c = match self.context.try_borrow(){
+                    Some(con) => con,
+                    None => { println!("cannot borrow context"); return; }
+                };
+
+                println!("object seclected : {}",  c.selected.len());
+
+                if c.selected.len() == 0 {
+                    match self.property {
+                        Some(ref pp) => {
+                            match pp.try_borrow_mut() {
+                                Some(ref mut p) => {
+                                    p.set_nothing();
+                                },
+                                None => {println!("cannot borrow property");}
+                            };
+                        },
+                        None => {
+                            println!("control no property");
+                        }
+                    }
+                }
+                else if c.selected.len() == 1 {
+                    //TODO select tree
+                    match c.selected.front() {
+                        Some(o) => {
+                            match self.property {
+                                Some(ref pp) => {
+                                    match pp.try_borrow_mut() {
+                                        Some(ref mut p) => {
+                                            p.set_object(&*o.read().unwrap());
+                                        },
+                                        None => {println!("cannot borrow property");}
+                                    };
+                                },
+                                None => {
+                                    println!("control no property");
+                                }
+                            }
+
+                            match self.tree {
+                                Some(ref tt) => {
+                                    match tt.try_borrow_mut() {
+                                        Some(ref mut t) => {
+                                            t.select(&o.read().unwrap().id);
+                                        }
+                                        _ => {}
+                                    }
+                                },
+                                None => {
+                                    println!("control no tree");
+                                }
+                            }
+                        },
+                        _ => {},
+                    }
+                }
+            }
             _ => {}
         }
     }

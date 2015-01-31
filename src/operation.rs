@@ -30,6 +30,7 @@ pub enum Change
     DirectChange(String),
     RectVisibleSet(bool),
     RectSet(f32, f32, f32, f32),
+    SelectedChange,
     All
 }
 

@@ -174,22 +174,6 @@ impl Control
             None => { println!("cannot borrow camera"); return operation::Change::None; }
         };
 
-        //TODO
-        /*
-        match m.render.line.write().mesh_render {
-            Some (ref mr) => {
-                match mr.mesh.resource {
-                    resource::ResData(ref mesh) => {
-                        mesh.write().add_line(
-                            geometry::Segment::new(r.start, r.start + r.direction),
-                            vec::Vec4::zero()); },
-                            _ => {}
-                }
-            },
-            None => {}
-        }
-        */
-
         let mut c = match self.context.try_borrow_mut(){
             Some(con) => con,
             None => { println!("cannot borrow context"); return operation::Change::None; }
@@ -233,60 +217,7 @@ impl Control
             Some(o) => c.selected.push_back(o)
         }
 
-        println!("object seclected : {}",  c.selected.len());
-
-        if c.selected.len() == 0 {
-            match self.property {
-                Some(ref pp) => {
-                    match pp.try_borrow_mut() {
-                        Some(ref mut p) => {
-                            p.set_nothing();
-                        },
-                        None => {println!("cannot borrow property");}
-                    };
-                },
-                None => {
-                    println!("control no property");
-                }
-            }
-        }
-        else if c.selected.len() == 1 {
-            //TODO select tree
-            match c.selected.front() {
-                Some(o) => {
-                    match self.property {
-                        Some(ref pp) => {
-                            match pp.try_borrow_mut() {
-                                Some(ref mut p) => {
-                                    p.set_object(&*o.read().unwrap());
-                                },
-                                None => {println!("cannot borrow property");}
-                            };
-                        },
-                        None => {
-                            println!("control no property");
-                        }
-                    }
-
-                    match self.tree {
-                        Some(ref tt) => {
-                            match tt.try_borrow_mut() {
-                                Some(ref mut t) => {
-                                    t.select(&o.read().unwrap().id);
-                                }
-                                _ => {}
-                            }
-                        },
-                        None => {
-                            println!("control no tree");
-                        }
-                    }
-                },
-                _ => {},
-            }
-        }
-
-        return operation::Change::None;
+        return operation::Change::SelectedChange;
     }
 
     pub fn select(&mut self, id : &Uuid)
