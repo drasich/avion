@@ -456,13 +456,16 @@ pub extern fn mouse_move(
     let view : &Box<View> = unsafe {mem::transmute(data)};
     let control_rc = view.control.clone();
 
-    let change = {
+    let change_list = {
         //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
         let mut c = control_rc.borrow_mut();
         c.mouse_move(modifiers_flag, button, curx, cury, prevx, prevy, timestamp)
     };
 
-    view.handle_control_change(&change);
+
+    for change in change_list.iter() {
+        view.handle_control_change(change);
+    }
     
 }
 

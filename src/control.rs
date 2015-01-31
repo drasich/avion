@@ -430,8 +430,10 @@ impl Control
         cury : i32,
         prevx : i32, 
         prevy : i32,
-        timestamp : i32) -> operation::Change
+        timestamp : i32) -> DList<operation::Change>
     {
+        let mut list = DList::new();
+
         match self.state {
             State::Idle | State::CameraRotation => {
                 let x : f64 = curx as f64;
@@ -443,7 +445,7 @@ impl Control
                     },
                     None => {
                         println!("cannot borrow camera"); 
-                        return operation::Change::None;
+                        return list;
                     }
                 };
 
@@ -473,7 +475,7 @@ impl Control
                     Some(c) =>c,
                     None => { 
                         println!("cannot borrow camera");
-                        return operation::Change::None;
+                        return list;
                     }
                 };
 
@@ -483,7 +485,7 @@ impl Control
                     match op {
                         dragger::Operation::Translation(v) => {
                             let prop = vec!["object".to_string(),"position".to_string()];
-                            return self.request_direct_change(prop, &v);
+                            list.push_back(self.request_direct_change(prop, &v));
                         },
                         _ => {}
                     }
@@ -497,12 +499,12 @@ impl Control
                     let ey = ms.y as f32;
                     let (startx, endx) = if x < ex {(x, ex - x)} else {(ex, x - ex)};
                     let (starty, endy) = if y < ey {(y, ey - y)} else {(ey, y - ey)};
-                    return operation::Change::RectSet(startx, starty, endx, endy);
+                    list.push_back(operation::Change::RectSet(startx, starty, endx, endy));
                 }
             }
         }
 
-        return operation::Change::None;
+        return list;
     }
 
     pub fn mouse_wheel(
