@@ -220,10 +220,10 @@ impl Control
         return operation::Change::SelectedChange;
     }
 
-    pub fn select(&mut self, id : &Uuid)
+    pub fn select(&mut self, ids : &DList<Uuid>)
     {
         //TODO same as the code at the end of mouse_up, so factorize
-        println!("TODO check: is this find by id ok? : control will try to find object by id, .................select is called : {} ", id);
+        println!("TODO check: is this find by id ok? : control will try to find object by id, .................select is called ");
         let mut c = match self.context.try_borrow_mut(){
             Some(con) => con,
             None => { println!("cannot borrow context"); return; }
@@ -236,6 +236,7 @@ impl Control
             None => return
         };
 
+        for id in ids.iter() {
         for o in scene.read().unwrap().objects.iter() {
             if o.read().unwrap().id == *id {
                 c.selected.push_back(o.clone());
@@ -252,6 +253,7 @@ impl Control
                 }
                 break;
             }
+        }
         }
     }
 

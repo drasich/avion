@@ -2,7 +2,7 @@ use std::sync::{RwLock, Arc};
 use std::collections::HashMap;
 use libc::{c_char, c_void, c_int};
 use std::mem;
-//use std::collections::{DList,Deque};
+use std::collections::{DList};//,Deque};
 use std::ptr;
 use std::cell::RefCell;
 use std::rc::Weak;
@@ -234,7 +234,9 @@ extern fn selected(
 
     match t.control.try_borrow_mut() {
         Some(ref mut c) => {
-            c.select(&o.read().unwrap().id);
+            let mut l = DList::new();
+            l.push_back(o.read().unwrap().id.clone());
+            c.select(&l);
         },
         _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
     }
