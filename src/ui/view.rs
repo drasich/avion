@@ -303,28 +303,6 @@ impl View
                     unsafe {
                         window_rect_set(win, x,y,w,h);
                     }
-
-                    let planes = self.camera.borrow().get_frustum_planes_rect(x as f64, y as f64, w as f64, h as f64);
-
-                    let mut c = match self.context.try_borrow_mut(){
-                        Some(con) => con,
-                        None => { println!("cannot borrow context"); return; }
-                    };
-
-                    c.selected.clear();
-
-                    let s = match c.scene {
-                        Some(ref s) => s.clone(),
-                        None => return
-                    };
-
-                    for o in s.read().unwrap().objects.iter() {
-                        let b = intersection::is_object_in_planes(planes.as_slice(), &*o.read().unwrap());
-                        if b {
-                            c.selected.push_back(o.clone());
-                        }
-                    }
-
                 }
             },
             operation::Change::SelectedChange => {

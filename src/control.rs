@@ -223,7 +223,7 @@ impl Control
     pub fn select(&mut self, id : &Uuid)
     {
         //TODO same as the code at the end of mouse_up, so factorize
-        println!("control .................select is called : {} ", id);
+        println!("TODO check: is this find by id ok? : control will try to find object by id, .................select is called : {} ", id);
         let mut c = match self.context.try_borrow_mut(){
             Some(con) => con,
             None => { println!("cannot borrow context"); return; }
@@ -239,6 +239,7 @@ impl Control
         for o in scene.read().unwrap().objects.iter() {
             if o.read().unwrap().id == *id {
                 c.selected.push_back(o.clone());
+                println!("TODO how to notify property...(and other possible widgets");
                 match self.property {
                     Some(ref mut pp) =>
                         match pp.try_borrow_mut() {
@@ -311,45 +312,6 @@ impl Control
 
         let s = join_string(&name);
         return operation::Change::DirectChange(s);
-
-        /*
-        //TODO it might do more than just update this property
-        // for example for orientation enum, you change the enum
-        // the widget must change.
-        // the proeprty might also be displayed somewhere else
-
-        //TODO update the widget that has this object/property, but not the
-        // widget where the change came from
-        // add widget origin uuid in request_operation and request_direct_change
-
-        //PROBLEM -> property borrow -> control borrow -> property borrow
-
-        let s = join_string(&name);
-        if s.as_slice() == "object/name" {
-            match self.tree {
-                Some(ref mut tt) =>
-                    match tt.try_borrow_mut() {
-                        Some(ref mut t) => {
-                            t.update_object(&o.read().unwrap().id);
-                        },
-                        None=> {}
-                    },
-                    None => {}
-            };
-        }
-            
-        match self.property {
-            Some(ref mut pp) =>
-                match pp.try_borrow_mut() {
-                    Some(ref mut p) => {
-                        println!("direct change : {}", s);
-                        p.update_object(&*o.read().unwrap(), s.as_slice());
-                    },
-                    None=> {}
-                },
-                None => {}
-        };
-        */
     }
 
     pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
@@ -500,6 +462,34 @@ impl Control
                     let (startx, endx) = if x < ex {(x, ex - x)} else {(ex, x - ex)};
                     let (starty, endy) = if y < ey {(y, ey - y)} else {(ey, y - ey)};
                     list.push_back(operation::Change::RectSet(startx, starty, endx, endy));
+
+                    let planes = self.camera.borrow().get_frustum_planes_rect(
+                        startx as f64, 
+                        starty as f64, 
+                        endx as f64, 
+                        endy as f64);
+
+                    let mut c = match self.context.try_borrow_mut(){
+                        Some(con) => con,
+                        None => { println!("cannot borrow context"); return list; }
+                    };
+
+                    c.selected.clear();
+
+                    let s = match c.scene {
+                        Some(ref s) => s.clone(),
+                        None => return list
+                    };
+
+                    for o in s.read().unwrap().objects.iter() {
+                        let b = intersection::is_object_in_planes(planes.as_slice(), &*o.read().unwrap());
+                        if b {
+                            c.selected.push_back(o.clone());
+                        }
+                    }
+
+                    list.push_back(operation::Change::SelectedChange);
+
                 }
             }
         }
