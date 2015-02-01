@@ -314,7 +314,7 @@ impl View
 
                 println!("object seclected : {}",  c.selected.len());
 
-                if c.selected.len() == 0 {
+                if c.selected.len() != 1 {
                     match self.property {
                         Some(ref pp) => {
                             match pp.try_borrow_mut() {
@@ -329,7 +329,7 @@ impl View
                         }
                     }
                 }
-                else if c.selected.len() == 1 {
+                else {
                     //TODO select tree
                     match c.selected.front() {
                         Some(o) => {
