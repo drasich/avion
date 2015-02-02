@@ -229,7 +229,7 @@ impl Control
             None => { println!("cannot borrow context"); return; }
         };
 
-        c.selected.clear();
+        //c.selected.clear();
 
         let scene = match c.scene {
             Some(ref s) => s.clone(),
@@ -241,6 +241,7 @@ impl Control
             if o.read().unwrap().id == *id {
                 c.selected.push_back(o.clone());
                 println!("TODO how to notify property...(and other possible widgets");
+                /*
                 match self.property {
                     Some(ref mut pp) =>
                         match pp.try_borrow_mut() {
@@ -251,11 +252,58 @@ impl Control
                         },
                     None => {}
                 }
+                */
                 break;
             }
         }
         }
     }
+
+    pub fn unselect(&mut self, ids : &DList<Uuid>)
+    {
+        let mut c = match self.context.try_borrow_mut(){
+            Some(con) => con,
+            None => { println!("cannot borrow context"); return; }
+        };
+
+        let scene = match c.scene {
+            Some(ref s) => s.clone(),
+            None => return
+        };
+
+        let mut newlist = DList::new();
+
+        for o in c.selected.iter() {
+            let mut should_remove = false;
+            for id_to_rm in ids.iter() {
+                if o.read().unwrap().id == *id_to_rm {
+                    should_remove = true;
+                    break;
+                }
+            }
+
+            if !should_remove {
+                newlist.push_back(o.clone());
+            }
+        }
+
+        c.selected = newlist;
+
+
+        /* TODO notify property 
+        match self.property {
+            Some(ref mut pp) =>
+                match pp.try_borrow_mut() {
+                    Some(ref mut p) => {
+                        p.set_object(&*o.read().unwrap());
+                    },
+                    None=> {}
+                },
+                None => {}
+        }
+        */
+    }
+
 
     pub fn request_operation<T : Any+PartialEq>(
         &mut self,  

@@ -34,6 +34,7 @@ extern {
         can_expand : extern fn(data : *const c_void) -> bool,
         expand : extern fn(tree: *const Tree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         sel : extern fn(tree: *const Tree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        unsel : extern fn(tree: *const Tree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         );
 
     fn tree_object_add(
@@ -83,7 +84,9 @@ impl Tree
                 item_selected,
                 can_expand,
                 expand,
-                selected);
+                selected,
+                unselected
+                );
         }
 
         t
@@ -237,6 +240,34 @@ extern fn selected(
             let mut l = DList::new();
             l.push_back(o.read().unwrap().id.clone());
             c.select(&l);
+        },
+        _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
+    }
+}
+
+extern fn unselected(
+    tree: *const Tree,
+    data : *const c_void,
+    parent : *const Elm_Object_Item) -> ()
+{
+    let o : &Arc<RwLock<object::Object>> = unsafe {
+        mem::transmute(data)
+    };
+
+    let t : &Tree = unsafe {mem::transmute(tree)};
+
+    println!("unsel ! {} ", o.read().unwrap().name);
+    println!("unsel ! tree name {} ", t.name);
+
+    if t.dont_forward_signal {
+        return;
+    }
+
+    match t.control.try_borrow_mut() {
+        Some(ref mut c) => {
+            let mut l = DList::new();
+            l.push_back(o.read().unwrap().id.clone());
+            c.unselect(&l);
         },
         _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
     }
