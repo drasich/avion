@@ -132,8 +132,9 @@ impl TranslationMove {
             let mut translation = ir.position - irstart.position;
             translation = translation * constraint;
 
-            let pos = self.translation_start + translation;
-            return Some(Operation::Translation(pos));
+            //let pos = self.translation_start + translation;
+            //return Some(Operation::Translation(pos));
+            return Some(Operation::Translation(translation));
         }
         else {
             return None;
@@ -195,8 +196,9 @@ impl TranslationMove {
                    translation = ca * dot;
             }
 
-            let pos = self.translation_start + translation;
-            return Some(Operation::Translation(pos));
+            //let pos = self.translation_start + translation;
+            //return Some(Operation::Translation(pos));
+            return Some(Operation::Translation(translation));
         }
         else {
             return None;

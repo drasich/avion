@@ -14,7 +14,7 @@ use control::WidgetUpdate;
 
 pub struct Operation
 {
-    pub object : Arc<RwLock<object::Object>>,
+    pub objects : DList<Arc<RwLock<object::Object>>>,
     pub name : Vec<String>,
     pub old : Box<Any>,
     pub new : Box<Any>,
@@ -38,13 +38,13 @@ pub enum Change
 impl Operation
 {
     pub fn new(
-        object : Arc<RwLock<object::Object>>,
+        objects : DList<Arc<RwLock<object::Object>>>,
         name : Vec<String>,
         old : Box<Any>,
         new : Box<Any>) -> Operation
     {
         Operation {
-            object : object,
+            objects : objects,
             name : name,
             old : old,
             new : new
@@ -53,8 +53,6 @@ impl Operation
 
     pub fn apply(&self)
     {
-        let o = &self.object;
-
         /*
         let v: Vec<&str> = self.name.split('/').collect();
         let mut vs = Vec::new();
@@ -66,11 +64,14 @@ impl Operation
         //let vs = vs.tail().to_vec();
         */
 
+        for o in self.objects.iter() {
         //o.write().set_property_hier(vs, &*self.old);
         println!("apply {:?}, {:?}", self.name, self.new);
         //o.write().set_property_hier(self.name.clone(), &*self.new);
         o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &*self.new);
         println!("applied {:?}", self.name);
+
+        }
 
         match self.new.downcast_ref::<String>() {
             Some(s) => println!("applay with value {}" , s),
@@ -84,13 +85,14 @@ impl Operation
             Some(s) => println!("undo with value {}" , s),
             None => {}
         };
-        let o = &self.object;
 
         let vs = self.name.tail().to_vec();
 
-        //o.write().set_property_hier(self.name.clone(), &*self.old);
-        //o.write().set_property_hier(vs, &*self.old);
-        o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), &*self.old);
+        for o in self.objects.iter() {
+            //o.write().set_property_hier(self.name.clone(), &*self.old);
+            //o.write().set_property_hier(vs, &*self.old);
+            o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), &*self.old);
+        }
     }
 }
 
@@ -155,7 +157,9 @@ impl OperationManager
         op.undo();
 
         let mut list = DList::new();
-        list.push_back(op.object.read().unwrap().id.clone());
+        for o in op.objects.iter() {
+            list.push_back(o.read().unwrap().id.clone());
+        }
 
         let s = join_string(&op.name);
 
@@ -177,7 +181,9 @@ impl OperationManager
         op.apply();
 
         let mut list = DList::new();
-        list.push_back(op.object.read().unwrap().id.clone());
+        for o in op.objects.iter() {
+            list.push_back(o.read().unwrap().id.clone());
+        }
 
         let s = join_string(&op.name);
 

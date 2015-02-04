@@ -304,30 +304,18 @@ impl Control
             return operation::Change::None;
         }
 
-        let o = match self.get_selected_object() {
-            Some(o) => o.clone(),
-            None => {
-                println!("no objetcs selected");
-                return operation::Change::None;
-            }
-        };
-
         let op = operation::Operation::new(
-            o.clone(), 
+            self.get_selected_objects(),
             name.clone(),
             old,
             new); 
 
         op.apply();
 
-        //TODO update the widget that has this object/property
-
         self.op_mgr.add(op);
 
-        let mut list = DList::new();
-        list.push_back(o.read().unwrap().id.clone());
         let s = join_string(&name);
-        return operation::Change::Objects(s,list);
+        return operation::Change::Objects(s,self.context.borrow().get_selected_ids());
     }
 
     pub fn request_direct_change(
@@ -511,7 +499,7 @@ impl Control
                     match op {
                         dragger::Operation::Translation(v) => {
                             let prop = vec!["object".to_string(),"position".to_string()];
-                            list.push_back(self.request_direct_change(prop, &v));
+                            list.push_back(self.request_translation(v));
                         },
                         _ => {}
                     }

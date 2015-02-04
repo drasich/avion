@@ -1,6 +1,7 @@
 use object;
 use scene;
 use vec;
+use uuid;
 
 use std::collections::{DList};
 use std::sync::{RwLock, Arc};
@@ -29,6 +30,16 @@ impl Context
         for o in self.selected.iter() {
             self.saved_positions.push(o.read().unwrap().position);
         }
+    }
+
+    pub fn get_selected_ids(&self) -> DList<uuid::Uuid>
+    {
+        let mut list = DList::new();
+        for o in self.selected.iter() {
+            list.push_back(o.read().unwrap().id.clone());
+        }
+
+        list
     }
 }
 
