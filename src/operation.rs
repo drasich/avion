@@ -11,13 +11,22 @@ use property;
 use property::PropertyWrite;
 use ui;
 use control::WidgetUpdate;
+use vec;
+
+pub enum DataChange
+{
+    OldNew(Box<Any>, Box<Any>),
+    Function(fn(DList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
+    List(DList<Box<Any>>, DList<Box<Any>>)
+}
 
 pub struct Operation
 {
     pub objects : DList<Arc<RwLock<object::Object>>>,
     pub name : Vec<String>,
-    pub old : Box<Any>,
-    pub new : Box<Any>,
+    pub change : DataChange
+    //pub old : Box<Any>,
+    //pub new : Box<Any>,
 }
 
 #[derive(PartialEq)]
@@ -43,56 +52,67 @@ impl Operation
         old : Box<Any>,
         new : Box<Any>) -> Operation
     {
+
+        /*
+        fn fntest( objs : DList<Arc<RwLock<object::Object>>>, val : Box<Any>)
+        {
+        }
+
+        let test = DataChange::Function(fntest, box 5);
+        */
+
+        match old.downcast_ref::<vec::Vec3>() {
+            Some(v) => println!("old : {:?}", v),
+            _ => {}
+        }
+        match new.downcast_ref::<vec::Vec3>() {
+            Some(v) => println!("new : {:?}", v),
+            _ => {}
+        }
+
+        let change = DataChange::OldNew(old, new);
         Operation {
             objects : objects,
             name : name,
-            old : old,
-            new : new
+            //old : old,
+            //new : new
+            change : change
         }
     }
 
     pub fn apply(&self)
     {
-        /*
-        let v: Vec<&str> = self.name.split('/').collect();
-        let mut vs = Vec::new();
-        for i in v.iter()
-        {
-            vs.push(i.to_string());
-        }
-
-        //let vs = vs.tail().to_vec();
-        */
-
         for o in self.objects.iter() {
-        //o.write().set_property_hier(vs, &*self.old);
-        println!("apply {:?}, {:?}", self.name, self.new);
-        //o.write().set_property_hier(self.name.clone(), &*self.new);
-        o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &*self.new);
-        println!("applied {:?}", self.name);
-
+            match self.change {
+                DataChange::OldNew(_,ref new) => {
+                    //println!("apply {:?}, {:?}", self.name, self.new);
+                    //o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &*self.new);
+                    o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &**new);
+                    println!("applied {:?}", self.name);
+                },
+                _ => {}
+            }
         }
 
-        match self.new.downcast_ref::<String>() {
-            Some(s) => println!("applay with value {}" , s),
-            None => {}
-        };
     }
 
     pub fn undo(&self)
     {
-        match self.old.downcast_ref::<String>() {
-            Some(s) => println!("undo with value {}" , s),
-            None => {}
-        };
-
-        let vs = self.name.tail().to_vec();
+        //let vs = self.name.tail().to_vec();
 
         for o in self.objects.iter() {
-            //o.write().set_property_hier(self.name.clone(), &*self.old);
-            //o.write().set_property_hier(vs, &*self.old);
-            o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), &*self.old);
+            match self.change {
+                DataChange::OldNew(ref old,_) => {
+                    //o.write().set_property_hier(self.name.clone(), &*self.old);
+                    //o.write().set_property_hier(vs, &*self.old);
+
+                    //o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), &**old);
+                    o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &**old);
+                },
+                _ => {}
+            }
         }
+
     }
 }
 
