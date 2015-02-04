@@ -129,20 +129,21 @@ impl Control
                     match op {
                         dragger::Operation::Translation(v) => {
                             let prop = vec!["object".to_string(),"position".to_string()];
-                            let positions = self.context.borrow().saved_positions.clone();
-                            let pos = if positions.len() > 0 {
-                                Some(positions[0])
+                            let cxpos = self.context.borrow().saved_positions.clone();
+                            let mut saved_positions = Vec::with_capacity(cxpos.len());
+                            for p in cxpos.iter() {
+                                saved_positions.push((box *p ) as Box<Any>);
                             }
-                            else {
-                                None
-                            };
+                            let mut new_pos = Vec::with_capacity(cxpos.len());
+                            for p in cxpos.iter() {
+                                let np = *p + v;
+                                new_pos.push((box np) as Box<Any>);
+                            }
+                            let change = operation::OperationData::Vector(
+                                saved_positions,
+                                new_pos);
 
-                            if let Some(p) = pos {
-                                //TODO
-                                println!("todo multiple objects");
-                                let new = p + v;
-                                self.request_operation(prop, box p, box new);
-                            }
+                            self.request_operation(prop, change);
                         },
                         _ => {}
                     }
@@ -295,7 +296,7 @@ impl Control
     }
 
 
-    pub fn request_operation<T : Any+PartialEq>(
+    pub fn request_operation_old_new<T : Any+PartialEq>(
         &mut self,  
         name : Vec<String>,
         old : Box<T>,
@@ -305,6 +306,12 @@ impl Control
             return operation::Change::None;
         }
 
+        self.request_operation(
+            name,
+            operation::OperationData::OldNew(old,new)
+            )
+
+            /*
         let op = operation::Operation::new(
             self.get_selected_objects(),
             name.clone(),
@@ -319,7 +326,29 @@ impl Control
 
         let s = join_string(&name);
         return operation::Change::Objects(s,self.context.borrow().get_selected_ids());
+        */
     }
+
+    pub fn request_operation(
+        &mut self,  
+        name : Vec<String>,
+        change : operation::OperationData
+        ) -> operation::Change
+    {
+        let op = operation::Operation::new(
+            self.get_selected_objects(),
+            name.clone(),
+            change
+            ); 
+
+        op.apply();
+
+        self.op_mgr.add(op);
+
+        let s = join_string(&name);
+        return operation::Change::Objects(s,self.context.borrow().get_selected_ids());
+    }
+
 
     pub fn request_direct_change(
         &mut self,  

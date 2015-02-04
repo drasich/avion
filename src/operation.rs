@@ -17,7 +17,8 @@ pub enum OperationData
 {
     OldNew(Box<Any>, Box<Any>),
     Function(fn(DList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
-    List(DList<Box<Any>>, DList<Box<Any>>)
+    List(DList<Box<Any>>, DList<Box<Any>>),
+    Vector(Vec<Box<Any>>, Vec<Box<Any>>)
 }
 
 pub struct Operation
@@ -64,7 +65,7 @@ impl Operation
         let test = OperationData::Function(fntest, box 5);
         */
 
-        //*
+        /*
         if let OperationData::OldNew(ref old,ref new) = change {
         match old.downcast_ref::<vec::Vec3>() {
             Some(v) => println!("old : {:?}", v),
@@ -75,7 +76,7 @@ impl Operation
             _ => {}
         }
         }
-        //*/
+        */
 
         //let change = OperationData::OldNew(old, new);
         Operation {
@@ -89,37 +90,44 @@ impl Operation
 
     pub fn apply(&self)
     {
-        for o in self.objects.iter() {
-            match self.change {
-                OperationData::OldNew(_,ref new) => {
-                    //println!("apply {:?}, {:?}", self.name, self.new);
-                    //o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &*self.new);
+        match self.change {
+            OperationData::OldNew(_,ref new) => {
+                for o in self.objects.iter() {
                     o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &**new);
-                    println!("applied {:?}", self.name);
-                },
-                _ => {}
-            }
+                }
+            },
+            OperationData::Vector(_,ref new) => {
+                let mut i = 0;
+                for o in self.objects.iter() {
+                    o.write().unwrap().test_set_property_hier(
+                        join_string(&self.name).as_slice(),
+                        &*new[i]);
+                    i = i +1;
+                }
+            },
+            _ => {}
         }
-
     }
 
     pub fn undo(&self)
     {
-        //let vs = self.name.tail().to_vec();
-
-        for o in self.objects.iter() {
-            match self.change {
-                OperationData::OldNew(ref old,_) => {
-                    //o.write().set_property_hier(self.name.clone(), &*self.old);
-                    //o.write().set_property_hier(vs, &*self.old);
-
-                    //o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), &**old);
+        match self.change {
+            OperationData::OldNew(ref old,_) => {
+                for o in self.objects.iter() {
                     o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &**old);
-                },
-                _ => {}
-            }
+                }
+            },
+            OperationData::Vector(ref old,_) => {
+                let mut i = 0;
+                for o in self.objects.iter() {
+                    o.write().unwrap().test_set_property_hier(
+                        join_string(&self.name).as_slice(),
+                        &*old[i]);
+                    i = i +1;
+                }
+            },
+            _ => {}
         }
-
     }
 }
 

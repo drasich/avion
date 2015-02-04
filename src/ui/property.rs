@@ -447,7 +447,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
     let change = match (old, action) {
         (Some(oldd), 1) => {
             println!(".....adding operation!!");
-            control.request_operation(
+            control.request_operation_old_new(
                 vs,
                 box oldd.clone(),
                 box new.clone())
