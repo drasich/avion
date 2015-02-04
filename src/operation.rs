@@ -13,7 +13,7 @@ use ui;
 use control::WidgetUpdate;
 use vec;
 
-pub enum DataChange
+pub enum OperationData
 {
     OldNew(Box<Any>, Box<Any>),
     Function(fn(DList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
@@ -24,7 +24,7 @@ pub struct Operation
 {
     pub objects : DList<Arc<RwLock<object::Object>>>,
     pub name : Vec<String>,
-    pub change : DataChange
+    pub change : OperationData
     //pub old : Box<Any>,
     //pub new : Box<Any>,
 }
@@ -49,8 +49,11 @@ impl Operation
     pub fn new(
         objects : DList<Arc<RwLock<object::Object>>>,
         name : Vec<String>,
-        old : Box<Any>,
-        new : Box<Any>) -> Operation
+        //old : Box<Any>,
+        //new : Box<Any>) 
+        change : OperationData
+            )
+        -> Operation
     {
 
         /*
@@ -58,9 +61,11 @@ impl Operation
         {
         }
 
-        let test = DataChange::Function(fntest, box 5);
+        let test = OperationData::Function(fntest, box 5);
         */
 
+        //*
+        if let OperationData::OldNew(ref old,ref new) = change {
         match old.downcast_ref::<vec::Vec3>() {
             Some(v) => println!("old : {:?}", v),
             _ => {}
@@ -69,8 +74,10 @@ impl Operation
             Some(v) => println!("new : {:?}", v),
             _ => {}
         }
+        }
+        //*/
 
-        let change = DataChange::OldNew(old, new);
+        //let change = OperationData::OldNew(old, new);
         Operation {
             objects : objects,
             name : name,
@@ -84,7 +91,7 @@ impl Operation
     {
         for o in self.objects.iter() {
             match self.change {
-                DataChange::OldNew(_,ref new) => {
+                OperationData::OldNew(_,ref new) => {
                     //println!("apply {:?}, {:?}", self.name, self.new);
                     //o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &*self.new);
                     o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &**new);
@@ -102,7 +109,7 @@ impl Operation
 
         for o in self.objects.iter() {
             match self.change {
-                DataChange::OldNew(ref old,_) => {
+                OperationData::OldNew(ref old,_) => {
                     //o.write().set_property_hier(self.name.clone(), &*self.old);
                     //o.write().set_property_hier(vs, &*self.old);
 

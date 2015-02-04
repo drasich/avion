@@ -140,7 +140,8 @@ impl Control
                             if let Some(p) = pos {
                                 //TODO
                                 println!("todo multiple objects");
-                                self.request_operation(prop, box p, box v);
+                                let new = p + v;
+                                self.request_operation(prop, box p, box new);
                             }
                         },
                         _ => {}
@@ -307,8 +308,10 @@ impl Control
         let op = operation::Operation::new(
             self.get_selected_objects(),
             name.clone(),
-            old,
-            new); 
+            operation::OperationData::OldNew(old,new)
+            //old,
+            //new
+            ); 
 
         op.apply();
 
