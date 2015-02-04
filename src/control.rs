@@ -44,7 +44,6 @@ pub struct Control
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO change to weak
     pub dragger : Rc<RefCell<ui::dragger::DraggerManager>>,
 
-    pub saved_positions : Option<DList<vec::Vec3>>,
     pub mouse_start : Option<vec::Vec2>
 }
 
@@ -65,7 +64,6 @@ impl Control
             context : context,
             dragger : dragger,
 
-            saved_positions : None,
             mouse_start : None
         }
     }
@@ -98,12 +96,7 @@ impl Control
             self.state = State::Dragger;
             let objs = self.context.borrow().selected.clone();
             if objs.len() > 0 {
-                let mut l = DList::new();
-                for o in objs.iter() {
-                    l.push_back(o.read().unwrap().position);
-                }
-                self.saved_positions = Some(l);
-                //todo save the position if translation
+                self.context.borrow_mut().save_positions();
             }
         }
 
@@ -136,13 +129,9 @@ impl Control
                     match op {
                         dragger::Operation::Translation(v) => {
                             let prop = vec!["object".to_string(),"position".to_string()];
-                            let pos = if let Some(ref p) = self.saved_positions {
-                                if let Some(pp) = p.front() {
-                                    Some(pp.clone())
-                                }
-                                else {
-                                    None
-                                }
+                            let positions = self.context.borrow().saved_positions.clone();
+                            let pos = if positions.len() > 0 {
+                                Some(positions[0])
                             }
                             else {
                                 None
@@ -364,6 +353,23 @@ impl Control
         return operation::Change::DirectChange(s);
     }
 
+    pub fn request_translation(
+        &mut self,  
+        translation : vec::Vec3) -> operation::Change
+    {
+        let sp = self.context.borrow().saved_positions.clone();
+        let mut obs = self.get_selected_objects();
+
+        let mut i = 0;
+        for o in obs.iter_mut() {
+            //o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), new);
+            o.write().unwrap().position = sp[i] + translation;
+            i = i+1;
+        }
+
+        return operation::Change::DirectChange("object/position".to_string());
+    }
+
     pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
     {
         let c = match self.context.try_borrow(){
@@ -378,6 +384,14 @@ impl Control
                 return None;
             }
         };
+    }
+
+    pub fn get_selected_objects(&self) -> DList<Arc<RwLock<object::Object>>>
+    {
+        match self.context.try_borrow(){
+            Some(con) => con.selected.clone(),
+            None => DList::new()
+        }
     }
 
     pub fn undo(&mut self) -> operation::Change
