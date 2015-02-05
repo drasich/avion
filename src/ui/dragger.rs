@@ -232,19 +232,21 @@ impl DraggerManager
             mouse_start : vec::Vec2::zero(),
             mouse : None,
             ori : vec::Quat::identity(),
-            current : 0us
+            current : 1us
         };
 
         let tr = dm.create_dragger_translation_group(factory);
-
         dm.draggers.push(tr);
 
         //dm.create_scale_draggers(factory);
+        let sc = dm.create_scale_draggers(factory);
+        dm.draggers.push(sc);
 
         dm
     }
 
-    fn create_dragger_translation_group(&mut self, factory : &mut factory::Factory) -> DraggerGroup
+    fn create_dragger_translation_group(&mut self, factory : &mut factory::Factory)
+        -> DraggerGroup
     {
         let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
         let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
@@ -288,6 +290,7 @@ impl DraggerManager
     }
 
     fn create_scale_draggers(&mut self, factory : &mut factory::Factory)
+        -> DraggerGroup
     {
         let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
         let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
@@ -321,9 +324,13 @@ impl DraggerManager
             Kind::Scale,
             blue);
 
-        self.scale_draggers.push(Rc::new(RefCell::new(dragger_x)));
-        self.scale_draggers.push(Rc::new(RefCell::new(dragger_y)));
-        self.scale_draggers.push(Rc::new(RefCell::new(dragger_z)));
+        let mut group = Vec::with_capacity(3);
+
+        group.push(Rc::new(RefCell::new(dragger_x)));
+        group.push(Rc::new(RefCell::new(dragger_y)));
+        group.push(Rc::new(RefCell::new(dragger_z)));
+
+        return group;
     }
 
 
@@ -444,8 +451,8 @@ impl DraggerManager
     pub fn get_objects(&self) -> DList<Arc<RwLock<object::Object>>>
     {
         let mut l = DList::new();
-        //for d in self.draggers.iter() {
-        for d in self.scale_draggers.iter() {
+        for d in self.draggers[self.current].iter() {
+        //for d in self.scale_draggers.iter() {
             l.push_back(d.borrow().object.clone());
         }
 

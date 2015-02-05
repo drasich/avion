@@ -10,7 +10,8 @@ pub struct Context
 {
     pub selected : DList<Arc<RwLock<object::Object>>>,
     pub scene : Option<Arc<RwLock<scene::Scene>>>,
-    pub saved_positions : Vec<vec::Vec3>
+    pub saved_positions : Vec<vec::Vec3>,
+    pub saved_scales : Vec<vec::Vec3>
 }
 
 impl Context
@@ -20,7 +21,8 @@ impl Context
         Context {
             selected: DList::new(),
             scene : None,
-            saved_positions : Vec::new()
+            saved_positions : Vec::new(),
+            saved_scales : Vec::new()
         }
     }
 
@@ -29,6 +31,14 @@ impl Context
         self.saved_positions.clear();
         for o in self.selected.iter() {
             self.saved_positions.push(o.read().unwrap().position);
+        }
+    }
+
+    pub fn save_scales(&mut self)
+    {
+        self.saved_scales.clear();
+        for o in self.selected.iter() {
+            self.saved_scales.push(o.read().unwrap().scale);
         }
     }
 

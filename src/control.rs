@@ -96,7 +96,9 @@ impl Control
             self.state = State::Dragger;
             let objs = self.context.borrow().selected.clone();
             if objs.len() > 0 {
+                println!("TODO choose the save");
                 self.context.borrow_mut().save_positions();
+                self.context.borrow_mut().save_scales();
             }
         }
 
@@ -142,6 +144,24 @@ impl Control
                             let change = operation::OperationData::Vector(
                                 saved_positions,
                                 new_pos);
+
+                            self.request_operation(prop, change);
+                        },
+                        dragger::Operation::Scale(v) => {
+                            let prop = vec!["object".to_string(),"scale".to_string()];
+                            let cxsc = self.context.borrow().saved_scales.clone();
+                            let mut saved_scales = Vec::with_capacity(cxsc.len());
+                            for p in cxsc.iter() {
+                                saved_scales.push((box *p ) as Box<Any>);
+                            }
+                            let mut new_sc = Vec::with_capacity(cxsc.len());
+                            for s in cxsc.iter() {
+                                let ns = *s * v;
+                                new_sc.push((box ns) as Box<Any>);
+                            }
+                            let change = operation::OperationData::Vector(
+                                saved_scales,
+                                new_sc);
 
                             self.request_operation(prop, change);
                         },
@@ -390,6 +410,23 @@ impl Control
         return operation::Change::DirectChange("object/position".to_string());
     }
 
+    pub fn request_scale(
+        &mut self,  
+        scale : vec::Vec3) -> operation::Change
+    {
+        let sp = self.context.borrow().saved_scales.clone();
+        let mut obs = self.get_selected_objects();
+
+        let mut i = 0;
+        for o in obs.iter_mut() {
+            //o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), new);
+            o.write().unwrap().scale = sp[i] * scale;
+            i = i+1;
+        }
+
+        return operation::Change::DirectChange("object/position".to_string());
+    }
+
     pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
     {
         let c = match self.context.try_borrow(){
@@ -532,6 +569,10 @@ impl Control
                         dragger::Operation::Translation(v) => {
                             let prop = vec!["object".to_string(),"position".to_string()];
                             list.push_back(self.request_translation(v));
+                        },
+                        dragger::Operation::Scale(v) => {
+                            let prop = vec!["object".to_string(),"scale".to_string()];
+                            list.push_back(self.request_scale(v));
                         },
                         _ => {}
                     }
