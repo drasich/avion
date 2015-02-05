@@ -328,5 +328,27 @@ impl Camera
         return p;
     }
 
+    pub fn world_to_screen(&self, p : vec::Vec3) -> vec::Vec2
+    {
+        let world = self.object.read().unwrap().get_world_matrix();
+        let cam_inv = world.get_inverse();
+        let projection = self.get_perspective();
+
+        let tm = &projection * &cam_inv;
+
+        let p4 = vec::Vec4::new(p.x, p.y, p.z, 1f64);
+        let sp = &tm * p4;
+
+        let n  = vec::Vec3::new(sp.x/sp.w, sp.y/sp.w, sp.z/sp.w);
+
+        let screen  = vec::Vec2::new(
+            (n.x+1.0f64)* self.data.width/2.0f64,
+            -(n.y-1.0f64)* self.data.height/2.0f64);
+
+        //printf("screen : %f, %f \n", screen.x, screen.y);
+
+        return screen;
+    }
+
 }
 

@@ -117,6 +117,16 @@ impl Vec2
             y : y,
         }
     }
+
+    pub fn dot(self, other : Vec2) -> f64
+    {
+        self.x * other.x + self.y * other.y
+    }
+
+    pub fn length2(self) -> f64
+    {
+        self.x*self.x + self.y*self.y
+    }
 }
 
 
@@ -545,8 +555,19 @@ impl PartialEq for Vec3 {
     }
 }
 
+impl Sub for Vec2 {
+    type Output = Vec2;
+    fn sub(self, other: Vec2) -> Vec2 {
+        Vec2::new(
+            self.x - other.x,
+            self.y - other.y)
+    }
+}
+
+
 #[test]
 fn test_quat_rotate() {
     //TODO
     assert_eq!(1is, 1is);
 }
+

@@ -20,6 +20,7 @@ use camera;
 pub struct DraggerManager
 {
     pub draggers : DList<Rc<RefCell<Dragger>>>,
+    pub scale_draggers : Vec<Rc<RefCell<Dragger>>>,
     pub scale : f64,
     mouse_start : vec::Vec2,
     mouse : Option<Box<DraggerMouse+'static>>,
@@ -77,6 +78,15 @@ pub struct TranslationMove
     repere : Repere,
     ori : vec::Quat
 }
+
+pub struct ScaleOperation
+{
+    start : vec::Vec3,
+    constraint : vec::Vec3,
+    repere : Repere,
+    ori : vec::Quat
+}
+
 
 impl TranslationMove {
     fn new(
@@ -213,6 +223,7 @@ impl DraggerManager
     {
         let mut dm = DraggerManager {
             draggers : DList::new(),
+            scale_draggers : Vec::with_capacity(4),
             scale : 1f64,
             mouse_start : vec::Vec2::zero(),
             mouse : None,
@@ -220,6 +231,7 @@ impl DraggerManager
         };
 
         dm.create_draggers(factory);
+        dm.create_scale_draggers(factory);
 
         dm
     }
@@ -229,12 +241,12 @@ impl DraggerManager
         let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
         let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
         let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
-        let dragger_parent = 
-            Arc::new(RwLock::new(factory.create_object("dragger")));
+        let mesh = "model/dragger_arrow.mesh";
 
         let dragger_x = Dragger::new(
             factory,
             "dragger_x",
+            mesh,
             vec::Vec3::new(1f64,0f64,0f64),
             transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,1f64,0f64), 90f64)),
             Kind::Translate,
@@ -243,6 +255,7 @@ impl DraggerManager
         let dragger_y = Dragger::new(
             factory,
             "dragger_y",
+            mesh,
             vec::Vec3::new(0f64,1f64,0f64),
             transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64)), 
             Kind::Translate,
@@ -251,6 +264,7 @@ impl DraggerManager
         let dragger_z = Dragger::new(
             factory,
             "dragger_z",
+            mesh,
             vec::Vec3::new(0f64,0f64,1f64),
             transform::Orientation::Quat(vec::Quat::identity()), 
             Kind::Translate,
@@ -260,6 +274,46 @@ impl DraggerManager
         self.draggers.push_back(Rc::new(RefCell::new(dragger_y)));
         self.draggers.push_back(Rc::new(RefCell::new(dragger_z)));
     }
+
+    fn create_scale_draggers(&mut self, factory : &mut factory::Factory)
+    {
+        let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
+        let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
+        let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
+        let mesh = "model/dragger_scale.mesh";
+
+        let dragger_x = Dragger::new(
+            factory,
+            "scale_x",
+            mesh,
+            vec::Vec3::new(1f64,0f64,0f64),
+            transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,1f64,0f64), 90f64)),
+            Kind::Scale,
+            red);
+
+        let dragger_y = Dragger::new(
+            factory,
+            "scale_y",
+            mesh,
+            vec::Vec3::new(0f64,1f64,0f64),
+            transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64)), 
+            Kind::Scale,
+            green);
+
+        let dragger_z = Dragger::new(
+            factory,
+            "scale_z",
+            mesh,
+            vec::Vec3::new(0f64,0f64,1f64),
+            transform::Orientation::Quat(vec::Quat::identity()), 
+            Kind::Scale,
+            blue);
+
+        self.scale_draggers.push(Rc::new(RefCell::new(dragger_x)));
+        self.scale_draggers.push(Rc::new(RefCell::new(dragger_y)));
+        self.scale_draggers.push(Rc::new(RefCell::new(dragger_z)));
+    }
+
 
     pub fn mouse_down(&mut self, c : &camera::Camera, button : i32, x : i32, y : i32) -> bool
     {
@@ -326,6 +380,16 @@ impl DraggerManager
                                     self.ori
                                     ) as Box<DraggerMouse>);
                         }
+                        Kind::Scale => {
+                            let ob = dragger.object.read().unwrap();
+
+                            self.mouse = Some(box ScaleOperation::new(
+                                    ob.position.clone(),
+                                    dragger.constraint,
+                                    dragger.repere,
+                                    self.ori
+                                    ) as Box<DraggerMouse>);
+                        }
                         _ => {println!("todo");}
                     }
                 }
@@ -342,11 +406,20 @@ impl DraggerManager
         for d in self.draggers.iter_mut() {
             d.borrow_mut().object.write().unwrap().position = p;
         }
+
+        for d in self.scale_draggers.iter_mut() {
+            d.borrow_mut().object.write().unwrap().position = p;
+        }
     }
 
     pub fn set_orientation(&mut self, ori : transform::Orientation) {
         self.ori = ori.as_quat();
         for d in self.draggers.iter_mut() {
+            let mut d = d.borrow_mut();
+            d.object.write().unwrap().orientation = ori * d.ori;
+        }
+
+        for d in self.scale_draggers.iter_mut() {
             let mut d = d.borrow_mut();
             d.object.write().unwrap().orientation = ori * d.ori;
         }
@@ -359,7 +432,8 @@ impl DraggerManager
     pub fn get_objects(&self) -> DList<Arc<RwLock<object::Object>>>
     {
         let mut l = DList::new();
-        for d in self.draggers.iter() {
+        //for d in self.draggers.iter() {
+        for d in self.scale_draggers.iter() {
             l.push_back(d.borrow().object.clone());
         }
 
@@ -368,6 +442,10 @@ impl DraggerManager
 
     pub fn set_state(&mut self, state : State) {
         for d in self.draggers.iter_mut() {
+            d.borrow_mut().set_state(state);
+        }
+
+        for d in self.scale_draggers.iter_mut() {
             d.borrow_mut().set_state(state);
         }
     }
@@ -389,10 +467,10 @@ impl DraggerManager
     }
 }
 
-fn create_dragger_tr(
+fn create_dragger(
     factory : &mut factory::Factory,
     name : &str,
-    //ori :vec::Quat,
+    mesh : &str,
     color : vec::Vec4) -> object::Object
 {
     let mut dragger = factory.create_object(name);
@@ -400,12 +478,11 @@ fn create_dragger_tr(
 
     dragger.mesh_render = 
         Some(mesh_render::MeshRender::new_with_mat(
-        "model/dragger_arrow.mesh", mat));
-
-    //dragger.orientation = transform::Orientation::Quat(ori);
+        mesh, mat));
 
     dragger
 }
+
 
 fn create_mat_res(color : vec::Vec4, name : &str) -> resource::ResTT<material::Material>
 {
@@ -428,7 +505,7 @@ impl Dragger
     pub fn new(
         factory : &mut factory::Factory,
         name : &str,
-        //aabox : geometry::AABox,
+        mesh : &str,
         constraint : vec::Vec3,
         ori : transform::Orientation,
         kind : Kind,
@@ -436,8 +513,8 @@ impl Dragger
         ) -> Dragger
     {
         Dragger {
-            object : Arc::new(RwLock::new(create_dragger_tr(factory, name, color))),
-            //aabox : aabox,
+            //object : Arc::new(RwLock::new(create_dragger_tr(factory, name, color))),
+            object : Arc::new(RwLock::new(create_dragger(factory, name, mesh, color))),
             constraint : constraint,
             ori : ori,
             kind : kind,
@@ -544,3 +621,68 @@ impl DraggerMouse for TranslationMove {
         }
     }
 }
+
+impl ScaleOperation {
+
+    fn new(
+        start : vec::Vec3,
+        constraint : vec::Vec3, 
+        repere : Repere,
+        ori : vec::Quat
+        ) -> ScaleOperation
+    {
+        ScaleOperation {
+            start : start,
+            constraint : constraint,
+            repere : repere,
+            ori : ori
+        }
+    }
+
+    fn local(
+        &self,
+        camera : &camera::Camera,
+        mouse_start : vec::Vec2,
+        mouse_end : vec::Vec2) -> Option<Operation>
+    {
+        let ss = camera.world_to_screen(self.start);
+
+        let sss = mouse_start - ss;
+        let l1 = sss.length2();
+        let sd = mouse_end - ss;
+        let l2 = sd.length2();
+
+        let mut fac = l2/l1;
+        let dot = sss.dot(sd);
+        if dot < 0f64 {
+            fac *= -1f64;
+        }
+
+        let mut scale_factor = vec::Vec3::new(fac,fac,fac);
+        if self.constraint.x == 0f64 {
+            scale_factor.x = 1f64;
+        }
+        if self.constraint.y == 0f64 {
+            scale_factor.y = 1f64;
+        }
+        if self.constraint.z == 0f64 {
+            scale_factor.z = 1f64;
+        }
+
+        return Some(Operation::Scale(scale_factor));
+    }
+}
+
+
+impl DraggerMouse for ScaleOperation {
+
+    fn mouse_move(
+        &self,
+        camera : &camera::Camera,
+        mouse_start : vec::Vec2,
+        mouse_end : vec::Vec2) -> Option<Operation>
+    {
+        return self.local(camera, mouse_start, mouse_end);
+    }
+}
+
