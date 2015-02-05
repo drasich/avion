@@ -17,14 +17,18 @@ use matrix;
 use factory;
 use camera;
 
+type DraggerGroup = Vec<Rc<RefCell<Dragger>>>;
+
 pub struct DraggerManager
 {
-    pub draggers : DList<Rc<RefCell<Dragger>>>,
-    pub scale_draggers : Vec<Rc<RefCell<Dragger>>>,
+
+    pub draggers : Vec<DraggerGroup>, //Vec<Rc<RefCell<Dragger>>>,
+    pub scale_draggers : DraggerGroup, //Vec<Rc<RefCell<Dragger>>>,
     pub scale : f64,
     mouse_start : vec::Vec2,
     mouse : Option<Box<DraggerMouse+'static>>,
-    pub ori : vec::Quat
+    pub ori : vec::Quat,
+    current : usize
 }
 
 #[derive(Copy)]
@@ -222,21 +226,25 @@ impl DraggerManager
     pub fn new(factory : &mut factory::Factory) -> DraggerManager
     {
         let mut dm = DraggerManager {
-            draggers : DList::new(),
+            draggers : Vec::with_capacity(3),
             scale_draggers : Vec::with_capacity(4),
             scale : 1f64,
             mouse_start : vec::Vec2::zero(),
             mouse : None,
-            ori : vec::Quat::identity()
+            ori : vec::Quat::identity(),
+            current : 0us
         };
 
-        dm.create_draggers(factory);
-        dm.create_scale_draggers(factory);
+        let tr = dm.create_dragger_translation_group(factory);
+
+        dm.draggers.push(tr);
+
+        //dm.create_scale_draggers(factory);
 
         dm
     }
 
-    fn create_draggers(&mut self, factory : &mut factory::Factory)
+    fn create_dragger_translation_group(&mut self, factory : &mut factory::Factory) -> DraggerGroup
     {
         let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
         let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
@@ -270,9 +278,13 @@ impl DraggerManager
             Kind::Translate,
             blue);
 
-        self.draggers.push_back(Rc::new(RefCell::new(dragger_x)));
-        self.draggers.push_back(Rc::new(RefCell::new(dragger_y)));
-        self.draggers.push_back(Rc::new(RefCell::new(dragger_z)));
+        let mut group = Vec::with_capacity(3);
+
+        group.push(Rc::new(RefCell::new(dragger_x)));
+        group.push(Rc::new(RefCell::new(dragger_y)));
+        group.push(Rc::new(RefCell::new(dragger_z)));
+
+        return group;
     }
 
     fn create_scale_draggers(&mut self, factory : &mut factory::Factory)
@@ -346,7 +358,7 @@ impl DraggerManager
     {
         let mut found_length = 0f64;
         let mut closest_dragger = None;
-        for dragger in self.draggers.iter_mut() {
+        for dragger in self.draggers[self.current].iter_mut() {
             let mut d = dragger.borrow_mut();
             d.set_state(State::Idle);
             let (hit, len) = d.check_collision(&r, self.scale);
@@ -403,7 +415,7 @@ impl DraggerManager
     }
 
     pub fn set_position(&mut self, p : vec::Vec3) {
-        for d in self.draggers.iter_mut() {
+        for d in self.draggers[self.current].iter_mut() {
             d.borrow_mut().object.write().unwrap().position = p;
         }
 
@@ -414,7 +426,7 @@ impl DraggerManager
 
     pub fn set_orientation(&mut self, ori : transform::Orientation) {
         self.ori = ori.as_quat();
-        for d in self.draggers.iter_mut() {
+        for d in self.draggers[self.current].iter_mut() {
             let mut d = d.borrow_mut();
             d.object.write().unwrap().orientation = ori * d.ori;
         }
@@ -441,7 +453,7 @@ impl DraggerManager
     }
 
     pub fn set_state(&mut self, state : State) {
-        for d in self.draggers.iter_mut() {
+        for d in self.draggers[self.current].iter_mut() {
             d.borrow_mut().set_state(state);
         }
 
