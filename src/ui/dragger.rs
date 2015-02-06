@@ -735,7 +735,7 @@ impl RotationOperation {
         }
     }
 
-    pub fn local_global( //Control* c, Evas_Event_Mouse_Move* e, Vec3 constraint)
+    pub fn local_global( 
         &self,
         camera : &camera::Camera,
         mouse_start : vec::Vec2,
