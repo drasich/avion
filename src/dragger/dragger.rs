@@ -100,8 +100,6 @@ pub struct RotationOperation
     ori : vec::Quat,
 }
 
-
-
 impl TranslationMove {
     fn new(
         start : vec::Vec3,

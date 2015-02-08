@@ -22,7 +22,7 @@ use mesh_render;
 use vec;
 use geometry;
 use material;
-use ui::dragger;
+use dragger;
 use camera;
 use operation;
 use intersection;

@@ -42,6 +42,7 @@ mod camera;
 mod scene;
 mod texture;
 mod ui;
+mod dragger;
 mod property;
 mod geometry;
 mod intersection;

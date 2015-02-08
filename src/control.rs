@@ -14,7 +14,7 @@ use context;
 use ui;
 //use ui::property;
 //use ui::tree;
-use ui::dragger;
+use dragger;
 use intersection;
 use vec;
 use object;
@@ -42,7 +42,7 @@ pub struct Control
     //pub tree : Option<Rc<RefCell<ui::Tree>>>, //TODO change to weak
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>, //TODO change to weak
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO change to weak
-    pub dragger : Rc<RefCell<ui::dragger::DraggerManager>>,
+    pub dragger : Rc<RefCell<dragger::DraggerManager>>,
 
     pub mouse_start : Option<vec::Vec2>
 }
