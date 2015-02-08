@@ -1,4 +1,4 @@
-pub use self::dragger::{
+pub use self::manager::{
     DraggerManager,
     Operation,
     State
@@ -6,4 +6,9 @@ pub use self::dragger::{
     //ChangedFunc
 };
 
-pub mod dragger;
+pub use self::translate::{
+    TranslationMove
+};
+
+pub mod manager;
+pub mod translate;
