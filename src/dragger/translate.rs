@@ -18,7 +18,14 @@ use matrix;
 use factory;
 use camera;
 
-use dragger::manager::{Repere, Operation, DraggerMouse};
+use dragger::manager::{
+    Repere,
+    Operation,
+    DraggerMouse,
+    DraggerGroup,
+    Kind,
+    Dragger
+};
 
 pub struct TranslationMove
 {
@@ -175,5 +182,49 @@ impl DraggerMouse for TranslationMove {
             },
         }
     }
+}
+
+pub fn create_dragger_translation_group(factory : &mut factory::Factory)
+    -> DraggerGroup
+{
+    let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
+    let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
+    let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
+    let mesh = "model/dragger_arrow.mesh";
+
+    let dragger_x = Dragger::new(
+        factory,
+        "dragger_x",
+        mesh,
+        vec::Vec3::new(1f64,0f64,0f64),
+        transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,1f64,0f64), 90f64)),
+        Kind::Translate,
+        red);
+
+    let dragger_y = Dragger::new(
+        factory,
+        "dragger_y",
+        mesh,
+        vec::Vec3::new(0f64,1f64,0f64),
+        transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64)), 
+        Kind::Translate,
+        green);
+
+    let dragger_z = Dragger::new(
+        factory,
+        "dragger_z",
+        mesh,
+        vec::Vec3::new(0f64,0f64,1f64),
+        transform::Orientation::Quat(vec::Quat::identity()), 
+        Kind::Translate,
+        blue);
+
+    let mut group = Vec::with_capacity(3);
+
+    group.push(Rc::new(RefCell::new(dragger_x)));
+    group.push(Rc::new(RefCell::new(dragger_y)));
+    group.push(Rc::new(RefCell::new(dragger_z)));
+
+    return group;
 }
 

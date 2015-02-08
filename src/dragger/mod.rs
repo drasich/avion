@@ -7,11 +7,13 @@ pub use self::manager::{
 };
 
 pub use self::translate::{
-    TranslationMove
+    TranslationMove,
+    create_dragger_translation_group
 };
 
 pub use self::scale::{
-    ScaleOperation
+    ScaleOperation,
+    create_scale_draggers
 };
 
 
