@@ -148,72 +148,69 @@ pub fn create_rotation_draggers(factory : &mut factory::Factory)
     return group;
 }
 
-/*
+pub fn face_camera(
+    o : &mut object::Object,
+    camera : &camera::Camera,
+    qo : vec::Quat,
+    constraint : vec::Vec3,
+    dragger_ori : vec::Quat,
+    )
+{
+    let camera_object = camera.object.read().unwrap();
 
-    pub fn face_camera(&self, c : &camera::Camera, qo : vec::Quat)
-        //Quat qo, Object* o, ViewCamera* c)
-    {
-
-        Vec3 diff = vec3_sub(o->position, c->object->position);
-        double dotx = vec3_dot(diff, quat_rotate_vec3(qo, vec3(1,0,0)));
-        double doty = vec3_dot(diff, quat_rotate_vec3(qo, vec3(0,1,0)));
-        double dotz = vec3_dot(diff, quat_rotate_vec3(qo, vec3(0,0,1)));
-  float angle = 0;
-  o->angles.x = 0;
-  o->angles.y = 0;
-  o->angles.z = 0;
-  /*
-  Vec3 camx = quat_rotate_vec3(c->object->orientation, vec3(1,0,0));
-  printf("camx : %f, %f ,%f\n", camx.x, camx.y, camx.z);
-  Vec3 obx = quat_rotate_vec3(qo, vec3(1,0,0));
-  double dot = vec3_dot(obx, camx);
-  */
-
-  if ( vec3_equal(d->constraint, vec3(0,0,1))) {
-    if (dotx >0) {
-      if (doty >0)
-      angle = 180;
-      else
-      angle = 90;
+    let diff = o.position - camera_object.position;
+    let dotx = diff.dot(&qo.rotate_vec3(&vec::Vec3::x()));
+    let doty = diff.dot(&qo.rotate_vec3(&vec::Vec3::y()));
+    let dotz = diff.dot(&qo.rotate_vec3(&vec::Vec3::z()));
+    let mut angle = 0f64;
+    
+    if constraint ==  vec::Vec3::new(0f64,0f64,1f64) {
+        if dotx > 0f64 {
+            if doty > 0f64 {
+                angle = 180f64;
+            }
+            else {
+                angle = 90f64;
+            }
+        }
+        else if doty > 0f64 {
+            angle = -90f64;
+        }
     }
-    else if (doty >0)
-      angle = -90;
-  }
 
-  if ( vec3_equal(d->constraint, vec3(0,1,0))) {
-    if (dotx >0) {
-      if (dotz >0)
-      angle = 180;
-      else
-      angle = 90;
+    if constraint == vec::Vec3::new(0f64,1f64,0f64) {
+        if dotx > 0f64 {
+            if dotz > 0f64 {
+                angle = 180f64;
+            }
+            else {
+                angle = 90f64;
+            }
+        }
+        else if dotz > 0f64 {
+            angle = -90f64;
+        }
     }
-    else if (dotz >0)
-      angle = -90;
-  }
 
-  if ( vec3_equal(d->constraint, vec3(1,0,0))) {
-    if (doty >0) {
-      if (dotz >0)
-      angle = -180;
-      else
-      angle = -90;
+    if constraint == vec::Vec3::new(1f64,0f64,0f64) {
+        if doty > 0f64 {
+            if dotz > 0f64 {
+                angle = -180f64;
+            }
+            else {
+                angle = -90f64;
+            }
+        }
+        else if dotz > 0f64 {
+            angle = 90f64;
+        }
     }
-    else if (dotz >0)
-      angle = 90;
-  }
 
 
-  Quat q = quat_yaw_pitch_roll_deg(0,0, angle);
+    let q = vec::Quat::new_yaw_pitch_roll_deg(0f64,0f64, angle);
+    let qoo = dragger_ori *q;
+    let qf = qo * qoo;
 
-  //o->orientation = quat_mul(q, d->ori);
-  o->orientation = quat_mul(d->ori,q);
-  o->orientation = quat_mul(qo, o->orientation);
-  o->orientation_type = ORIENTATION_QUAT;
-
+    o.orientation = transform::Orientation::Quat(qf);
 }
-
-
-
-    }
-*/
 

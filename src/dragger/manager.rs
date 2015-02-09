@@ -86,7 +86,6 @@ pub struct Dragger
     kind : Kind,
     color : vec::Vec4,
     repere : Repere,
-    translation_start : vec::Vec3,
 }
 
 impl DraggerManager
@@ -100,7 +99,7 @@ impl DraggerManager
             mouse_start : vec::Vec2::zero(),
             mouse : None,
             ori : vec::Quat::identity(),
-            current : 2us
+            current : 0us
         };
 
         let tr = create_dragger_translation_group(factory);
@@ -321,7 +320,6 @@ impl Dragger
             kind : kind,
             color : color,
             repere : Repere::Local,
-            translation_start : vec::Vec3::zero(),
         }
     }
 
@@ -349,7 +347,6 @@ impl Dragger
             },
             State::Selected => {
                 set_color(self, vec::Vec4::new(1f64,1f64,1f64, 1f64));
-                self.translation_start = self.object.read().unwrap().position.clone();
             },
             State::Idle => {
                 set_color(self, self.color);
