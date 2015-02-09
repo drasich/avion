@@ -16,7 +16,13 @@ pub use self::scale::{
     create_scale_draggers
 };
 
+pub use self::rotate::{
+    RotationOperation,
+    create_rotation_draggers
+};
+
 
 pub mod manager;
 pub mod translate;
 pub mod scale;
+pub mod rotate;
