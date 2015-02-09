@@ -662,7 +662,12 @@ impl Control
             "r" => {
                 return self.redo();
             },
-            _ => {}
+            "space" => {
+                self.dragger.borrow_mut().change();
+            },
+            _ => {
+                println!("key not implemented : {}", key);
+            }
         }
 
         {

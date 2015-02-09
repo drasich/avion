@@ -77,15 +77,22 @@ pub enum Repere
     Local
 }
 
+pub enum Collision
+{
+    MeshAABox,
+    Mesh,
+    SpecialMesh(mesh::Mesh)
+}
+
 pub struct Dragger
 {
     pub object : Arc<RwLock<object::Object>>,
-    //pub aabox : geometry::AABox,
     pub ori : transform::Orientation,
     pub constraint : vec::Vec3,
     kind : Kind,
     color : vec::Vec4,
     repere : Repere,
+    collision : Collision
 }
 
 impl DraggerManager
@@ -271,6 +278,16 @@ impl DraggerManager
         None
     }
 
+    pub fn change(&mut self)
+    {
+        let mut newlen = self.current + 1;
+        if newlen >= self.draggers.len() {
+            newlen = 0;
+        }
+
+        self.current = newlen;
+    }
+
 }
 
 fn create_dragger(
@@ -315,7 +332,8 @@ impl Dragger
         constraint : vec::Vec3,
         ori : transform::Orientation,
         kind : Kind,
-        color : vec::Vec4
+        color : vec::Vec4,
+        collision : Collision
         ) -> Dragger
     {
         Dragger {
@@ -326,6 +344,7 @@ impl Dragger
             kind : kind,
             color : color,
             repere : Repere::Local,
+            collision : Collision::MeshAABox
         }
     }
 

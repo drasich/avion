@@ -24,6 +24,7 @@ use dragger::manager::{
     DraggerMouse,
     DraggerGroup,
     Kind,
+    Collision,
     Dragger
 };
 
@@ -111,6 +112,8 @@ pub fn create_rotation_draggers(factory : &mut factory::Factory)
     let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
     let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
     let mesh = "model/dragger_rotate_quarter.mesh";
+    let collider = "model/dragger_rotate_collider_quarter.mesh";
+    //TODO mesh : resource::ResTT::new(mesh),
 
     let dragger_x = Dragger::new(
         factory,
@@ -119,7 +122,9 @@ pub fn create_rotation_draggers(factory : &mut factory::Factory)
         vec::Vec3::new(1f64,0f64,0f64),
         transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,1f64,0f64), 90f64)),
         Kind::Rotate,
-        red);
+        red,
+        Collision::MeshAABox
+        );
 
     let dragger_y = Dragger::new(
         factory,
@@ -128,7 +133,9 @@ pub fn create_rotation_draggers(factory : &mut factory::Factory)
         vec::Vec3::new(0f64,1f64,0f64),
         transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64)), 
         Kind::Rotate,
-        green);
+        green,
+        Collision::MeshAABox
+        );
 
     let dragger_z = Dragger::new(
         factory,
@@ -137,7 +144,9 @@ pub fn create_rotation_draggers(factory : &mut factory::Factory)
         vec::Vec3::new(0f64,0f64,1f64),
         transform::Orientation::Quat(vec::Quat::identity()), 
         Kind::Rotate,
-        blue);
+        blue,
+        Collision::MeshAABox
+        );
 
     let mut group = Vec::with_capacity(3);
 

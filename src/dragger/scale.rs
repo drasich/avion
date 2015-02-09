@@ -24,6 +24,7 @@ use dragger::manager::{
     DraggerMouse,
     DraggerGroup,
     Kind,
+    Collision,
     Dragger
 };
 
@@ -115,7 +116,9 @@ pub fn create_scale_draggers(factory : &mut factory::Factory)
         vec::Vec3::new(1f64,0f64,0f64),
         transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,1f64,0f64), 90f64)),
         Kind::Scale,
-        red);
+        red,
+        Collision::MeshAABox
+        );
 
     let dragger_y = Dragger::new(
         factory,
@@ -124,7 +127,9 @@ pub fn create_scale_draggers(factory : &mut factory::Factory)
         vec::Vec3::new(0f64,1f64,0f64),
         transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64)), 
         Kind::Scale,
-        green);
+        green,
+        Collision::MeshAABox
+        );
 
     let dragger_z = Dragger::new(
         factory,
@@ -133,7 +138,9 @@ pub fn create_scale_draggers(factory : &mut factory::Factory)
         vec::Vec3::new(0f64,0f64,1f64),
         transform::Orientation::Quat(vec::Quat::identity()), 
         Kind::Scale,
-        blue);
+        blue,
+        Collision::MeshAABox
+        );
 
     let mut group = Vec::with_capacity(3);
 
