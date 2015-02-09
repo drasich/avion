@@ -40,7 +40,6 @@ pub enum ResTest<T>
     ResNone
 }
 
-
 pub struct ResTT<T>
 {
     pub name : String,
@@ -64,7 +63,23 @@ impl<T> ResTT<T>
             resource : res
         }
     }
+}
 
+impl<T> Clone for ResTT<T>
+{
+    fn clone(&self) -> ResTT<T>
+    {
+        let r = match self.resource {
+            ResData(ref d) => ResData(d.clone()),
+            ResWait => ResWait,
+            ResNone => ResNone
+        };
+
+        ResTT {
+            name : self.name.clone(),
+            resource : r
+        }
+    }
 }
 
 impl <T:'static+Create+Send+Sync> ResTT<T>

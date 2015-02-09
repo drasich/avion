@@ -81,7 +81,7 @@ pub enum Collision
 {
     MeshAABox,
     Mesh,
-    SpecialMesh(mesh::Mesh)
+    SpecialMesh(resource::ResTT<mesh::Mesh>)
 }
 
 pub struct Dragger
@@ -407,6 +407,19 @@ impl Dragger
         //let ir = intersection::ray_object(r, &*o.read().unwrap());
         if ir.hit {
             let length = (ir.position - r.start).length2();
+
+            //TODO 
+            /*
+            let m = match self.collision{
+                Collision::SpecialMesh(r) => {
+                    match r.resource {
+                        resource::ResTest::ResData(ref m) => {
+                        m.read().unwrap()
+                    },
+                },
+                _ => return (true, length),
+            }
+            */
             return (true, length);
         }
         else {

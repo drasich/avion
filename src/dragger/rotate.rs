@@ -113,6 +113,7 @@ pub fn create_rotation_draggers(factory : &mut factory::Factory)
     let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
     let mesh = "model/dragger_rotate_quarter.mesh";
     let collider = "model/dragger_rotate_collider_quarter.mesh";
+    let collider_mesh : resource::ResTT<mesh::Mesh> = resource::ResTT::new(collider);
     //TODO mesh : resource::ResTT::new(mesh),
 
     let dragger_x = Dragger::new(
@@ -120,10 +121,11 @@ pub fn create_rotation_draggers(factory : &mut factory::Factory)
         "rotate_x",
         mesh,
         vec::Vec3::new(1f64,0f64,0f64),
-        transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,1f64,0f64), 90f64)),
+        transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(
+                vec::Vec3::new(0f64,1f64,0f64), -90f64)),
         Kind::Rotate,
         red,
-        Collision::MeshAABox
+        Collision::SpecialMesh(collider_mesh.clone())
         );
 
     let dragger_y = Dragger::new(
@@ -131,10 +133,11 @@ pub fn create_rotation_draggers(factory : &mut factory::Factory)
         "rotate_y",
         mesh,
         vec::Vec3::new(0f64,1f64,0f64),
-        transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64)), 
+        transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(
+                vec::Vec3::new(1f64,0f64,0f64), 90f64)), 
         Kind::Rotate,
         green,
-        Collision::MeshAABox
+        Collision::SpecialMesh(collider_mesh.clone())
         );
 
     let dragger_z = Dragger::new(
@@ -145,7 +148,7 @@ pub fn create_rotation_draggers(factory : &mut factory::Factory)
         transform::Orientation::Quat(vec::Quat::identity()), 
         Kind::Rotate,
         blue,
-        Collision::MeshAABox
+        Collision::SpecialMesh(collider_mesh)
         );
 
     let mut group = Vec::with_capacity(3);

@@ -9,10 +9,11 @@ use scene;
 use vec;
 use transform;
 
-#[derive(RustcDecodable, RustcEncodable)]
+//#[derive(RustcDecodable, RustcEncodable)]
 pub struct Factory
 {
-     id : u32
+     id : u32,
+     //mesh_manager : Arc<RwLock<resource::ResourceManager<mesh::Mesh>>>,
 }
 
 impl Factory {
