@@ -175,9 +175,11 @@ impl View
 
         if sel.len() > 0 {
             center = center / (sel.len() as f64);
+
+            //TODO println!("remove this code from here, put in update or when moving the camera");
             let mut dragger = self.dragger.borrow_mut();
             dragger.set_position(center);
-            dragger.set_orientation(transform::Orientation::Quat(ori));
+            dragger.set_orientation(transform::Orientation::Quat(ori), &*self.camera.borrow());
             let scale = self.camera.borrow().get_camera_resize_w(0.05f64);
             dragger.set_scale(scale);
         }

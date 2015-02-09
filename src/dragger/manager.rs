@@ -82,7 +82,7 @@ pub struct Dragger
     pub object : Arc<RwLock<object::Object>>,
     //pub aabox : geometry::AABox,
     pub ori : transform::Orientation,
-    constraint : vec::Vec3,
+    pub constraint : vec::Vec3,
     kind : Kind,
     color : vec::Vec4,
     repere : Repere,
@@ -99,7 +99,7 @@ impl DraggerManager
             mouse_start : vec::Vec2::zero(),
             mouse : None,
             ori : vec::Quat::identity(),
-            current : 0us
+            current : 2us
         };
 
         let tr = create_dragger_translation_group(factory);
@@ -212,11 +212,16 @@ impl DraggerManager
         }
     }
 
-    pub fn set_orientation(&mut self, ori : transform::Orientation) {
+    pub fn set_orientation(&mut self, ori : transform::Orientation, camera : &camera::Camera) {
         self.ori = ori.as_quat();
         for d in self.draggers[self.current].iter_mut() {
             let mut d = d.borrow_mut();
+            if self.current == 2us {
+                d.face_camera(camera, self.ori);
+            }
+            else {
             d.object.write().unwrap().orientation = ori * d.ori;
+            }
         }
 
         for d in self.scale_draggers.iter_mut() {
@@ -265,6 +270,7 @@ impl DraggerManager
 
         None
     }
+
 }
 
 fn create_dragger(
@@ -387,6 +393,76 @@ impl Dragger
         else {
             return (false,0f64);
         }
+    }
+
+    pub fn face_camera(
+        &self,
+        camera : &camera::Camera,
+        manager_ori : vec::Quat,
+        )
+    {
+        let qo = manager_ori;
+        let mut o = self.object.write().unwrap();
+        let constraint = self.constraint;
+        let dragger_ori = self.ori.as_quat();
+
+
+        let camera_object = camera.object.read().unwrap();
+
+        let diff = o.position - camera_object.position;
+        let dotx = diff.dot(&qo.rotate_vec3(&vec::Vec3::x()));
+        let doty = diff.dot(&qo.rotate_vec3(&vec::Vec3::y()));
+        let dotz = diff.dot(&qo.rotate_vec3(&vec::Vec3::z()));
+        let mut angle = 0f64;
+
+        if constraint ==  vec::Vec3::new(0f64,0f64,1f64) {
+            if dotx > 0f64 {
+                if doty > 0f64 {
+                    angle = 180f64;
+                }
+                else {
+                    angle = 90f64;
+                }
+            }
+            else if doty > 0f64 {
+                angle = -90f64;
+            }
+        }
+
+        if constraint == vec::Vec3::new(0f64,1f64,0f64) {
+            if dotx > 0f64 {
+                if dotz > 0f64 {
+                    angle = 180f64;
+                }
+                else {
+                    angle = 90f64;
+                }
+            }
+            else if dotz > 0f64 {
+                angle = -90f64;
+            }
+        }
+
+        if constraint == vec::Vec3::new(1f64,0f64,0f64) {
+            if doty > 0f64 {
+                if dotz > 0f64 {
+                    angle = -180f64;
+                }
+                else {
+                    angle = -90f64;
+                }
+            }
+            else if dotz > 0f64 {
+                angle = 90f64;
+            }
+        }
+
+
+        let q = vec::Quat::new_yaw_pitch_roll_deg(0f64,0f64, angle);
+        let qoo = dragger_ori *q;
+        let qf = qo * qoo;
+
+        o.orientation = transform::Orientation::Quat(qf);
     }
 
 }
