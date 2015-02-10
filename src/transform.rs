@@ -206,12 +206,24 @@ impl ui::PropertyShow for Orientation {
 
 }
 
-
 impl Mul<Orientation> for Orientation {
     type Output = Orientation;
     fn mul(self, other: Orientation) -> Orientation {
         let p = self.as_quat() * other.as_quat();
         //Orientation::Quat(self.as_quat() * other.as_quat())
+        match self {
+            Orientation::AngleXYZ(_) => 
+                Orientation::AngleXYZ(p.to_euler_deg()),
+            Orientation::Quat(_) => 
+                Orientation::Quat(p)
+        }
+    }
+}
+
+impl Mul<vec::Quat> for Orientation {
+    type Output = Orientation;
+    fn mul(self, other: vec::Quat) -> Orientation {
+        let p = self.as_quat() * other;
         match self {
             Orientation::AngleXYZ(_) => 
                 Orientation::AngleXYZ(p.to_euler_deg()),

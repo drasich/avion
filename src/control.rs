@@ -161,7 +161,24 @@ impl Control
 
                             self.request_operation(prop, change);
                         },
-                        _ => {}
+                        dragger::Operation::Rotation(q) => {
+                            let prop = vec!["object".to_string(),"orientation".to_string()];
+                            let cxoris = self.context.borrow().saved_oris.clone();
+                            let mut saved_oris = Vec::with_capacity(cxoris.len());
+                            for p in cxoris.iter() {
+                                saved_oris.push((box *p ) as Box<Any>);
+                            }
+                            let mut new_ori = Vec::with_capacity(cxoris.len());
+                            for p in cxoris.iter() {
+                                let no = *p * q;
+                                new_ori.push((box no) as Box<Any>);
+                            }
+                            let change = operation::OperationData::Vector(
+                                saved_oris,
+                                new_ori);
+
+                            self.request_operation(prop, change);
+                        },
                     }
                 }
                 return operation::Change::None;
