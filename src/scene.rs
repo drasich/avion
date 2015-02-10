@@ -1,7 +1,7 @@
 use object;
 use std::collections::{DList};
 use std::sync::{RwLock, Arc};
-use std::io::File;
+use std::old_io::File;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use uuid::Uuid;
 

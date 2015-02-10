@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied,Vacant};
-use std::io::File;
+use std::old_io::File;
 use rustc_serialize::{Encodable, Encoder, Decoder, Decodable};
 
 //use libc::{c_char, c_int, c_uint, c_void};

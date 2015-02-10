@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
-use std::io::File;
-use std::io::BufferedReader;
+use std::old_io::File;
+use std::old_io::BufferedReader;
 use libc::{c_char, c_uint};
 use std::ptr;
 use std::str::FromStr;
@@ -149,10 +149,16 @@ impl Shader
             let split : Vec<&str> = l.as_slice().split(',').collect();
             if split[0] == "att" {
                 let size : u32;
-                let op : Option<u32> = FromStr::from_str(split[2]);
+                /*let op : Option<u32> = FromStr::from_str(split[2]);
                 match op {
                     Some(u) => size = u,
                     None => continue
+                }
+                */
+                let op = FromStr::from_str(split[2]);
+                match op {
+                    Ok(u) => size = u,
+                    _ => continue
                 }
                 println!("it's an attribute {}, {}", split[1], size);
                 self.attribute_add(split[1], size);

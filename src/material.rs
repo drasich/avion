@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
-use std::io::File;
-use std::io::BufferedReader;
+use std::old_io::File;
+use std::old_io::BufferedReader;
 use std::collections::hash_map::Entry::{Occupied,Vacant};
 //use std::default::Default;
 //use toml;
@@ -143,7 +143,8 @@ impl Material
         let encoded = json::encode(self);
         let mut s = String::new();
         {
-            let mut encoder = json::PrettyEncoder::new(&mut s);
+            //let mut encoder = json::PrettyEncoder::new(&mut s);
+            let mut encoder = json::Encoder::new_pretty(&mut s);
             let _ = self.encode(&mut encoder);
         }
 
