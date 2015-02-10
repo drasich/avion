@@ -45,7 +45,7 @@ pub struct DraggerManager
     current : usize
 }
 
-#[derive(Copy)]
+#[derive(Copy,Debug)]
 pub enum State
 {
     Idle,
@@ -92,7 +92,8 @@ pub struct Dragger
     kind : Kind,
     color : vec::Vec4,
     repere : Repere,
-    collision : Collision
+    collision : Collision,
+    state : State
 }
 
 impl DraggerManager
@@ -197,7 +198,17 @@ impl DraggerManager
                                     self.ori
                                     ) as Box<DraggerMouse>);
                         }
-                        _ => {println!("todo");}
+                        Kind::Rotate => {
+                            let ob = dragger.object.read().unwrap();
+                            //println!("ori : {:?}", self.ori);
+
+                            self.mouse = Some(box RotationOperation::new(
+                                    ob.position.clone(),
+                                    dragger.constraint,
+                                    dragger.repere,
+                                    self.ori
+                                    ) as Box<DraggerMouse>);
+                        }
                     }
                 }
                 _ => {}
@@ -344,7 +355,8 @@ impl Dragger
             kind : kind,
             color : color,
             repere : Repere::Local,
-            collision : collision
+            collision : collision,
+            state : State::Idle
         }
     }
 
@@ -366,6 +378,7 @@ impl Dragger
             }
         }
 
+
         match state {
             State::Highlight => {
                 set_color(self, vec::Vec4::new(1f64,1f64,0f64, 1f64));
@@ -378,6 +391,8 @@ impl Dragger
             }
             _ => {}
         }
+
+        self.state = state;
     }
 
     fn check_collision(&self, r : &geometry::Ray, s : f64) -> (bool, f64)

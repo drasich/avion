@@ -92,9 +92,9 @@ impl Control
             self.state = State::Dragger;
             let objs = self.context.borrow().selected.clone();
             if objs.len() > 0 {
-                println!("TODO choose the save");
                 self.context.borrow_mut().save_positions();
                 self.context.borrow_mut().save_scales();
+                self.context.borrow_mut().save_oris();
             }
         }
 
@@ -426,6 +426,23 @@ impl Control
         return operation::Change::DirectChange("object/position".to_string());
     }
 
+    pub fn request_rotation(
+        &mut self,  
+        rotation : vec::Quat) -> operation::Change
+    {
+        let so = self.context.borrow().saved_oris.clone();
+        let mut obs = self.get_selected_objects();
+
+        let mut i = 0;
+        for o in obs.iter_mut() {
+            o.write().unwrap().orientation = so[i] * transform::Orientation::new_with_quat(&rotation);
+            i = i+1;
+        }
+
+        return operation::Change::DirectChange("object/orientation".to_string());
+    }
+
+
     pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
     {
         let c = match self.context.borrow_state(){
@@ -569,14 +586,14 @@ impl Control
                 if let Some(op) = self.dragger.borrow_mut().mouse_move(&*camera,x,y) {
                     match op {
                         dragger::Operation::Translation(v) => {
-                            let prop = vec!["object".to_string(),"position".to_string()];
                             list.push_back(self.request_translation(v));
                         },
                         dragger::Operation::Scale(v) => {
-                            let prop = vec!["object".to_string(),"scale".to_string()];
                             list.push_back(self.request_scale(v));
                         },
-                        _ => {}
+                        dragger::Operation::Rotation(q) => {
+                            list.push_back(self.request_rotation(q));
+                        }
                     }
                 }
             }

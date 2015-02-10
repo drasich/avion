@@ -38,7 +38,7 @@ pub struct RotationOperation
 
 impl RotationOperation {
 
-    fn new(
+    pub fn new(
         start : vec::Vec3,
         constraint : vec::Vec3, 
         repere : Repere,
@@ -158,5 +158,17 @@ pub fn create_rotation_draggers(factory : &mut factory::Factory)
     group.push(Rc::new(RefCell::new(dragger_z)));
 
     return group;
+}
+
+impl DraggerMouse for RotationOperation {
+
+    fn mouse_move(
+        &self,
+        camera : &camera::Camera,
+        mouse_start : vec::Vec2,
+        mouse_end : vec::Vec2) -> Option<Operation>
+    {
+        return self.local_global(camera, mouse_start, mouse_end);
+    }
 }
 

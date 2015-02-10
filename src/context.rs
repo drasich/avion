@@ -2,6 +2,7 @@ use object;
 use scene;
 use vec;
 use uuid;
+use transform;
 
 use std::collections::{DList};
 use std::sync::{RwLock, Arc};
@@ -11,7 +12,8 @@ pub struct Context
     pub selected : DList<Arc<RwLock<object::Object>>>,
     pub scene : Option<Arc<RwLock<scene::Scene>>>,
     pub saved_positions : Vec<vec::Vec3>,
-    pub saved_scales : Vec<vec::Vec3>
+    pub saved_scales : Vec<vec::Vec3>,
+    pub saved_oris : Vec<transform::Orientation>
 }
 
 impl Context
@@ -22,7 +24,8 @@ impl Context
             selected: DList::new(),
             scene : None,
             saved_positions : Vec::new(),
-            saved_scales : Vec::new()
+            saved_scales : Vec::new(),
+            saved_oris : Vec::new()
         }
     }
 
@@ -39,6 +42,14 @@ impl Context
         self.saved_scales.clear();
         for o in self.selected.iter() {
             self.saved_scales.push(o.read().unwrap().scale);
+        }
+    }
+
+    pub fn save_oris(&mut self)
+    {
+        self.saved_oris.clear();
+        for o in self.selected.iter() {
+            self.saved_oris.push(o.read().unwrap().orientation);
         }
     }
 
