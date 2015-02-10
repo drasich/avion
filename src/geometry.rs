@@ -188,7 +188,7 @@ impl<'a> Mul<f32> for &'a AABox {
     }
 }
 
-impl fmt::Show for AABox
+impl fmt::Debug for AABox
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "(min : {:?}, max : {:?})", self.min, self.max)
@@ -225,7 +225,8 @@ impl Segment
     }
 
 }
-impl fmt::Show for Segment
+
+impl fmt::Debug for Segment
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "{:?}; {:?}", self.p0, self.p1)
@@ -233,21 +234,21 @@ impl fmt::Show for Segment
 }
 
 
-impl fmt::Show for Ray
+impl fmt::Debug for Ray
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "{:?}; {:?}", self.start, self.direction)
     }
 }
 
-impl fmt::Show for Triangle
+impl fmt::Debug for Triangle
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "{:?} ; {:?} ; {:?}", self.v0, self.v1, self.v2)
     }
 }
 
-impl fmt::Show for Repere
+impl fmt::Debug for Repere
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "{:?} ; {:?}", self.origin, self.rotation)

@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{RefCell, BorrowState};
 use std::any::{Any};//, AnyRefExt};
 use std::sync::{RwLock, Arc};
 use std::collections::DList;
@@ -178,16 +178,19 @@ impl Control
         }
 
         //println!("rust mouse up button {}, pos: {}, {}", button, x, y);
-        let r = match self.camera.try_borrow(){
-            Some(c) => {
-                c.ray_from_screen(x as f64, y as f64, 10000f64)
+        let r = match self.camera.borrow_state(){
+            BorrowState::Writing => {
+                println!("cannot borrow camera");
+                return operation::Change::None;
             },
-            None => { println!("cannot borrow camera"); return operation::Change::None; }
+            _ => {
+                self.camera.borrow().ray_from_screen(x as f64, y as f64, 10000f64)
+            }
         };
 
-        let mut c = match self.context.try_borrow_mut(){
-            Some(con) => con,
-            None => { println!("cannot borrow context"); return operation::Change::None; }
+        let mut c = match self.context.borrow_state(){
+            BorrowState::Unused => self.context.borrow_mut(),
+            _ => { println!("cannot borrow context"); return operation::Change::None; }
         };
 
         c.selected.clear();
@@ -235,9 +238,9 @@ impl Control
     {
         //TODO same as the code at the end of mouse_up, so factorize
         println!("TODO check: is this find by id ok? : control will try to find object by id, .................select is called ");
-        let mut c = match self.context.try_borrow_mut(){
-            Some(con) => con,
-            None => { println!("cannot borrow context"); return; }
+        let mut c = match self.context.borrow_state(){
+            BorrowState::Unused => self.context.borrow_mut(),
+            _ => { println!("cannot borrow context"); return; }
         };
 
         //c.selected.clear();
@@ -272,9 +275,9 @@ impl Control
 
     pub fn unselect(&mut self, ids : &DList<Uuid>)
     {
-        let mut c = match self.context.try_borrow_mut(){
-            Some(con) => con,
-            None => { println!("cannot borrow context"); return; }
+        let mut c = match self.context.borrow_state(){
+            BorrowState::Unused => self.context.borrow_mut(),
+            _ => { println!("cannot borrow context"); return; }
         };
 
         let scene = match c.scene {
@@ -429,9 +432,9 @@ impl Control
 
     pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
     {
-        let c = match self.context.try_borrow(){
-            Some(con) => con,
-            None => { println!("cannot borrow context"); return None; }
+        let c = match self.context.borrow_state(){
+            BorrowState::Writing => { println!("cannot borrow context"); return None; }
+            _ => self.context.borrow(),
         };
 
         match c.selected.front() {
@@ -445,9 +448,9 @@ impl Control
 
     pub fn get_selected_objects(&self) -> DList<Arc<RwLock<object::Object>>>
     {
-        match self.context.try_borrow(){
-            Some(con) => con.selected.clone(),
-            None => DList::new()
+        match self.context.borrow_state(){
+            BorrowState::Writing => DList::new(),
+            _ => self.context.borrow().selected.clone(),
         }
     }
 
@@ -522,13 +525,13 @@ impl Control
                 let x : f64 = curx as f64;
                 let y : f64 = cury as f64;
 
-                let r = match self.camera.try_borrow(){
-                    Some(c) => {
-                        c.ray_from_screen(x as f64, y as f64, 10000f64)
-                    },
-                    None => {
+                let r = match self.camera.borrow_state(){
+                    BorrowState::Writing => {
                         println!("cannot borrow camera"); 
                         return list;
+                    },
+                    _ => {
+                        self.camera.borrow().ray_from_screen(x as f64, y as f64, 10000f64)
                     }
                 };
 
@@ -557,12 +560,12 @@ impl Control
             State::Dragger =>
             {
                 let camera_clone = self.camera.clone();
-                let camera = match camera_clone.try_borrow(){
-                    Some(c) =>c,
-                    None => { 
+                let camera = match camera_clone.borrow_state(){
+                    BorrowState::Writing => { 
                         println!("cannot borrow camera");
                         return list;
-                    }
+                    },
+                    _ => camera_clone.borrow(),
                 };
 
                 let x : f64 = curx as f64;// - prevx as f64;
@@ -597,9 +600,9 @@ impl Control
                         endx as f64, 
                         endy as f64);
 
-                    let mut c = match self.context.try_borrow_mut(){
-                        Some(con) => con,
-                        None => { println!("cannot borrow context"); return list; }
+                    let mut c = match self.context.borrow_state(){
+                        BorrowState::Unused => self.context.borrow_mut(),
+                        _ => { println!("cannot borrow context, because being used"); return list; }
                     };
 
                     c.selected.clear();

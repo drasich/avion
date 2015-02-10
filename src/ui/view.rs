@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{RefCell, BorrowState};
 use std::sync::{RwLock, Arc};
 use libc::{c_char, c_void, c_int, c_float};
 use std::mem;
@@ -137,12 +137,13 @@ impl View
             None => {}
         };
 
-        match control.try_borrow_mut() {
-            Some(ref mut c) => {
+        match control.borrow_state() {
+            BorrowState::Unused => {
+                let mut c = control.borrow_mut();
                 c.property = Some(p.clone());
                 c.tree = Some(t.clone());
             },
-            None => {}
+            _ => {}
         };
 
         self.tree = Some(t);
@@ -194,9 +195,9 @@ impl View
 
     fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
     {
-        let c = match self.context.try_borrow(){
-            Some(con) => con,
-            None => { println!("cannot borrow context"); return None; }
+        let c = match self.context.borrow_state(){
+            BorrowState::Writing => { println!("cannot borrow context"); return None; }
+            _ => self.context.borrow(),
         };
 
         match c.selected.front() {
@@ -222,26 +223,26 @@ impl View
 
         if s == "object/name" {
             match self.tree {
-                Some(ref tt) =>
-                    match tt.try_borrow() {
-                        Some(ref t) => {
-                            t.update_object(&o.read().unwrap().id);
+                Some(ref t) =>
+                    match t.borrow_state() {
+                        BorrowState::Writing => {},
+                        _ => {
+                            t.borrow().update_object(&o.read().unwrap().id);
                         },
-                        None=> {}
                     },
                     None => {}
             };
         }
             
         match self.property {
-            Some(ref pp) =>
-                match pp.try_borrow() {
-                    Some(ref p) => {
+            Some(ref p) =>
+                match p.borrow_state() {
+                    BorrowState::Writing => {},
+                    _ => {
                         println!("direct change : {}", s);
                         //p.update_object(&*o.read().unwrap(), s);
-                        p.update_object_property(&*o.read().unwrap(), s);
+                        p.borrow().update_object_property(&*o.read().unwrap(), s);
                     },
-                    None=> {}
                 },
                 None => {}
         };
@@ -263,13 +264,13 @@ impl View
                     if let Some(ref o) = sel {
                         if *id == o.read().unwrap().id  {
                             match self.property.clone() {
-                                Some(ref mut pp) =>
-                                    match pp.try_borrow_mut() {
-                                        Some(ref mut p) => {
-                                            p.update_object(&*o.read().unwrap(), "");
+                                Some(ref p) =>
+                                    match p.borrow_state() {
+                                        BorrowState::Unused => {
+                                            p.borrow_mut().update_object(&*o.read().unwrap(), "");
 
                                         },
-                                        None=> {}
+                                        _=> {}
                                     },
                                     None => {}
                             };
@@ -278,12 +279,12 @@ impl View
 
                     if name.as_slice() == "object/name" {
                         match self.tree.clone() {
-                            Some(ref mut tt) =>
-                                match tt.try_borrow_mut() {
-                                    Some(ref mut t) => {
-                                        t.update_object(id);
+                            Some(ref mut t) =>
+                                match t.borrow_state() {
+                                    BorrowState::Unused => {
+                                        t.borrow_mut().update_object(id);
                                     },
-                                    None=> {}
+                                    _ => {}
                                 },
                                 None => {}
                         };
@@ -309,21 +310,21 @@ impl View
             },
             operation::Change::SelectedChange => {
 
-                let c = match self.context.try_borrow(){
-                    Some(con) => con,
-                    None => { println!("cannot borrow context"); return; }
+                let c = match self.context.borrow_state(){
+                    BorrowState::Writing => { println!("cannot borrow context"); return; }
+                    _ => self.context.borrow(),
                 };
 
                 println!("object seclected : {}",  c.selected.len());
 
                 if c.selected.len() != 1 {
                     match self.property {
-                        Some(ref pp) => {
-                            match pp.try_borrow_mut() {
-                                Some(ref mut p) => {
-                                    p.set_nothing();
+                        Some(ref p) => {
+                            match p.borrow_state() {
+                                BorrowState::Unused => {
+                                    p.borrow_mut().set_nothing();
                                 },
-                                None => {println!("cannot borrow property");}
+                                _ => {println!("cannot borrow property");}
                             };
                         },
                         None => {
@@ -336,12 +337,12 @@ impl View
                     match c.selected.front() {
                         Some(o) => {
                             match self.property {
-                                Some(ref pp) => {
-                                    match pp.try_borrow_mut() {
-                                        Some(ref mut p) => {
-                                            p.set_object(&*o.read().unwrap());
+                                Some(ref p) => {
+                                    match p.borrow_state() {
+                                        BorrowState::Unused => {
+                                            p.borrow_mut().set_object(&*o.read().unwrap());
                                         },
-                                        None => {println!("cannot borrow property");}
+                                        _ => {println!("cannot borrow property");}
                                     };
                                 },
                                 None => {
@@ -350,10 +351,10 @@ impl View
                             }
 
                             match self.tree {
-                                Some(ref tt) => {
-                                    match tt.try_borrow_mut() {
-                                        Some(ref mut t) => {
-                                            t.select(&o.read().unwrap().id);
+                                Some(ref t) => {
+                                    match t.borrow_state() {
+                                        BorrowState::Unused => {
+                                            t.borrow_mut().select(&o.read().unwrap().id);
                                         }
                                         _ => {}
                                     }
