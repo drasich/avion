@@ -7,7 +7,7 @@ use std::mem;
 use std::collections::{DList};
 use std::ptr;
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{RefCell, BorrowState};
 use std::rc::Weak;
 use std::any::{Any};//, AnyRefExt};
 use std::ffi::CString;
@@ -436,12 +436,10 @@ fn changed_set<T : Any+Clone+PartialEq>(
     //let vs = vs.tail().to_vec();
 
     let p : & Property = unsafe {mem::transmute(property)};
-    //let control_rc : &Rc<RefCell<Control>>  = unsafe {mem::transmute(control_void)};
 
-    let mut control = match p.control.try_borrow_mut() {
-    //let mut control = match control_rc.try_borrow_mut() {
-        Some(c) => c,
-        None => { println!("cannot borrow control"); return; }
+    let mut control = match p.control.borrow_state() {
+        BorrowState::Unused => p.control.borrow_mut(),
+        _ => { println!("cannot borrow control"); return; }
     };
 
     let change = match (old, action) {
@@ -469,12 +467,12 @@ fn changed_set<T : Any+Clone+PartialEq>(
         operation::Change::Objects(s, _) => {
             if s == "object/name" {
                 match control.tree {
-                    Some(ref tt) =>
-                        match tt.try_borrow() {
-                            Some(ref t) => {
-                                t.update_object(&id);
+                    Some(ref t) =>
+                        match t.borrow_state() {
+                            BorrowState::Writing => {}
+                            _ => {
+                                t.borrow().update_object(&id);
                             },
-                            None=> {}
                         },
                         None => {}
                 };
@@ -511,11 +509,13 @@ extern fn expand(
     let yep = vs.tail().to_vec();
     println!("expand : {:?}", vs);
 
-    match p.control.clone().try_borrow() {
-    //match control_rc.clone().try_borrow() {
-        Some(c) => {
-
-            let o = match c.get_selected_object() {
+    match p.control.clone().borrow_state() {
+        BorrowState::Writing => {
+            println!("cannot borrow control, might be already borrowed...");
+            return;
+        },
+        _ => {
+            let o = match p.control.borrow().get_selected_object() {
                 Some(ob) => ob,
                 None => {
                     println!("no selected objectttttttttttttt");
@@ -535,10 +535,6 @@ extern fn expand(
                 }
             }
         },
-        None => {
-            println!("cannot borrow control, might be already borrowed...");
-            return;
-        }
     };
 
 }

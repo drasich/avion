@@ -2,7 +2,12 @@
 #![feature(trace_macros)]
 #![feature(slicing_syntax)]
 #![feature(box_syntax)]
-#![allow(unstable)]
+#![feature(std_misc)]
+#![feature(core)]
+#![feature(collections)]
+#![feature(libc)]
+#![feature(path)]
+#![feature(io)]
 
 //TODO remove
 #![allow(unused_variables)]

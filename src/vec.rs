@@ -413,14 +413,14 @@ impl Quat
 
 }
 
-impl fmt::Show for Vec3
+impl fmt::Debug for Vec3
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "({}, {}, {})", self.x, self.y, self.z)
     }
 }
 
-impl fmt::Show for Vec4
+impl fmt::Debug for Vec4
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "({}, {}, {}, {})", self.x, self.y, self.z, self.w)
@@ -428,7 +428,7 @@ impl fmt::Show for Vec4
 }
 
 
-impl fmt::Show for Quat
+impl fmt::Debug for Quat
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "{}, {}, {}, {}", self.x, self.y, self.z, self.w)

@@ -380,7 +380,7 @@ impl<'a> Mul<vec::Vec4> for &'a Matrix4 {
     }
 }
 
-impl fmt::Show for Matrix4
+impl fmt::Debug for Matrix4
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
         let mut yep = String::from_str("");

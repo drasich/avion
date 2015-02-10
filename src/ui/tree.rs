@@ -4,7 +4,7 @@ use libc::{c_char, c_void, c_int};
 use std::mem;
 use std::collections::{DList};//,Deque};
 use std::ptr;
-use std::cell::RefCell;
+use std::cell::{RefCell, BorrowState};
 use std::rc::Weak;
 use std::rc::Rc;
 use uuid::Uuid;
@@ -235,11 +235,11 @@ extern fn selected(
         return;
     }
 
-    match t.control.try_borrow_mut() {
-        Some(ref mut c) => {
+    match t.control.borrow_state() {
+        BorrowState::Unused => {
             let mut l = DList::new();
             l.push_back(o.read().unwrap().id.clone());
-            c.select(&l);
+            t.control.borrow_mut().select(&l);
         },
         _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
     }
@@ -263,11 +263,11 @@ extern fn unselected(
         return;
     }
 
-    match t.control.try_borrow_mut() {
-        Some(ref mut c) => {
+    match t.control.borrow_state() {
+        BorrowState::Unused => {
             let mut l = DList::new();
             l.push_back(o.read().unwrap().id.clone());
-            c.unselect(&l);
+            t.control.borrow_mut().unselect(&l);
         },
         _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
     }
