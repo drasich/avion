@@ -80,6 +80,32 @@ impl Orientation
             Orientation::Quat(q) => Orientation::Quat(q.inverse())
         }
     }
+
+    pub fn get_angle_xyz(& self) -> vec::Vec3
+    {
+        match *self {
+            Orientation::Quat(q) => q.to_euler_deg(),
+            Orientation::AngleXYZ(a) => {a}
+        }
+    }
+
+    pub fn get_quat(& self) -> vec::Quat
+    {
+        match *self {
+            Orientation::Quat(q) => q,
+            Orientation::AngleXYZ(a) => vec::Quat::new_angles_deg(&a),
+        }
+    }
+
+    pub fn set_and_keep_type(&mut self, ori : Orientation )
+    {
+        match *self {
+            Orientation::AngleXYZ(_) => 
+                *self = Orientation::AngleXYZ(ori.get_angle_xyz()),
+            Orientation::Quat(_) => 
+                *self = Orientation::Quat(ori.get_quat())
+        }
+    }
 }
 
 #[derive(RustcDecodable, RustcEncodable, Clone)]
@@ -184,7 +210,14 @@ impl ui::PropertyShow for Orientation {
 impl Mul<Orientation> for Orientation {
     type Output = Orientation;
     fn mul(self, other: Orientation) -> Orientation {
-        Orientation::Quat(self.as_quat() * other.as_quat())
+        let p = self.as_quat() * other.as_quat();
+        //Orientation::Quat(self.as_quat() * other.as_quat())
+        match self {
+            Orientation::AngleXYZ(_) => 
+                Orientation::AngleXYZ(p.to_euler_deg()),
+            Orientation::Quat(_) => 
+                Orientation::Quat(p)
+        }
     }
 }
 

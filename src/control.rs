@@ -435,6 +435,7 @@ impl Control
 
         let mut i = 0;
         for o in obs.iter_mut() {
+            let yep = so[i] * transform::Orientation::new_with_quat(&rotation);
             o.write().unwrap().orientation = so[i] * transform::Orientation::new_with_quat(&rotation);
             i = i+1;
         }
