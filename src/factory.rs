@@ -8,12 +8,14 @@ use camera;
 use scene;
 use vec;
 use transform;
+use mesh;
+use resource;
 
 //#[derive(RustcDecodable, RustcEncodable)]
 pub struct Factory
 {
      id : u32,
-     //mesh_manager : Arc<RwLock<resource::ResourceManager<mesh::Mesh>>>,
+     pub mesh_manager : Arc<RwLock<resource::ResourceManager<mesh::Mesh>>>,
 }
 
 impl Factory {
@@ -22,6 +24,7 @@ impl Factory {
     {
         Factory {
             id: 0,
+            mesh_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
         }
     }
 

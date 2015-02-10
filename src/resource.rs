@@ -46,7 +46,7 @@ pub struct ResTT<T>
     pub resource : ResTest<T>,
 }
 
-impl<T> ResTT<T>
+impl<T:Create+Send+Sync> ResTT<T>
 {
     pub fn new(name : &str) -> ResTT<T>
     {
@@ -54,6 +54,14 @@ impl<T> ResTT<T>
             name : String::from_str(name),
             resource : ResTest::ResNone
         }
+    }
+
+    pub fn new_instant(name : &str, rm : &mut ResourceManager<T>) -> ResTT<T>
+    {
+        let mut r = ResTT::new(name);
+        r.load_instant(rm);
+
+        r
     }
 
     pub fn new_with_res(name : &str, res : ResTest<T>) -> ResTT<T>
@@ -90,6 +98,29 @@ impl <T:'static+Create+Send+Sync> ResTT<T>
             ResTest::ResData(ref rd) => Some(rd.clone()),
             //ResTest::ResWait => None,
             _ => resource_get(manager, self)
+        }
+    }
+
+    pub fn load_instant(&mut self, manager : &mut ResourceManager<T> )
+    {
+        match self.resource {
+            ResNone | ResWait => {
+                let data = manager.request_use_no_proc(self.name.as_slice());
+                self.resource = ResTest::ResData(data);
+            },
+            _ => {}
+        }
+    }
+
+    pub fn get_resource_instant(&mut self, manager : &mut ResourceManager<T> ) -> Arc<RwLock<T>>
+    {
+        match self.resource {
+            ResTest::ResData(ref rd) => rd.clone(),
+            _ => {
+                let data = manager.request_use_no_proc(self.name.as_slice());
+                self.resource = ResTest::ResData(data.clone());
+                data
+            }
         }
     }
 

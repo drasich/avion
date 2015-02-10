@@ -113,8 +113,8 @@ pub fn create_rotation_draggers(factory : &mut factory::Factory)
     let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
     let mesh = "model/dragger_rotate_quarter.mesh";
     let collider = "model/dragger_rotate_collider_quarter.mesh";
-    let collider_mesh : resource::ResTT<mesh::Mesh> = resource::ResTT::new(collider);
-    //TODO mesh : resource::ResTT::new(mesh),
+    let collider_mesh : resource::ResTT<mesh::Mesh> = 
+        resource::ResTT::new_instant(collider, &mut *factory.mesh_manager.write().unwrap());
 
     let dragger_x = Dragger::new(
         factory,

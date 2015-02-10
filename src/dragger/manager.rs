@@ -344,7 +344,7 @@ impl Dragger
             kind : kind,
             color : color,
             repere : Repere::Local,
-            collision : Collision::MeshAABox
+            collision : collision
         }
     }
 
@@ -409,18 +409,26 @@ impl Dragger
             let length = (ir.position - r.start).length2();
 
             //TODO 
-            /*
             let m = match self.collision{
-                Collision::SpecialMesh(r) => {
+                Collision::SpecialMesh(ref r) => {
                     match r.resource {
                         resource::ResTest::ResData(ref m) => {
-                        m.read().unwrap()
-                    },
+                            m
+                        },
+                        _ => { return (true, length); }
+                    }
                 },
-                _ => return (true, length),
+                _ => return (true, length)
+            };
+
+            let ir = intersection::ray_mesh(r, &*m.read().unwrap(), &position, &rotation, &scale);
+            if ir.hit {
+                let length = (ir.position - r.start).length2();
+                return (true, length);
             }
-            */
-            return (true, length);
+            else {
+                return (false, 0f64);
+            }
         }
         else {
             return (false,0f64);

@@ -380,7 +380,7 @@ impl Render {
 
         let r = Render { 
             passes : HashMap::new(),
-            mesh_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
+            mesh_manager : factory.mesh_manager.clone(),//Arc::new(RwLock::new(resource::ResourceManager::new())),
             shader_manager : shader_manager.clone(),
             texture_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
             material_manager : material_manager.clone(),
