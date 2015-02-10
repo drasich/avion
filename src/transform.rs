@@ -1,12 +1,9 @@
 use vec;
-use property;
 use ui;
-use std::any::{Any};//, AnyRefExt};
 use std::ptr;
-use libc::{c_char, c_void, c_int, c_float};
+use libc::{c_char};
 use std::ffi::CString;
-//use std::c_str::ToCStr;
-use std::ops::{Mul};//, BitXor, Add, Sub, Div};
+use std::ops::{Mul};
 
 
 #[link(name = "joker")]

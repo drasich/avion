@@ -12,15 +12,11 @@ use operation;
 use camera;
 use context;
 use ui;
-//use ui::property;
-//use ui::tree;
 use dragger;
 use intersection;
 use vec;
 use object;
-use property;
 use property::PropertyWrite;
-use uuid;
 
 pub enum State
 {

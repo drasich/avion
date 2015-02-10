@@ -1,13 +1,8 @@
-#![feature(log_syntax)]
-#![feature(trace_macros)]
-#![feature(slicing_syntax)]
+//#![feature(log_syntax)]
+//#![feature(trace_macros)]
+//#![feature(slicing_syntax)]
 #![feature(box_syntax)]
-#![feature(std_misc)]
-#![feature(core)]
-#![feature(collections)]
-#![feature(libc)]
-#![feature(path)]
-#![feature(io)]
+#![feature(std_misc,core,collections,libc,path,io)]
 
 //TODO remove
 #![allow(unused_variables)]

@@ -140,7 +140,6 @@ impl Material
         self.encode(&mut encoder).unwrap();
         */
 
-        let encoded = json::encode(self);
         let mut s = String::new();
         {
             //let mut encoder = json::PrettyEncoder::new(&mut s);
