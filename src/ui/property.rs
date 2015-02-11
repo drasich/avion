@@ -724,27 +724,6 @@ impl PropertyShow for String {
     }
 }
 
-
-/*
-impl PropertyShow for vec::Quat {
-
-    fn create_widget(&self, property : &mut Property, field : &str)
-    {
-        let s = field.to_string() + "/x".to_string();
-        self.x.create_widget(property, s.as_slice());
-
-        let s = field.to_string() + "/y".to_string();
-        self.y.create_widget(property, s.as_slice());
-
-        let s = field.to_string() + "/z".to_string();
-        self.z.create_widget(property, s.as_slice());
-
-        let s = field.to_string() + "/w".to_string();
-        self.w.create_widget(property, s.as_slice());
-    }
-}
-*/
-
 impl<T : PropertyShow> PropertyShow for Box<T> {
 
     fn create_widget(

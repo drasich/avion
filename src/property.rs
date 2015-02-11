@@ -112,6 +112,35 @@ impl<T:PropertyWrite+'static+Clone> PropertyWrite for Option<T>
   }
 }
 
+impl<T> PropertyWrite for resource::ResTT<T> where T: 'static
+{
+    fn test_set_property(&mut self, value: &Any)
+    {
+        match value.downcast_ref::<resource::ResTT<T>>() {
+            Some(v) => {
+                *self = v.clone();
+                return;
+            }
+            None => {}
+        }
+    }
+
+  fn test_set_property_hier(&mut self, name : &str, value: &Any)
+  {
+      println!("property write restt : {}", name);
+      if name == "name" {
+        match value.downcast_ref::<String>() {
+            Some(v) => {
+                self.name = v.clone();
+                self.resource = resource::ResTest::ResNone;
+            }
+            None => {}
+        }
+      }
+  }
+}
+
+
 impl PropertyWrite for transform::Orientation
 {
   fn test_set_property(&mut self, value: &Any)
@@ -265,6 +294,4 @@ pub macro_rules! property_test_impl(
 property_test_impl!(vec::Vec3,[x,y,z]);
 property_test_impl!(vec::Quat,[x,y,z,w]);
 property_test_impl!(mesh_render::MeshRender,[mesh,material]);
-property_test_impl!(resource::ResTT<mesh::Mesh>,[name]);
-property_test_impl!(resource::ResTT<material::Material>,[name]);
 property_test_impl!(object::Object,[name,position,orientation,scale,mesh_render]);
