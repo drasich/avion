@@ -15,6 +15,7 @@ use uuid::Uuid;
 
 //#[derive(Decodable, Encodable)]
 //#[derive(Encodable)]
+#[derive(Clone)]
 pub struct Object
 {
     pub name : String,
@@ -200,4 +201,25 @@ impl Encodable  for Object {
       })
   }
 }
+
+/*
+impl Clone for Object
+{
+    fn clone(&self) -> Object
+    {
+        Object {
+            name : self.name.clone(),
+            id : uuid.clone(),
+            mesh_render : None,
+            position : vec::Vec3::zero(),
+            orientation : vec::Quat::identity(),
+            //angles : vec::Vec3::zero(),
+            scale : vec::Vec3::one(),
+            children : DList::new(),
+            parent : None
+        }
+
+    }
+}
+*/
 

@@ -3,6 +3,10 @@ use vec;
 use std::any::{Any};//, AnyRefExt};
 use std::f64::consts;
 use transform;
+use mesh_render;
+use resource;
+use mesh;
+use material;
 
 //log_syntax!()
 //trace_macros!(true)
@@ -79,45 +83,31 @@ impl<T:PropertyWrite> PropertyWrite for Box<T>
   }
 }
 
-impl PropertyWrite for vec::Vec3
+impl<T:PropertyWrite+'static+Clone> PropertyWrite for Option<T>
 {
-  fn test_set_property(&mut self, value: &Any)
-  {
-      match value.downcast_ref::<vec::Vec3>() {
-          Some(v) => *self = *v,
-          None => {}
-      }
-  }
+    fn test_set_property(&mut self, value: &Any)
+    {
+        match value.downcast_ref::<Option<T>>() {
+            Some(v) => {
+                *self = v.clone();
+                return;
+            }
+            None => {}
+        }
+
+        match value.downcast_ref::<T>() {
+            Some(t) => {
+                *self = Some(t.clone())
+            },
+            None => {}
+        }
+    }
 
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {
-      match name {
-          "x" => self.x.test_set_property(value),
-          "y" => self.y.test_set_property(value),
-          "z" => self.z.test_set_property(value),
-          _ => println!("no such member")
-      }
-  }
-}
-
-impl PropertyWrite for vec::Quat
-{
-  fn test_set_property(&mut self, value: &Any)
-  {
-      match value.downcast_ref::<vec::Quat>() {
-          Some(v) => *self = *v,
+      match *self{
+          Some(ref mut v) => v.test_set_property_hier(name, value),
           None => {}
-      }
-  }
-
-  fn test_set_property_hier(&mut self, name : &str, value: &Any)
-  {
-      match name {
-          "x" => self.x.test_set_property(value),
-          "y" => self.y.test_set_property(value),
-          "z" => self.z.test_set_property(value),
-          "w" => self.w.test_set_property(value),
-          _ => println!("no such member")
       }
   }
 }
@@ -168,6 +158,7 @@ impl PropertyWrite for transform::Orientation
   }
 }
 
+/*
 impl PropertyWrite for transform::Transform
 {
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
@@ -191,52 +182,6 @@ impl PropertyWrite for transform::Transform
                   "orientation" =>
                       self.orientation.test_set_property_hier(yep.as_slice(), value),
                   _ => println!("no such member")
-              }
-          }
-      }
-  }
-}
-
-impl PropertyWrite for object::Object
-{
-  fn test_set_property_hier(&mut self, name : &str, value: &Any)
-  {
-      //TODO remove
-      println!("REMOVE THIS");
-      let mut vs = make_vec_from_string(name);
-      if vs.len() > 0 {
-          if vs[0].as_slice() == "object" {
-              vs = vs.tail().to_vec();
-          }
-      }
-
-      match vs.len() {
-          0 => {},
-          1 => {
-              match vs[0].as_slice() {
-                  "name" => self.name.test_set_property(value),
-                  "position" => self.position.test_set_property(value),
-                  "orientation" => self.orientation.test_set_property(value),
-                  "scale" => self.scale.test_set_property(value),
-                  //"transform" => self.transform.test_set_property(value),
-                  _ => println!("no such member : {} ", vs[0])
-              }
-          },
-          _ => {
-              let yep = join_string(&vs.tail().to_vec());
-              match vs[0].as_slice() {
-                  "name" => self.name.test_set_property_hier(yep.as_slice(),value),
-                  "position" => 
-                      self.position.test_set_property_hier(yep.as_slice(), value),
-                  "orientation" =>
-                      self.orientation.test_set_property_hier(yep.as_slice(), value),
-                  "scale" => 
-                      self.scale.test_set_property_hier(yep.as_slice(), value),
-                  //"transform" => {
-                      //println!("yes come here");
-                      //self.transform.test_set_property_hier(yep.as_slice(), value);
-                  //}
-                  _ => println!("no such member,hier : {}", vs[0])
               }
           }
       }
@@ -270,4 +215,56 @@ fn join_string(path : &Vec<String>) -> String
 
     s
 }
+*/
 
+pub macro_rules! property_test_impl(
+    ($my_type:ty, [ $($member:ident),+ ]) => ( 
+        impl PropertyWrite for $my_type
+        {
+            fn test_set_property(&mut self, value: &Any)
+            {
+                match value.downcast_ref::<$my_type>() {
+                    Some(v) => *self = (*v).clone(),
+                    None => {}
+                }
+            }
+
+            fn test_set_property_hier(&mut self, name : &str, value: &Any)
+            {
+                let mut v : Vec<&str> = name.split('/').collect();
+                //TODO remove this?
+                if v[0] == "object" {
+                    v = v.tail().to_vec();
+                }
+
+                match v.len() {
+                    0 => {},
+                    1 => {
+                        match v[0] {
+                            $(
+                                stringify!($member) => self.$member.test_set_property(value),
+                                )+
+                                _ => println!("1111 no such member, name : {}", v[0])
+                        }
+                    },
+                    _ => {
+                        let yep : String = v.tail().connect("/");
+                        match v[0] {
+                            $(
+                                stringify!($member) => self.$member.test_set_property_hier(yep.as_slice(),value),
+                                )+
+                                _ => println!(">>>> 1 , no such member,hier : {}, {}", v[0], name)
+                        }
+                    }
+                }
+            }
+        }
+)
+);
+
+property_test_impl!(vec::Vec3,[x,y,z]);
+property_test_impl!(vec::Quat,[x,y,z,w]);
+property_test_impl!(mesh_render::MeshRender,[mesh,material]);
+property_test_impl!(resource::ResTT<mesh::Mesh>,[name]);
+property_test_impl!(resource::ResTT<material::Material>,[name]);
+property_test_impl!(object::Object,[name,position,orientation,scale,mesh_render]);

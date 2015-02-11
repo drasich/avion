@@ -55,6 +55,8 @@ mod control;
 
 mod transform;
 
+mod model;
+
 fn main() {
     /*
     let mut c = property::Chris::new();

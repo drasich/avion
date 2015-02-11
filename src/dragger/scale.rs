@@ -108,6 +108,7 @@ pub fn create_scale_draggers(factory : &mut factory::Factory)
     let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
     let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
     let mesh = "model/dragger_scale.mesh";
+    //let mesh_cube = "model/dragger_cube.mesh";
 
     let dragger_x = Dragger::new(
         factory,
@@ -142,11 +143,25 @@ pub fn create_scale_draggers(factory : &mut factory::Factory)
         Collision::MeshAABox
         );
 
-    let mut group = Vec::with_capacity(3);
+    /*
+    let dragger_xyz = Dragger::new(
+        factory,
+        "scale_xyz",
+        mesh_cube,
+        vec::Vec3::new(1f64,1f64,1f64),
+        transform::Orientation::Quat(vec::Quat::identity()), 
+        Kind::Scale,
+        blue,
+        Collision::MeshAABox
+        );
+        */
+
+    let mut group = Vec::with_capacity(4);
 
     group.push(Rc::new(RefCell::new(dragger_x)));
     group.push(Rc::new(RefCell::new(dragger_y)));
     group.push(Rc::new(RefCell::new(dragger_z)));
+    //group.push(Rc::new(RefCell::new(dragger_xyz)));
 
     return group;
 }

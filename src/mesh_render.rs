@@ -3,7 +3,7 @@ use mesh;
 use resource;
 use material;
 
-#[derive(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable, Clone)]
 pub struct MeshRender
 {
     pub mesh : resource::ResTT<mesh::Mesh>,

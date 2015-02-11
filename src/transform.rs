@@ -138,6 +138,7 @@ impl ui::PropertyShow for Orientation {
                 Orientation::Quat(_) => "Quat"
             };
 
+            println!(".......type value : {}", type_value);
             let v = CString::from_slice(type_value.as_bytes());
 
             let types = CString::from_slice("AngleXYZ/Quat".as_bytes());

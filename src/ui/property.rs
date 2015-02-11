@@ -23,6 +23,10 @@ use control::Control;
 use control::WidgetUpdate;
 use vec;
 use transform;
+use resource;
+use mesh;
+use mesh_render;
+use material;
 
 #[repr(C)]
 pub struct Elm_Object_Item;
@@ -758,6 +762,31 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
     }
 }
 
+impl<T : PropertyShow> PropertyShow for Option<T> {
+
+    fn create_widget(
+        &self,
+        property : &mut Property,
+        field : &str,
+        depth : i32)
+    {
+        match *self {
+            Some(ref s) =>
+                s.create_widget(property ,field, depth),
+            None => {println!("property show todo");}
+        }
+    }
+
+    fn get_property(&self, field : &str) -> Option<&PropertyShow>
+    {
+        match *self {
+            Some(ref s) =>
+                s.get_property(field),
+            None => None
+        }
+    }
+}
+
 pub macro_rules! property_show_impl(
     ($my_type:ty, [ $($member:ident),+ ]) => ( 
 
@@ -830,8 +859,13 @@ property_show_impl!(vec::Quat,[x,y,z,w]);
 
 property_show_impl!(transform::Transform,[position,orientation]);
 
+property_show_impl!(resource::ResTT<mesh::Mesh>,[name]);
+property_show_impl!(resource::ResTT<material::Material>,[name]);
+property_show_impl!(mesh_render::MeshRender,[mesh,material]);
+
 property_show_impl!(object::Object,
-                     [name,position,orientation,scale]);
+                     [name,position,orientation,scale,mesh_render]);
+                     //[name,position,orientation,scale]);
 
 fn join_string(path : &Vec<String>) -> String
 {
