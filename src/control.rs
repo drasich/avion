@@ -440,7 +440,7 @@ impl Control
             i = i+1;
         }
 
-        return operation::Change::DirectChange("object/position".to_string());
+        return operation::Change::DirectChange("object/scale".to_string());
     }
 
     pub fn request_rotation(
@@ -452,7 +452,6 @@ impl Control
 
         let mut i = 0;
         for o in obs.iter_mut() {
-            let yep = so[i] * transform::Orientation::new_with_quat(&rotation);
             o.write().unwrap().orientation = so[i] * transform::Orientation::new_with_quat(&rotation);
             i = i+1;
         }

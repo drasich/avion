@@ -192,6 +192,7 @@ pub fn create_dragger_translation_group(factory : &mut factory::Factory)
     let green = vec::Vec4::new(0.2117f64,0.949f64,0.4156f64,0.5f64);
     let blue = vec::Vec4::new(0f64,0.4745f64,1f64,0.5f64);
     let mesh = "model/dragger_arrow.mesh";
+    let mesh_plane = "model/dragger_plane.mesh";
 
     let dragger_x = Dragger::new(
         factory,
@@ -226,11 +227,51 @@ pub fn create_dragger_translation_group(factory : &mut factory::Factory)
         Collision::MeshAABox
         );
 
-    let mut group = Vec::with_capacity(3);
+    let dragger_xy = Dragger::new(
+        factory,
+        "dragger_xy",
+        mesh_plane,
+        vec::Vec3::new(1f64,1f64,0f64),
+        transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(
+                vec::Vec3::new(0f64,1f64,0f64), 90f64)),
+        Kind::Translate,
+        red,
+        Collision::MeshAABox
+        );
+
+    let dragger_xz = Dragger::new(
+        factory,
+        "dragger_xz",
+        mesh_plane,
+        vec::Vec3::new(1f64,0f64,1f64),
+        transform::Orientation::Quat(
+            vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,0f64,1f64), -90f64)), 
+        Kind::Translate,
+        green,
+        Collision::MeshAABox
+        );
+
+    let dragger_yz = Dragger::new(
+        factory,
+        "dragger_yz",
+        mesh_plane,
+        vec::Vec3::new(0f64,1f64,1f64),
+        //transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), 90f64)), 
+        transform::Orientation::Quat(vec::Quat::identity()), 
+        Kind::Translate,
+        blue,
+        Collision::MeshAABox
+        );
+
+    let mut group = Vec::with_capacity(6);
 
     group.push(Rc::new(RefCell::new(dragger_x)));
     group.push(Rc::new(RefCell::new(dragger_y)));
     group.push(Rc::new(RefCell::new(dragger_z)));
+
+    group.push(Rc::new(RefCell::new(dragger_xy)));
+    group.push(Rc::new(RefCell::new(dragger_xz)));
+    group.push(Rc::new(RefCell::new(dragger_yz)));
 
     return group;
 }

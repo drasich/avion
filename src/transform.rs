@@ -169,7 +169,6 @@ impl ui::PropertyShow for Orientation {
     }
 
     fn update_widget(&self, pv : *const ui::property::PropertyValue) {
-        println!("TODODODODODO DO YOU CALL ME");
         let type_value = match *self {
             Orientation::AngleXYZ(_) => "AngleXYZ",
             Orientation::Quat(_) => "Quat"

@@ -107,7 +107,7 @@ impl DraggerManager
             mouse_start : vec::Vec2::zero(),
             mouse : None,
             ori : vec::Quat::identity(),
-            current : 2us
+            current : 0us
         };
 
         let tr = create_dragger_translation_group(factory);
