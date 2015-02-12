@@ -261,7 +261,8 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                             let mut mscwww = msc.write().unwrap();
 
                             match mscwww.entry(s.clone()) {
-                                Entry::Vacant(entry) => entry.insert(ResTest::ResNone),
+                                //Entry::Vacant(entry) => entry.insert(ResTest::ResNone),
+                                Entry::Vacant(entry) => entry.insert(ResTest::ResData(value.clone())),
                                 Entry::Occupied(mut entry) => { 
                                     *entry.get_mut() = ResTest::ResData(value.clone());
                                     entry.into_mut()
