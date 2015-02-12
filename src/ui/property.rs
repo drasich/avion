@@ -156,6 +156,11 @@ extern {
         value : *const c_char
         ) -> *const PropertyValue;
 
+    fn property_list_option_add(
+        ps : *const JkPropertyList,
+        name : *const c_char
+        ) -> *const PropertyValue;
+
     fn property_list_string_update(
         pv : *const PropertyValue,
         value : *const c_char);
@@ -163,6 +168,7 @@ extern {
     fn property_list_float_update(
         pv : *const PropertyValue,
         value : c_float);
+
 }
 
 pub struct Property
@@ -752,7 +758,19 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
         match *self {
             Some(ref s) =>
                 s.create_widget(property ,field, depth),
-            None => {println!("property show todo");}
+            None => {
+                println!("property show todo");
+                println!("adding field : {}", field);
+                let f = CString::from_slice(field.as_bytes());
+                unsafe {
+                    let pv = property_list_option_add(
+                        property.jk_property_list,
+                        f.as_ptr());
+                    if pv != ptr::null() {
+                        property.pv.insert(field.to_string(), pv);
+                    }
+                }
+            }
         }
     }
 
