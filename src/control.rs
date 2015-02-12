@@ -264,26 +264,14 @@ impl Control
         };
 
         for id in ids.iter() {
-        for o in scene.read().unwrap().objects.iter() {
-            if o.read().unwrap().id == *id {
-                c.selected.push_back(o.clone());
-                println!("TODO how to notify property...(and other possible widgets");
-                /*
-                match self.property {
-                    Some(ref mut pp) =>
-                        match pp.try_borrow_mut() {
-                            Some(ref mut p) => {
-                                p.set_object(&*o.read().unwrap());
-                            },
-                            None=> {}
-                        },
-                    None => {}
+            for o in scene.read().unwrap().objects.iter() {
+                if o.read().unwrap().id == *id {
+                    c.selected.push_back(o.clone());
+                    break;
                 }
-                */
-                break;
             }
         }
-        }
+
     }
 
     pub fn unselect(&mut self, ids : &DList<Uuid>)

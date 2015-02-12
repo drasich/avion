@@ -26,15 +26,15 @@ pub struct JkTree;
 extern {
     fn window_tree_new(window : *const Window) -> *const JkTree;
     fn tree_widget_new() -> *const JkTree;
-    fn tree_register_cb(
+    pub fn tree_register_cb(
         tree : *const JkTree,
-        data : *const Tree,
+        data : *const TreeSelectData,
         name_get : extern fn(data : *const c_void) -> *const c_char,
         selected : extern fn(data : *const c_void) -> (),
         can_expand : extern fn(data : *const c_void) -> bool,
-        expand : extern fn(tree: *const Tree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
-        sel : extern fn(tree: *const Tree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
-        unsel : extern fn(tree: *const Tree, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        expand : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        sel : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        unsel : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         );
 
     fn tree_object_add(
@@ -50,6 +50,13 @@ extern {
     fn tree_update(tree : *const JkTree);
 }
 
+pub struct TreeSelectData
+{
+    pub tree : Rc<RefCell<Box<ui::Tree>>>,
+    pub property : Rc<RefCell<Box<ui::Property>>>,
+    pub control : Rc<RefCell<Control>>,
+}
+
 pub struct Tree
 {
     pub name : String,
@@ -57,7 +64,7 @@ pub struct Tree
     //objects : HashMap<Arc<RwLock<object::Object>>, *const Elm_Object_Item >
     //objects : HashMap<String, *const Elm_Object_Item>,
     objects : HashMap<Uuid, *const Elm_Object_Item>,
-    jk_tree : *const JkTree,
+    pub jk_tree : *const JkTree,
     control : Rc<RefCell<Control>>,
     dont_forward_signal : bool
 }
@@ -75,19 +82,6 @@ impl Tree
             control : control,
             dont_forward_signal : false
         };
-
-        unsafe {
-            tree_register_cb(
-                t.jk_tree,
-                &*t,
-                name_get,
-                item_selected,
-                can_expand,
-                expand,
-                selected,
-                unselected
-                );
-        }
 
         t
     }
@@ -165,7 +159,7 @@ impl Tree
     }
 }
 
-extern fn name_get(data : *const c_void) -> *const c_char
+pub extern fn name_get(data : *const c_void) -> *const c_char
 {
     let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
@@ -176,7 +170,7 @@ extern fn name_get(data : *const c_void) -> *const c_char
     cs.as_ptr()
 }
 
-extern fn item_selected(data : *const c_void) -> ()
+pub extern fn item_selected(data : *const c_void) -> ()
 {
     let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
@@ -184,7 +178,7 @@ extern fn item_selected(data : *const c_void) -> ()
     println!("selected ! {} ", o.read().unwrap().name);
 }
 
-extern fn can_expand(data : *const c_void) -> bool
+pub extern fn can_expand(data : *const c_void) -> bool
 {
     let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
@@ -194,8 +188,8 @@ extern fn can_expand(data : *const c_void) -> bool
     return !o.read().unwrap().children.is_empty();
 }
 
-extern fn expand(
-    tree: *const Tree,
+pub extern fn expand(
+    tsd: *const TreeSelectData,
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
@@ -203,7 +197,8 @@ extern fn expand(
         mem::transmute(data)
     };
 
-    let mut t : &mut Tree = unsafe {mem::transmute(tree)};
+    let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
+    let t : &mut Tree = &mut **tsd.tree.borrow_mut();
 
     println!("expanding ! {} ", o.read().unwrap().name);
     println!("expanding ! tree name {} ", t.name);
@@ -217,8 +212,8 @@ extern fn expand(
     }
 }
 
-extern fn selected(
-    tree: *const Tree,
+pub extern fn selected(
+    tsd: *const TreeSelectData,
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
@@ -226,27 +221,27 @@ extern fn selected(
         mem::transmute(data)
     };
 
-    let t : &Tree = unsafe {mem::transmute(tree)};
-
-    println!("sel ! {} ", o.read().unwrap().name);
-    println!("sel ! tree name {} ", t.name);
-
-    if t.dont_forward_signal {
-        return;
-    }
-
-    match t.control.borrow_state() {
+    let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
+    match tsd.control.borrow_state() {
         BorrowState::Unused => {
             let mut l = DList::new();
             l.push_back(o.read().unwrap().id.clone());
-            t.control.borrow_mut().select(&l);
+            tsd.control.borrow_mut().select(&l);
         },
-        _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
-    }
+        _ => { println!("control already borrowed : tree sel ->add_ob"); return;}
+    };
+
+    match tsd.property.borrow_state() {
+        BorrowState::Unused => {
+            tsd.property.borrow_mut().set_object(&*o.read().unwrap());
+        },
+        _ => { println!("property already borrowed : tree sel ->add_ob"); return;}
+    };
+
 }
 
-extern fn unselected(
-    tree: *const Tree,
+pub extern fn unselected(
+    tsd: *const TreeSelectData,
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
@@ -254,22 +249,22 @@ extern fn unselected(
         mem::transmute(data)
     };
 
-    let t : &Tree = unsafe {mem::transmute(tree)};
+    let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
 
-    println!("unsel ! {} ", o.read().unwrap().name);
-    println!("unsel ! tree name {} ", t.name);
-
-    if t.dont_forward_signal {
-        return;
-    }
-
-    match t.control.borrow_state() {
+    match tsd.control.borrow_state() {
         BorrowState::Unused => {
             let mut l = DList::new();
             l.push_back(o.read().unwrap().id.clone());
-            t.control.borrow_mut().unselect(&l);
+            tsd.control.borrow_mut().unselect(&l);
         },
         _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
     }
+
+    match tsd.property.borrow_state() {
+        BorrowState::Unused => {
+            tsd.property.borrow_mut().set_nothing();
+        },
+        _ => { println!("property already borrowed : tree unsel ->add_ob"); return;}
+    };
 }
 

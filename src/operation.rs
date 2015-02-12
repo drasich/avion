@@ -44,7 +44,6 @@ pub enum Change
     All
 }
 
-
 impl Operation
 {
     pub fn new(

@@ -130,13 +130,6 @@ impl View
                     w,
                     control.clone())));
 
-        match self.context.borrow().scene {
-            Some(ref s) => {
-                t.borrow_mut().set_scene(&*s.read().unwrap());
-            },
-            None => {}
-        };
-
         match control.borrow_state() {
             BorrowState::Unused => {
                 let mut c = control.borrow_mut();
@@ -144,6 +137,36 @@ impl View
                 c.tree = Some(t.clone());
             },
             _ => {}
+        };
+
+        println!("TODO must free this in c");
+        let tsd = ui::tree::TreeSelectData {
+            tree : t.clone(),
+            property : p.clone(),
+            control : control.clone()
+        };
+
+        {
+            let tree = t.borrow();
+            unsafe {
+                ui::tree::tree_register_cb(
+                    tree.jk_tree,
+                    mem::transmute(box tsd),
+                    ui::tree::name_get,
+                    ui::tree::item_selected,
+                    ui::tree::can_expand,
+                    ui::tree::expand,
+                    ui::tree::selected,
+                    ui::tree::unselected
+                    );
+            }
+        }
+
+        match self.context.borrow().scene {
+            Some(ref s) => {
+                t.borrow_mut().set_scene(&*s.read().unwrap());
+            },
+            None => {}
         };
 
         self.tree = Some(t);
