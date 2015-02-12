@@ -133,7 +133,7 @@ impl View
         match control.borrow_state() {
             BorrowState::Unused => {
                 let mut c = control.borrow_mut();
-                c.property = Some(p.clone());
+                //c.property = Some(p.clone());
                 c.tree = Some(t.clone());
             },
             _ => {}

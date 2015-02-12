@@ -36,7 +36,7 @@ pub struct Control
     //TODO control listener
     //pub property : Option<Rc<RefCell<ui::Property>>>, //TODO change to weak
     //pub tree : Option<Rc<RefCell<ui::Tree>>>, //TODO change to weak
-    pub property : Option<Rc<RefCell<Box<ui::Property>>>>, //TODO change to weak
+    //pub property : Option<Rc<RefCell<Box<ui::Property>>>>, //TODO change to weak
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO change to weak
     pub dragger : Rc<RefCell<dragger::DraggerManager>>,
 
@@ -54,7 +54,7 @@ impl Control
         Control {
             op_mgr : operation::OperationManager::new(),
             camera : camera,
-            property : None,
+            //property : None,
             tree : None,
             state : State::Idle,
             context : context,

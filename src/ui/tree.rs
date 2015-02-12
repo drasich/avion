@@ -175,7 +175,7 @@ pub extern fn item_selected(data : *const c_void) -> ()
     let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
-    println!("selected ! {} ", o.read().unwrap().name);
+    println!("item_selected ! {} ", o.read().unwrap().name);
 }
 
 pub extern fn can_expand(data : *const c_void) -> bool
@@ -217,11 +217,17 @@ pub extern fn selected(
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
+
+    let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
+
+    if tsd.tree.borrow_state() == BorrowState::Writing {
+        return;
+    }
+
     let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
 
-    let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
     match tsd.control.borrow_state() {
         BorrowState::Unused => {
             let mut l = DList::new();
@@ -245,11 +251,15 @@ pub extern fn unselected(
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
+    let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
+
+    if tsd.tree.borrow_state() == BorrowState::Writing {
+        return;
+    }
+
     let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
-
-    let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
 
     match tsd.control.borrow_state() {
         BorrowState::Unused => {
