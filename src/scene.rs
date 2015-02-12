@@ -82,17 +82,58 @@ impl Scene
         None
     }
 
-    pub fn object_find_by_id(&self, id : &Uuid) -> Option<Arc<RwLock<object::Object>>>
+    pub fn find_object_by_id(&self, id : &Uuid) -> Option<Arc<RwLock<object::Object>>>
     {
-        for o in self.objects.iter()
-        {
-            if o.read().unwrap().id == *id {
-                return Some(o.clone());
+        fn find(list : &DList<Arc<RwLock<object::Object>>>, id : &Uuid) ->
+            Option<Arc<RwLock<object::Object>>>
+            {
+                for o in list.iter()
+                {
+                    if o.read().unwrap().id == *id {
+                        return Some(o.clone());
+                    }
+                    else {
+                        if let Some(aro) = find(&o.read().unwrap().children, id) {
+                            return Some(aro);
+                        }
+                    }
+                }
+                None
             }
-        }
 
-        None
+        find(&self.objects, id)
     }
+
+    pub fn find_objects_by_id(&self, ids : &mut Vec<Uuid>) -> DList<Arc<RwLock<object::Object>>>
+    {
+        let mut return_list = DList::new();
+        fn find(
+            list : &DList<Arc<RwLock<object::Object>>>,
+            ids : &mut Vec<Uuid>,
+            return_list : &mut DList<Arc<RwLock<object::Object>>>
+            )
+            {
+                for o in list.iter()
+                {
+                    let mut found = false;
+                    for i in 0..ids.len() {
+                        if o.read().unwrap().id == ids[i] {
+                            ids.remove(i);
+                            return_list.push_back(o.clone());
+                            found = true;
+                            break;
+                        }
+                    }
+                    if !found {
+                        find(&o.read().unwrap().children, ids, return_list);
+                    }
+                }
+            }
+
+        find(&self.objects, ids, &mut return_list);
+        return_list
+    }
+
 
 }
 

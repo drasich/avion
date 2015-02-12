@@ -75,15 +75,15 @@ impl Control
         let mut list = DList::new();
 
         if modifier & (1 << 0) != 0 {
+            println!("pressed shifr");
+        }
+        else if modifier & (1 << 1) != 0 {
             self.mouse_start = Some(vec::Vec2::new(x as f64, y as f64));
             self.state = State::MultipleSelect;
             list.push_back(operation::Change::RectVisibleSet(true));
             list.push_back(operation::Change::RectSet(x as f32, y as f32, 1f32, 1f32));
-            println!("pressed shift");
-            return list;
-        }
-        else if modifier & (1 << 1) != 0 {
             println!("pressed control");
+            return list;
         }
 
         let click = self.dragger.borrow_mut().mouse_down(
@@ -247,7 +247,8 @@ impl Control
         return operation::Change::SelectedChange;
     }
 
-    pub fn select(&mut self, ids : &DList<Uuid>)
+    //pub fn select(&mut self, ids : &DList<Uuid>)
+    pub fn select(&mut self, ids : &mut Vec<Uuid>)
     {
         //TODO same as the code at the end of mouse_up, so factorize
         println!("TODO check: is this find by id ok? : control will try to find object by id, .................select is called ");
@@ -263,14 +264,18 @@ impl Control
             None => return
         };
 
+        let mut obs = scene.read().unwrap().find_objects_by_id(ids);
+        c.selected.append(&mut obs);
+
+        /*
         for id in ids.iter() {
-            for o in scene.read().unwrap().objects.iter() {
-                if o.read().unwrap().id == *id {
-                    c.selected.push_back(o.clone());
-                    break;
-                }
-            }
+            match scene.read().unwrap().find_object_by_id(id) {
+                Some(o) =>
+                    c.selected.push_back(o.clone()),
+                None => {}
+            };
         }
+        */
 
     }
 

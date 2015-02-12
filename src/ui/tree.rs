@@ -230,9 +230,9 @@ pub extern fn selected(
 
     match tsd.control.borrow_state() {
         BorrowState::Unused => {
-            let mut l = DList::new();
-            l.push_back(o.read().unwrap().id.clone());
-            tsd.control.borrow_mut().select(&l);
+            let mut l = Vec::new();
+            l.push(o.read().unwrap().id.clone());
+            tsd.control.borrow_mut().select(&mut l);
         },
         _ => { println!("control already borrowed : tree sel ->add_ob"); return;}
     };

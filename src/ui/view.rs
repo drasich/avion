@@ -466,7 +466,6 @@ pub extern fn mouse_move(
         c.mouse_move(modifiers_flag, button, curx, cury, prevx, prevy, timestamp)
     };
 
-
     for change in change_list.iter() {
         view.handle_control_change(change);
     }
