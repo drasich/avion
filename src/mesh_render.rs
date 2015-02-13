@@ -64,4 +64,14 @@ impl MeshRender
 
 }
 
+impl resource::Create for MeshRender
+{
+    fn create(name : &str) -> Self
+    {
+        MeshRender::new(name, "default.material")
+    }
 
+    fn inittt(&mut self)
+    {
+    }
+}

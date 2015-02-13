@@ -118,6 +118,7 @@ extern {
         register_change_string : RegisterChangeFunc,
         register_change_float : RegisterChangeFunc,
         register_change_enum : RegisterChangeFunc,
+        register_change_option : RegisterChangeFunc,
         expand : PropertyTreeFunc,
         contract : PropertyTreeFunc
         );
@@ -158,7 +159,8 @@ extern {
 
     fn property_list_option_add(
         ps : *const JkPropertyList,
-        name : *const c_char
+        name : *const c_char,
+        value : *const c_char
         ) -> *const PropertyValue;
 
     fn property_list_string_update(
@@ -204,6 +206,7 @@ impl Property
                 register_change_string,
                 register_change_float,
                 register_change_enum,
+                register_change_option,
                 expand,
                 contract
                 ); 
@@ -415,6 +418,43 @@ pub extern fn register_change_enum(
         changed_set(property, name, None, &ss, action);
     }
 }
+
+pub extern fn register_change_option(
+    property : *const c_void,
+    name : *const c_char,
+    old : *const c_void,
+    new : *const c_void,
+    action : c_int
+    ) {
+
+    let newchar = new as *const i8;
+    let s = unsafe {ffi::c_str_to_bytes(&newchar)};
+    let ss = match str::from_utf8(s) {
+        Ok(sss) => sss.to_string(),
+        _ => {
+            println!("error");
+            return
+        }
+    };
+
+    //println!("the string is {}", ss);
+    if action == 1 && old != ptr::null() {
+        let oldchar = old as *const i8;
+        let so = unsafe {ffi::c_str_to_bytes(&oldchar)};
+        let sso = match str::from_utf8(so) {
+            Ok(ssso) => ssso.to_string(),
+            _ => {
+                println!("error");
+                return
+            }
+        };
+        changed_set(property, name, Some(&sso), &ss, action);
+    }
+    else {
+        changed_set(property, name, None, &ss, action);
+    }
+}
+
 
 //fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
 fn changed_set<T : Any+Clone+PartialEq>(
@@ -755,22 +795,36 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
         field : &str,
         depth : i32)
     {
-        match *self {
-            Some(ref s) =>
-                s.create_widget(property ,field, depth),
-            None => {
-                println!("property show todo");
-                println!("adding field : {}", field);
-                let f = CString::from_slice(field.as_bytes());
-                unsafe {
-                    let pv = property_list_option_add(
-                        property.jk_property_list,
-                        f.as_ptr());
-                    if pv != ptr::null() {
-                        property.pv.insert(field.to_string(), pv);
-                    }
+        if depth == 0 {
+            let f = CString::from_slice(field.as_bytes());
+            let type_value = match *self {
+                Some(_) => "Some",
+                None => "None"
+            };
+
+            println!(".......type value : {}", type_value);
+            let v = CString::from_slice(type_value.as_bytes());
+
+            unsafe {
+                let pv = property_list_option_add(
+                    property.jk_property_list,
+                    f.as_ptr(),
+                    v.as_ptr());
+
+                if pv != ptr::null() {
+                    println!("ADDING : {}", field);
+                    property.pv.insert(field.to_string(), pv);
                 }
             }
+        }
+
+        if depth == 1 {
+            match *self {
+                Some(ref s) =>  {
+                    s.create_widget(property, field, depth);
+                },
+                None => {}
+            };
         }
     }
 

@@ -83,7 +83,7 @@ impl<T:PropertyWrite> PropertyWrite for Box<T>
   }
 }
 
-impl<T:PropertyWrite+'static+Clone> PropertyWrite for Option<T>
+impl<T:PropertyWrite+'static+Clone+resource::Create> PropertyWrite for Option<T>
 {
     fn test_set_property(&mut self, value: &Any)
     {
@@ -95,19 +95,52 @@ impl<T:PropertyWrite+'static+Clone> PropertyWrite for Option<T>
             None => {}
         }
 
-        match value.downcast_ref::<T>() {
-            Some(t) => {
-                *self = Some(t.clone())
-            },
-            None => {}
-        }
+        ////////////////////////////
+
+      match value.downcast_ref::<T>() {
+          Some(t) => {
+              *self = Some(t.clone());
+              return;
+          },
+          None => {}
+      }
+
+      match value.downcast_ref::<String>() {
+          Some(s) => {
+              match s.as_slice() {
+                  "Some" => {
+                      let some : T = resource::Create::create("nonameyet");
+                      *self = Some(some);
+                  },
+                  "None" => *self = None,
+                  _ => println!("no such type")
+              }
+          },
+          None => {}
+      }
     }
 
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {
-      match *self{
-          Some(ref mut v) => v.test_set_property_hier(name, value),
-          None => {}
+      if name == "type" {
+          let s = match value.downcast_ref::<String>() {
+              Some(v) => v,
+              None => return
+          };
+          match s.as_slice() {
+              "Some" => {
+                  let some : T = resource::Create::create("nonameyet");
+                  *self = Some(some);
+              },
+              "None" => *self = None,
+              _ => println!("no such type")
+          }
+      }
+      else  {
+          match *self{
+              Some(ref mut v) => v.test_set_property_hier(name, value),
+              None => {}
+          }
       }
   }
 }
@@ -145,6 +178,7 @@ impl PropertyWrite for transform::Orientation
 {
   fn test_set_property(&mut self, value: &Any)
   {
+      println!("%%%%%%% test set property");
       match value.downcast_ref::<transform::Orientation>() {
           Some(v) => {
               *self = *v;
@@ -167,6 +201,8 @@ impl PropertyWrite for transform::Orientation
 
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {
+      println!("#######ori ######### name {} ", name);
+
       if name == "type" {
           let s = match value.downcast_ref::<String>() {
               Some(v) => v,
