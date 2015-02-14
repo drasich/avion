@@ -36,6 +36,45 @@ impl Chris
 }
 */
 
+pub trait PropertyRead
+{
+  fn get_property(&self) -> Box<Any>;
+}
+
+impl<T:Any+Clone> PropertyRead for T
+{
+  fn get_property(&self) -> Box<Any>
+  {
+      box self.clone()
+  }
+}
+
+pub trait PropertyGet
+{
+  fn get_property_hier(&self, name : &str) -> Option<Box<Any>>
+  {
+      println!("default property does not do anything");
+      None
+  }
+}
+
+impl PropertyGet for f64{}
+impl PropertyGet for String{}
+
+/*
+impl<T:Any+Clone> PropertyRead for Option<T>
+{
+  fn get_property(&self) -> Option<Box<Any>>
+  {
+      match *self {
+          Some(ref s) => Some(box s.clone()),
+          None => None
+      }
+  }
+}
+*/
+
+
 pub trait PropertyWrite
 {
   fn test_set_property(&mut self, value: &Any)
@@ -145,6 +184,18 @@ impl<T:PropertyWrite+'static+Clone+resource::Create> PropertyWrite for Option<T>
   }
 }
 
+impl<T:PropertyGet> PropertyGet for Option<T>
+{
+  fn get_property_hier(& self, name : &str) -> Option<Box<Any>>
+  {
+      match *self{
+          Some(ref v) => v.get_property_hier(name),
+          None => None 
+      }
+  }
+}
+
+
 impl<T> PropertyWrite for resource::ResTT<T> where T: 'static
 {
     fn test_set_property(&mut self, value: &Any)
@@ -222,6 +273,18 @@ impl PropertyWrite for transform::Orientation
       }
   }
 }
+
+impl PropertyGet for transform::Orientation
+{
+  fn get_property_hier(&self, name : &str) -> Option<Box<Any>>
+  {
+      match *self {
+          transform::Orientation::AngleXYZ(ref v) => v.get_property_hier(name),
+          transform::Orientation::Quat(ref v) => v.get_property_hier(name),
+      }
+  }
+}
+
 
 /*
 impl PropertyWrite for transform::Transform
@@ -331,3 +394,53 @@ property_test_impl!(vec::Vec3,[x,y,z]);
 property_test_impl!(vec::Quat,[x,y,z,w]);
 property_test_impl!(mesh_render::MeshRender,[mesh,material]);
 property_test_impl!(object::Object,[name,position,orientation,scale,mesh_render]);
+
+pub macro_rules! property_get_impl(
+    ($my_type:ty, [ $($member:ident),+ ]) => ( 
+        impl PropertyGet for $my_type
+        {
+            fn get_property_hier(&self, name : &str) -> Option<Box<Any>>
+            {
+                let mut v : Vec<&str> = name.split('/').collect();
+                //TODO remove this?
+                if v[0] == "object" {
+                    v = v.tail().to_vec();
+                }
+
+                match v.len() {
+                    0 => {None},
+                    1 => {
+                        match v[0] {
+                            $(
+                                stringify!($member) => Some(self.$member.get_property()),
+                                )+
+                                _ => {
+                                    println!("1111 no such member, name : {}", v[0]);
+                                    None
+                                }
+                        }
+                    },
+                    _ => {
+                        let yep : String = v.tail().connect("/");
+                        match v[0] {
+                            $(
+                                stringify!($member) => self.$member.get_property_hier(yep.as_slice()),
+                                )+
+                                _ => {
+                                    println!(">>>> 1 , no such member,hier : {}, {}", v[0], name);
+                                    None
+                                }
+                        }
+                    }
+                }
+            }
+        }
+)
+);
+
+property_get_impl!(vec::Vec3,[x,y,z]);
+property_get_impl!(vec::Quat,[x,y,z,w]);
+property_get_impl!(resource::ResTT<mesh::Mesh>,[name]);
+property_get_impl!(resource::ResTT<material::Material>,[name]);
+property_get_impl!(mesh_render::MeshRender,[mesh,material]);
+property_get_impl!(object::Object,[name,position,orientation,scale,mesh_render]);
