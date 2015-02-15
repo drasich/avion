@@ -38,9 +38,11 @@ impl Chris
 
 pub trait PropertyRead
 {
-  fn get_property(&self) -> Box<Any>;
+  fn get_property(&self) -> Option<Box<Any>>;
+  //fn get_some() -> Option<Self>;
 }
 
+/*
 impl<T:Any+Clone> PropertyRead for T
 {
   fn get_property(&self) -> Box<Any>
@@ -48,6 +50,35 @@ impl<T:Any+Clone> PropertyRead for T
       box self.clone()
   }
 }
+*/
+impl<T:'static> PropertyRead for resource::ResTT<T>
+{
+  fn get_property(&self) -> Option<Box<Any>>
+  {
+      Some(box self.clone())
+  }
+}
+
+pub macro_rules! property_read_impl(
+    ($my_type:ty) => ( 
+
+        impl PropertyRead for $my_type
+        {
+            fn get_property(&self) -> Option<Box<Any>>
+            {
+                Some(box self.clone())
+            }
+        }
+));
+
+
+property_read_impl!(f64);
+property_read_impl!(String);
+property_read_impl!(vec::Vec3);
+property_read_impl!(vec::Quat);
+property_read_impl!(transform::Orientation);
+property_read_impl!(mesh_render::MeshRender);
+
 
 pub trait PropertyGet
 {
@@ -61,18 +92,29 @@ pub trait PropertyGet
 impl PropertyGet for f64{}
 impl PropertyGet for String{}
 
-/*
 impl<T:Any+Clone> PropertyRead for Option<T>
 {
   fn get_property(&self) -> Option<Box<Any>>
   {
       match *self {
-          Some(ref s) => Some(box s.clone()),
-          None => None
+          Some(ref s) => {
+              println!("get option property");
+              Some(box s.clone())
+          },
+          None => {
+              println!("get option property : none");
+              None
+          }
       }
   }
 }
-*/
+
+pub enum WriteValue
+{
+    None,
+    Some,
+    Any(Box<Any>)
+}
 
 
 pub trait PropertyWrite
@@ -85,6 +127,23 @@ pub trait PropertyWrite
   {
       println!("default set property HIER does nothing");
   }
+
+  fn set_property(&mut self, value: WriteValue)
+  {
+      match value {
+          WriteValue::Any(v) => self.test_set_property(&*v),
+          _ => {}
+      }
+  }
+  fn set_property_hier(&mut self, name : &str, value: WriteValue)
+  {
+      match value {
+          WriteValue::Any(v) => self.test_set_property_hier(name, &*v),
+          _ => {}
+      }
+  }
+
+
 }
 
 impl PropertyWrite for f64
@@ -128,24 +187,31 @@ impl<T:PropertyWrite+'static+Clone+resource::Create> PropertyWrite for Option<T>
     {
         match value.downcast_ref::<Option<T>>() {
             Some(v) => {
+                println!("it is option T");
                 *self = v.clone();
                 return;
             }
-            None => {}
+            None => {
+                println!("it is not option T");
+            }
         }
 
         ////////////////////////////
 
       match value.downcast_ref::<T>() {
           Some(t) => {
+                println!("it is T");
               *self = Some(t.clone());
               return;
           },
-          None => {}
+          None => {
+                println!("it is not T");
+          }
       }
 
       match value.downcast_ref::<String>() {
           Some(s) => {
+              println!("it is string");
               match s.as_slice() {
                   "Some" => {
                       let some : T = resource::Create::create("nonameyet");
@@ -155,7 +221,9 @@ impl<T:PropertyWrite+'static+Clone+resource::Create> PropertyWrite for Option<T>
                   _ => println!("no such type")
               }
           },
-          None => {}
+          None => {
+              println!("it is not string");
+          }
       }
     }
 
@@ -180,6 +248,27 @@ impl<T:PropertyWrite+'static+Clone+resource::Create> PropertyWrite for Option<T>
               Some(ref mut v) => v.test_set_property_hier(name, value),
               None => {}
           }
+      }
+  }
+
+  fn set_property(&mut self, value: WriteValue)
+  {
+      match value {
+          WriteValue::Any(v) => self.test_set_property(&*v),
+          WriteValue::None => *self = None,
+          WriteValue::Some => {
+              let some : T = resource::Create::create("no_name_yet");
+              *self = Some(some);
+          },
+          //_ => {}
+      }
+  }
+
+  fn set_property_hier(&mut self, name: &str, value: WriteValue)
+  {
+      match *self{
+          Some(ref mut v) => v.set_property_hier(name, value),
+          None => {}
       }
   }
 }
@@ -386,6 +475,36 @@ pub macro_rules! property_test_impl(
                     }
                 }
             }
+
+            fn set_property_hier(&mut self, name : &str, value: WriteValue)
+            {
+                let mut v : Vec<&str> = name.split('/').collect();
+                //TODO remove this?
+                if v[0] == "object" {
+                    v = v.tail().to_vec();
+                }
+
+                match v.len() {
+                    0 => {},
+                    1 => {
+                        match v[0] {
+                            $(
+                                stringify!($member) => self.$member.set_property(value),
+                                )+
+                                _ => println!("1111 no such member, name : {}", v[0])
+                        }
+                    },
+                    _ => {
+                        let yep : String = v.tail().connect("/");
+                        match v[0] {
+                            $(
+                                stringify!($member) => self.$member.set_property_hier(yep.as_slice(),value),
+                                )+
+                                _ => println!(">>>> 1 , no such member,hier : {}, {}", v[0], name)
+                        }
+                    }
+                }
+            }
         }
 )
 );
@@ -412,7 +531,7 @@ pub macro_rules! property_get_impl(
                     1 => {
                         match v[0] {
                             $(
-                                stringify!($member) => Some(self.$member.get_property()),
+                                stringify!($member) => self.$member.get_property(),
                                 )+
                                 _ => {
                                     println!("1111 no such member, name : {}", v[0]);

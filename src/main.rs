@@ -19,6 +19,7 @@ extern crate png;
 //extern crate toml;
 //extern crate debug;
 extern crate uuid;
+extern crate core;
 
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;

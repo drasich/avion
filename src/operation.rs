@@ -16,6 +16,8 @@ use vec;
 pub enum OperationData
 {
     OldNew(Box<Any>, Box<Any>),
+    ToNone(Box<Any>),
+    ToSome,
     Function(fn(DList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
     List(DList<Box<Any>>, DList<Box<Any>>),
     Vector(Vec<Box<Any>>, Vec<Box<Any>>)
@@ -91,8 +93,21 @@ impl Operation
     {
         match self.change {
             OperationData::OldNew(_,ref new) => {
+                println!("operation set property hier {:?}", self.name);
                 for o in self.objects.iter() {
                     o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &**new);
+                }
+            },
+            OperationData::ToNone(_) => {
+                println!("to none, apply,  operation set property hier {:?}", self.name);
+                for o in self.objects.iter() {
+                    o.write().unwrap().set_property_hier(join_string(&self.name).as_slice(), property::WriteValue::None);
+                }
+            },
+            OperationData::ToSome => {
+                println!("to some, apply,  operation set property hier {:?}", self.name);
+                for o in self.objects.iter() {
+                    o.write().unwrap().set_property_hier(join_string(&self.name).as_slice(), property::WriteValue::Some);
                 }
             },
             OperationData::Vector(_,ref new) => {
@@ -114,6 +129,18 @@ impl Operation
             OperationData::OldNew(ref old,_) => {
                 for o in self.objects.iter() {
                     o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &**old);
+                }
+            },
+            OperationData::ToNone(ref old) => {
+                println!("to none, undo, operation set property hier {:?}", self.name);
+                for o in self.objects.iter() {
+                    o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &**old);
+                }
+            },
+            OperationData::ToSome => {
+                println!("to some, undo,  operation set property hier {:?}", self.name);
+                for o in self.objects.iter() {
+                    o.write().unwrap().set_property_hier(join_string(&self.name).as_slice(), property::WriteValue::None);
                 }
             },
             OperationData::Vector(ref old,_) => {
@@ -198,6 +225,7 @@ impl OperationManager
         let s = join_string(&op.name);
 
         self.add_redo(op);
+        println!("undo {:?}, {:?}", s, list.len());
 
         return Change::Objects(s,list);
     }

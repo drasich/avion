@@ -12,6 +12,7 @@ use std::rc::Weak;
 use std::any::{Any};//, AnyRefExt};
 use std::ffi::CString;
 use std::ffi;
+use core::marker;
 
 use scene;
 use object;
@@ -27,6 +28,7 @@ use resource;
 use mesh;
 use mesh_render;
 use material;
+use property::PropertyGet;
 
 #[repr(C)]
 pub struct Elm_Object_Item;
@@ -162,6 +164,10 @@ extern {
         name : *const c_char,
         value : *const c_char
         ) -> *const PropertyValue;
+
+    fn property_list_option_update(
+        pv : *const PropertyValue,
+        value : *const c_char);
 
     fn property_list_string_update(
         pv : *const PropertyValue,
@@ -438,21 +444,22 @@ pub extern fn register_change_option(
     };
 
     //println!("the string is {}", ss);
-    if action == 1 && old != ptr::null() {
-        let oldchar = old as *const i8;
-        let so = unsafe {ffi::c_str_to_bytes(&oldchar)};
-        let sso = match str::from_utf8(so) {
-            Ok(ssso) => ssso.to_string(),
-            _ => {
-                println!("error");
-                return
-            }
-        };
-        changed_set(property, name, Some(&sso), &ss, action);
+    if old == ptr::null() {
+        println!("old is null, return");
+        return;
     }
-    else {
-        changed_set(property, name, None, &ss, action);
-    }
+
+    let oldchar = old as *const i8;
+    let so = unsafe {ffi::c_str_to_bytes(&oldchar)};
+    let sso = match str::from_utf8(so) {
+        Ok(ssso) => ssso.to_string(),
+        _ => {
+            println!("error");
+            return
+        }
+    };
+
+    changed_option(property, name, &sso, &ss);
 }
 
 
@@ -532,6 +539,93 @@ fn changed_set<T : Any+Clone+PartialEq>(
     }
             
 }
+
+fn changed_option(
+//fn changed_option<T : Any+Clone+PartialEq>(
+    property : *const c_void,
+    name : *const c_char,
+    old : &str,
+    new : &str
+    ) {
+    let s = unsafe {ffi::c_str_to_bytes(&name)};
+
+    let path = match str::from_utf8(s) {
+        Ok(pp) => pp,
+        _ => {
+            println!("problem with the path");
+            return;}
+    };
+
+    println!("OPTIONNNNNNNNNN I changed the value {} ", path);
+
+    let v: Vec<&str> = path.split('/').collect();
+
+    let mut vs = Vec::new();
+    for i in v.iter()
+    {
+        vs.push(i.to_string());
+    }
+
+    //let vs = vs.tail().to_vec();
+
+    let p : & Property = unsafe {mem::transmute(property)};
+
+    let mut control = match p.control.borrow_state() {
+        BorrowState::Unused => p.control.borrow_mut(),
+        _ => { println!("cannot borrow control"); return; }
+    };
+
+    /*
+    let (id, prop) = if let Some(o) = control.get_selected_object(){
+        let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path);
+        (o.read().unwrap().id.clone(),p)
+    }
+    else { 
+        return;
+    };
+    */
+
+    let change = if new == "Some" {
+        control.request_operation_option_to_some(vs)
+    }
+    else {
+        control.request_operation_option_to_none(path)
+        /*
+        if let Some(propget) = prop {
+                let test = *propget;
+            control.request_operation_option_to_none(
+                vs,
+                box test.clone())
+        }
+        else {
+            return
+        }
+        */
+    };
+
+    /*
+    match change {
+        operation::Change::DirectChange(s) |
+        operation::Change::Objects(s, _) => {
+            if s == "object/name" {
+                match control.tree {
+                    Some(ref t) =>
+                        match t.borrow_state() {
+                            BorrowState::Writing => {}
+                            _ => {
+                                t.borrow().update_object(&id);
+                            },
+                        },
+                        None => {}
+                };
+            }
+        },
+        _ => {}
+    }
+    */
+            
+}
+
 
 
 extern fn expand(
@@ -835,6 +929,19 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
                 s.get_property(field),
             None => None
         }
+    }
+
+    fn update_widget(&self, pv : *const PropertyValue) {
+        let s = match *self {
+            Some(_) => "Some",
+            None => "None"
+        };
+        let v = CString::from_slice(s.as_bytes());
+        unsafe {
+            property_list_option_update(
+                pv,
+                v.as_ptr());
+        };
     }
 }
 

@@ -17,6 +17,8 @@ use intersection;
 use vec;
 use object;
 use property::PropertyWrite;
+use resource;
+use property::PropertyGet;
 
 pub enum State
 {
@@ -339,23 +341,61 @@ impl Control
             name,
             operation::OperationData::OldNew(old,new)
             )
+    }
 
-            /*
-        let op = operation::Operation::new(
-            self.get_selected_objects(),
-            name.clone(),
-            operation::OperationData::OldNew(old,new)
-            //old,
-            //new
-            ); 
+    pub fn request_operation_option_to_none(
+        &mut self,  
+        path : &str)
+        -> operation::Change
+    {
+        let v: Vec<&str> = path.split('/').collect();
 
-        op.apply();
+        let mut vs = Vec::new();
+        for i in v.iter()
+        {
+            vs.push(i.to_string());
+        }
 
-        self.op_mgr.add(op);
 
-        let s = join_string(&name);
-        return operation::Change::Objects(s,self.context.borrow().get_selected_ids());
+        let  prop = if let Some(o) = self.get_selected_object(){
+            let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path);
+            match p {
+                Some(pp) => pp,
+                None => return operation::Change::None
+            }
+        }
+        else { 
+            return operation::Change::None;
+        };
+
+        self.request_operation(
+            vs,
+            operation::OperationData::ToNone(prop)
+            )
+    }
+
+    pub fn request_operation_option_to_some(
+        &mut self,  
+        name : Vec<String>) -> operation::Change
+    {
+        /*
+        let n = if new == "None" {
+            None
+        }
+        else {
+            //let r : T = resource::Create::create("yep");
+            //Some(r)
+            None
+        };
         */
+
+
+        //todo chris
+        //return operation::Change::None;
+        self.request_operation(
+            name,
+            operation::OperationData::ToSome
+            )
     }
 
     pub fn request_operation(
