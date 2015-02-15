@@ -945,6 +945,43 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
     }
 }
 
+impl<T> PropertyShow for resource::ResTT<T>
+{
+    fn create_widget(
+        &self,
+        property : &mut Property,
+        field : &str,
+        depth : i32)
+    {
+        if depth < 0 {
+            return;
+        }
+
+        if depth == 0 && field != ""
+        {
+            let f = CString::from_slice(field.as_bytes());
+            unsafe {
+                property_list_node_add(
+                    property.jk_property_list,
+                    f.as_ptr());
+            }
+        }
+
+        if depth > 0 {
+            let s = field.to_string() + "/name";
+            self.name.create_widget(property, s.as_slice(), depth-1);
+        }
+    }
+
+    fn get_property(&self, field : &str) -> Option<&PropertyShow>
+    {
+        match field {
+            "name" => Some(&self.name as &PropertyShow),
+            _ => None
+        }
+    }
+}
+
 pub macro_rules! property_show_impl(
     ($my_type:ty, [ $($member:ident),+ ]) => ( 
 
@@ -1010,20 +1047,12 @@ pub macro_rules! property_show_impl(
     )
 );
 
-property_show_impl!(vec::Vec3,
-                     [x,y,z]);
-
+property_show_impl!(vec::Vec3,[x,y,z]);
 property_show_impl!(vec::Quat,[x,y,z,w]);
-
 property_show_impl!(transform::Transform,[position,orientation]);
-
-property_show_impl!(resource::ResTT<mesh::Mesh>,[name]);
-property_show_impl!(resource::ResTT<material::Material>,[name]);
 property_show_impl!(mesh_render::MeshRender,[mesh,material]);
-
 property_show_impl!(object::Object,
                      [name,position,orientation,scale,mesh_render]);
-                     //[name,position,orientation,scale]);
 
 fn join_string(path : &Vec<String>) -> String
 {
