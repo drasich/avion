@@ -703,10 +703,10 @@ impl Render {
             //self.prepare_passes_objects_per(ld);
             self.prepare_passes_objects_per(draggers);
 
-            /*
+            //*
             let scale = self.camera.borrow().get_camera_resize_w(0.05f64);
             //add_box(&mut *self.line.write().unwrap(), selected, scale as f32);
-            add_box(&mut *self.line.write().unwrap(), draggers, scale as f32);
+            add_box_only_first_object(&mut *self.line.write().unwrap(), draggers, scale);
 
             prepare_passes_object(
                 self.line.clone(),
@@ -714,7 +714,7 @@ impl Render {
                 self.material_manager.clone(),
                 self.shader_manager.clone(),
                 self.camera.clone());
-                */
+            //    */
 
             for p in self.passes.values()
             {
@@ -872,7 +872,7 @@ fn create_repere(m : &mut mesh::Mesh, len : f64)
 fn add_box_only_first_object(
     line : &mut object::Object, 
     objects : &DList<Arc<RwLock<object::Object>>>, 
-    scale : f32
+    scale : f64
     )
 {
     let mut m = if let Some(ref mr) = line.mesh_render {
