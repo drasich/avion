@@ -704,7 +704,9 @@ impl Render {
             self.prepare_passes_objects_per(draggers);
 
             //*
-            let scale = self.camera.borrow().get_camera_resize_w(0.05f64);
+            let scale = self.camera.borrow().get_camera_resize_w2(
+                &draggers.front().unwrap().read().unwrap().get_matrix(),
+                0.05f64);
             //add_box(&mut *self.line.write().unwrap(), selected, scale as f32);
             add_box_only_first_object(&mut *self.line.write().unwrap(), draggers, scale);
 
@@ -896,6 +898,7 @@ fn add_box_only_first_object(
         line.position = ob.world_position();
         line.orientation = transform::Orientation::Quat(ob.world_orientation());
         //line.scale = ob.world_scale();
+        //line.scale = vec::Vec3::new(scale,scale,scale);
 
         let obm = if let Some(ref mr) = ob.mesh_render {
             if let resource::ResTest::ResData(ref mesh_arc) = mr.mesh.resource {
