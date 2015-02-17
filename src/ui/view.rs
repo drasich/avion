@@ -65,6 +65,7 @@ pub struct View
     //pub tree : Option<Box<Tree>>,
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>,
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
+    pub action : Option<Rc<RefCell<Box<ui::Action>>>>,
 
     //pub dragger : Arc<RwLock<object::Object>>,
     pub dragger : Rc<RefCell<dragger::DraggerManager>>,
@@ -107,6 +108,7 @@ impl View
             window : None,
             tree : None,
             property: None,
+            action : None,
 
             dragger : dragger,
 
@@ -129,6 +131,9 @@ impl View
         let t = Rc::new(RefCell::new(ui::Tree::new(
                     w,
                     control.clone())));
+
+        let a = Rc::new(RefCell::new(ui::Action::new(
+                    w)));
 
         match control.borrow_state() {
             BorrowState::Unused => {
@@ -171,6 +176,7 @@ impl View
 
         self.tree = Some(t);
         self.property = Some(p);
+        self.action = Some(a);
     }
 
     fn init_render(&mut self)
@@ -204,8 +210,9 @@ impl View
             let mut dragger = self.dragger.borrow_mut();
             dragger.set_position(center);
             dragger.set_orientation(transform::Orientation::Quat(ori), &*self.camera.borrow());
-            let scale = self.camera.borrow().get_camera_resize_w(0.05f64);
-            dragger.set_scale(scale);
+            //let scale = self.camera.borrow().get_camera_resize_w(0.05f64);
+            //dragger.set_scale(scale);
+            dragger.scale_to_camera(&*self.camera.borrow());
         }
 
         self.render.draw(obs, sel, &self.dragger.borrow().get_objects());

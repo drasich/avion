@@ -37,8 +37,6 @@ pub struct DraggerManager
 {
 
     pub draggers : Vec<DraggerGroup>, //Vec<Rc<RefCell<Dragger>>>,
-    pub scale_draggers : DraggerGroup, //Vec<Rc<RefCell<Dragger>>>,
-    pub scale : f64,
     mouse_start : vec::Vec2,
     mouse : Option<Box<DraggerMouse+'static>>,
     pub ori : vec::Quat,
@@ -93,7 +91,8 @@ pub struct Dragger
     color : vec::Vec4,
     repere : Repere,
     collision : Collision,
-    state : State
+    state : State,
+    scale : f64,
 }
 
 impl DraggerManager
@@ -102,8 +101,6 @@ impl DraggerManager
     {
         let mut dm = DraggerManager {
             draggers : Vec::with_capacity(3),
-            scale_draggers : Vec::with_capacity(4),
-            scale : 1f64,
             mouse_start : vec::Vec2::zero(),
             mouse : None,
             ori : vec::Quat::identity(),
@@ -113,7 +110,6 @@ impl DraggerManager
         let tr = create_dragger_translation_group(factory);
         dm.draggers.push(tr);
 
-        //dm.create_scale_draggers(factory);
         let sc = create_scale_draggers(factory);
         dm.draggers.push(sc);
 
@@ -157,7 +153,7 @@ impl DraggerManager
         for dragger in self.draggers[self.current].iter_mut() {
             let mut d = dragger.borrow_mut();
             d.set_state(State::Idle);
-            let (hit, len) = d.check_collision(&r, self.scale);
+            let (hit, len) = d.check_collision(&r, d.scale);
             if hit {
                 if let None = closest_dragger {
                     closest_dragger = Some(dragger.clone());
@@ -225,9 +221,6 @@ impl DraggerManager
             d.borrow_mut().object.write().unwrap().position = p;
         }
 
-        for d in self.scale_draggers.iter_mut() {
-            d.borrow_mut().object.write().unwrap().position = p;
-        }
     }
 
     pub fn set_orientation(&mut self, ori : transform::Orientation, camera : &camera::Camera) {
@@ -241,22 +234,24 @@ impl DraggerManager
             d.object.write().unwrap().orientation = ori * d.ori;
             }
         }
-
-        for d in self.scale_draggers.iter_mut() {
-            let mut d = d.borrow_mut();
-            d.object.write().unwrap().orientation = ori * d.ori;
-        }
     }
 
-    pub fn set_scale(&mut self, scale : f64) {
-        self.scale = scale;
+    pub fn scale_to_camera(&mut self, camera : &camera::Camera)
+    {
+        let cam_mat = camera.object.read().unwrap().get_world_matrix();
+        let projection = camera.get_perspective();
+        let cam_mat_inv = cam_mat.get_inverse();
+
+        for d in self.draggers[self.current].iter_mut() {
+
+            d.borrow_mut().scale_to_camera_data(&cam_mat_inv, &projection);
+        }
     }
 
     pub fn get_objects(&self) -> DList<Arc<RwLock<object::Object>>>
     {
         let mut l = DList::new();
         for d in self.draggers[self.current].iter() {
-        //for d in self.scale_draggers.iter() {
             l.push_back(d.borrow().object.clone());
         }
 
@@ -265,10 +260,6 @@ impl DraggerManager
 
     pub fn set_state(&mut self, state : State) {
         for d in self.draggers[self.current].iter_mut() {
-            d.borrow_mut().set_state(state);
-        }
-
-        for d in self.scale_draggers.iter_mut() {
             d.borrow_mut().set_state(state);
         }
     }
@@ -356,7 +347,8 @@ impl Dragger
             color : color,
             repere : Repere::Local,
             collision : collision,
-            state : State::Idle
+            state : State::Idle,
+            scale : 1f64,
         }
     }
 
@@ -366,6 +358,23 @@ impl Dragger
         projection : &matrix::Matrix4)
     {
         
+    }
+
+    fn scale_to_camera_data(
+        &mut self,
+        cam_mat_inv : &matrix::Matrix4,
+        projection : &matrix::Matrix4)
+    {
+        let world_inv = cam_mat_inv * &self.object.read().unwrap().get_world_matrix();
+
+        let mut tm = projection * &world_inv;
+        tm = tm.transpose();
+
+        let zero = vec::Vec4::new(0f64,0f64,0f64,1f64);
+        let vw = &tm * zero;
+        let factor = 0.05f64;
+        let w = vw.w * factor;
+        self.scale = w;
     }
 
     fn set_state(&mut self, state : State)

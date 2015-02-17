@@ -703,8 +703,28 @@ impl Render {
             //self.prepare_passes_objects_per(ld);
             self.prepare_passes_objects_per(draggers);
 
-            //*
-            let scale = self.camera.borrow().get_camera_resize_w2(
+
+            /*
+            fn get_camera_resize_w(camera : &camera::Camera, m : &matrix::Matrix4, factor : f64) -> f64
+            {
+                let cam_mat = camera.object.read().unwrap().get_world_matrix();
+                let projection = camera.get_perspective();
+
+                let cam_mat_inv = cam_mat.get_inverse();
+                let world_inv = &cam_mat_inv * m;
+
+                let mut tm = &projection * &world_inv;
+                tm = tm.transpose();
+
+                let zero = vec::Vec4::new(0f64,0f64,0f64,1f64);
+                let vw = &tm * zero;
+                let w = vw.w * factor;
+                return w;
+            }
+
+
+            
+            let scale = get_camera_resize_w(&*self.camera.borrow(),
                 &draggers.front().unwrap().read().unwrap().get_matrix(),
                 0.05f64);
             //add_box(&mut *self.line.write().unwrap(), selected, scale as f32);
@@ -716,7 +736,7 @@ impl Render {
                 self.material_manager.clone(),
                 self.shader_manager.clone(),
                 self.camera.clone());
-            //    */
+             */
 
             for p in self.passes.values()
             {

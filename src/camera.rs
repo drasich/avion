@@ -234,42 +234,6 @@ impl Camera
         self.recalculate_origin();
     }
 
-    pub fn get_camera_resize_w(&self, factor : f64) -> f64
-    {
-        //TODO compute matrix only one time per frame
-        let world = self.object.read().unwrap().get_world_matrix();
-        let projection = self.get_perspective();
-
-        let world_inv = world.get_inverse();
-
-        let mut tm = &projection * &world_inv;
-        tm = tm.transpose();
-
-        let zero = vec::Vec4::new(0f64,0f64,0f64,1f64);
-        let vw = &tm * zero;
-        let w = vw.w * factor;
-        return w;
-    }
-
-    pub fn get_camera_resize_w2(&self, m : &matrix::Matrix4, factor : f64) -> f64
-    {
-        //TODO compute matrix only one time per frame
-        let cam_mat = self.object.read().unwrap().get_world_matrix();
-        let projection = self.get_perspective();
-
-        let cam_mat_inv = cam_mat.get_inverse();
-        let world_inv = &cam_mat_inv * m;
-
-        let mut tm = &projection * &world_inv;
-        tm = tm.transpose();
-
-        let zero = vec::Vec4::new(0f64,0f64,0f64,1f64);
-        let vw = &tm * zero;
-        let w = vw.w * factor;
-        return w;
-    }
-
-
     pub fn get_frustum_planes_rect(
         /*
            ViewCamera* cam,

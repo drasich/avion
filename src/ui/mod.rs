@@ -11,6 +11,7 @@ pub use self::def::{
 };
 
 pub use self::tree::{Tree};
+pub use self::action::{Action};
 pub use self::property::{Property,ChangedFunc};
 pub use self::property::{PropertyShow};
 pub use self::property::{JkPropertyList, PropertyValue};
@@ -18,6 +19,7 @@ pub use self::property::{JkPropertyList, PropertyValue};
 pub use self::view::View;
 
 mod tree;
+mod action;
 pub mod def;
 pub mod property;
 pub mod view;
