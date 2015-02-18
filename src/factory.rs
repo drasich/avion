@@ -10,6 +10,7 @@ use vec;
 use transform;
 use mesh;
 use resource;
+use mesh_render;
 
 //#[derive(RustcDecodable, RustcEncodable)]
 pub struct Factory
@@ -53,7 +54,7 @@ impl Factory {
             //transform : box transform::Transform::new()
         }
     }
-
+    
     pub fn create_camera(&mut self) -> camera::Camera
     {
         let c = camera::Camera {
