@@ -20,6 +20,7 @@ use property::PropertyWrite;
 use resource;
 use property::PropertyGet;
 use factory;
+use mesh_render;
 
 pub enum State
 {
@@ -757,7 +758,14 @@ impl Control
 
     pub fn add_empty(&mut self, name : &str) -> Arc<RwLock<object::Object>>
     {
-        let o = self.factory.borrow_mut().create_object(name);
+        let mut o = self.factory.borrow_mut().create_object(name);
+        o.mesh_render = Some(mesh_render::MeshRender::new("model/skeletonmesh.mesh","material/simple.mat"));
+        {
+        let c = self.camera.borrow();
+        let c = c.object.read().unwrap();
+        o.position = c.position + c.orientation.rotate_vec3(&vec::Vec3::new(0f64,0f64,-100f64));
+        }
+
         let ao =  Arc::new(RwLock::new(o));
 
         let mut list = DList::new();

@@ -16,7 +16,6 @@ use ui::Window;
 use ui::Master;
 use ui;
 use control::Control;
-use mesh_render;
 
 #[repr(C)]
 pub struct JkAction;
@@ -101,8 +100,6 @@ pub extern fn add_empty(data : *const c_void)
 
     let mut control = ad.control.borrow_mut();
     let o = control.add_empty("new object");
-
-    o.write().unwrap().mesh_render = Some(mesh_render::MeshRender::new("model/skeletonmesh.mesh","material/simple.mat"));
 
     match ad.property.borrow_state() {
         BorrowState::Unused => {
