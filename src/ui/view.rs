@@ -54,7 +54,6 @@ extern {
         h : c_float);
 }
 
-
 pub struct View
 {
     render : Box<Render>,
@@ -76,7 +75,10 @@ pub struct View
 impl View
 {
     pub fn new(factory: &mut factory::Factory) -> View
+    //pub fn new(factory: Rc<RefCell<factory::Factory>>) -> View
     {
+        //let factory = factory.borrow_mut();
+
         let scene_path = "scene/simple.scene";
         let scene = Arc::new(RwLock::new(scene::Scene::new_from_file(scene_path)));
 
@@ -150,6 +152,13 @@ impl View
             property : p.clone(),
             control : control.clone()
         };
+        let ad = ui::action::ActionData::new(
+            t.clone(),
+            p.clone(),
+            control.clone()
+        );
+
+        a.borrow().add_button("christest", ui::action::add_empty, ad);
 
         {
             let tree = t.borrow();
@@ -233,7 +242,7 @@ impl View
         match c.selected.front() {
             Some(o) => return Some(o.clone()),
             None => {
-                println!("no objetcs selected");
+                println!("view get selected objects, no objects selected");
                 return None;
             }
         };
@@ -363,7 +372,6 @@ impl View
                     }
                 }
                 else {
-                    //TODO select tree
                     match c.selected.front() {
                         Some(o) => {
                             match self.property {

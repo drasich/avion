@@ -232,7 +232,7 @@ pub extern fn selected(
         BorrowState::Unused => {
             let mut l = Vec::new();
             l.push(o.read().unwrap().id.clone());
-            tsd.control.borrow_mut().select(&mut l);
+            tsd.control.borrow_mut().select_by_id(&mut l);
         },
         _ => { println!("control already borrowed : tree sel ->add_ob"); return;}
     };

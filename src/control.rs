@@ -19,6 +19,7 @@ use object;
 use property::PropertyWrite;
 use resource;
 use property::PropertyGet;
+use factory;
 
 pub enum State
 {
@@ -30,19 +31,15 @@ pub enum State
 
 pub struct Control
 {
-    pub op_mgr : operation::OperationManager,
-    pub camera : Rc<RefCell<camera::Camera>>,
-    pub state : State,
-    pub context : Rc<RefCell<context::Context>>,
+    op_mgr : operation::OperationManager,
+    factory : Rc<RefCell<factory::Factory>>,
+    camera : Rc<RefCell<camera::Camera>>,
+    state : State,
+    context : Rc<RefCell<context::Context>>,
+    dragger : Rc<RefCell<dragger::DraggerManager>>,
+    mouse_start : Option<vec::Vec2>,
 
-    //TODO control listener
-    //pub property : Option<Rc<RefCell<ui::Property>>>, //TODO change to weak
-    //pub tree : Option<Rc<RefCell<ui::Tree>>>, //TODO change to weak
-    //pub property : Option<Rc<RefCell<Box<ui::Property>>>>, //TODO change to weak
-    pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO change to weak
-    pub dragger : Rc<RefCell<dragger::DraggerManager>>,
-
-    pub mouse_start : Option<vec::Vec2>
+    pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO remove
 }
 
 impl Control
@@ -55,8 +52,8 @@ impl Control
     {
         Control {
             op_mgr : operation::OperationManager::new(),
+            factory : Rc::new(RefCell::new(factory::Factory::new())),
             camera : camera,
-            //property : None,
             tree : None,
             state : State::Idle,
             context : context,
@@ -203,18 +200,18 @@ impl Control
             }
         };
 
-        let mut c = match self.context.borrow_state(){
-            BorrowState::Unused => self.context.borrow_mut(),
-            _ => { println!("cannot borrow context"); return operation::Change::None; }
-        };
-
-        c.selected.clear();
-
-        let scene = match c.scene {
-            Some(ref s) => s.clone(),
-            None => {
-                println!("no scene ");
-                return operation::Change::None;
+        let scene = match self.context.borrow_state(){
+            BorrowState::Writing => { println!("cannot borrow context"); return operation::Change::None; }
+            _ => {
+                let c = self.context.borrow();
+                let scene = match c.scene {
+                    Some(ref s) => s.clone(),
+                    None => {
+                        println!("no scene ");
+                        return operation::Change::None;
+                    }
+                };
+                scene
             }
         };
 
@@ -241,16 +238,29 @@ impl Control
             }
         }
 
+        let mut list = DList::new();
         match closest_obj {
             None => {},
-            Some(o) => c.selected.push_back(o)
+            Some(o) => list.push_back(o)
         }
+
+        self.select(list);
 
         return operation::Change::SelectedChange;
     }
 
+    pub fn select(&mut self, objects : DList<Arc<RwLock<object::Object>>>)
+    {
+        let mut c = match self.context.borrow_state(){
+            BorrowState::Unused => self.context.borrow_mut(),
+            _ => { println!("cannot borrow context"); return; }
+        };
+
+        c.selected = objects.clone();
+    }
+
     //pub fn select(&mut self, ids : &DList<Uuid>)
-    pub fn select(&mut self, ids : &mut Vec<Uuid>)
+    pub fn select_by_id(&mut self, ids : &mut Vec<Uuid>)
     {
         //TODO same as the code at the end of mouse_up, so factorize
         println!("TODO check: is this find by id ok? : control will try to find object by id, .................select is called ");
@@ -428,7 +438,7 @@ impl Control
         let o = match self.get_selected_object() {
             Some(ob) => ob,
             None => {
-                println!("direct change, no objetcs selected");
+                println!("direct change, no objects selected");
                 return operation::Change::None;
             }
         };
@@ -503,7 +513,7 @@ impl Control
         match c.selected.front() {
             Some(o) => return Some(o.clone()),
             None => {
-                println!("no objetcs selected");
+                println!("get_selected_objects : no objetcs selected");
                 return None;
             }
         };
@@ -743,6 +753,24 @@ impl Control
         }
 
         return operation::Change::None;
+    }
+
+    pub fn add_empty(&mut self, name : &str) -> Arc<RwLock<object::Object>>
+    {
+        let o = self.factory.borrow_mut().create_object(name);
+        let ao =  Arc::new(RwLock::new(o));
+
+        let mut list = DList::new();
+        list.push_back(ao.clone());
+        self.select(list);
+
+        if let Some(ref s) = self.context.borrow_mut().scene {
+            let mut s = s.write().unwrap();
+            s.objects.push_back(ao.clone());
+        }
+
+        ao
+
     }
 
 }
