@@ -405,7 +405,14 @@ impl View
                         _ => {},
                     }
                 }
-            }
+            },
+            operation::Change::SceneRemove(ref id, ref list) => {
+                {
+                let mut c = self.context.borrow_mut();
+                c.remove(list.clone());
+                }
+                self.handle_control_change(&operation::Change::SelectedChange);
+            },
             _ => {}
         }
     }

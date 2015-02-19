@@ -51,7 +51,8 @@ pub enum Change
     RectVisibleSet(bool),
     RectSet(f32, f32, f32, f32),
     SelectedChange,
-    Scene(uuid::Uuid),
+    SceneAdd(uuid::Uuid, DList<uuid::Uuid>),
+    SceneRemove(uuid::Uuid, DList<uuid::Uuid>),
     All
 }
 
@@ -155,7 +156,7 @@ impl OperationTrait for Operation
             OperationData::SceneAddObjects(ref s, ref obs)  => {
                 let mut sc = s.write().unwrap();
                 sc.add_objects(obs);
-                return Change::Scene(sc.id.clone());
+                return Change::SceneAdd(sc.id.clone(), get_ids(obs));
             },
             _ => {}
         }
@@ -216,7 +217,7 @@ impl OperationTrait for Operation
                 println!("undo scene add objects !!!");
                 let mut sc = s.write().unwrap();
                 sc.remove_objects(obs);
-                return Change::Scene(sc.id.clone());
+                return Change::SceneRemove(sc.id.clone(), get_ids(obs));
             },
             _ => {}
         }
@@ -328,3 +329,12 @@ fn join_string(path : &Vec<String>) -> String
     s
 }
 
+fn get_ids(obs : &DList<Arc<RwLock<object::Object>>>) -> DList<uuid::Uuid>
+{
+    let mut list = DList::new();
+    for o in obs.iter() {
+        list.push_back(o.read().unwrap().id.clone());
+    }
+
+    list
+}

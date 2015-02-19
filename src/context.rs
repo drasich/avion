@@ -62,5 +62,25 @@ impl Context
 
         list
     }
+
+    pub fn remove(&mut self, ids : DList<uuid::Uuid>)
+    {
+        let mut new_list = DList::new();
+        for o in self.selected.iter() {
+            let mut not_found = true;
+            for id in ids.iter() {
+                if *id == o.read().unwrap().id {
+                    not_found = false;
+                    break;
+                }
+            }
+            if not_found {
+                new_list.push_back(o.clone());
+            }
+        }
+
+        self.selected = new_list;
+    }
+
 }
 
