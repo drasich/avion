@@ -12,6 +12,7 @@ use property::PropertyWrite;
 use ui;
 use control::WidgetUpdate;
 use vec;
+use scene;
 
 pub enum OperationData
 {
@@ -20,7 +21,8 @@ pub enum OperationData
     ToSome,
     Function(fn(DList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
     List(DList<Box<Any>>, DList<Box<Any>>),
-    Vector(Vec<Box<Any>>, Vec<Box<Any>>)
+    Vector(Vec<Box<Any>>, Vec<Box<Any>>),
+    SceneAddObjects(Arc<RwLock<scene::Scene>>,DList<Arc<RwLock<object::Object>>>)
 }
 
 pub struct Operation
@@ -119,6 +121,9 @@ impl Operation
                     i = i +1;
                 }
             },
+            OperationData::SceneAddObjects(ref s, ref obs)  => {
+                s.write().unwrap().add_objects(obs);
+            },
             _ => {}
         }
     }
@@ -151,6 +156,10 @@ impl Operation
                         &*old[i]);
                     i = i +1;
                 }
+            },
+            OperationData::SceneAddObjects(ref s, ref obs)  => {
+                println!("undo scene add objects !!!");
+                s.write().unwrap().remove_objects(obs);
             },
             _ => {}
         }

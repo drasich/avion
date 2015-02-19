@@ -134,7 +134,31 @@ impl Scene
         return_list
     }
 
+    pub fn add_objects(&mut self, obs : &DList<Arc<RwLock<object::Object>>>)
+    {
+        self.objects.append(&mut obs.clone());
+    }
 
+    pub fn remove_objects(&mut self, obs : &DList<Arc<RwLock<object::Object>>>)
+    {
+        let mut list = DList::new();
+        for o in self.objects.iter() {
+            let mut not_found = true;
+            for r in obs.iter() {
+                if o.read().unwrap().id == r.read().unwrap().id {
+                    println!("found the id, break {}", o.read().unwrap().name);
+                    not_found = false;
+                    break;
+                }
+            }
+            if not_found {
+            println!("dit not found the id, adding {}", o.read().unwrap().name);
+            list.push_back(o.clone());
+            }
+        }
+
+        self.objects = list;
+    }
 }
 
 //impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RwLock<object::Object>> {

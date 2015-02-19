@@ -761,21 +761,32 @@ impl Control
         let mut o = self.factory.borrow_mut().create_object(name);
         o.mesh_render = Some(mesh_render::MeshRender::new("model/skeletonmesh.mesh","material/simple.mat"));
         {
-        let c = self.camera.borrow();
-        let c = c.object.read().unwrap();
-        o.position = c.position + c.orientation.rotate_vec3(&vec::Vec3::new(0f64,0f64,-100f64));
+            let c = self.camera.borrow();
+            let c = c.object.read().unwrap();
+            o.position = c.position + c.orientation.rotate_vec3(&vec::Vec3::new(0f64,0f64,-100f64));
         }
 
         let ao =  Arc::new(RwLock::new(o));
 
         let mut list = DList::new();
         list.push_back(ao.clone());
-        self.select(list);
+        self.select(list.clone());
 
-        if let Some(ref s) = self.context.borrow_mut().scene {
-            let mut s = s.write().unwrap();
-            s.objects.push_back(ao.clone());
+
+        let s = if let Some(ref s) = self.context.borrow_mut().scene {
+            s.clone()
+            //let mut s = s.write().unwrap();
+            //s.objects.push_back(ao.clone());
         }
+        else {
+            return ao;
+        };
+
+        let mut vs = Vec::new();
+        self.request_operation(
+            vs,
+            operation::OperationData::SceneAddObjects(s.clone(),list)
+            );
 
         ao
 
