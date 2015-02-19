@@ -14,6 +14,12 @@ use control::WidgetUpdate;
 use vec;
 use scene;
 
+pub trait OperationTrait
+{
+    fn apply(&self) -> Change;
+    fn undo(&self) -> Change;
+}
+
 pub enum OperationData
 {
     OldNew(Box<Any>, Box<Any>),
@@ -45,6 +51,7 @@ pub enum Change
     RectVisibleSet(bool),
     RectSet(f32, f32, f32, f32),
     SelectedChange,
+    Scene(uuid::Uuid),
     All
 }
 
@@ -91,78 +98,130 @@ impl Operation
         }
     }
 
-    pub fn apply(&self)
+}
+
+impl OperationTrait for Operation
+{
+    fn apply(&self) -> Change
     {
         match self.change {
             OperationData::OldNew(_,ref new) => {
                 println!("operation set property hier {:?}", self.name);
+                let s = join_string(&self.name);
+                let mut ids = DList::new();
                 for o in self.objects.iter() {
-                    o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &**new);
+                    let mut ob = o.write().unwrap();
+                    ob.test_set_property_hier(s.as_slice(), &**new);
+                    ids.push_back(ob.id.clone());
                 }
+                return Change::Objects(s, ids);
             },
             OperationData::ToNone(_) => {
                 println!("to none, apply,  operation set property hier {:?}", self.name);
+                let s = join_string(&self.name);
+                let mut ids = DList::new();
                 for o in self.objects.iter() {
-                    o.write().unwrap().set_property_hier(join_string(&self.name).as_slice(), property::WriteValue::None);
+                    let mut ob = o.write().unwrap();
+                    ob.set_property_hier(s.as_slice(), property::WriteValue::None);
+                    ids.push_back(ob.id.clone());
                 }
+                return Change::Objects(s, ids);
             },
             OperationData::ToSome => {
                 println!("to some, apply,  operation set property hier {:?}", self.name);
+                let s = join_string(&self.name);
+                let mut ids = DList::new();
                 for o in self.objects.iter() {
-                    o.write().unwrap().set_property_hier(join_string(&self.name).as_slice(), property::WriteValue::Some);
+                    let mut ob = o.write().unwrap();
+                    ob.set_property_hier(s.as_slice(), property::WriteValue::Some);
+                    ids.push_back(ob.id.clone());
                 }
+                return Change::Objects(s, ids);
             },
             OperationData::Vector(_,ref new) => {
                 let mut i = 0;
+                let s = join_string(&self.name);
+                let mut ids = DList::new();
                 for o in self.objects.iter() {
-                    o.write().unwrap().test_set_property_hier(
-                        join_string(&self.name).as_slice(),
+                    let mut ob = o.write().unwrap();
+                    ob.test_set_property_hier(
+                        s.as_slice(),
                         &*new[i]);
                     i = i +1;
+                    ids.push_back(ob.id.clone());
                 }
+                return Change::Objects(s, ids);
             },
             OperationData::SceneAddObjects(ref s, ref obs)  => {
-                s.write().unwrap().add_objects(obs);
+                let mut sc = s.write().unwrap();
+                sc.add_objects(obs);
+                return Change::Scene(sc.id.clone());
             },
             _ => {}
         }
+
+        Change::None
     }
 
-    pub fn undo(&self)
+    fn undo(&self) -> Change
     {
         match self.change {
             OperationData::OldNew(ref old,_) => {
+                let s = join_string(&self.name);
+                let mut ids = DList::new();
                 for o in self.objects.iter() {
-                    o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &**old);
+                    let mut ob = o.write().unwrap();
+                    ob.test_set_property_hier(s.as_slice(), &**old);
+                    ids.push_back(ob.id.clone());
                 }
+                return Change::Objects(s, ids);
             },
             OperationData::ToNone(ref old) => {
                 println!("to none, undo, operation set property hier {:?}", self.name);
+                let s = join_string(&self.name);
+                let mut ids = DList::new();
                 for o in self.objects.iter() {
-                    o.write().unwrap().test_set_property_hier(join_string(&self.name).as_slice(), &**old);
+                    let mut ob = o.write().unwrap();
+                    ob.test_set_property_hier(s.as_slice(), &**old);
+                    ids.push_back(ob.id.clone());
                 }
+                return Change::Objects(s, ids);
             },
             OperationData::ToSome => {
                 println!("to some, undo,  operation set property hier {:?}", self.name);
+                let s = join_string(&self.name);
+                let mut ids = DList::new();
                 for o in self.objects.iter() {
-                    o.write().unwrap().set_property_hier(join_string(&self.name).as_slice(), property::WriteValue::None);
+                    let mut ob = o.write().unwrap();
+                    ob.set_property_hier(s.as_slice(), property::WriteValue::None);
+                    ids.push_back(ob.id.clone());
                 }
+                return Change::Objects(s, ids);
             },
             OperationData::Vector(ref old,_) => {
                 let mut i = 0;
+                let s = join_string(&self.name);
+                let mut ids = DList::new();
                 for o in self.objects.iter() {
-                    o.write().unwrap().test_set_property_hier(
-                        join_string(&self.name).as_slice(),
+                    let mut ob = o.write().unwrap();
+                    ob.test_set_property_hier(
+                        s.as_slice(),
                         &*old[i]);
                     i = i +1;
+                    ids.push_back(ob.id.clone());
                 }
+                return Change::Objects(s, ids);
             },
             OperationData::SceneAddObjects(ref s, ref obs)  => {
                 println!("undo scene add objects !!!");
-                s.write().unwrap().remove_objects(obs);
+                let mut sc = s.write().unwrap();
+                sc.remove_objects(obs);
+                return Change::Scene(sc.id.clone());
             },
             _ => {}
         }
+
+        Change::None
     }
 }
 
@@ -172,8 +231,10 @@ impl<T: Any + Clone> AnyClone for T {}
 
 pub struct OperationManager
 {
-    pub undo : Vec<Operation>,
-    pub redo : Vec<Operation>,
+    //pub undo : Vec<Operation>,
+    //pub redo : Vec<Operation>,
+    pub undo : Vec<Box<OperationTrait+'static>>,
+    pub redo : Vec<Box<OperationTrait+'static>>,
 }
 
 impl OperationManager
@@ -189,27 +250,28 @@ impl OperationManager
 
     pub fn add(&mut self, op : Operation)
     {
-        self.add_undo(op);
+        op.apply();
+        self.add_undo(box op);
         self.redo.clear();
     }
 
-    fn add_undo(&mut self, op : Operation)
+    fn add_undo(&mut self, op : Box<OperationTrait+'static>)
     {
         self.undo.push(op);
     }
 
-    fn add_redo(&mut self, op : Operation)
+    fn add_redo(&mut self, op : Box<OperationTrait+'static>)
     {
         self.redo.push(op);
     }
 
 
-    fn pop_undo(&mut self) -> Option<Operation>
+    fn pop_undo(&mut self) -> Option<Box<OperationTrait+'static>>
     {
         self.undo.pop()
     }
 
-    fn pop_redo(&mut self) -> Option<Operation>
+    fn pop_redo(&mut self) -> Option<Box<OperationTrait+'static>>
     {
         self.redo.pop()
     }
@@ -224,19 +286,11 @@ impl OperationManager
             }
         };
 
-        op.undo();
-
-        let mut list = DList::new();
-        for o in op.objects.iter() {
-            list.push_back(o.read().unwrap().id.clone());
-        }
-
-        let s = join_string(&op.name);
+        let change = op.undo();
 
         self.add_redo(op);
-        println!("undo {:?}, {:?}", s, list.len());
 
-        return Change::Objects(s,list);
+        return change;
     }
 
     pub fn redo(&mut self) -> Change
@@ -249,18 +303,10 @@ impl OperationManager
             }
         };
 
-        op.apply();
-
-        let mut list = DList::new();
-        for o in op.objects.iter() {
-            list.push_back(o.read().unwrap().id.clone());
-        }
-
-        let s = join_string(&op.name);
+        let change = op.apply();
 
         self.add_undo(op);
-
-        return Change::Objects(s,list);
+        return change;
     }
 
 

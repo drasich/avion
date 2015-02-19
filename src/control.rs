@@ -421,8 +421,6 @@ impl Control
             change
             ); 
 
-        op.apply();
-
         self.op_mgr.add(op);
 
         let s = join_string(&name);
