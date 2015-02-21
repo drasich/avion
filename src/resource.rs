@@ -46,7 +46,7 @@ pub struct ResTT<T>
     pub resource : ResTest<T>,
 }
 
-impl<T:Create+Send+Sync> ResTT<T>
+impl<T:Create+Send+Sync+'static> ResTT<T>
 {
     pub fn new(name : &str) -> ResTT<T>
     {

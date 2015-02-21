@@ -2,7 +2,7 @@ use std::rc::Rc;
 use std::cell::{RefCell, BorrowState};
 use std::any::{Any};//, AnyRefExt};
 use std::sync::{RwLock, Arc};
-use std::collections::DList;
+use std::collections::LinkedList;
 use std::f64::consts;
 use transform;
 
@@ -70,9 +70,9 @@ impl Control
             button : i32,
             x : i32, 
             y : i32,
-            timestamp : i32) -> DList<operation::Change>
+            timestamp : i32) -> LinkedList<operation::Change>
     {
-        let mut list = DList::new();
+        let mut list = LinkedList::new();
 
         if modifier & (1 << 0) != 0 {
             println!("pressed shifr");
@@ -239,7 +239,7 @@ impl Control
             }
         }
 
-        let mut list = DList::new();
+        let mut list = LinkedList::new();
         match closest_obj {
             None => {},
             Some(o) => list.push_back(o)
@@ -250,7 +250,7 @@ impl Control
         return operation::Change::SelectedChange;
     }
 
-    pub fn select(&mut self, objects : DList<Arc<RwLock<object::Object>>>)
+    pub fn select(&mut self, objects : LinkedList<Arc<RwLock<object::Object>>>)
     {
         let mut c = match self.context.borrow_state(){
             BorrowState::Unused => self.context.borrow_mut(),
@@ -260,7 +260,7 @@ impl Control
         c.selected = objects.clone();
     }
 
-    //pub fn select(&mut self, ids : &DList<Uuid>)
+    //pub fn select(&mut self, ids : &LinkedList<Uuid>)
     pub fn select_by_id(&mut self, ids : &mut Vec<Uuid>)
     {
         //TODO same as the code at the end of mouse_up, so factorize
@@ -292,7 +292,7 @@ impl Control
 
     }
 
-    pub fn unselect(&mut self, ids : &DList<Uuid>)
+    pub fn unselect(&mut self, ids : &LinkedList<Uuid>)
     {
         let mut c = match self.context.borrow_state(){
             BorrowState::Unused => self.context.borrow_mut(),
@@ -304,7 +304,7 @@ impl Control
             None => return
         };
 
-        let mut newlist = DList::new();
+        let mut newlist = LinkedList::new();
 
         for o in c.selected.iter() {
             let mut should_remove = false;
@@ -518,10 +518,10 @@ impl Control
         };
     }
 
-    pub fn get_selected_objects(&self) -> DList<Arc<RwLock<object::Object>>>
+    pub fn get_selected_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
     {
         match self.context.borrow_state(){
-            BorrowState::Writing => DList::new(),
+            BorrowState::Writing => LinkedList::new(),
             _ => self.context.borrow().selected.clone(),
         }
     }
@@ -588,9 +588,9 @@ impl Control
         cury : i32,
         prevx : i32, 
         prevy : i32,
-        timestamp : i32) -> DList<operation::Change>
+        timestamp : i32) -> LinkedList<operation::Change>
     {
-        let mut list = DList::new();
+        let mut list = LinkedList::new();
 
         match self.state {
             State::Idle | State::CameraRotation => {
@@ -642,7 +642,8 @@ impl Control
 
                 let x : f64 = curx as f64;// - prevx as f64;
                 let y : f64 = cury as f64;// - prevy as f64;
-                if let Some(op) = self.dragger.borrow_mut().mouse_move(&*camera,x,y) {
+                let opsome = self.dragger.borrow_mut().mouse_move(&*camera,x,y);
+                if let Some(op) = opsome {
                     match op {
                         dragger::Operation::Translation(v) => {
                             list.push_back(self.request_translation(v));
@@ -766,7 +767,7 @@ impl Control
 
         let ao =  Arc::new(RwLock::new(o));
 
-        let mut list = DList::new();
+        let mut list = LinkedList::new();
         list.push_back(ao.clone());
         self.select(list.clone());
 
@@ -807,7 +808,7 @@ fn join_string(path : &Vec<String>) -> String
     s
 }
 
-fn objects_center(objects : &DList<Arc<RwLock<object::Object>>>) -> vec::Vec3
+fn objects_center(objects : &LinkedList<Arc<RwLock<object::Object>>>) -> vec::Vec3
 {
     let mut v = vec::Vec3::zero();
     for o in objects.iter()

@@ -2,7 +2,7 @@ use std::sync::{RwLock, Arc};
 use std::collections::HashMap;
 use libc::{c_char, c_void, c_int};
 use std::mem;
-use std::collections::{DList};//,Deque};
+use std::collections::{LinkedList};//,Deque};
 use std::ptr;
 use std::cell::{RefCell, BorrowState};
 use std::rc::Weak;
@@ -166,7 +166,7 @@ pub extern fn name_get(data : *const c_void) -> *const c_char
     };
 
     //println!("name get {:?}", o);
-    let cs = CString::from_slice(o.read().unwrap().name.as_bytes());
+    let cs = CString::new(o.read().unwrap().name.as_bytes()).unwrap();
     cs.as_ptr()
 }
 
@@ -263,7 +263,7 @@ pub extern fn unselected(
 
     match tsd.control.borrow_state() {
         BorrowState::Unused => {
-            let mut l = DList::new();
+            let mut l = LinkedList::new();
             l.push_back(o.read().unwrap().id.clone());
             tsd.control.borrow_mut().unselect(&l);
         },

@@ -1,5 +1,5 @@
 use std::default::Default;
-use std::collections::{DList};
+use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};
 use uuid;
 
@@ -49,7 +49,7 @@ impl Factory {
             orientation : transform::Orientation::new_quat(),
             //angles : vec::Vec3::zero(),
             scale : vec::Vec3::one(),
-            children : DList::new(),
+            children : LinkedList::new(),
             parent : None,
             //transform : box transform::Transform::new()
         }
@@ -73,7 +73,7 @@ impl Factory {
         scene::Scene {
             name : String::from_str(name),
             id : self.create_id(),
-            objects : DList::new(),
+            objects : LinkedList::new(),
         }
     }
 }

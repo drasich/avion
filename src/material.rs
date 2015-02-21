@@ -64,7 +64,7 @@ impl Default for Material
             shader : None,
             state : 0,
             texture : None,
-            textures : DList::new()
+            textures : LinkedList::new()
         }
     }
 }

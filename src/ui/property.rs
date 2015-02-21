@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use libc::{c_char, c_void, c_int, c_float};
 use std::str;
 use std::mem;
-//use std::collections::{DList,Deque};
-use std::collections::{DList};
+//use std::collections::{LinkedList,Deque};
+use std::collections::{LinkedList};
 use std::ptr;
 use std::rc::Rc;
 use std::cell::{RefCell, BorrowState};
@@ -60,6 +60,7 @@ pub struct JkPropertyList;
 #[repr(C)]
 pub struct PropertyValue;
 
+#[link(name = "png")]
 
 #[link(name = "joker")]
 extern {
@@ -229,7 +230,7 @@ impl Property
         unsafe {
             property_list_group_add(
                 self.jk_property_list,
-                CString::from_slice("object".as_bytes()).as_ptr());
+                CString::new("object".as_bytes()).unwrap().as_ptr());
         }
         let mut v = Vec::new();
         v.push("object".to_string());
@@ -294,7 +295,7 @@ pub extern fn name_get(data : *const c_void) -> *const c_char {
         mem::transmute(data)
     };
 
-    let cs = CString::from_slice(o.read().unwrap().name.as_bytes());
+    let cs = CString::new(o.read().unwrap().name.as_bytes()).unwrap();
     //println!("..........name get {:?}", cs);
     cs.as_ptr()
 }
@@ -667,8 +668,8 @@ extern fn expand(
                 }
             };
 
-            //match property::find_property(&*o.read(), yep.clone()) {
-            match find_property_show(&*o.read().unwrap(), yep.clone()) {
+            let or  = o.read().unwrap();
+            match find_property_show(&*or, yep.clone()) {
                 Some(ppp) => {
                     //p.create_entries(&*ppp, vs.clone());
                     println!("I found and create {:?} ", vs);
@@ -762,7 +763,7 @@ impl WidgetUpdate for Property
 
         match new.downcast_ref::<String>() {
             Some(s) => {
-                let v = CString::from_slice(s.as_bytes());
+                let v = CString::new(s.as_bytes()).unwrap();
                 unsafe {
                     property_list_string_update(
                         *pv,
@@ -815,7 +816,7 @@ impl PropertyShow for f64 {
     fn create_widget(&self, property : &mut Property, field : &str, depth : i32)
     {
         println!("adding field : {}", field);
-        let f = CString::from_slice(field.as_bytes());
+        let f = CString::new(field.as_bytes()).unwrap();
         unsafe {
             let pv = property_list_float_add(
                 property.jk_property_list,
@@ -840,8 +841,8 @@ impl PropertyShow for String {
 
     fn create_widget(&self, property : &mut Property, field : &str, depth : i32)
     {
-        let f = CString::from_slice(field.as_bytes());
-        let v = CString::from_slice(self.as_bytes());
+        let f = CString::new(field.as_bytes()).unwrap();
+        let v = CString::new(self.as_bytes()).unwrap();
 
         unsafe {
             let pv = property_list_string_add(
@@ -855,7 +856,7 @@ impl PropertyShow for String {
     }
 
     fn update_widget(&self, pv : *const PropertyValue) {
-        let v = CString::from_slice(self.as_bytes());
+        let v = CString::new(self.as_bytes()).unwrap();
         unsafe {
             property_list_string_update(
                 pv,
@@ -890,14 +891,14 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
         depth : i32)
     {
         if depth == 0 {
-            let f = CString::from_slice(field.as_bytes());
+            let f = CString::new(field.as_bytes()).unwrap();
             let type_value = match *self {
                 Some(_) => "Some",
                 None => "None"
             };
 
             println!(".......type value : {}", type_value);
-            let v = CString::from_slice(type_value.as_bytes());
+            let v = CString::new(type_value.as_bytes()).unwrap();
 
             unsafe {
                 let pv = property_list_option_add(
@@ -936,7 +937,7 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
             Some(_) => "Some",
             None => "None"
         };
-        let v = CString::from_slice(s.as_bytes());
+        let v = CString::new(s.as_bytes()).unwrap();
         unsafe {
             property_list_option_update(
                 pv,
@@ -959,7 +960,7 @@ impl<T> PropertyShow for resource::ResTT<T>
 
         if depth == 0 && field != ""
         {
-            let f = CString::from_slice(field.as_bytes());
+            let f = CString::new(field.as_bytes()).unwrap();
             unsafe {
                 property_list_node_add(
                     property.jk_property_list,
@@ -982,7 +983,7 @@ impl<T> PropertyShow for resource::ResTT<T>
     }
 }
 
-pub macro_rules! property_show_impl(
+macro_rules! property_show_impl(
     ($my_type:ty, [ $($member:ident),+ ]) => ( 
 
         impl PropertyShow for $my_type
@@ -999,7 +1000,7 @@ pub macro_rules! property_show_impl(
 
                 if depth == 0 && field != ""
                 {
-                    let f = CString::from_slice(field.as_bytes());
+                    let f = CString::new(field.as_bytes()).unwrap();
                     unsafe {
                         property_list_node_add(
                             property.jk_property_list,
@@ -1018,9 +1019,9 @@ pub macro_rules! property_show_impl(
             }
 
             /*
-            fn get_children(&self) -> Option<DList<&PropertyShow>>
+            fn get_children(&self) -> Option<LinkedList<&PropertyShow>>
             {
-                let mut list = DList::new();
+                let mut list = LinkedList::new();
                 $(
                     list.push_back(&self.$member as &PropertyShow);
                  )+

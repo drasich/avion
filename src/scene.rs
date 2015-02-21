@@ -1,5 +1,5 @@
 use object;
-use std::collections::{DList};
+use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};
 use std::old_io::File;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
@@ -9,7 +9,7 @@ pub struct Scene
 {
     pub name : String,
     pub id : Uuid,
-    pub objects : DList<Arc<RwLock<object::Object>>>
+    pub objects : LinkedList<Arc<RwLock<object::Object>>>
 }
 
 impl Scene
@@ -19,7 +19,7 @@ impl Scene
     {
         Scene {
             name : String::from_str(name),
-            objects : DList::new(),
+            objects : LinkedList::new(),
         }
     }
     */
@@ -84,7 +84,7 @@ impl Scene
 
     pub fn find_object_by_id(&self, id : &Uuid) -> Option<Arc<RwLock<object::Object>>>
     {
-        fn find(list : &DList<Arc<RwLock<object::Object>>>, id : &Uuid) ->
+        fn find(list : &LinkedList<Arc<RwLock<object::Object>>>, id : &Uuid) ->
             Option<Arc<RwLock<object::Object>>>
             {
                 for o in list.iter()
@@ -104,13 +104,13 @@ impl Scene
         find(&self.objects, id)
     }
 
-    pub fn find_objects_by_id(&self, ids : &mut Vec<Uuid>) -> DList<Arc<RwLock<object::Object>>>
+    pub fn find_objects_by_id(&self, ids : &mut Vec<Uuid>) -> LinkedList<Arc<RwLock<object::Object>>>
     {
-        let mut return_list = DList::new();
+        let mut return_list = LinkedList::new();
         fn find(
-            list : &DList<Arc<RwLock<object::Object>>>,
+            list : &LinkedList<Arc<RwLock<object::Object>>>,
             ids : &mut Vec<Uuid>,
-            return_list : &mut DList<Arc<RwLock<object::Object>>>
+            return_list : &mut LinkedList<Arc<RwLock<object::Object>>>
             )
             {
                 for o in list.iter()
@@ -134,14 +134,14 @@ impl Scene
         return_list
     }
 
-    pub fn add_objects(&mut self, obs : &DList<Arc<RwLock<object::Object>>>)
+    pub fn add_objects(&mut self, obs : &LinkedList<Arc<RwLock<object::Object>>>)
     {
         self.objects.append(&mut obs.clone());
     }
 
-    pub fn remove_objects(&mut self, obs : &DList<Arc<RwLock<object::Object>>>)
+    pub fn remove_objects(&mut self, obs : &LinkedList<Arc<RwLock<object::Object>>>)
     {
-        let mut list = DList::new();
+        let mut list = LinkedList::new();
         for o in self.objects.iter() {
             let mut not_found = true;
             for r in obs.iter() {
@@ -195,10 +195,10 @@ impl Decodable for Scene {
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
           id: try!(decoder.read_struct_field("id", 0, |decoder| Decodable::decode(decoder))),
          //id : Uuid::new_v4(),
-          //objects: DList::new(),
+          //objects: LinkedList::new(),
           objects: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
           //tests: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
-          //tests: DList::new()
+          //tests: LinkedList::new()
         })
     })
   }

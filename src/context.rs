@@ -4,12 +4,12 @@ use vec;
 use uuid;
 use transform;
 
-use std::collections::{DList};
+use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};
 
 pub struct Context
 {
-    pub selected : DList<Arc<RwLock<object::Object>>>,
+    pub selected : LinkedList<Arc<RwLock<object::Object>>>,
     pub scene : Option<Arc<RwLock<scene::Scene>>>,
     pub saved_positions : Vec<vec::Vec3>,
     pub saved_scales : Vec<vec::Vec3>,
@@ -21,7 +21,7 @@ impl Context
     pub fn new() -> Context
     {
         Context {
-            selected: DList::new(),
+            selected: LinkedList::new(),
             scene : None,
             saved_positions : Vec::new(),
             saved_scales : Vec::new(),
@@ -53,9 +53,9 @@ impl Context
         }
     }
 
-    pub fn get_selected_ids(&self) -> DList<uuid::Uuid>
+    pub fn get_selected_ids(&self) -> LinkedList<uuid::Uuid>
     {
-        let mut list = DList::new();
+        let mut list = LinkedList::new();
         for o in self.selected.iter() {
             list.push_back(o.read().unwrap().id.clone());
         }
@@ -63,9 +63,9 @@ impl Context
         list
     }
 
-    pub fn remove(&mut self, ids : DList<uuid::Uuid>)
+    pub fn remove(&mut self, ids : LinkedList<uuid::Uuid>)
     {
-        let mut new_list = DList::new();
+        let mut new_list = LinkedList::new();
         for o in self.selected.iter() {
             let mut not_found = true;
             for id in ids.iter() {

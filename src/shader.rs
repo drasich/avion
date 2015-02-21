@@ -48,7 +48,7 @@ impl Shader
 {
     fn attribute_add(&mut self, name : &str, size : u32)
     {
-        let attc = CString::from_slice(name.as_bytes());
+        let attc = CString::new(name.as_bytes()).unwrap();
 
         match self.cgl_shader {
             None => {},
@@ -65,7 +65,7 @@ impl Shader
 
     fn uniform_add(&mut self, name : &str)
     {
-        let unic = CString::from_slice(name.as_bytes());
+        let unic = CString::new(name.as_bytes()).unwrap();
 
         match self.cgl_shader {
             None => {},
@@ -204,7 +204,7 @@ impl Shader
         match self.vert {
             None => return,
             Some(ref v) => {
-                vertc = CString::from_slice(v.as_bytes());
+                vertc = CString::new(v.as_bytes()).unwrap();
             }
         }
 
@@ -212,7 +212,7 @@ impl Shader
         match self.frag {
             None => return,
             Some(ref f) => {
-                fragc = CString::from_slice(f.as_bytes());
+                fragc = CString::new(f.as_bytes()).unwrap();
             }
         }
 

@@ -1,4 +1,4 @@
-use std::collections::{DList};
+use std::collections::{LinkedList};
 use std::rc::Rc;
 use std::cell::RefCell;
 use libc::{c_uint, c_int};
@@ -69,7 +69,7 @@ pub extern fn resize_cb(r : *mut Render, w : c_int, h : c_int) -> () {
 struct CameraPass
 {
     camera : Rc<RefCell<camera::Camera>>,
-    objects : DList<Arc<RwLock<object::Object>>>,
+    objects : LinkedList<Arc<RwLock<object::Object>>>,
 }
 
 impl CameraPass
@@ -78,7 +78,7 @@ impl CameraPass
     {
         CameraPass {
             camera : camera,
-            objects : DList::new()
+            objects : LinkedList::new()
         }
     }
 
@@ -93,7 +93,7 @@ struct RenderPass
     pub name : String,
     //pub material : Arc<sync::RwLock<material::Material>>,
     pub shader : Arc<sync::RwLock<shader::Shader>>,
-    //pub objects : DList<Arc<RwLock<object::Object>>>,
+    //pub objects : LinkedList<Arc<RwLock<object::Object>>>,
     //pub camera : Rc<RefCell<camera::Camera>>,
     pub passes : HashMap<uuid::Uuid, Box<CameraPass>>,
 }
@@ -107,7 +107,7 @@ impl RenderPass
         RenderPass {
                   name : String::from_str("passtest"),
                   shader : shader.clone(),
-                  //objects : DList::new(),
+                  //objects : LinkedList::new(),
                   //camera : camera,
                   passes : HashMap::new()
               }
@@ -131,7 +131,8 @@ impl RenderPass
         shader.utilise();
 
         for (_,p) in self.passes.iter() {
-            let cam_mat = p.camera.borrow().object.read().unwrap().get_world_matrix();
+            let cam_mat_borrow = p.camera.borrow();
+            let cam_mat = cam_mat_borrow.object.read().unwrap().get_world_matrix();
             let cam_projection = p.camera.borrow().get_perspective();
             let cam_mat_inv = cam_mat.get_inverse();
             let matrix = &cam_projection * &cam_mat_inv;
@@ -497,7 +498,7 @@ impl Render {
 
     fn resolution_set(&mut self, w : c_int, h : c_int)
     {
-        self.quad_outline.clone().read().unwrap().set_uniform_data(
+        self.quad_outline.read().unwrap().set_uniform_data(
             "resolution",
             shader::UniformData::Vec2(vec::Vec2::new(w as f64, h as f64)));
 
@@ -508,7 +509,7 @@ impl Render {
             */
     }
 
-    fn prepare_passes(&mut self, objects : &DList<Arc<RwLock<object::Object>>>)
+    fn prepare_passes(&mut self, objects : &LinkedList<Arc<RwLock<object::Object>>>)
     {
         for (_,p) in self.passes.iter_mut()
         {
@@ -539,8 +540,10 @@ impl Render {
                 -self.camera_ortho.borrow().data.width/2f64 +m, 
                 -self.camera_ortho.borrow().data.height/2f64 +m, 
                 -10f64);
+        let camera = 
+            self.camera.borrow();
         self.camera_repere.write().unwrap().orientation = 
-            self.camera.borrow().object.read().unwrap().orientation.inverse();
+            camera.object.read().unwrap().orientation.inverse();
 
         prepare_passes_object(
             self.camera_repere.clone(),
@@ -552,7 +555,7 @@ impl Render {
 
     fn prepare_passes_selected(
         &mut self,
-        objects : &DList<Arc<RwLock<object::Object>>>)
+        objects : &LinkedList<Arc<RwLock<object::Object>>>)
     {
         for (_,p) in self.passes.iter_mut()
         {
@@ -573,7 +576,7 @@ impl Render {
         }
     }
 
-    fn prepare_passes_objects_ortho(&mut self, list : DList<Arc<RwLock<object::Object>>>)
+    fn prepare_passes_objects_ortho(&mut self, list : LinkedList<Arc<RwLock<object::Object>>>)
     {
         for (_,p) in self.passes.iter_mut()
         {
@@ -592,7 +595,7 @@ impl Render {
         }
     }
 
-    fn prepare_passes_objects_per(&mut self, list : &DList<Arc<RwLock<object::Object>>>)
+    fn prepare_passes_objects_per(&mut self, list : &LinkedList<Arc<RwLock<object::Object>>>)
     {
         for (_,p) in self.passes.iter_mut()
         {
@@ -613,9 +616,9 @@ impl Render {
 
     pub fn draw(
         &mut self,
-        objects : &DList<Arc<RwLock<object::Object>>>,
-        selected : &DList<Arc<RwLock<object::Object>>>,
-        draggers : &DList<Arc<RwLock<object::Object>>>,
+        objects : &LinkedList<Arc<RwLock<object::Object>>>,
+        selected : &LinkedList<Arc<RwLock<object::Object>>>,
+        draggers : &LinkedList<Arc<RwLock<object::Object>>>,
         ) -> ()
     {
         self.prepare_passes_selected(selected);
@@ -662,7 +665,7 @@ impl Render {
 
 
         //*
-        let mut l = DList::new();
+        let mut l = LinkedList::new();
         l.push_back(self.quad_all.clone());
         self.prepare_passes_objects_ortho(l);
 
@@ -681,7 +684,7 @@ impl Render {
         let sel_len = selected.len();
 
         if sel_len > 0 {
-            let mut l = DList::new();
+            let mut l = LinkedList::new();
             l.push_back(self.quad_outline.clone());
             self.prepare_passes_objects_ortho(l);
 
@@ -698,7 +701,7 @@ impl Render {
 
             //* TODO dragger
             unsafe { cgl_clear(); }
-            //let mut ld = DList::new();
+            //let mut ld = LinkedList::new();
             //ld.push_back(self.dragger.clone());
             //self.prepare_passes_objects_per(ld);
             self.prepare_passes_objects_per(draggers);
@@ -893,7 +896,7 @@ fn create_repere(m : &mut mesh::Mesh, len : f64)
 
 fn add_box_only_first_object(
     line : &mut object::Object, 
-    objects : &DList<Arc<RwLock<object::Object>>>, 
+    objects : &LinkedList<Arc<RwLock<object::Object>>>, 
     scale : f64
     )
 {

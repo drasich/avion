@@ -1,4 +1,4 @@
-use std::collections::DList;
+use std::collections::LinkedList;
 use std::rc::{Rc,Weak};
 use std::cell::RefCell;
 use std::sync::{RwLock, Arc};
@@ -218,7 +218,8 @@ impl DraggerManager
 
     pub fn set_position(&mut self, p : vec::Vec3) {
         for d in self.draggers[self.current].iter_mut() {
-            d.borrow_mut().object.write().unwrap().position = p;
+            let mut db =d.borrow_mut();
+            db.object.write().unwrap().position = p;
         }
 
     }
@@ -248,9 +249,9 @@ impl DraggerManager
         }
     }
 
-    pub fn get_objects(&self) -> DList<Arc<RwLock<object::Object>>>
+    pub fn get_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
     {
-        let mut l = DList::new();
+        let mut l = LinkedList::new();
         for d in self.draggers[self.current].iter() {
             l.push_back(d.borrow().object.clone());
         }

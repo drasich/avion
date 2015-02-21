@@ -1,7 +1,7 @@
 use libc::{c_char, c_void, c_int};
 use std::mem;
 use std::sync::{RwLock, Arc};
-use std::collections::{DList};
+use std::collections::{LinkedList};
 use std::ptr;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -96,7 +96,7 @@ extern {
 pub struct Master
 {
     pub factory : factory::Factory,
-    pub views : DList<Box<View>>,
+    pub views : LinkedList<Box<View>>,
 }
 
 impl Master
@@ -107,7 +107,7 @@ impl Master
 
         let mut m = Master {
             factory : factory,
-            views : DList::new(),
+            views : LinkedList::new(),
         };
 
         let v = box View::new(&mut m.factory);

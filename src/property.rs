@@ -59,7 +59,7 @@ impl<T:'static> PropertyRead for resource::ResTT<T>
   }
 }
 
-pub macro_rules! property_read_impl(
+macro_rules! property_read_impl(
     ($my_type:ty) => ( 
 
         impl PropertyRead for $my_type
@@ -434,7 +434,7 @@ fn join_string(path : &Vec<String>) -> String
 }
 */
 
-pub macro_rules! property_test_impl(
+macro_rules! property_test_impl(
     ($my_type:ty, [ $($member:ident),+ ]) => ( 
         impl PropertyWrite for $my_type
         {
@@ -514,7 +514,7 @@ property_test_impl!(vec::Quat,[x,y,z,w]);
 property_test_impl!(mesh_render::MeshRender,[mesh,material]);
 property_test_impl!(object::Object,[name,position,orientation,scale,mesh_render]);
 
-pub macro_rules! property_get_impl(
+macro_rules! property_get_impl(
     ($my_type:ty, [ $($member:ident),+ ]) => ( 
         impl PropertyGet for $my_type
         {

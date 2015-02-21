@@ -6,7 +6,7 @@ use shader;
 use resource;
 use material;
 
-use std::collections::{DList};
+use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};//,RWLockReadGuard};
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::hash_map::Entry::{Occupied,Vacant};
@@ -27,7 +27,7 @@ pub struct Object
     pub orientation : transform::Orientation,
     //pub angles : vec::Vec3,
     pub scale : vec::Vec3,
-    pub children : DList<Arc<RwLock<Object>>>,
+    pub children : LinkedList<Arc<RwLock<Object>>>,
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
 }
@@ -45,7 +45,7 @@ impl Object
             orientation : vec::Quat::identity(),
             //angles : vec::Vec3::zero(),
             scale : vec::Vec3::one(),
-            children : DList::new(),
+            children : LinkedList::new(),
             parent : None
         }
     }
@@ -215,7 +215,7 @@ impl Clone for Object
             orientation : vec::Quat::identity(),
             //angles : vec::Vec3::zero(),
             scale : vec::Vec3::one(),
-            children : DList::new(),
+            children : LinkedList::new(),
             parent : None
         }
 

@@ -2,7 +2,7 @@ use std::sync::{RwLock, Arc};
 use std::collections::HashMap;
 use libc::{c_char, c_void, c_int};
 use std::mem;
-use std::collections::{DList};//,Deque};
+use std::collections::{LinkedList};//,Deque};
 use std::ptr;
 use std::cell::{RefCell, BorrowState};
 use std::rc::Weak;
@@ -82,7 +82,7 @@ impl Action
         unsafe {
             action_button_new(
                 self.jk_action,
-                CString::from_slice(name.as_bytes()).as_ptr(),
+                CString::new(name.as_bytes()).unwrap().as_ptr(),
                 mem::transmute(box data),
                 cb);
         }

@@ -3,7 +3,7 @@ use std::sync::{RwLock, Arc};
 use std::cell::RefCell;
 use std::rc::Weak;
 use std::fmt;
-use std::collections::DList;
+use std::collections::LinkedList;
 use uuid;
 
 use object;
@@ -25,15 +25,15 @@ pub enum OperationData
     OldNew(Box<Any>, Box<Any>),
     ToNone(Box<Any>),
     ToSome,
-    Function(fn(DList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
-    List(DList<Box<Any>>, DList<Box<Any>>),
+    Function(fn(LinkedList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
+    List(LinkedList<Box<Any>>, LinkedList<Box<Any>>),
     Vector(Vec<Box<Any>>, Vec<Box<Any>>),
-    SceneAddObjects(Arc<RwLock<scene::Scene>>,DList<Arc<RwLock<object::Object>>>)
+    SceneAddObjects(Arc<RwLock<scene::Scene>>,LinkedList<Arc<RwLock<object::Object>>>)
 }
 
 pub struct Operation
 {
-    pub objects : DList<Arc<RwLock<object::Object>>>,
+    pub objects : LinkedList<Arc<RwLock<object::Object>>>,
     pub name : Vec<String>,
     pub change : OperationData
     //pub old : Box<Any>,
@@ -46,20 +46,20 @@ pub enum Change
     None,
     Property,
     Tree,
-    Objects(String, DList<uuid::Uuid>),
+    Objects(String, LinkedList<uuid::Uuid>),
     DirectChange(String),
     RectVisibleSet(bool),
     RectSet(f32, f32, f32, f32),
     SelectedChange,
-    SceneAdd(uuid::Uuid, DList<uuid::Uuid>),
-    SceneRemove(uuid::Uuid, DList<uuid::Uuid>),
+    SceneAdd(uuid::Uuid, LinkedList<uuid::Uuid>),
+    SceneRemove(uuid::Uuid, LinkedList<uuid::Uuid>),
     All
 }
 
 impl Operation
 {
     pub fn new(
-        objects : DList<Arc<RwLock<object::Object>>>,
+        objects : LinkedList<Arc<RwLock<object::Object>>>,
         name : Vec<String>,
         //old : Box<Any>,
         //new : Box<Any>) 
@@ -69,7 +69,7 @@ impl Operation
     {
 
         /*
-        fn fntest( objs : DList<Arc<RwLock<object::Object>>>, val : Box<Any>)
+        fn fntest( objs : LinkedList<Arc<RwLock<object::Object>>>, val : Box<Any>)
         {
         }
 
@@ -109,7 +109,7 @@ impl OperationTrait for Operation
             OperationData::OldNew(_,ref new) => {
                 println!("operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
-                let mut ids = DList::new();
+                let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(s.as_slice(), &**new);
@@ -120,7 +120,7 @@ impl OperationTrait for Operation
             OperationData::ToNone(_) => {
                 println!("to none, apply,  operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
-                let mut ids = DList::new();
+                let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
                     ob.set_property_hier(s.as_slice(), property::WriteValue::None);
@@ -131,7 +131,7 @@ impl OperationTrait for Operation
             OperationData::ToSome => {
                 println!("to some, apply,  operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
-                let mut ids = DList::new();
+                let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
                     ob.set_property_hier(s.as_slice(), property::WriteValue::Some);
@@ -142,7 +142,7 @@ impl OperationTrait for Operation
             OperationData::Vector(_,ref new) => {
                 let mut i = 0;
                 let s = join_string(&self.name);
-                let mut ids = DList::new();
+                let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(
@@ -169,7 +169,7 @@ impl OperationTrait for Operation
         match self.change {
             OperationData::OldNew(ref old,_) => {
                 let s = join_string(&self.name);
-                let mut ids = DList::new();
+                let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(s.as_slice(), &**old);
@@ -180,7 +180,7 @@ impl OperationTrait for Operation
             OperationData::ToNone(ref old) => {
                 println!("to none, undo, operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
-                let mut ids = DList::new();
+                let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(s.as_slice(), &**old);
@@ -191,7 +191,7 @@ impl OperationTrait for Operation
             OperationData::ToSome => {
                 println!("to some, undo,  operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
-                let mut ids = DList::new();
+                let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
                     ob.set_property_hier(s.as_slice(), property::WriteValue::None);
@@ -202,7 +202,7 @@ impl OperationTrait for Operation
             OperationData::Vector(ref old,_) => {
                 let mut i = 0;
                 let s = join_string(&self.name);
-                let mut ids = DList::new();
+                let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(
@@ -329,9 +329,9 @@ fn join_string(path : &Vec<String>) -> String
     s
 }
 
-fn get_ids(obs : &DList<Arc<RwLock<object::Object>>>) -> DList<uuid::Uuid>
+fn get_ids(obs : &LinkedList<Arc<RwLock<object::Object>>>) -> LinkedList<uuid::Uuid>
 {
-    let mut list = DList::new();
+    let mut list = LinkedList::new();
     for o in obs.iter() {
         list.push_back(o.read().unwrap().id.clone());
     }
