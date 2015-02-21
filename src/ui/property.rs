@@ -12,6 +12,7 @@ use std::rc::Weak;
 use std::any::{Any};//, AnyRefExt};
 use std::ffi::CString;
 use std::ffi;
+use std::ffi::CStr;
 use core::marker;
 
 use scene;
@@ -315,7 +316,7 @@ pub extern fn changed_set_string(
     data : *const c_void) {
 
     let datachar = data as *const i8;
-    let s = unsafe {ffi::c_str_to_bytes(&datachar)};
+    let s = unsafe {CStr::from_ptr(datachar).to_bytes()};
     let ss = match str::from_utf8(s) {
         Ok(sss) => sss.to_string(),
         _ => {
@@ -343,7 +344,7 @@ pub extern fn register_change_string(
     ) {
 
     let newchar = new as *const i8;
-    let s = unsafe {ffi::c_str_to_bytes(&newchar)};
+    let s = unsafe {CStr::from_ptr(newchar).to_bytes()};
     let ss = match str::from_utf8(s) {
         Ok(sss) => sss.to_string(),
         _ => {
@@ -355,7 +356,7 @@ pub extern fn register_change_string(
     //println!("the string is {}", ss);
     if action == 1 && old != ptr::null() {
         let oldchar = old as *const i8;
-        let so = unsafe {ffi::c_str_to_bytes(&oldchar)};
+        let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
         let sso = match str::from_utf8(so) {
             Ok(ssso) => ssso.to_string(),
             _ => {
@@ -399,7 +400,7 @@ pub extern fn register_change_enum(
     ) {
 
     let newchar = new as *const i8;
-    let s = unsafe {ffi::c_str_to_bytes(&newchar)};
+    let s = unsafe {CStr::from_ptr(newchar).to_bytes()};
     let ss = match str::from_utf8(s) {
         Ok(sss) => sss.to_string(),
         _ => {
@@ -411,7 +412,7 @@ pub extern fn register_change_enum(
     //println!("the string is {}", ss);
     if action == 1 && old != ptr::null() {
         let oldchar = old as *const i8;
-        let so = unsafe {ffi::c_str_to_bytes(&oldchar)};
+        let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
         let sso = match str::from_utf8(so) {
             Ok(ssso) => ssso.to_string(),
             _ => {
@@ -435,7 +436,7 @@ pub extern fn register_change_option(
     ) {
 
     let newchar = new as *const i8;
-    let s = unsafe {ffi::c_str_to_bytes(&newchar)};
+    let s = unsafe {CStr::from_ptr(newchar).to_bytes()};
     let ss = match str::from_utf8(s) {
         Ok(sss) => sss.to_string(),
         _ => {
@@ -451,7 +452,7 @@ pub extern fn register_change_option(
     }
 
     let oldchar = old as *const i8;
-    let so = unsafe {ffi::c_str_to_bytes(&oldchar)};
+    let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
     let sso = match str::from_utf8(so) {
         Ok(ssso) => ssso.to_string(),
         _ => {
@@ -472,7 +473,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
     new : &T,
     action : c_int
     ) {
-    let s = unsafe {ffi::c_str_to_bytes(&name)};
+    let s = unsafe {CStr::from_ptr(name).to_bytes()};
 
     let path = match str::from_utf8(s) {
         Ok(pp) => pp,
@@ -548,7 +549,7 @@ fn changed_option(
     old : &str,
     new : &str
     ) {
-    let s = unsafe {ffi::c_str_to_bytes(&name)};
+    let s = unsafe {CStr::from_ptr(name).to_bytes()};
 
     let path = match str::from_utf8(s) {
         Ok(pp) => pp,
@@ -635,7 +636,7 @@ extern fn expand(
     parent : *const Elm_Object_Item) -> ()
 {
     let datachar = data as *const i8;
-    let s = unsafe {ffi::c_str_to_bytes(&datachar)};
+    let s = unsafe {CStr::from_ptr(datachar).to_bytes()};
     let mut p : &mut Property = unsafe {mem::transmute(property)};
 
     //println!("expanding ! property name {} ", p.name);
@@ -700,7 +701,7 @@ extern fn contract(
     };
 
     let datachar = data as *const i8;
-    let s = unsafe {ffi::c_str_to_bytes(&datachar)};
+    let s = unsafe {CStr::from_ptr(datachar).to_bytes()};
     let path = match str::from_utf8(s) {
         Ok(pp) => pp,
         _ => {

@@ -4,6 +4,7 @@ use std::sync::{RwLock, Arc};
 use libc::{c_char, c_void, c_int, c_float};
 use std::mem;
 use std::ffi;
+use std::ffi::CStr;
 use std::ffi::CString;
 use std::str;
 use object;
@@ -528,7 +529,7 @@ pub extern fn key_down(
         let mut c = control_rc.borrow_mut();
 
         let key_str = {
-            let s = unsafe {ffi::c_str_to_bytes(&key)};
+            let s = unsafe {CStr::from_ptr(key).to_bytes()};
             match str::from_utf8(s) {
                 Ok(ss) => ss.to_string(),
                 _ => {
@@ -540,7 +541,7 @@ pub extern fn key_down(
 
         let keyname_str = {
             let keynameconst = keyname as *const c_char;
-            let s = unsafe {ffi::c_str_to_bytes(&keynameconst)};
+            let s = unsafe {CStr::from_ptr(keynameconst).to_bytes()};
             match str::from_utf8(s) {
                 Ok(ss) => ss.to_string(),
                 _ => {
