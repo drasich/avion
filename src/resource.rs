@@ -12,7 +12,7 @@ use std::sync::mpsc::channel;
 //use std::io::timer::sleep;
 //use std::time::duration::Duration;
 use self::ResTest::{ResData,ResWait,ResNone};
-use std::thread::Thread;
+use std::thread;
 
 
 /*
@@ -243,7 +243,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                 let ss = s.clone();
 
                 let (tx, rx) = channel::<Arc<RwLock<T>>>();
-                let guard = Thread::scoped(move || {
+                let guard = thread::scoped(move || {
                     //sleep(::std::time::duration::Duration::seconds(5));
                     let mt : T = Create::create(ss.as_slice());
                     let m = Arc::new(RwLock::new(mt));
@@ -253,7 +253,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
 
                 let result = guard.join();
 
-                Thread::spawn( move || {
+                thread::spawn( move || {
                     loop {
                     match rx.try_recv() {
                         Err(_) => {},

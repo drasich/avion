@@ -781,7 +781,7 @@ impl Control
             return ao;
         };
 
-        let mut vs = Vec::new();
+        let vs = Vec::new();
         self.request_operation(
             vs,
             operation::OperationData::SceneAddObjects(s.clone(),list)

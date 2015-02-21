@@ -2,7 +2,8 @@
 //#![feature(trace_macros)]
 //#![feature(slicing_syntax)]
 #![feature(box_syntax)]
-#![feature(std_misc,core,collections,libc,path,io)]
+#![feature(alloc)]
+#![feature(std_misc,core,collections,libc)]
 
 //TODO remove
 #![allow(unused_variables)]
