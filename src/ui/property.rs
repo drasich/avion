@@ -135,7 +135,7 @@ extern {
     fn property_list_node_add(
         pl : *const JkPropertyList,
         name : *const c_char
-        );
+        ) -> *const Elm_Object_Item;
 
     fn property_list_nodes_remove(
         pl : *const JkPropertyList,
@@ -178,6 +178,9 @@ extern {
     fn property_list_float_update(
         pv : *const PropertyValue,
         value : c_float);
+
+    fn property_expand(
+        item : *const Elm_Object_Item);
 
 }
 
@@ -291,13 +294,24 @@ impl Property
         }
     }
 
-    pub fn add_node(&self, name : &str) {
+    pub fn add_node(&mut self, ps : &PropertyShow, name : &str) {
         let f = CString::new(name.as_bytes()).unwrap();
-        unsafe {
+        let item = unsafe {
             property_list_node_add(
                 self.jk_property_list,
                 f.as_ptr()
-                );
+                )
+        };
+        
+        let es = match self.expand_state.get(&name.to_string()) {
+            Some(b) => *b,
+            None => return,
+        };
+
+        if es {
+            unsafe {
+                property_expand(item);
+            }
         }
     }
 }
@@ -687,6 +701,7 @@ extern fn expand(
                     //p.create_entries(&*ppp, vs.clone());
                     println!("I found and create {:?} ", vs);
                     ppp.create_widget(p, path , 1);
+                    p.expand_state.insert(path.to_string(), true);
                 },
                 None => {
                     println!("could not find property {:?} ", vs);
@@ -722,6 +737,8 @@ extern fn contract(
     };
 
     println!("I contract the path {} ", path);
+
+    p.expand_state.insert(path.to_string(), false);
 
     let vs = make_vec_from_string(&path.to_string());
 
@@ -973,7 +990,7 @@ impl<T> PropertyShow for resource::ResTT<T>
 
         if depth == 0 && field != ""
         {
-            property.add_node(field);
+            property.add_node(self, field);
         }
 
         if depth > 0 {
@@ -1008,7 +1025,7 @@ macro_rules! property_show_impl(
 
                 if depth == 0 && field != ""
                 {
-                    property.add_node(field);
+                    property.add_node(self, field);
                 }
 
                 if depth > 0 {
