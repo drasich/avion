@@ -484,12 +484,15 @@ pub extern fn mouse_down(
     )
 {
     let view : &Box<View> = unsafe {mem::transmute(data)};
-    let control_rc = view.control.clone();
 
-    //println!("rust mouse down button {}, pos: {}, {}", button, x, y);
-    //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
-    let mut c = control_rc.borrow_mut();
-    let op_list = c.mouse_down(modifier, button,x,y,timestamp);
+    let op_list = {
+        let control_rc = view.control.clone();
+
+        //println!("rust mouse down button {}, pos: {}, {}", button, x, y);
+        //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
+        let mut c = control_rc.borrow_mut();
+        c.mouse_down(modifier, button,x,y,timestamp)
+    };
 
     for op in op_list.iter() {
         view.handle_control_change(op);
@@ -506,10 +509,12 @@ pub extern fn mouse_up(
     )
 {
     let view : &Box<View> = unsafe {mem::transmute(data)};
-    let control_rc = view.control.clone();
-    //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
-    let mut c = control_rc.borrow_mut();
-    let change = c.mouse_up(button,x,y,timestamp);
+
+    let change = {
+        let control_rc = view.control.clone();
+        let mut c = control_rc.borrow_mut();
+        c.mouse_up(button,x,y,timestamp)
+    };
 
     view.handle_control_change(&change);
 }

@@ -718,35 +718,33 @@ extern fn expand(
     let yep = vs.tail().to_vec();
     println!("expand : {:?}", vs);
 
-    match p.control.clone().borrow_state() {
+    let o = match p.control.clone().borrow_state() {
         BorrowState::Writing => {
-            println!("cannot borrow control, might be already borrowed...");
             return;
         },
         _ => {
-            let o = match p.control.borrow().get_selected_object() {
+            match p.control.borrow().get_selected_object() {
                 Some(ob) => ob,
                 None => {
                     println!("no selected objectttttttttttttt");
                     return;
                 }
-            };
-
-            let or  = o.read().unwrap();
-            match find_property_show(&*or, yep.clone()) {
-                Some(ppp) => {
-                    //p.create_entries(&*ppp, vs.clone());
-                    println!("I found and create {:?} ", vs);
-                    ppp.create_widget(p, path , 1);
-                    p.expand_state.insert(path.to_string(), true);
-                },
-                None => {
-                    println!("could not find property {:?} ", vs);
-                }
             }
-        },
+        }
     };
 
+    let or  = o.read().unwrap();
+    match find_property_show(&*or, yep.clone()) {
+        Some(ppp) => {
+            //p.create_entries(&*ppp, vs.clone());
+            println!("I found and create {:?} ", vs);
+            ppp.create_widget(p, path , 1);
+            p.expand_state.insert(path.to_string(), true);
+        },
+        None => {
+            println!("could not find property {:?} ", vs);
+        }
+    };
 }
 
 extern fn contract(
