@@ -186,7 +186,8 @@ pub struct Property
     pub name : String,
     pub jk_property_list : *const JkPropertyList,
     pub pv : HashMap<String, *const PropertyValue>,
-    control : Rc<RefCell<Control>>
+    control : Rc<RefCell<Control>>,
+    expand_state : HashMap<String, bool>,
 }
 
 impl Property
@@ -200,7 +201,8 @@ impl Property
             name : String::from_str("property_name"),
             jk_property_list : unsafe {jk_property_list_new(window)},
             pv : HashMap::new(),
-            control : control
+            control : control,
+            expand_state : HashMap::new()
         };
 
         unsafe {
@@ -286,6 +288,16 @@ impl Property
                     println!("could not find prop : {:?}", yep);
                 }
             }
+        }
+    }
+
+    pub fn add_node(&self, name : &str) {
+        let f = CString::new(name.as_bytes()).unwrap();
+        unsafe {
+            property_list_node_add(
+                self.jk_property_list,
+                f.as_ptr()
+                );
         }
     }
 }
@@ -793,7 +805,7 @@ pub trait PropertyShow
         println!("update_widget not implemented for this type");
     }
 
-      fn get_property(&self, field : &str) -> Option<&PropertyShow>
+    fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
         return None;
     }
@@ -961,12 +973,7 @@ impl<T> PropertyShow for resource::ResTT<T>
 
         if depth == 0 && field != ""
         {
-            let f = CString::new(field.as_bytes()).unwrap();
-            unsafe {
-                property_list_node_add(
-                    property.jk_property_list,
-                    f.as_ptr());
-            }
+            property.add_node(field);
         }
 
         if depth > 0 {
@@ -1001,12 +1008,7 @@ macro_rules! property_show_impl(
 
                 if depth == 0 && field != ""
                 {
-                    let f = CString::new(field.as_bytes()).unwrap();
-                    unsafe {
-                        property_list_node_add(
-                            property.jk_property_list,
-                            f.as_ptr());
-                    }
+                    property.add_node(field);
                 }
 
                 if depth > 0 {
