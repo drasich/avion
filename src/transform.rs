@@ -131,30 +131,13 @@ impl ui::PropertyShow for Orientation {
     {
         println!("...................DEPTH, field  : {}, {}", depth, field);
         if depth == 0 {
-            //let yep = field.to_string() + "/type";
-            let f = CString::new(field.as_bytes()).unwrap();
             let type_value = match *self {
                 Orientation::AngleXYZ(_) => "AngleXYZ",
                 Orientation::Quat(_) => "Quat"
             };
 
-            println!(".......type value : {}", type_value);
-            let v = CString::new(type_value.as_bytes()).unwrap();
-
-            let types = CString::new("AngleXYZ/Quat".as_bytes()).unwrap();
-
-            unsafe {
-                let pv = property_list_enum_add(
-                    property.jk_property_list,
-                    f.as_ptr(),
-                    types.as_ptr(),
-                    v.as_ptr());
-
-                if pv != ptr::null() {
-                    println!("ADDING : {}", field);
-                    property.pv.insert(field.to_string(), pv);
-                }
-            }
+            let types = "AngleXYZ/Quat";
+            property.add_enum(self, field, types, type_value);
         }
 
         if depth == 1 {

@@ -135,7 +135,7 @@ extern {
     fn property_list_node_add(
         pl : *const JkPropertyList,
         name : *const c_char
-        ) -> *const Elm_Object_Item;
+        ) -> *const PropertyValue;
 
     fn property_list_nodes_remove(
         pl : *const JkPropertyList,
@@ -180,7 +180,7 @@ extern {
         value : c_float);
 
     fn property_expand(
-        item : *const Elm_Object_Item);
+        pv : *const PropertyValue);
 
 }
 
@@ -296,7 +296,7 @@ impl Property
 
     pub fn add_node(&mut self, ps : &PropertyShow, name : &str) {
         let f = CString::new(name.as_bytes()).unwrap();
-        let item = unsafe {
+        let pv = unsafe {
             property_list_node_add(
                 self.jk_property_list,
                 f.as_ptr()
@@ -310,7 +310,44 @@ impl Property
 
         if es {
             unsafe {
-                property_expand(item);
+                property_expand(pv);
+            }
+        }
+    }
+
+    pub fn add_enum(
+        &mut self,
+        ps : &PropertyShow,
+        path : &str,
+        types : &str,
+        value : &str
+        )
+    {
+        let f = CString::new(path.as_bytes()).unwrap();
+        let types = CString::new(types.as_bytes()).unwrap();
+        let v = CString::new(value.as_bytes()).unwrap();
+
+        let pv = unsafe {
+            property_list_enum_add(
+                self.jk_property_list,
+                f.as_ptr(),
+                types.as_ptr(),
+                v.as_ptr())
+
+        };
+
+        if pv != ptr::null() {
+            self.pv.insert(path.to_string(), pv);
+        }
+
+        let es = match self.expand_state.get(&path.to_string()) {
+            Some(b) => *b,
+            None => return,
+        };
+
+        if es {
+            unsafe {
+                property_expand(pv);
             }
         }
     }
