@@ -63,7 +63,17 @@ impl Context
         list
     }
 
-    pub fn remove(&mut self, ids : LinkedList<uuid::Uuid>)
+    pub fn get_vec_selected_ids(&self) -> Vec<uuid::Uuid>
+    {
+        let mut v = Vec::with_capacity(self.selected.len());
+        for o in self.selected.iter() {
+            v.push(o.read().unwrap().id.clone());
+        }
+
+        v
+    }
+
+    pub fn remove_objects_by_id(&mut self, ids : Vec<uuid::Uuid>)
     {
         let mut new_list = LinkedList::new();
         for o in self.selected.iter() {
@@ -80,6 +90,29 @@ impl Context
         }
 
         self.selected = new_list;
+    }
+
+    pub fn add_objects_by_id(&mut self, ids : Vec<uuid::Uuid>)
+    {
+        for id in ids.iter() {
+            let mut found = false;
+            for o in self.selected.iter() {
+                if *id == o.read().unwrap().id {
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
+                if let Some(ref s) = self.scene {
+                    for so in s.read().unwrap().objects.iter() {
+                        if *id == so.read().unwrap().id {
+                            self.selected.push_back(so.clone());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }

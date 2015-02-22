@@ -139,7 +139,36 @@ impl Scene
         self.objects.append(&mut obs.clone());
     }
 
+    pub fn add_objects_by_vec(&mut self, obs : Vec<Arc<RwLock<object::Object>>>)
+    {
+        //TODO vec to list
+        for o in obs.iter() {
+            self.objects.push_back(o.clone());
+        }
+    }
+
     pub fn remove_objects(&mut self, obs : &LinkedList<Arc<RwLock<object::Object>>>)
+    {
+        let mut list = LinkedList::new();
+        for o in self.objects.iter() {
+            let mut not_found = true;
+            for r in obs.iter() {
+                if o.read().unwrap().id == r.read().unwrap().id {
+                    println!("found the id, break {}", o.read().unwrap().name);
+                    not_found = false;
+                    break;
+                }
+            }
+            if not_found {
+            println!("dit not found the id, adding {}", o.read().unwrap().name);
+            list.push_back(o.clone());
+            }
+        }
+
+        self.objects = list;
+    }
+
+    pub fn remove_objects_by_vec(&mut self, obs : Vec<Arc<RwLock<object::Object>>>)
     {
         let mut list = LinkedList::new();
         for o in self.objects.iter() {

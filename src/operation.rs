@@ -28,7 +28,7 @@ pub enum OperationData
     Function(fn(LinkedList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
     List(LinkedList<Box<Any>>, LinkedList<Box<Any>>),
     Vector(Vec<Box<Any>>, Vec<Box<Any>>),
-    SceneAddObjects(Arc<RwLock<scene::Scene>>,LinkedList<Arc<RwLock<object::Object>>>)
+    SceneAddObjects(Arc<RwLock<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>)
 }
 
 pub struct Operation
@@ -51,8 +51,8 @@ pub enum Change
     RectVisibleSet(bool),
     RectSet(f32, f32, f32, f32),
     SelectedChange,
-    SceneAdd(uuid::Uuid, LinkedList<uuid::Uuid>),
-    SceneRemove(uuid::Uuid, LinkedList<uuid::Uuid>),
+    SceneAdd(uuid::Uuid, Vec<uuid::Uuid>),
+    SceneRemove(uuid::Uuid, Vec<uuid::Uuid>),
     All
 }
 
@@ -155,7 +155,7 @@ impl OperationTrait for Operation
             },
             OperationData::SceneAddObjects(ref s, ref obs)  => {
                 let mut sc = s.write().unwrap();
-                sc.add_objects(obs);
+                sc.add_objects_by_vec(obs.clone());
                 return Change::SceneAdd(sc.id.clone(), get_ids(obs));
             },
             _ => {}
@@ -216,7 +216,7 @@ impl OperationTrait for Operation
             OperationData::SceneAddObjects(ref s, ref obs)  => {
                 println!("undo scene add objects !!!");
                 let mut sc = s.write().unwrap();
-                sc.remove_objects(obs);
+                sc.remove_objects_by_vec(obs.clone());
                 return Change::SceneRemove(sc.id.clone(), get_ids(obs));
             },
             _ => {}
@@ -329,11 +329,11 @@ fn join_string(path : &Vec<String>) -> String
     s
 }
 
-fn get_ids(obs : &LinkedList<Arc<RwLock<object::Object>>>) -> LinkedList<uuid::Uuid>
+fn get_ids(obs : &Vec<Arc<RwLock<object::Object>>>) -> Vec<uuid::Uuid>
 {
-    let mut list = LinkedList::new();
+    let mut list = Vec::new();
     for o in obs.iter() {
-        list.push_back(o.read().unwrap().id.clone());
+        list.push(o.read().unwrap().id.clone());
     }
 
     list

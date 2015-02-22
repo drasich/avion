@@ -769,8 +769,7 @@ impl Control
 
         let mut list = LinkedList::new();
         list.push_back(ao.clone());
-        self.select(list.clone());
-
+        self.select(list);
 
         let s = if let Some(ref s) = self.context.borrow_mut().scene {
             s.clone()
@@ -781,10 +780,13 @@ impl Control
             return ao;
         };
 
+        let mut vec = Vec::new();
+        vec.push(ao.clone());
+
         let vs = Vec::new();
         self.request_operation(
             vs,
-            operation::OperationData::SceneAddObjects(s.clone(),list)
+            operation::OperationData::SceneAddObjects(s.clone(),vec)
             );
 
         ao

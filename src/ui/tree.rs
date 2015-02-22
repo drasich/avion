@@ -43,6 +43,9 @@ extern {
         parent : *const Elm_Object_Item,
         ) -> *const Elm_Object_Item;
 
+    fn tree_object_remove(
+        item : *const Elm_Object_Item);
+
     fn tree_item_select(item : *const Elm_Object_Item);
     fn tree_item_update(item : *const Elm_Object_Item);
     fn tree_item_expand(item : *const Elm_Object_Item);
@@ -88,12 +91,29 @@ impl Tree
 
     pub fn set_scene(&mut self, scene : &scene::Scene)
     {
+        println!("TODO clear items, first");
         for o in scene.objects.iter() {
             self.add_object(o.clone());
         }
     }
 
     pub fn add_object(&mut self, object : Arc<RwLock<object::Object>>)
+    {
+        if self.objects.contains_key(&object.read().unwrap().id) {
+            return;
+        }
+
+        self._add_object(object);
+    }
+
+    pub fn add_objects(&mut self, objects : LinkedList<Arc<RwLock<object::Object>>>)
+    {
+        for o in objects.iter() {
+            self.add_object(o.clone());
+        }
+    }
+
+    fn _add_object(&mut self, object : Arc<RwLock<object::Object>>)
     {
         let eoi = unsafe {
             match object.read().unwrap().parent {
@@ -126,10 +146,66 @@ impl Tree
         }
     }
 
+    /*
+    pub fn add_object_by_id(&mut self, id : Uuid)
+    {
+        if self.objects.contains_key(&id) {
+            return;
+        }
+
+        let o = match self.scene {
+            Some(s) => {
+                match  s.read().unwrap().find_object_by_id(id) {
+                    Some(o) => o,
+                    None => return
+                }
+            },
+            _ => return
+        };
+
+        self._add_object(o);
+    }
+
+    pub fn add_objects_by_id(&mut self, ids : LinkedList<Uuid>)
+    {
+        for id in ids.iter()
+        {
+            self.add_object_by_id(id);
+        }
+    }
+    */
+
+    pub fn remove_objects_by_id(&mut self, ids : Vec<Uuid>)
+    {
+        for id in ids.iter() {
+            let item = self.objects.remove(id);
+            match item {
+                Some(i) => unsafe {
+                    tree_object_remove(i);
+                },
+                None => {
+                }
+            }
+        }
+    }
+
+
     pub fn select(&mut self, id: &Uuid)
     {
         unsafe { tree_deselect_all(self.jk_tree); }
+        self._select(id);
+    }
 
+    pub fn select_objects(&mut self, ids: Vec<Uuid>)
+    {
+        unsafe { tree_deselect_all(self.jk_tree); }
+        for id in ids.iter() {
+            self._select(id);
+        }
+    }
+
+    pub fn _select(&mut self, id: &Uuid)
+    {
         println!("select from tree");
         self.dont_forward_signal = true;
         match self.objects.get(id) {
@@ -137,6 +213,25 @@ impl Tree
                 unsafe {tree_item_select(*item);}
             }
             _ => {}
+        }
+
+        self.dont_forward_signal = false;
+        println!("select from tree end");
+    }
+
+
+    pub fn set_selected(&mut self, ids: LinkedList<Uuid>)
+    {
+        unsafe { tree_deselect_all(self.jk_tree); }
+
+        self.dont_forward_signal = true;
+        for id in ids.iter() {
+            match self.objects.get(id) {
+                Some(item) => {
+                    unsafe {tree_item_select(*item);}
+                }
+                _ => {}
+            }
         }
 
         self.dont_forward_signal = false;

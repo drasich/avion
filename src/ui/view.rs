@@ -371,6 +371,7 @@ impl View
                             println!("control no property");
                         }
                     }
+
                 }
                 else {
                     match c.selected.front() {
@@ -388,31 +389,76 @@ impl View
                                     println!("control no property");
                                 }
                             }
-
-                            match self.tree {
-                                Some(ref t) => {
-                                    match t.borrow_state() {
-                                        BorrowState::Unused => {
-                                            t.borrow_mut().select(&o.read().unwrap().id);
-                                        }
-                                        _ => {}
-                                    }
-                                },
-                                None => {
-                                    println!("control no tree");
-                                }
-                            }
                         },
                         _ => {},
                     }
                 }
+
+                match self.tree {
+                    Some(ref t) => {
+                        match t.borrow_state() {
+                            BorrowState::Unused => {
+                                println!("view, select objects");
+                                t.borrow_mut().select_objects(c.get_vec_selected_ids());
+                            }
+                            _ => {
+                                println!("view, selectchange!!!!!!!!, tree already borrowed");
+                            }
+                        }
+                    },
+                    None => {
+                        println!("control no tree");
+                    }
+                }
             },
-            operation::Change::SceneRemove(ref id, ref list) => {
+            operation::Change::SceneRemove(ref id, ref obs) => {
                 {
-                let mut c = self.context.borrow_mut();
-                c.remove(list.clone());
+                    println!("view, sceneremove!!!!!!!!");
+                    let mut c = self.context.borrow_mut();
+                    c.remove_objects_by_id(obs.clone());
+
+                    match self.tree {
+                        Some(ref t) => {
+                            match t.borrow_state() {
+                                BorrowState::Unused => {
+                                    println!("view, sceneremove!!!!!!!! tree remove");
+                                    t.borrow_mut().remove_objects_by_id(obs.clone());
+                                }
+                                _ => {
+                                    println!("view, sceneremove!!!!!!!!, tree already borrowed");
+                                }
+                            }
+                        },
+                        None => {
+                            println!("control no tree");
+                        }
+                    }
                 }
                 self.handle_control_change(&operation::Change::SelectedChange);
+            },
+            operation::Change::SceneAdd(ref id, ref obs) => {
+                let c = self.context.borrow();
+                let scene = match c.scene {
+                    Some(ref s) => s.clone(),
+                    None => return
+                };
+
+                let objects = scene.read().unwrap().find_objects_by_id(&mut obs.clone());
+
+                // todo
+                match self.tree {
+                    Some(ref t) => {
+                        match t.borrow_state() {
+                            BorrowState::Unused => {
+                                t.borrow_mut().add_objects(objects);
+                            }
+                            _ => {}
+                        }
+                    },
+                    None => {
+                        println!("control no tree");
+                    }
+                }
             },
             _ => {}
         }
@@ -555,7 +601,6 @@ pub extern fn key_down(
     };
 
     view.handle_control_change(&change);
-
 }
 
 
