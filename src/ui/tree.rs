@@ -356,18 +356,29 @@ pub extern fn unselected(
         mem::transmute(data)
     };
 
-    match tsd.control.borrow_state() {
+    let o = match tsd.control.borrow_state() {
         BorrowState::Unused => {
-            let mut l = LinkedList::new();
-            l.push_back(o.read().unwrap().id.clone());
-            tsd.control.borrow_mut().unselect(&l);
+            {
+                let mut l = LinkedList::new();
+                l.push_back(o.read().unwrap().id.clone());
+                tsd.control.borrow_mut().unselect(&l);
+            }
+            tsd.control.borrow().get_selected_object()
         },
-        _ => { println!("already borrowed : mouse_up add_ob ->sel ->add_ob")}
-    }
+        _ => { 
+            println!("already borrowed : mouse_up add_ob ->sel ->add_ob");
+            return;
+        }
+    };
 
     match tsd.property.borrow_state() {
         BorrowState::Unused => {
-            tsd.property.borrow_mut().set_nothing();
+            match o {
+                Some(ref o) => 
+                    tsd.property.borrow_mut().set_object(&*o.read().unwrap()),
+                None =>
+                    tsd.property.borrow_mut().set_nothing()
+            }
         },
         _ => { println!("property already borrowed : tree unsel ->add_ob"); return;}
     };

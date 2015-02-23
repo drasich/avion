@@ -209,7 +209,7 @@ impl View
         let mut center = vec::Vec3::zero();
         let mut ori = vec::Quat::identity();
         for o in sel.iter() {
-            center = center + o.read().unwrap().position;
+            center = center + o.read().unwrap().world_position();
             ori = ori * o.read().unwrap().world_orientation();
         }
 
