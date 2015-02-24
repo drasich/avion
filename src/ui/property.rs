@@ -241,7 +241,24 @@ impl Property
         let mut v = Vec::new();
         v.push("object".to_string());
         o.create_widget(self, "object", 1);
+
+        self.add_tools();
     }
+
+    fn add_tools(&mut self)
+    {
+        // add as prefab
+        // if linked to prefab : 
+        // State : linked, inherit
+        // operation : change state : if linked, remove link(set independant)
+        //TODO
+        unsafe {
+            property_list_group_add(
+                self.jk_property_list,
+                CString::new("tools".as_bytes()).unwrap().as_ptr());
+        }
+    }
+
 
     pub fn set_nothing(&mut self)
     {
