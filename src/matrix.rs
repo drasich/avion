@@ -75,7 +75,7 @@ impl Matrix4
     pub fn to_f32(&self) -> [f32; 16]
     {
         let mut m : [f32;16] = [0f32; 16];
-        for i in range(0us, 16)
+        for i in range(0usize, 16)
         {
             m[i] = self.data[i] as f32;
         }
@@ -385,7 +385,7 @@ impl fmt::Debug for Matrix4
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
         let mut yep = String::from_str("");
 
-        for i in range(0us,4) 
+        for i in range(0usize,4) 
         {
             //let line = format!("{}, {}, {}, {} \n", self.data[4*i], self.data[4*i + 1], self.data[4*i + 2], self.data[4*i + 3]);
             let line = format!("{}, {}, {}, {} \n", self.data[i], self.data[i + 4], self.data[i + 8], self.data[i + 12]);

@@ -71,7 +71,7 @@ impl Texture
                  let data = match img.pixels {
                      //png::RGB8(ref pixels) => pixels.as_ptr(),
                      png::PixelsByColorType::RGBA8(ref pixels) =>  { 
-                         for i in range(0us, 8) { 
+                         for i in range(0usize, 8) { 
                              println!("{}RGBA{} : {}", self.name, i, pixels[i]);
                          }
                          pixels.as_ptr()
@@ -103,7 +103,7 @@ impl Texture
 impl Encodable for Texture {
   fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Texture", 1, |encoder| {
-          try!(encoder.emit_struct_field( "name", 0us, |encoder| self.name.encode(encoder)));
+          try!(encoder.emit_struct_field( "name", 0usize, |encoder| self.name.encode(encoder)));
           Ok(())
       })
   }

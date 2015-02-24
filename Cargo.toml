@@ -24,10 +24,10 @@ git = "https://github.com/indefini/rust-png.git"
 git = "https://github.com/alexcrichton/toml-rs"
 
 [dependencies.uuid]
-#git = "https://github.com/rust-lang/uuid.git"
-git = "https://github.com/drasich/uuid.git"
+git = "https://github.com/rust-lang/uuid.git"
+#git = "https://github.com/drasich/uuid.git"
 
 [dependencies]
-rustc-serialize = "0.2.12"
+rustc-serialize = "0.3.0"
 
 

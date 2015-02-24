@@ -568,6 +568,6 @@ impl Sub for Vec2 {
 #[test]
 fn test_quat_rotate() {
     //TODO
-    assert_eq!(1is, 1is);
+    assert_eq!(1isize, 1isize);
 }
 

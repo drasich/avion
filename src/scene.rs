@@ -209,9 +209,9 @@ impl Decodable for RwLock<object::Object> {
 impl Encodable for Scene {
   fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Scene", 1, |encoder| {
-          try!(encoder.emit_struct_field( "name", 0us, |encoder| self.name.encode(encoder)));
-          try!(encoder.emit_struct_field( "id", 1us, |encoder| self.id.encode(encoder)));
-          try!(encoder.emit_struct_field( "objects", 2us, |encoder| self.objects.encode(encoder)));
+          try!(encoder.emit_struct_field( "name", 0usize, |encoder| self.name.encode(encoder)));
+          try!(encoder.emit_struct_field( "id", 1usize, |encoder| self.id.encode(encoder)));
+          try!(encoder.emit_struct_field( "objects", 2usize, |encoder| self.objects.encode(encoder)));
           Ok(())
       })
   }

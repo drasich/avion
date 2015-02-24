@@ -104,7 +104,7 @@ impl DraggerManager
             mouse_start : vec::Vec2::zero(),
             mouse : None,
             ori : vec::Quat::identity(),
-            current : 0us
+            current : 0usize
         };
 
         let tr = create_dragger_translation_group(factory);
@@ -228,7 +228,7 @@ impl DraggerManager
         self.ori = ori.as_quat();
         for d in self.draggers[self.current].iter_mut() {
             let mut d = d.borrow_mut();
-            if self.current == 2us {
+            if self.current == 2usize {
                 d.face_camera(camera, self.ori);
             }
             else {

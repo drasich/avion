@@ -219,10 +219,10 @@ impl resource::ResourceT for Material
 impl Encodable for Material {
   fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Material", 1, |encoder| {
-          try!(encoder.emit_struct_field( "name", 0us, |encoder| self.name.encode(encoder)));
-          try!(encoder.emit_struct_field( "shader", 1us, |encoder| self.shader.encode(encoder)));
-          try!(encoder.emit_struct_field( "textures", 2us, |encoder| self.textures.encode(encoder)));
-          try!(encoder.emit_struct_field( "uniforms", 3us, |encoder| self.uniforms.encode(encoder)));
+          try!(encoder.emit_struct_field( "name", 0usize, |encoder| self.name.encode(encoder)));
+          try!(encoder.emit_struct_field( "shader", 1usize, |encoder| self.shader.encode(encoder)));
+          try!(encoder.emit_struct_field( "textures", 2usize, |encoder| self.textures.encode(encoder)));
+          try!(encoder.emit_struct_field( "uniforms", 3usize, |encoder| self.uniforms.encode(encoder)));
           Ok(())
       })
   }

@@ -283,7 +283,7 @@ extern {
 impl Encodable for Shader {
   fn encode<S : Encoder>(&self, encoder: &mut S) -> Result<(), S::Error> {
       encoder.emit_struct("Mesh", 1, |encoder| {
-          try!(encoder.emit_struct_field( "name", 0us, |encoder| self.name.encode(encoder)));
+          try!(encoder.emit_struct_field( "name", 0usize, |encoder| self.name.encode(encoder)));
           Ok(())
       })
   }
