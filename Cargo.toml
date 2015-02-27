@@ -29,5 +29,6 @@ git = "https://github.com/rust-lang/uuid.git"
 
 [dependencies]
 rustc-serialize = "0.3.0"
+#toml = "0.1"
 
 

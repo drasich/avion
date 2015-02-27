@@ -167,7 +167,10 @@ pub extern fn exit_cb(data: *mut c_void) -> () {
     for v in master.views.iter()
     {
         match v.context.borrow().scene {
-            Some(ref s) => s.read().unwrap().save(),
+            Some(ref s) => {
+                s.read().unwrap().save();
+                s.read().unwrap().savetoml();
+            },
             None => {}
         }
     }

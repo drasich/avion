@@ -247,6 +247,7 @@ impl Property
 
     fn add_tools(&mut self)
     {
+        //add component
         // add as prefab
         // if linked to prefab : 
         // State : linked, inherit

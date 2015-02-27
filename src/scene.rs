@@ -4,6 +4,7 @@ use std::sync::{RwLock, Arc};
 use std::old_io::File;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use uuid::Uuid;
+use toml;
 
 pub struct Scene
 {
@@ -188,6 +189,20 @@ impl Scene
 
         self.objects = list;
     }
+
+    pub fn savetoml(&self)
+    {
+        let s = toml::encode_str(self);
+        println!("encoder toml : {} ", s );
+    }
+
+    /*
+    pub fn new_toml(s : &str) -> Material
+    {
+        let mat : Material = toml::decode_str(s).unwrap();
+        mat
+    }
+    */
 }
 
 //impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RwLock<object::Object>> {
