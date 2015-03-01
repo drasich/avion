@@ -3,8 +3,8 @@ use libc::{c_uint, c_int};
 #[repr(C)]
 pub struct CglFbo;
 
-unsafe impl Send for *const CglFbo {}
-unsafe impl Sync for *const CglFbo {}
+unsafe impl Send for CglFbo {}
+unsafe impl Sync for CglFbo {}
 
 #[link(name = "cypher")]
 extern {
@@ -28,6 +28,9 @@ pub struct Fbo
     pub state : i32,
     pub cgl_fbo: Option<*const CglFbo>,
 } 
+
+unsafe impl Send for Fbo {}
+unsafe impl Sync for Fbo {}
 
 impl Fbo
 {

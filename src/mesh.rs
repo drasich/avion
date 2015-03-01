@@ -65,8 +65,11 @@ pub struct Buffer<T>
     //state : BufferState
 }
 
-unsafe impl Send for *const CglBuffer {}
-unsafe impl Sync for *const CglBuffer {}
+unsafe impl Send for Mesh {}
+unsafe impl Sync for Mesh {}
+
+unsafe impl<T> Send for Buffer<T> {}
+unsafe impl<T> Sync for Buffer<T> {}
 
 impl<T> Buffer<T>
 {

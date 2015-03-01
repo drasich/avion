@@ -34,15 +34,17 @@ use control::WidgetUpdate;
 
 use scene;
 
+/*
 #[link(name = "cypher")]
 extern {
     pub fn draw_callback_set(
-        init_cb: extern fn(*mut View) -> (),
-        draw_cb: extern fn(*mut View) -> (),
+        init_cb: extern fn(*mut View),// -> (),
+        draw_cb: extern fn(*mut View), // -> (),
         resize_cb: extern fn(*mut View, w : c_int, h : c_int) -> (),
         render: *const View
         ) -> ();
 }
+*/
 
 #[link(name = "joker")]
 extern {
@@ -159,7 +161,8 @@ impl View
             control.clone()
         );
 
-        a.borrow().add_button("christest", ui::action::add_empty, ad);
+        a.borrow().add_button("christest", ui::action::add_empty, ad.clone());
+        a.borrow().add_button("play_scene", ui::action::play_scene, ad);
 
         {
             let tree = t.borrow();
@@ -648,3 +651,26 @@ pub extern fn resize_cb(v : *mut View, w : c_int, h : c_int) -> () {
     }
 }
 
+pub struct GameView
+{
+    pub window : Option<*const ui::Window>,
+    render : Box<Render>
+}
+
+/*
+impl GameView {
+    pub fn new(factory: &mut factory::Factory) -> View
+    {
+        let render = box Render::new(factory, camera todo);
+
+        let v = GameView {
+            render : render,
+            
+            window : None,
+            camera : camera todo
+        };
+
+        return v;
+    }
+}
+*/

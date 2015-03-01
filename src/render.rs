@@ -331,27 +331,27 @@ impl RenderPass
 
 pub struct Render
 {
-    pub passes : HashMap<String, Box<RenderPass>>, //TODO check
+    passes : HashMap<String, Box<RenderPass>>, //TODO check
 
-    pub mesh_manager : Arc<RwLock<resource::ResourceManager<mesh::Mesh>>>,
-    pub shader_manager : Arc<RwLock<resource::ResourceManager<shader::Shader>>>,
-    pub texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
-    pub material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
-    pub fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>,
+    mesh_manager : Arc<RwLock<resource::ResourceManager<mesh::Mesh>>>,
+    shader_manager : Arc<RwLock<resource::ResourceManager<shader::Shader>>>,
+    texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
+    material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
+    fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>,
 
-    pub camera : Rc<RefCell<camera::Camera>>,
-    pub camera_ortho : Rc<RefCell<camera::Camera>>,
+    camera : Rc<RefCell<camera::Camera>>,
+    camera_ortho : Rc<RefCell<camera::Camera>>,
 
-    pub fbo_all : Arc<RwLock<fbo::Fbo>>,
-    pub fbo_selected : Arc<RwLock<fbo::Fbo>>,
+    fbo_all : Arc<RwLock<fbo::Fbo>>,
+    fbo_selected : Arc<RwLock<fbo::Fbo>>,
 
-    pub quad_outline : Arc<RwLock<object::Object>>,
-    pub quad_all : Arc<RwLock<object::Object>>,
+    quad_outline : Arc<RwLock<object::Object>>,
+    quad_all : Arc<RwLock<object::Object>>,
 
-    pub grid : Arc<RwLock<object::Object>>,
-    pub camera_repere : Arc<RwLock<object::Object>>,
+    grid : Arc<RwLock<object::Object>>,
+    camera_repere : Arc<RwLock<object::Object>>,
 
-    pub line : Arc<RwLock<object::Object>>
+    line : Arc<RwLock<object::Object>>
 
     //pub dragger : Arc<RwLock<object::Object>>,
 }

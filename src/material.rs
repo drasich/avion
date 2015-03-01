@@ -54,6 +54,8 @@ pub struct Material
     pub uniforms : HashMap<String, Box<shader::UniformData>>,
 }
 
+unsafe impl Send for Material {}
+unsafe impl Sync for Material {}
 
 /*
 impl Default for Material

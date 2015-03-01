@@ -7,6 +7,8 @@ pub use self::def::{
     elm_simple_window_main,
     Window,
     window_new,
+    jk_window_new,
+    jk_glview_new,
     window_callback_set
 };
 

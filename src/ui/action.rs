@@ -39,6 +39,7 @@ pub struct Action
     jk_action : *const JkAction,
 }
 
+#[derive(Clone)]
 pub struct ActionData
 {
     tree : Rc<RefCell<Box<ui::Tree>>>,
@@ -115,6 +116,15 @@ pub extern fn add_empty(data : *const c_void)
             t.select(&o.read().unwrap().id);
         }
         _ => {}
+    }
+}
+
+pub extern fn play_scene(data : *const c_void)
+{
+    println!("play scene");
+    unsafe {
+        let win = ui::jk_window_new();
+        //let gl = ui::jk_glview_new(win, ptr::null(),);
     }
 }
 

@@ -10,11 +10,11 @@ build = "build.rs"
 name = "avion"
 
 [dependencies.png]
-#git = "https://github.com/servo/rust-png.git"
+git = "https://github.com/servo/rust-png.git"
 #git = "https://github.com/sebcrozet/rust-png.git"
 #git = "https://github.com/drasich/rust-png.git"
 #git = "https://github.com/bfops/rust-png.git"
-git = "https://github.com/indefini/rust-png.git"
+#git = "https://github.com/indefini/rust-png.git"
 
 #[dependencies.cypher]
 

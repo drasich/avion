@@ -6,8 +6,8 @@ use std::mem;
 #[repr(C)]
 pub struct CglTexture;
 
-unsafe impl Send for *const CglTexture {}
-unsafe impl Sync for *const CglTexture {}
+unsafe impl Send for CglTexture {}
+unsafe impl Sync for CglTexture {}
 
 #[link(name = "cypher")]
 extern {
@@ -26,6 +26,9 @@ pub struct Texture
     pub image : Option<png::Image>,
     pub cgl_texture: Option<*const CglTexture>,
 } 
+
+unsafe impl Send for Texture {}
+unsafe impl Sync for Texture {}
 
 impl Texture
 {

@@ -32,6 +32,9 @@ pub struct Object
     //pub transform : Box<transform::Transform>
 }
 
+unsafe impl Send for Object {}
+unsafe impl Sync for Object {}
+
 impl Object
 {
     /*

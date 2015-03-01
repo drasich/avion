@@ -22,15 +22,6 @@ pub struct CglShaderAttribute;
 #[repr(C)]
 pub struct CglShaderUniform;
 
-unsafe impl Send for *const CglShader {}
-unsafe impl Sync for *const CglShader {}
-
-unsafe impl Send for *const CglShaderUniform {}
-unsafe impl Sync for *const CglShaderUniform {}
-
-unsafe impl Send for *const CglShaderAttribute {}
-unsafe impl Sync for *const CglShaderAttribute {}
-
 pub struct Shader
 {
     pub name : String,
@@ -43,6 +34,9 @@ pub struct Shader
 
     cgl_shader : Option<*const CglShader>, 
 }
+
+unsafe impl Send for Shader {}
+unsafe impl Sync for Shader {}
 
 impl Shader
 {

@@ -211,6 +211,9 @@ pub struct ResourceManager<T>
     resources : Arc<RwLock<HashMap<String, ResTest<T>>>>,
 }
 
+unsafe impl<T:Send> Send for ResourceManager<T> {}
+unsafe impl<T:Sync> Sync for ResourceManager<T> {}
+
 impl<T:'static+Create+Sync+Send> ResourceManager<T> {
     pub fn new() -> ResourceManager<T>
     {
