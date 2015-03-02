@@ -653,24 +653,64 @@ pub extern fn resize_cb(v : *mut View, w : c_int, h : c_int) -> () {
 
 pub struct GameView
 {
-    pub window : Option<*const ui::Window>,
-    render : Box<Render>
+    window : *const ui::Evas_Object,
+    render : Box<Render>,
+    scene : Arc<RwLock<scene::Scene>>
 }
 
-/*
 impl GameView {
-    pub fn new(factory: &mut factory::Factory) -> View
+    pub fn new(
+        factory: &mut factory::Factory,
+        scene : Arc<RwLock<scene::Scene>>
+        ) -> Box<GameView>
     {
-        let render = box Render::new(factory, camera todo);
+        let camera = Rc::new(RefCell::new(factory.create_camera()));
+        {
+            let mut cam = camera.borrow_mut();
+            cam.pan(&vec::Vec3::new(100f64,20f64,100f64));
+            cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
+        }
 
-        let v = GameView {
+        let win = unsafe { ui::jk_window_new() };
+
+        let render = box Render::new(factory, camera);
+
+        let v = box GameView {
             render : render,
-            
-            window : None,
-            camera : camera todo
+            window : win,
+            scene : scene
+            //camera : camera todo
         };
+
+        let glview = unsafe { ui::jk_glview_new(
+                win, 
+                //mem::transmute(&*v.render),
+                mem::transmute(&*v),
+                gv_init_cb,
+                gv_draw_cb,
+                gv_resize_cb
+                ) };
 
         return v;
     }
 }
-*/
+
+pub extern fn gv_init_cb(v : *const c_void) {
+    unsafe {
+        //return (*v).init_render();
+    }
+}
+
+pub extern fn gv_draw_cb(v : *const c_void) {
+    unsafe {
+        //return (*v).draw();
+    }
+}
+
+pub extern fn gv_resize_cb(v : *const c_void, w : c_int, h : c_int) {
+    unsafe {
+        //return (*v).resize(w, h);
+    }
+}
+
+

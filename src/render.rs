@@ -29,15 +29,6 @@ use mesh::BufferSend;
 
 #[link(name = "cypher")]
 extern {
-    /*
-    pub fn draw_callback_set(
-        init_cb: extern fn(*mut Render) -> (),
-        draw_cb: extern fn(*mut Render) -> (),
-        resize_cb: extern fn(*mut Render, w : c_int, h : c_int) -> (),
-        render: *const Render
-        ) -> ();
-        */
-
     pub fn cgl_draw(vertex_count : c_uint) -> ();
     pub fn cgl_draw_lines(vertex_count : c_uint) -> ();
     pub fn cgl_draw_faces(buffer : *const mesh::CglBuffer, index_count : c_uint) -> ();
@@ -950,4 +941,122 @@ fn add_box_only_first_object(
     }
 }
 
+
+pub struct GameRender
+{
+    passes : HashMap<String, Box<RenderPass>>, //TODO check
+
+    mesh_manager : Arc<RwLock<resource::ResourceManager<mesh::Mesh>>>,
+    shader_manager : Arc<RwLock<resource::ResourceManager<shader::Shader>>>,
+    texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
+    material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
+    fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>,
+
+    camera : Rc<RefCell<camera::Camera>>,
+    camera_ortho : Rc<RefCell<camera::Camera>>,
+}
+
+impl GameRender {
+
+    //TODO remove dragger and put "view_objects"
+    pub fn new(factory: &mut factory::Factory,
+               camera : Rc<RefCell<camera::Camera>>,
+               //dragger : Arc<RwLock<object::Object>>,
+               ) -> GameRender
+    {
+        let camera_ortho = Rc::new(RefCell::new(factory.create_camera()));
+        {
+            let mut cam = camera_ortho.borrow_mut();
+            cam.data.projection = camera::Projection::Orthographic;
+            cam.pan(&vec::Vec3::new(0f64,0f64,50f64));
+        }
+
+        let material_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
+        let shader_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
+        let fbo_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
+
+        let r = GameRender { 
+            passes : HashMap::new(),
+            mesh_manager : factory.mesh_manager.clone(),//Arc::new(RwLock::new(resource::ResourceManager::new())),
+            shader_manager : shader_manager.clone(),
+            texture_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
+            material_manager : material_manager.clone(),
+            fbo_manager : fbo_manager,
+            camera : camera,
+            camera_ortho : camera_ortho,
+        };
+
+        r
+    }
+
+    pub fn init(&mut self)
+    {
+    }
+
+    pub fn resize(&mut self, w : c_int, h : c_int)
+    {
+        let mut cam = self.camera.borrow_mut();
+        cam.set_resolution(w, h);
+
+        let mut cam_ortho = self.camera_ortho.borrow_mut();
+        cam_ortho.set_resolution(w, h);
+    }
+
+    fn prepare_passes_objects_ortho(&mut self, list : LinkedList<Arc<RwLock<object::Object>>>)
+    {
+        for (_,p) in self.passes.iter_mut()
+        {
+            p.passes.clear();
+        }
+
+        for o in list.iter() {
+            prepare_passes_object(
+                o.clone(),
+                &mut self.passes,
+                self.material_manager.clone(),
+                self.shader_manager.clone(),
+                self.camera_ortho.clone());
+        }
+    }
+
+    fn prepare_passes_objects_per(
+        &mut self,
+        list : &LinkedList<Arc<RwLock<object::Object>>>)
+    {
+        for (_,p) in self.passes.iter_mut()
+        {
+            p.passes.clear();
+        }
+
+        for o in list.iter() {
+            prepare_passes_object(
+                o.clone(),
+                &mut self.passes,
+                self.material_manager.clone(),
+                self.shader_manager.clone(),
+                self.camera.clone());
+        }
+    }
+
+    pub fn draw(
+        &mut self,
+        objects : &LinkedList<Arc<RwLock<object::Object>>>,
+        selected : &LinkedList<Arc<RwLock<object::Object>>>,
+        draggers : &LinkedList<Arc<RwLock<object::Object>>>,
+        ) -> ()
+    {
+        self.prepare_passes_objects_per(objects);
+
+        for p in self.passes.values()
+        {
+            p.draw_frame(
+                self.mesh_manager.clone(),
+                self.material_manager.clone(),
+                self.shader_manager.clone(),
+                self.texture_manager.clone(),
+                self.fbo_manager.clone(),
+                );
+        }
+    }
+}
 

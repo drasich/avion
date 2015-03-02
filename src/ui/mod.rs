@@ -7,6 +7,7 @@ pub use self::def::{
     elm_simple_window_main,
     Window,
     window_new,
+    Evas_Object,
     jk_window_new,
     jk_glview_new,
     window_callback_set
@@ -18,7 +19,7 @@ pub use self::property::{Property,ChangedFunc};
 pub use self::property::{PropertyShow};
 pub use self::property::{JkPropertyList, PropertyValue};
 
-pub use self::view::View;
+pub use self::view::{View};//, Gameview};
 
 mod tree;
 mod action;

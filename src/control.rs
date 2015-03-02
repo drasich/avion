@@ -33,10 +33,10 @@ pub enum State
 pub struct Control
 {
     op_mgr : operation::OperationManager,
-    factory : Rc<RefCell<factory::Factory>>,
+    pub factory : Rc<RefCell<factory::Factory>>,
     camera : Rc<RefCell<camera::Camera>>,
     state : State,
-    context : Rc<RefCell<context::Context>>,
+    pub context : Rc<RefCell<context::Context>>,
     dragger : Rc<RefCell<dragger::DraggerManager>>,
     mouse_start : Option<vec::Vec2>,
 

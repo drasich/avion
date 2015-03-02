@@ -94,7 +94,7 @@ pub extern fn add_empty(data : *const c_void)
 {
     let ad : &ActionData = unsafe {mem::transmute(data)};
 
-    if ad.control.borrow_state() == BorrowState::Writing {
+    if ad.control.borrow_state() != BorrowState::Unused {
         println!("control already borrowed ");
         return;
     }
@@ -121,9 +121,23 @@ pub extern fn add_empty(data : *const c_void)
 
 pub extern fn play_scene(data : *const c_void)
 {
+    let ad : &ActionData = unsafe {mem::transmute(data)};
+
+    if ad.control.borrow_state() == BorrowState::Writing {
+        println!("control already borrowed ");
+        return;
+    }
+
+    /*
+    let control = ad.control.borrow();
+    let scene = control.context.borrow().scene;
+    let factory = control.factory.clone();
+    */
+
     println!("play scene");
+    //let gv = ui::view::GameView::new(factory, scene);
     unsafe {
-        let win = ui::jk_window_new();
+        //let win = ui::jk_window_new();
         //let gl = ui::jk_glview_new(win, ptr::null(),);
     }
 }
