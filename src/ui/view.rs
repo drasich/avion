@@ -14,7 +14,7 @@ use transform;
 
 use ui;
 use render;
-use render::Render;
+use render::{Render, GameRender};
 use factory;
 use context;
 use resource;
@@ -654,31 +654,37 @@ pub extern fn resize_cb(v : *mut View, w : c_int, h : c_int) -> () {
 pub struct GameView
 {
     window : *const ui::Evas_Object,
-    render : Box<Render>,
-    scene : Arc<RwLock<scene::Scene>>
+    render : Box<GameRender>,
+    scene : Arc<RwLock<scene::Scene>>,
+    name : String
 }
 
 impl GameView {
     pub fn new(
-        factory: &mut factory::Factory,
+        //factory: &mut factory::Factory,
+        camera : Rc<RefCell<camera::Camera>>,
         scene : Arc<RwLock<scene::Scene>>
         ) -> Box<GameView>
     {
+        /*
         let camera = Rc::new(RefCell::new(factory.create_camera()));
         {
             let mut cam = camera.borrow_mut();
             cam.pan(&vec::Vec3::new(100f64,20f64,100f64));
             cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
         }
+        */
 
         let win = unsafe { ui::jk_window_new() };
 
-        let render = box Render::new(factory, camera);
+        //let render = box GameRender::new(factory, camera);
+        let render = box GameRender::new(camera);
 
         let v = box GameView {
             render : render,
             window : win,
-            scene : scene
+            scene : scene,
+            name : "cacayop".to_string()
             //camera : camera todo
         };
 
@@ -697,12 +703,16 @@ impl GameView {
 
 pub extern fn gv_init_cb(v : *const c_void) {
     unsafe {
+        let gv : *const GameView = mem::transmute(v);
+        println!("AAAAAAAAAAAAAAAAAAAAAA {}", (*gv).name);
         //return (*v).init_render();
     }
 }
 
 pub extern fn gv_draw_cb(v : *const c_void) {
     unsafe {
+        let gv : *const GameView = mem::transmute(v);
+        println!("draw {}", (*gv).name);
         //return (*v).draw();
     }
 }

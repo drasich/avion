@@ -953,23 +953,25 @@ pub struct GameRender
     fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>,
 
     camera : Rc<RefCell<camera::Camera>>,
-    camera_ortho : Rc<RefCell<camera::Camera>>,
+    //camera_ortho : Rc<RefCell<camera::Camera>>,
 }
 
 impl GameRender {
 
     //TODO remove dragger and put "view_objects"
-    pub fn new(factory: &mut factory::Factory,
+    pub fn new(//factory: &mut factory::Factory,
                camera : Rc<RefCell<camera::Camera>>,
                //dragger : Arc<RwLock<object::Object>>,
                ) -> GameRender
     {
+        /*
         let camera_ortho = Rc::new(RefCell::new(factory.create_camera()));
         {
             let mut cam = camera_ortho.borrow_mut();
             cam.data.projection = camera::Projection::Orthographic;
             cam.pan(&vec::Vec3::new(0f64,0f64,50f64));
         }
+        */
 
         let material_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
         let shader_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
@@ -977,13 +979,14 @@ impl GameRender {
 
         let r = GameRender { 
             passes : HashMap::new(),
-            mesh_manager : factory.mesh_manager.clone(),//Arc::new(RwLock::new(resource::ResourceManager::new())),
+            //mesh_manager : factory.mesh_manager.clone(),
+            mesh_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
             shader_manager : shader_manager.clone(),
             texture_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
             material_manager : material_manager.clone(),
             fbo_manager : fbo_manager,
             camera : camera,
-            camera_ortho : camera_ortho,
+            //camera_ortho : camera_ortho,
         };
 
         r
@@ -998,10 +1001,11 @@ impl GameRender {
         let mut cam = self.camera.borrow_mut();
         cam.set_resolution(w, h);
 
-        let mut cam_ortho = self.camera_ortho.borrow_mut();
-        cam_ortho.set_resolution(w, h);
+        //let mut cam_ortho = self.camera_ortho.borrow_mut();
+        //cam_ortho.set_resolution(w, h);
     }
 
+    /*
     fn prepare_passes_objects_ortho(&mut self, list : LinkedList<Arc<RwLock<object::Object>>>)
     {
         for (_,p) in self.passes.iter_mut()
@@ -1018,6 +1022,7 @@ impl GameRender {
                 self.camera_ortho.clone());
         }
     }
+    */
 
     fn prepare_passes_objects_per(
         &mut self,

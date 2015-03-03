@@ -128,14 +128,21 @@ pub extern fn play_scene(data : *const c_void)
         return;
     }
 
-    /*
-    let control = ad.control.borrow();
-    let scene = control.context.borrow().scene;
-    let factory = control.factory.clone();
-    */
+    let controlc = ad.control.clone();
+    let control = controlc.borrow();
+    let camera = control.camera.clone();
+    let contextc = control.context.clone();
+    let context = contextc.borrow();
+    let scene = if let Some(ref s) = context.scene {
+        s.clone()
+    }
+    else {
+        return;
+    };
+    //let factory = control.factory.clone();
 
     println!("play scene");
-    //let gv = ui::view::GameView::new(factory, scene);
+    let gv = ui::view::GameView::new(camera, scene);
     unsafe {
         //let win = ui::jk_window_new();
         //let gl = ui::jk_glview_new(win, ptr::null(),);

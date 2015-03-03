@@ -34,7 +34,7 @@ pub struct Control
 {
     op_mgr : operation::OperationManager,
     pub factory : Rc<RefCell<factory::Factory>>,
-    camera : Rc<RefCell<camera::Camera>>,
+    pub camera : Rc<RefCell<camera::Camera>>,
     state : State,
     pub context : Rc<RefCell<context::Context>>,
     dragger : Rc<RefCell<dragger::DraggerManager>>,
