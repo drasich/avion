@@ -45,6 +45,7 @@ pub struct ActionData
     tree : Rc<RefCell<Box<ui::Tree>>>,
     property : Rc<RefCell<Box<ui::Property>>>,
     control : Rc<RefCell<Control>>,
+    holder : Rc<RefCell<ui::view::Holder>>
 }
 
 impl ActionData
@@ -52,12 +53,15 @@ impl ActionData
     pub fn new(
     tree : Rc<RefCell<Box<ui::Tree>>>,
     property : Rc<RefCell<Box<ui::Property>>>,
-    control : Rc<RefCell<Control>>) -> ActionData
+    control : Rc<RefCell<Control>>,
+    holder : Rc<RefCell<ui::view::Holder>>,
+    ) -> ActionData
     {
         ActionData {
             tree : tree,
             property : property,
-            control : control
+            control : control,
+            holder : holder
         }
     }
 }
@@ -85,6 +89,20 @@ impl Action
                 self.jk_action,
                 CString::new(name.as_bytes()).unwrap().as_ptr(),
                 mem::transmute(box data),
+                cb);
+        }
+    }
+
+    pub fn add_button_ptr(
+        &self,
+        name : &str,
+        cb : ButtonCallback, data : *const c_void)
+    {
+        unsafe {
+            action_button_new(
+                self.jk_action,
+                CString::new(name.as_bytes()).unwrap().as_ptr(),
+                data,
                 cb);
         }
     }
@@ -143,6 +161,7 @@ pub extern fn play_scene(data : *const c_void)
 
     println!("play scene");
     let gv = ui::view::GameView::new(camera, scene);
+    ad.holder.borrow_mut().gameview = Some(gv);
     unsafe {
         //let win = ui::jk_window_new();
         //let gl = ui::jk_glview_new(win, ptr::null(),);

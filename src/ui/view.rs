@@ -57,6 +57,11 @@ extern {
         h : c_float);
 }
 
+pub struct Holder
+{
+    pub gameview : Option<Box<GameView>>
+}
+
 pub struct View
 {
     render : Box<Render>,
@@ -72,7 +77,8 @@ pub struct View
     //pub dragger : Arc<RwLock<object::Object>>,
     pub dragger : Rc<RefCell<dragger::DraggerManager>>,
 
-    pub camera : Rc<RefCell<camera::Camera>>
+    pub camera : Rc<RefCell<camera::Camera>>,
+    pub holder : Rc<RefCell<Holder>>
 }
 
 impl View
@@ -117,7 +123,8 @@ impl View
 
             dragger : dragger,
 
-            camera : camera
+            camera : camera,
+            holder : Rc::new(RefCell::new(Holder { gameview : None }))
         };
 
         return v;
@@ -158,11 +165,15 @@ impl View
         let ad = ui::action::ActionData::new(
             t.clone(),
             p.clone(),
-            control.clone()
+            control.clone(),
+            self.holder.clone()
         );
 
         a.borrow().add_button("christest", ui::action::add_empty, ad.clone());
-        a.borrow().add_button("play_scene", ui::action::play_scene, ad);
+        a.borrow().add_button(
+            "play_scene",
+            ui::action::play_scene,
+            ad);
 
         {
             let tree = t.borrow();
@@ -699,27 +710,43 @@ impl GameView {
 
         return v;
     }
+
+    fn draw(&mut self) {
+        self.render.draw(&self.scene.read().unwrap().objects);
+    }
+
+    fn init(&mut self) {
+        self.render.init();
+    }
+
+    fn resize(&mut self, w : c_int, h : c_int)
+    {
+        self.render.resize(w, h);
+    }
 }
 
 pub extern fn gv_init_cb(v : *const c_void) {
     unsafe {
-        let gv : *const GameView = mem::transmute(v);
+        let gv : *mut GameView = mem::transmute(v);
         println!("AAAAAAAAAAAAAAAAAAAAAA {}", (*gv).name);
-        //return (*v).init_render();
+        (*gv).init();
     }
 }
 
 pub extern fn gv_draw_cb(v : *const c_void) {
     unsafe {
-        let gv : *const GameView = mem::transmute(v);
-        println!("draw {}", (*gv).name);
-        //return (*v).draw();
+        let gv : *mut GameView = mem::transmute(v);
+        //println!("draw {}", (*gv).name);
+        (*gv).draw();
     }
 }
 
 pub extern fn gv_resize_cb(v : *const c_void, w : c_int, h : c_int) {
     unsafe {
         //return (*v).resize(w, h);
+        let gv : *mut GameView = mem::transmute(v);
+        //println!("draw {}", (*gv).name);
+        (*gv).resize(w, h);
     }
 }
 

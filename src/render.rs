@@ -1046,8 +1046,6 @@ impl GameRender {
     pub fn draw(
         &mut self,
         objects : &LinkedList<Arc<RwLock<object::Object>>>,
-        selected : &LinkedList<Arc<RwLock<object::Object>>>,
-        draggers : &LinkedList<Arc<RwLock<object::Object>>>,
         ) -> ()
     {
         self.prepare_passes_objects_per(objects);
