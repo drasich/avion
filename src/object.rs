@@ -226,3 +226,28 @@ impl Clone for Object
 }
 */
 
+pub struct ObjectRef
+{
+    pub id : uuid::Uuid,
+    pub object : Option<Arc<RwLock<Object>>>,
+}
+
+impl ObjectRef
+{
+    pub fn new_with_id(id : uuid::Uuid) -> ObjectRef
+    {
+        ObjectRef {
+            id : id,
+            object : None
+        }
+    }
+
+    pub fn new_with_object(o : Arc<RwLock<Object>>) -> ObjectRef
+    {
+        let id = o.read().unwrap().id.clone();
+        ObjectRef {
+            id : id,
+            object : Some(o)
+        }
+    }
+}

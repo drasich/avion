@@ -74,6 +74,7 @@ impl Factory {
             name : String::from_str(name),
             id : self.create_id(),
             objects : LinkedList::new(),
+            camera : Some(Arc::new(RwLock::new(self.create_camera())))
         }
     }
 }

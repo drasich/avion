@@ -2,6 +2,7 @@ use std::sync::{RwLock, Arc};
 use std::f64::consts;
 use std::default::Default;
 use std::num::Float;
+use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 
 use vec;
 use vec::{Vec3};
@@ -11,12 +12,14 @@ use geometry;
 use transform::Orientation;
 use uuid;
 
+#[derive(RustcDecodable,RustcEncodable)]
 pub enum Projection
 {
     Perspective,
     Orthographic
 }
 
+#[derive(RustcDecodable,RustcEncodable)]
 pub struct CameraData
 {
     fovy : f64,
@@ -71,6 +74,7 @@ impl Default for CameraData
     }
 }
 
+#[derive(RustcDecodable,RustcEncodable)]
 pub struct Camera
 {
     pub data : CameraData,
@@ -333,5 +337,17 @@ impl Camera
         return screen;
     }
 
+}
+
+impl Decodable for RwLock<Camera> {
+  fn decode<D : Decoder>(decoder: &mut D) -> Result<RwLock<Camera>, D::Error> {
+      Ok(RwLock::new(try!(Decodable::decode(decoder))))
+  }
+}
+
+impl Encodable for RwLock<Camera> {
+  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
+      self.read().unwrap().encode(encoder)
+  }
 }
 

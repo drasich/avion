@@ -1,16 +1,21 @@
-use object;
 use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};
+use std::rc::Rc;
+use std::cell::RefCell;
 use std::old_io::File;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use uuid::Uuid;
 use toml;
 
+use object;
+use camera;
+
 pub struct Scene
 {
     pub name : String,
     pub id : Uuid,
-    pub objects : LinkedList<Arc<RwLock<object::Object>>>
+    pub objects : LinkedList<Arc<RwLock<object::Object>>>,
+    pub camera : Option<Arc<RwLock<camera::Camera>>>
 }
 
 impl Scene
@@ -46,29 +51,15 @@ impl Scene
     pub fn save(&self)
     {
         println!("save scene todo serialize");
-        /*
-        let mut file = File::create(&Path::new(self.name.as_slice()));
-        //let mut stdwriter = stdio::stdout();
-        //let mut encoder = json::Encoder::new(&mut stdwriter);
-        //let mut encoder = json::PrettyEncoder::new(&mut stdwriter);
-        let mut encoder = json::PrettyEncoder::new(&mut file);
-        //let mut encoder = json::Encoder::new(&mut file);
 
-        //println!("scene : \n\n {}", json::encode(&scene));
-        self.encode(&mut encoder).unwrap();
-        */
-
-        /*
         let mut file = File::create(&Path::new(self.name.as_slice()));
-        let encoded = json::encode(self);
         let mut s = String::new();
         {
-            let mut encoder = json::PrettyEncoder::new(&mut s);
+            let mut encoder = json::Encoder::new_pretty(&mut s);
             let _ = self.encode(&mut encoder);
         }
 
         let result = file.write_str(s.as_slice());
-        */
     }
 
     pub fn object_find(&self, name : &str) -> Option<Arc<RwLock<object::Object>>>
@@ -227,6 +218,7 @@ impl Encodable for Scene {
           try!(encoder.emit_struct_field( "name", 0usize, |encoder| self.name.encode(encoder)));
           try!(encoder.emit_struct_field( "id", 1usize, |encoder| self.id.encode(encoder)));
           try!(encoder.emit_struct_field( "objects", 2usize, |encoder| self.objects.encode(encoder)));
+          try!(encoder.emit_struct_field( "camera", 3usize, |encoder| self.camera.encode(encoder)));
           Ok(())
       })
   }
@@ -234,7 +226,7 @@ impl Encodable for Scene {
 
 impl Decodable for Scene {
   fn decode<D : Decoder>(decoder: &mut D) -> Result<Scene, D::Error> {
-    decoder.read_struct("root", 0, |decoder| {
+      decoder.read_struct("root", 0, |decoder| {
          Ok(Scene{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
           id: try!(decoder.read_struct_field("id", 0, |decoder| Decodable::decode(decoder))),
@@ -243,6 +235,7 @@ impl Decodable for Scene {
           objects: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
           //tests: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
           //tests: LinkedList::new()
+          camera : None //try!(decoder.read_struct_field("camera", 0, |decoder| Decodable::decode(decoder)))
         })
     })
   }

@@ -129,6 +129,34 @@
         "z": 81.0
       },
       "children": []
+    },
+    {
+      "name": "camera",
+      "id": "ff632432-da7c-4d25-bd3f-e999f9d3c87a",
+      "mesh_render": null,
+      "position": {
+        "x": 29.748222,
+        "y": 9.457775,
+        "z": 29.718503
+      },
+      "orientation": {
+        "variant": "Quat",
+        "fields": [
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          }
+        ]
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "children": []
     }
-  ]
+  ],
+  "camera": null
 }
