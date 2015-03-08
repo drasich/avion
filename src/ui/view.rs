@@ -73,6 +73,7 @@ pub struct View
     pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>,
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
     pub action : Option<Rc<RefCell<Box<ui::Action>>>>,
+    pub command : Option<Rc<RefCell<Box<ui::Command>>>>,
 
     //pub dragger : Arc<RwLock<object::Object>>,
     pub dragger : Rc<RefCell<dragger::DraggerManager>>,
@@ -120,6 +121,7 @@ impl View
             tree : None,
             property: None,
             action : None,
+            command : None,
 
             dragger : dragger,
 
@@ -145,6 +147,9 @@ impl View
                     control.clone())));
 
         let a = Rc::new(RefCell::new(ui::Action::new(
+                    w)));
+
+        let command = Rc::new(RefCell::new(ui::Command::new(
                     w)));
 
         match control.borrow_state() {
@@ -173,7 +178,15 @@ impl View
         a.borrow().add_button(
             "play_scene",
             ui::action::play_scene,
-            ad);
+            ad.clone());
+
+        let cd = ui::command::CommandData::new(
+            t.clone(),
+            p.clone(),
+            control.clone(),
+            self.holder.clone()
+        );
+        command.borrow().add("add empty", ui::command::add_empty, cd.clone());
 
         {
             let tree = t.borrow();
@@ -201,6 +214,8 @@ impl View
         self.tree = Some(t);
         self.property = Some(p);
         self.action = Some(a);
+        self.command = Some(command);
+
     }
 
     fn init_render(&mut self)
@@ -615,6 +630,18 @@ pub extern fn key_down(
                 }
             }
         };
+
+        match key_str.as_slice() {
+            "Return" => {
+                if let Some(ref cmd) = view.command {
+                    cmd.borrow().show();
+                }
+                return;
+            },
+            _ => {
+                println!("key not implemented : {}", key_str);
+            }
+        }
 
         c.key_down(modifier, keyname_str.as_slice(), key_str.as_slice(), timestamp)
     };

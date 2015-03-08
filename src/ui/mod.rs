@@ -15,6 +15,7 @@ pub use self::def::{
 
 pub use self::tree::{Tree};
 pub use self::action::{Action};
+pub use self::command::{Command};
 pub use self::property::{Property,ChangedFunc};
 pub use self::property::{PropertyShow};
 pub use self::property::{JkPropertyList, PropertyValue};
@@ -23,6 +24,7 @@ pub use self::view::{View};//, Gameview};
 
 mod tree;
 mod action;
+mod command;
 pub mod def;
 pub mod property;
 pub mod view;
