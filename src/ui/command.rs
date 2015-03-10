@@ -121,3 +121,8 @@ pub extern fn add_empty(data : *const c_void)
 }
 
 
+pub extern fn set_scene_camera(data : *const c_void)
+{
+    println!("command ::: set scene camera");
+}
+

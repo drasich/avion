@@ -187,6 +187,7 @@ impl View
             self.holder.clone()
         );
         command.borrow().add("add empty", ui::command::add_empty, cd.clone());
+        command.borrow().add("set scene camera", ui::command::set_scene_camera, cd.clone());
 
         {
             let tree = t.borrow();
@@ -634,6 +635,7 @@ pub extern fn key_down(
         match key_str.as_slice() {
             "Return" => {
                 if let Some(ref cmd) = view.command {
+                    println!("pressed return show popup");
                     cmd.borrow().show();
                 }
                 return;
