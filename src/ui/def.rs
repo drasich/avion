@@ -184,7 +184,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         }
     }
 
-    for v in master.views.iter_mut()
+    for v in master.views.iter()
     {
         if let Some(w) = v.window {
             unsafe {

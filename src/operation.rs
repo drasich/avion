@@ -28,7 +28,8 @@ pub enum OperationData
     Function(fn(LinkedList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
     List(LinkedList<Box<Any>>, LinkedList<Box<Any>>),
     Vector(Vec<Box<Any>>, Vec<Box<Any>>),
-    SceneAddObjects(Arc<RwLock<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>)
+    SceneAddObjects(Arc<RwLock<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>),
+    SceneRemoveObjects(Arc<RwLock<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>)
 }
 
 pub struct Operation
@@ -158,6 +159,11 @@ impl OperationTrait for Operation
                 sc.add_objects_by_vec(obs.clone());
                 return Change::SceneAdd(sc.id.clone(), get_ids(obs));
             },
+            OperationData::SceneRemoveObjects(ref s, ref obs)  => {
+                let mut sc = s.write().unwrap();
+                sc.remove_objects_by_vec(obs.clone());
+                return Change::SceneRemove(sc.id.clone(), get_ids(obs));
+            },
             _ => {}
         }
 
@@ -218,6 +224,12 @@ impl OperationTrait for Operation
                 let mut sc = s.write().unwrap();
                 sc.remove_objects_by_vec(obs.clone());
                 return Change::SceneRemove(sc.id.clone(), get_ids(obs));
+            },
+            OperationData::SceneRemoveObjects(ref s, ref obs)  => {
+                println!("undo scene remove objects !!!");
+                let mut sc = s.write().unwrap();
+                sc.add_objects_by_vec(obs.clone());
+                return Change::SceneAdd(sc.id.clone(), get_ids(obs));
             },
             _ => {}
         }

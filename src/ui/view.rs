@@ -187,6 +187,7 @@ impl View
             self.holder.clone()
         );
         command.borrow().add("add empty", ui::command::add_empty, cd.clone());
+        command.borrow().add("remove selected", ui::command::remove_selected, cd.clone());
         command.borrow().add("set scene camera", ui::command::set_scene_camera, cd.clone());
 
         {

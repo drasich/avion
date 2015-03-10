@@ -793,6 +793,34 @@ impl Control
 
     }
 
+    pub fn remove_selected_objects(&mut self)
+    {
+        println!("control remove sel");
+
+        let s = if let Some(ref s) = self.context.borrow_mut().scene {
+            s.clone()
+            //let mut s = s.write().unwrap();
+            //s.objects.push_back(ao.clone());
+        }
+        else {
+            println!("control remove sel, cannot borrow");
+            return;
+        };
+
+
+        let list = self.get_selected_objects();
+        let mut vec = Vec::new();
+        for o in list.iter() {
+            vec.push(o.clone());
+        }
+
+        let vs = Vec::new();
+        self.request_operation(
+            vs,
+            operation::OperationData::SceneRemoveObjects(s.clone(),vec)
+            );
+    }
+
 }
 
 fn join_string(path : &Vec<String>) -> String
