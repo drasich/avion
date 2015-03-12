@@ -16,6 +16,7 @@ use ui::Window;
 use ui::Master;
 use ui;
 use control::Control;
+use operation;
 
 #[repr(C)]
 pub struct JkCommand;
@@ -98,21 +99,19 @@ impl Command
         }
     }
 
-    /*
-    pub fn add_button_ptr(
+    pub fn add_ptr(
         &self,
         name : &str,
         cb : CommandCallback, data : *const c_void)
     {
         unsafe {
-            action_button_new(
-                self.jk_action,
+            command_new(
+                self.jk_command,
                 CString::new(name.as_bytes()).unwrap().as_ptr(),
                 data,
                 cb);
         }
     }
-    */
 }
 
 pub extern fn add_empty(data : *const c_void)
@@ -183,5 +182,21 @@ pub extern fn remove_selected(data : *const c_void)
 pub extern fn set_scene_camera(data : *const c_void)
 {
     println!("command ::: set scene camera");
+}
+
+
+pub extern fn remove_selected2(data : *const c_void)
+{
+    let v : &Box<ui::View> = unsafe {mem::transmute(data)};
+
+    if v.control.borrow_state() != BorrowState::Unused {
+        println!("control already borrowed ");
+        return;
+    }
+
+    let mut control = v.control.borrow_mut();
+    let change = control.remove_selected_objects();
+
+    v.handle_control_change(&change);
 }
 

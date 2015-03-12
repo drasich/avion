@@ -261,11 +261,13 @@ impl OperationManager
         }
     }
 
-    pub fn add(&mut self, op : Operation)
+    pub fn add(&mut self, op : Operation) -> Change
     {
-        op.apply();
+        let change = op.apply();
         self.add_undo(box op);
         self.redo.clear();
+
+        change
     }
 
     fn add_undo(&mut self, op : Box<OperationTrait+'static>)

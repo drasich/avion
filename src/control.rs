@@ -421,10 +421,11 @@ impl Control
             change
             ); 
 
-        self.op_mgr.add(op);
+        let change = self.op_mgr.add(op);
+        change
 
-        let s = join_string(&name);
-        return operation::Change::Objects(s,self.context.borrow().get_selected_ids());
+        //let s = join_string(&name);
+        //return operation::Change::Objects(s,self.context.borrow().get_selected_ids());
     }
 
 
@@ -793,7 +794,7 @@ impl Control
 
     }
 
-    pub fn remove_selected_objects(&mut self)
+    pub fn remove_selected_objects(&mut self) -> operation::Change
     {
         println!("control remove sel");
 
@@ -804,7 +805,7 @@ impl Control
         }
         else {
             println!("control remove sel, cannot borrow");
-            return;
+            return operation::Change::None;
         };
 
 
@@ -815,10 +816,13 @@ impl Control
         }
 
         let vs = Vec::new();
-        self.request_operation(
+        return self.request_operation(
             vs,
-            operation::OperationData::SceneRemoveObjects(s.clone(),vec)
+            operation::OperationData::SceneRemoveObjects(s.clone(),vec.clone())
             );
+
+        //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
+
     }
 
 }

@@ -320,7 +320,7 @@ impl View
     }
 
 
-    fn handle_control_change(&self, change : &operation::Change)
+    pub fn handle_control_change(&self, change : &operation::Change)
     {
         if *change == operation::Change::None {
             return;
