@@ -203,6 +203,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         let yo : *const c_void = unsafe { mem::transmute(v) };
         if let Some(ref vc) =  v.command {
             vc.borrow().add_ptr("remove selected22", ui::command::remove_selected2, yo);
+            vc.borrow().add_ptr("set camera2", ui::command::set_camera2, yo);
         }
     }
 }
