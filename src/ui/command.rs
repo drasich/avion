@@ -202,7 +202,6 @@ pub extern fn remove_selected2(data : *const c_void)
 
 pub extern fn set_camera2(data : *const c_void)
 {
-    //TODO
     let v : &Box<ui::View> = unsafe {mem::transmute(data)};
 
     if v.control.borrow_state() != BorrowState::Unused {
@@ -211,7 +210,8 @@ pub extern fn set_camera2(data : *const c_void)
     }
 
     let mut control = v.control.borrow_mut();
-    let change = control.remove_selected_objects();
+    println!("commnd set camera");
+    let change = control.set_scene_camera();
 
     v.handle_control_change(&change);
 }

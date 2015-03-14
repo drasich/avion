@@ -29,7 +29,11 @@ pub enum OperationData
     List(LinkedList<Box<Any>>, LinkedList<Box<Any>>),
     Vector(Vec<Box<Any>>, Vec<Box<Any>>),
     SceneAddObjects(Arc<RwLock<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>),
-    SceneRemoveObjects(Arc<RwLock<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>)
+    SceneRemoveObjects(Arc<RwLock<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>),
+    SetSceneCamera(
+        Arc<RwLock<scene::Scene>>,
+        Option<Arc<RwLock<object::Object>>>,
+        Option<Arc<RwLock<object::Object>>>)
 }
 
 pub struct Operation
@@ -54,6 +58,7 @@ pub enum Change
     SelectedChange,
     SceneAdd(uuid::Uuid, Vec<uuid::Uuid>),
     SceneRemove(uuid::Uuid, Vec<uuid::Uuid>),
+    Scene(uuid::Uuid),
     All
 }
 
@@ -164,6 +169,24 @@ impl OperationTrait for Operation
                 sc.remove_objects_by_vec(obs.clone());
                 return Change::SceneRemove(sc.id.clone(), get_ids(obs));
             },
+            OperationData::SetSceneCamera(ref s, _, ref new)   => {
+
+                println!("operation set camera");
+                let mut sc = s.write().unwrap();
+                if let Some(ref c) = sc.camera {
+                    if let Some(ref o) = *new {
+                        println!("I set thhe camera !!!!!!!");
+                        c.write().unwrap().object = o.clone();
+                        return Change::Scene(sc.id.clone());
+                    }
+                    else {
+                        println!("dame 10");
+                    }
+                }
+                else {
+                    println!("dame 00");
+                }
+            },
             _ => {}
         }
 
@@ -230,6 +253,15 @@ impl OperationTrait for Operation
                 let mut sc = s.write().unwrap();
                 sc.add_objects_by_vec(obs.clone());
                 return Change::SceneAdd(sc.id.clone(), get_ids(obs));
+            },
+            OperationData::SetSceneCamera(ref s, ref old, _)   => {
+                let mut sc = s.write().unwrap();
+                if let Some(ref c) = sc.camera {
+                    if let Some(ref o) = *old {
+                        c.write().unwrap().object = o.clone();
+                        return Change::Scene(sc.id.clone());
+                    }
+                }
             },
             _ => {}
         }

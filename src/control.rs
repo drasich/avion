@@ -825,6 +825,38 @@ impl Control
 
     }
 
+    pub fn set_scene_camera(&mut self) -> operation::Change
+    {
+        println!("control remove sel");
+
+        let s = if let Some(ref s) = self.context.borrow_mut().scene {
+            s.clone()
+            //let mut s = s.write().unwrap();
+            //s.objects.push_back(ao.clone());
+        }
+        else {
+            println!("control remove sel, cannot borrow");
+            return operation::Change::None;
+        };
+
+        let current = match s.read().unwrap().camera {
+            None => None,
+            Some(ref c) => Some(c.read().unwrap().object.clone())
+        };
+
+        let o = self.get_selected_object();
+        println!("control set camera");
+
+        let vs = Vec::new();
+        return self.request_operation(
+            vs,
+            operation::OperationData::SetSceneCamera(s.clone(),current, o.clone())
+            );
+
+        //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
+
+    }
+
 }
 
 fn join_string(path : &Vec<String>) -> String

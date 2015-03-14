@@ -90,7 +90,15 @@ impl View
         //let factory = factory.borrow_mut();
 
         let scene_path = "scene/simple.scene";
-        let scene = Arc::new(RwLock::new(scene::Scene::new_from_file(scene_path)));
+        let mut ss = scene::Scene::new_from_file(scene_path);
+        if let None = ss.camera {
+            let mut cam = factory.create_camera();
+            cam.pan(&vec::Vec3::new(-100f64,20f64,100f64));
+            cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
+            ss.camera = Some(Arc::new(RwLock::new(cam)));
+        }
+        let scene = Arc::new(RwLock::new(ss));
+
 
         let camera = Rc::new(RefCell::new(factory.create_camera()));
         {

@@ -135,7 +135,7 @@
       "id": "ff632432-da7c-4d25-bd3f-e999f9d3c87a",
       "mesh_render": null,
       "position": {
-        "x": 29.748222,
+        "x": 27.726455,
         "y": 9.457775,
         "z": 29.718503
       },
@@ -158,5 +158,69 @@
       "children": []
     }
   ],
-  "camera": null
+  "camera": {
+    "data": {
+      "fovy": 0.392699,
+      "fovy_base": 0.392699,
+      "near": 1.0,
+      "far": 10000.0,
+      "aspect": 1.6,
+      "width": 800.0,
+      "height": 500.0,
+      "height_base": 500,
+      "yaw": -0.784898,
+      "pitch": -0.105723,
+      "roll": 0.0,
+      "clear_color": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+      },
+      "projection": "Perspective",
+      "origin": {
+        "x": 100,
+        "y": -15,
+        "z": 42.144328
+      },
+      "local_offset": {
+        "x": -100.0,
+        "y": 20.0,
+        "z": 100.0
+      },
+      "center": {
+        "x": 0.0,
+        "y": 5.0,
+        "z": 0.0
+      }
+    },
+    "object": {
+      "name": "camera",
+      "id": "89f1cb1e-977e-4f70-8d4c-47622836a66f",
+      "mesh_render": null,
+      "position": {
+        "x": -99.9,
+        "y": 20.0,
+        "z": 100.0
+      },
+      "orientation": {
+        "variant": "Quat",
+        "fields": [
+          {
+            "x": -0.04882,
+            "y": -0.381918,
+            "z": -0.020208,
+            "w": 0.922685
+          }
+        ]
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "children": []
+    },
+    "id": "8c3f4185-5ae3-4b3a-97aa-5791ac4af325"
+  }
 }
