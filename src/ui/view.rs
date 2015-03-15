@@ -7,6 +7,7 @@ use std::ffi;
 use std::ffi::CStr;
 use std::ffi::CString;
 use std::str;
+use std::ptr;
 use object;
 use mesh;
 use shader;
@@ -45,6 +46,7 @@ extern {
         ) -> ();
 }
 */
+
 
 #[link(name = "joker")]
 extern {
@@ -95,9 +97,9 @@ impl View
             let mut cam = factory.create_camera();
             cam.pan(&vec::Vec3::new(-100f64,20f64,100f64));
             cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
-            ss.camera = Some(Arc::new(RwLock::new(cam)));
+            ss.camera = Some(Rc::new(RefCell::new(cam)));
         }
-        let scene = Arc::new(RwLock::new(ss));
+        let scene = Rc::new(RefCell::new(ss));
 
 
         let camera = Rc::new(RefCell::new(factory.create_camera()));
@@ -216,7 +218,7 @@ impl View
 
         match self.context.borrow().scene {
             Some(ref s) => {
-                t.borrow_mut().set_scene(&*s.read().unwrap());
+                t.borrow_mut().set_scene(&*s.borrow());
             },
             None => {}
         };
@@ -238,7 +240,7 @@ impl View
         let context = self.context.borrow();
 
         let scene = match context.scene {
-            Some(ref s) => s.read().unwrap(),
+            Some(ref s) => s.borrow(),
             None => return
         };
 
@@ -482,7 +484,7 @@ impl View
                     None => return
                 };
 
-                let objects = scene.read().unwrap().find_objects_by_id(&mut obs.clone());
+                let objects = scene.borrow().find_objects_by_id(&mut obs.clone());
 
                 // todo
                 match self.tree {
@@ -704,15 +706,17 @@ pub struct GameView
 {
     window : *const ui::Evas_Object,
     render : Box<GameRender>,
-    scene : Arc<RwLock<scene::Scene>>,
+    scene : Rc<RefCell<scene::Scene>>,
     name : String
 }
+
+
 
 impl GameView {
     pub fn new(
         //factory: &mut factory::Factory,
         camera : Rc<RefCell<camera::Camera>>,
-        scene : Arc<RwLock<scene::Scene>>
+        scene : Rc<RefCell<scene::Scene>>
         ) -> Box<GameView>
     {
         /*
@@ -724,7 +728,9 @@ impl GameView {
         }
         */
 
-        let win = unsafe { ui::jk_window_new() };
+        let win = unsafe { 
+            ui::jk_window_new(gv_close_cb, ptr::null())
+        };
 
         //let render = box GameRender::new(factory, camera);
         let render = box GameRender::new(camera);
@@ -750,7 +756,7 @@ impl GameView {
     }
 
     fn draw(&mut self) {
-        self.render.draw(&self.scene.read().unwrap().objects);
+        self.render.draw(&self.scene.borrow().objects);
     }
 
     fn init(&mut self) {
@@ -766,7 +772,7 @@ impl GameView {
 pub extern fn gv_init_cb(v : *const c_void) {
     unsafe {
         let gv : *mut GameView = mem::transmute(v);
-        println!("AAAAAAAAAAAAAAAAAAAAAA {}", (*gv).name);
+        //println!("AAAAAAAAAAAAAAAAAAAAAA gv init cb {}", (*gv).name);
         (*gv).init();
     }
 }
@@ -783,9 +789,12 @@ pub extern fn gv_resize_cb(v : *const c_void, w : c_int, h : c_int) {
     unsafe {
         //return (*v).resize(w, h);
         let gv : *mut GameView = mem::transmute(v);
-        //println!("draw {}", (*gv).name);
+        //println!("resize {}", (*gv).name);
         (*gv).resize(w, h);
     }
 }
 
+pub extern fn gv_close_cb(v : *mut c_void) {
+    println!("close cb");
+}
 

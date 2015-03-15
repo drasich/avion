@@ -251,3 +251,25 @@ impl ObjectRef
         }
     }
 }
+
+impl Decodable for ObjectRef {
+  fn decode<D : Decoder>(decoder: &mut D) -> Result<ObjectRef, D::Error> {
+    decoder.read_struct("root", 0, |decoder| {
+         Ok(ObjectRef{
+          id: try!(decoder.read_struct_field("id", 0, |decoder| Decodable::decode(decoder))),
+          object: None,
+        })
+    })
+  }
+}
+
+
+impl Encodable  for ObjectRef {
+  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
+      encoder.emit_struct("ObjectRef", 1, |encoder| {
+          try!(encoder.emit_struct_field( "id", 0usize, |encoder| self.id.encode(encoder)));
+          Ok(())
+      })
+  }
+}
+

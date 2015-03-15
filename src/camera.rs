@@ -75,10 +75,18 @@ impl Default for CameraData
 }
 
 #[derive(RustcDecodable,RustcEncodable)]
+pub enum ObjectKind
+{
+    Own(Arc<RwLock<object::Object>>),
+    Ref(object::ObjectRef),
+}
+
+#[derive(RustcDecodable,RustcEncodable)]
 pub struct Camera
 {
     pub data : CameraData,
     pub object : Arc<RwLock<object::Object>>,
+    //pub object : ObjectKind, 
     pub id : uuid::Uuid
 }
 

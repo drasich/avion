@@ -32,6 +32,7 @@ pub struct Evas_Object;
 #[repr(C)]
 pub struct JkGlview;
 
+pub type RustCb = extern fn(data : *mut c_void);
 pub type RenderFunc = extern fn(data : *const c_void);
 pub type ResizeFunc = extern fn(data : *const c_void, w : c_int, h : c_int);
 
@@ -49,7 +50,7 @@ pub type ResizeFuncTmp = extern fn(data : *mut View, w : c_int, h : c_int);
 extern {
     pub fn elm_simple_window_main();
     pub fn window_new() -> *const Window;
-    pub fn jk_window_new() -> *const Evas_Object;
+    pub fn jk_window_new(cb : RustCb, cb_data : *const c_void) -> *const Evas_Object;
     pub fn jk_glview_new(
         win : *const Evas_Object,
         data : *const c_void,
@@ -216,8 +217,10 @@ pub extern fn exit_cb(data: *mut c_void) -> () {
     {
         match v.context.borrow().scene {
             Some(ref s) => {
-                s.read().unwrap().save();
-                s.read().unwrap().savetoml();
+                //s.read().unwrap().save();
+                //s.read().unwrap().savetoml();
+                s.borrow().save();
+                //s.borrow().savetoml();
             },
             None => {}
         }

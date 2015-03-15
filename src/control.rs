@@ -216,11 +216,11 @@ impl Control
             }
         };
 
-        println!("objects in the scene : {}", scene.read().unwrap().objects.len());
+        println!("objects in the scene : {}", scene.borrow().objects.len());
 
         let mut found_length = 0f64;
         let mut closest_obj = None;
-        for o in scene.read().unwrap().objects.iter() {
+        for o in scene.borrow().objects.iter() {
             let ir = intersection::ray_object(&r, &*o.read().unwrap());
             if ir.hit {
                 let length = (ir.position - r.start).length2();
@@ -277,7 +277,7 @@ impl Control
             None => return
         };
 
-        let mut obs = scene.read().unwrap().find_objects_by_id(ids);
+        let mut obs = scene.borrow().find_objects_by_id(ids);
         c.selected.append(&mut obs);
 
         /*
@@ -686,7 +686,7 @@ impl Control
                         None => return list
                     };
 
-                    for o in s.read().unwrap().objects.iter() {
+                    for o in s.borrow().objects.iter() {
                         let b = intersection::is_object_in_planes(planes.as_slice(), &*o.read().unwrap());
                         if b {
                             c.selected.push_back(o.clone());
@@ -839,9 +839,9 @@ impl Control
             return operation::Change::None;
         };
 
-        let current = match s.read().unwrap().camera {
+        let current = match s.borrow().camera {
             None => None,
-            Some(ref c) => Some(c.read().unwrap().object.clone())
+            Some(ref c) => Some(c.borrow().object.clone())
         };
 
         let o = self.get_selected_object();

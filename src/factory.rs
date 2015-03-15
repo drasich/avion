@@ -1,6 +1,8 @@
 use std::default::Default;
 use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};
+use std::rc::Rc;
+use std::cell::RefCell;
 use uuid;
 
 use object;
@@ -74,7 +76,7 @@ impl Factory {
             name : String::from_str(name),
             id : self.create_id(),
             objects : LinkedList::new(),
-            camera : Some(Arc::new(RwLock::new(self.create_camera())))
+            camera : Some(Rc::new(RefCell::new(self.create_camera())))
         }
     }
 }

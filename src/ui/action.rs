@@ -148,7 +148,7 @@ pub extern fn play_scene(data : *const c_void)
 
     let controlc = ad.control.clone();
     let control = controlc.borrow();
-    let camera = control.camera.clone();
+    //let camera = control.camera.clone();
     let contextc = control.context.clone();
     let context = contextc.borrow();
     let scene = if let Some(ref s) = context.scene {
@@ -158,6 +158,13 @@ pub extern fn play_scene(data : *const c_void)
         return;
     };
     //let factory = control.factory.clone();
+    
+    let camera = if let Some(ref s) = scene.borrow().camera {
+        s.clone()
+    }
+    else {
+        return;
+    };
 
     println!("play scene");
     let gv = ui::view::GameView::new(camera, scene);

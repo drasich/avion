@@ -6,11 +6,13 @@ use transform;
 
 use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};
+use std::rc::Rc;
+use std::cell::{RefCell, BorrowState};
 
 pub struct Context
 {
     pub selected : LinkedList<Arc<RwLock<object::Object>>>,
-    pub scene : Option<Arc<RwLock<scene::Scene>>>,
+    pub scene : Option<Rc<RefCell<scene::Scene>>>,
     pub saved_positions : Vec<vec::Vec3>,
     pub saved_scales : Vec<vec::Vec3>,
     pub saved_oris : Vec<transform::Orientation>
@@ -104,7 +106,7 @@ impl Context
             }
             if !found {
                 if let Some(ref s) = self.scene {
-                    for so in s.read().unwrap().objects.iter() {
+                    for so in s.borrow().objects.iter() {
                         if *id == so.read().unwrap().id {
                             self.selected.push_back(so.clone());
                             break;

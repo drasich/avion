@@ -14,9 +14,9 @@
         }
       },
       "position": {
-        "x": 0.0,
+        "x": -6.164148,
         "y": 0.0,
-        "z": 0.0
+        "z": -2.169883
       },
       "orientation": {
         "variant": "AngleXYZ",
@@ -135,18 +135,18 @@
       "id": "ff632432-da7c-4d25-bd3f-e999f9d3c87a",
       "mesh_render": null,
       "position": {
-        "x": 27.726455,
-        "y": 9.457775,
-        "z": 29.718503
+        "x": 53.493718,
+        "y": 8.652413,
+        "z": 55.28257
       },
       "orientation": {
         "variant": "Quat",
         "fields": [
           {
             "x": 0.0,
-            "y": 0.0,
+            "y": 0.324578,
             "z": 0.0,
-            "w": 1.0
+            "w": 0.945859
           }
         ]
       },
@@ -160,13 +160,13 @@
   ],
   "camera": {
     "data": {
-      "fovy": 0.392699,
+      "fovy": 0.340863,
       "fovy_base": 0.392699,
       "near": 1.0,
       "far": 10000.0,
-      "aspect": 1.6,
-      "width": 800.0,
-      "height": 500.0,
+      "aspect": 1.990783,
+      "width": 864.0,
+      "height": 434.0,
       "height_base": 500,
       "yaw": -0.784898,
       "pitch": -0.105723,
@@ -196,7 +196,7 @@
     },
     "object": {
       "name": "camera",
-      "id": "89f1cb1e-977e-4f70-8d4c-47622836a66f",
+      "id": "b05d6ab7-9cf1-4b08-95ac-7d543b217b23",
       "mesh_render": null,
       "position": {
         "x": -99.9,
@@ -221,6 +221,6 @@
       },
       "children": []
     },
-    "id": "8c3f4185-5ae3-4b3a-97aa-5791ac4af325"
+    "id": "6eb434d8-d71d-45b8-b582-027eb13ca4b3"
   }
 }

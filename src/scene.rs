@@ -15,7 +15,7 @@ pub struct Scene
     pub name : String,
     pub id : Uuid,
     pub objects : LinkedList<Arc<RwLock<object::Object>>>,
-    pub camera : Option<Arc<RwLock<camera::Camera>>>
+    pub camera : Option<Rc<RefCell<camera::Camera>>>
 }
 
 impl Scene

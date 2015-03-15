@@ -1,7 +1,7 @@
 use std::any::{Any};//, AnyRefExt};
 use std::sync::{RwLock, Arc};
 use std::cell::RefCell;
-use std::rc::Weak;
+use std::rc::{Rc,Weak};
 use std::fmt;
 use std::collections::LinkedList;
 use uuid;
@@ -28,10 +28,10 @@ pub enum OperationData
     Function(fn(LinkedList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
     List(LinkedList<Box<Any>>, LinkedList<Box<Any>>),
     Vector(Vec<Box<Any>>, Vec<Box<Any>>),
-    SceneAddObjects(Arc<RwLock<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>),
-    SceneRemoveObjects(Arc<RwLock<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>),
+    SceneAddObjects(Rc<RefCell<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>),
+    SceneRemoveObjects(Rc<RefCell<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>),
     SetSceneCamera(
-        Arc<RwLock<scene::Scene>>,
+        Rc<RefCell<scene::Scene>>,
         Option<Arc<RwLock<object::Object>>>,
         Option<Arc<RwLock<object::Object>>>)
 }
@@ -160,23 +160,22 @@ impl OperationTrait for Operation
                 return Change::Objects(s, ids);
             },
             OperationData::SceneAddObjects(ref s, ref obs)  => {
-                let mut sc = s.write().unwrap();
+                let mut sc = s.borrow_mut();
                 sc.add_objects_by_vec(obs.clone());
                 return Change::SceneAdd(sc.id.clone(), get_ids(obs));
             },
             OperationData::SceneRemoveObjects(ref s, ref obs)  => {
-                let mut sc = s.write().unwrap();
+                let mut sc = s.borrow_mut();
                 sc.remove_objects_by_vec(obs.clone());
                 return Change::SceneRemove(sc.id.clone(), get_ids(obs));
             },
             OperationData::SetSceneCamera(ref s, _, ref new)   => {
-
                 println!("operation set camera");
-                let mut sc = s.write().unwrap();
+                let mut sc = s.borrow_mut();
                 if let Some(ref c) = sc.camera {
                     if let Some(ref o) = *new {
                         println!("I set thhe camera !!!!!!!");
-                        c.write().unwrap().object = o.clone();
+                        c.borrow_mut().object = o.clone();
                         return Change::Scene(sc.id.clone());
                     }
                     else {
@@ -244,21 +243,21 @@ impl OperationTrait for Operation
             },
             OperationData::SceneAddObjects(ref s, ref obs)  => {
                 println!("undo scene add objects !!!");
-                let mut sc = s.write().unwrap();
+                let mut sc = s.borrow_mut();
                 sc.remove_objects_by_vec(obs.clone());
                 return Change::SceneRemove(sc.id.clone(), get_ids(obs));
             },
             OperationData::SceneRemoveObjects(ref s, ref obs)  => {
                 println!("undo scene remove objects !!!");
-                let mut sc = s.write().unwrap();
+                let mut sc = s.borrow_mut();
                 sc.add_objects_by_vec(obs.clone());
                 return Change::SceneAdd(sc.id.clone(), get_ids(obs));
             },
             OperationData::SetSceneCamera(ref s, ref old, _)   => {
-                let mut sc = s.write().unwrap();
+                let mut sc = s.borrow_mut();
                 if let Some(ref c) = sc.camera {
                     if let Some(ref o) = *old {
-                        c.write().unwrap().object = o.clone();
+                        c.borrow_mut().object = o.clone();
                         return Change::Scene(sc.id.clone());
                     }
                 }
