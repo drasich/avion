@@ -81,10 +81,69 @@ pub enum ObjectKind
     Ref(object::ObjectRef),
 }
 
+impl ObjectKind {
+
+    fn get_orientation(&self) -> Orientation
+    {
+        match *self {
+            ObjectKind::Own(ref o) => o.read().unwrap().orientation,
+            ObjectKind::Ref(ref r) => match r.object {
+                None => Orientation::new_quat(),
+                Some(ref o) => o.read().unwrap().orientation
+            }
+        }
+    }
+
+    fn set_orientation(&mut self, ori : Orientation)
+    {
+        match *self {
+            ObjectKind::Own(ref o) => o.write().unwrap().orientation = ori,
+            ObjectKind::Ref(ref r) => if let Some(ref o) = r.object {
+                o.write().unwrap().orientation = ori;
+            }
+        }
+    }
+
+    fn get_position(&self) -> vec::Vec3
+    {
+        match *self {
+            ObjectKind::Own(ref o) => o.read().unwrap().position,
+            ObjectKind::Ref(ref r) => match r.object {
+                None => vec::Vec3::zero(),
+                Some(ref o) => o.read().unwrap().position
+            }
+        }
+    }
+
+    fn set_position(&mut self, pos : vec::Vec3)
+    {
+        match *self {
+            ObjectKind::Own(ref o) => o.write().unwrap().position = pos,
+            ObjectKind::Ref(ref r) => if let Some(ref o) = r.object {
+                o.write().unwrap().position = pos;
+            }
+        }
+    }
+
+    fn get_object(&self) -> Option<Arc<RwLock<object::Object>>>
+    {
+        match *self {
+            ObjectKind::Own(ref o) => Some(o.clone()),
+            ObjectKind::Ref(ref r) => match r.object {
+                None => None,
+                Some(ref o) => Some(o.clone())
+            }
+        }
+
+    }
+}
+
 #[derive(RustcDecodable,RustcEncodable)]
 pub struct Camera
 {
     pub data : CameraData,
+    //pub position : vec::Vec3,
+    //pub orientation : Orientation,
     pub object : Arc<RwLock<object::Object>>,
     //pub object : ObjectKind, 
     pub id : uuid::Uuid
@@ -343,6 +402,31 @@ impl Camera
         //printf("screen : %f, %f \n", screen.x, screen.y);
 
         return screen;
+    }
+
+    pub fn get_orientation(&self) -> Orientation
+    {
+        self.object.read().unwrap().orientation
+    }
+
+    pub fn set_orientation(&mut self, ori : Orientation)
+    {
+        self.object.write().unwrap().orientation = ori;
+    }
+
+    pub fn get_position(&self) -> vec::Vec3
+    {
+        self.object.read().unwrap().position
+    }
+
+    pub fn set_position(&mut self, pos : vec::Vec3)
+    {
+        self.object.write().unwrap().position = pos;
+    }
+
+    pub fn get_object(&self) -> Option<Arc<RwLock<object::Object>>>
+    {
+        Some(self.object.clone())
     }
 
 }

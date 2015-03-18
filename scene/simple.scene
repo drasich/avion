@@ -160,13 +160,13 @@
   ],
   "camera": {
     "data": {
-      "fovy": 0.340863,
+      "fovy": 0.392699,
       "fovy_base": 0.392699,
       "near": 1.0,
       "far": 10000.0,
-      "aspect": 1.990783,
-      "width": 864.0,
-      "height": 434.0,
+      "aspect": 1.6,
+      "width": 800.0,
+      "height": 500.0,
       "height_base": 500,
       "yaw": -0.784898,
       "pitch": -0.105723,
@@ -196,7 +196,7 @@
     },
     "object": {
       "name": "camera",
-      "id": "b05d6ab7-9cf1-4b08-95ac-7d543b217b23",
+      "id": "d53b8f67-77cb-4378-94b8-2f8c132517cb",
       "mesh_render": null,
       "position": {
         "x": -99.9,
@@ -221,6 +221,6 @@
       },
       "children": []
     },
-    "id": "6eb434d8-d71d-45b8-b582-027eb13ca4b3"
+    "id": "6b43402d-c669-496d-843a-6955aef8e1a4"
   }
 }
