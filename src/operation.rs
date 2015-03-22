@@ -176,10 +176,12 @@ impl OperationTrait for Operation
                     if let Some(ref o) = *new {
                         println!("I set thhe camera !!!!!!!");
                         c.borrow_mut().object = o.clone();
+                        c.borrow_mut().object_id = Some(o.read().unwrap().id.clone());
                         return Change::Scene(sc.id.clone());
                     }
                     else {
                         println!("dame 10");
+                        c.borrow_mut().object_id = None;
                     }
                 }
                 else {
@@ -258,7 +260,11 @@ impl OperationTrait for Operation
                 if let Some(ref c) = sc.camera {
                     if let Some(ref o) = *old {
                         c.borrow_mut().object = o.clone();
+                        c.borrow_mut().object_id = Some(o.read().unwrap().id.clone());
                         return Change::Scene(sc.id.clone());
+                    }
+                    else {
+                        c.borrow_mut().object_id = None
                     }
                 }
             },

@@ -146,7 +146,8 @@ pub struct Camera
     //pub orientation : Orientation,
     pub object : Arc<RwLock<object::Object>>,
     //pub object : ObjectKind, 
-    pub id : uuid::Uuid
+    pub id : uuid::Uuid,
+    pub object_id : Option<uuid::Uuid>
 }
 
 impl Camera

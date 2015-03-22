@@ -35,16 +35,38 @@ impl Scene
         let file = File::open(&Path::new(file_path)).read_to_string().unwrap();
         let scene : Scene = json::decode(file.as_slice()).unwrap();
 
-        scene.post_read_parent_set();
+        scene.post_read();
 
         scene
     }
 
-    fn post_read_parent_set(&self)
+    fn post_read(&self)
     {
         for o in self.objects.iter()
         {
             post_read_parent_set(o.clone());
+
+            if let Some(ref c) = self.camera {
+                let mut cam = c.borrow_mut();
+                let id = match cam.object_id {
+                    Some(ref id) => id.clone(),
+                    None => {
+                        println!("camera has no id");
+                        continue;
+                    }
+                };
+
+                if o.read().unwrap().id == id {
+                    println!("fiiiiiiiiiiiiiiiiiiiiind");
+                    cam.object = o.clone();
+                }
+                else {
+                    println!("it is not {}", o.read().unwrap().name);
+                }
+            }
+            else {
+                println!("nooooooooo camera");
+            }
         }
     }
 
@@ -235,7 +257,8 @@ impl Decodable for Scene {
           objects: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
           //tests: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
           //tests: LinkedList::new()
-          camera : None //try!(decoder.read_struct_field("camera", 0, |decoder| Decodable::decode(decoder)))
+          //camera : None //try!(decoder.read_struct_field("camera", 0, |decoder| Decodable::decode(decoder)))
+          camera : try!(decoder.read_struct_field("camera", 0, |decoder| Decodable::decode(decoder)))
         })
     })
   }
