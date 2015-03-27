@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
-use std::old_io::File;
-use std::old_io::BufferedReader;
+//use std::old_io::File;
+use std::fs::File;
+//use std::old_io::BufferedReader;
+use std::io::{BufReader, BufRead, BufReadExt, Read};
 use libc::{c_char, c_uint};
 use std::ptr;
 use std::str::FromStr;
@@ -118,18 +120,18 @@ impl Shader
     pub fn read(&mut self)
     {
         let path = Path::new(self.name.clone());
-        let mut file = BufferedReader::new(File::open(&path));
+        let mut file = BufReader::new(File::open(&path).ok().unwrap());
 
-        let mut frag : String;
-        let mut vert : String;
+        let mut frag = String::new();
+        let mut vert = String::new();
 
-        match file.read_line() {
-            Ok(l) => { vert = l; vert.pop(); },
+        match file.read_line(&mut vert) {
+            Ok(_) => { vert.pop(); },
             Err(_) => return
         }
  
-        match file.read_line() {
-            Ok(l) => { frag = l; frag.pop();},
+        match file.read_line(&mut frag) {
+            Ok(_) => { frag.pop();},
             Err(_) => return
         }
 
@@ -175,18 +177,20 @@ impl Shader
             return
         }
 
-        let contents = File::open(&Path::new(fragpath)).read_to_string();
-
-        match contents {
-            Ok(r) => self.frag = Some(r),
-            _ => return
+        {
+            let mut contents = String::new();
+            match File::open(&Path::new(fragpath)).ok().unwrap().read_to_string(&mut contents){
+                Ok(_) => self.frag = Some(contents),
+                _ => return
+            }
         }
 
-        let contents = File::open(&Path::new(vertpath)).read_to_string();
-
-        match contents {
-            Ok(r) => self.vert = Some(r),
-            _ => return
+        {
+            let mut contents = String::new();
+            match File::open(&Path::new(vertpath)).ok().unwrap().read_to_string(&mut contents) {
+                Ok(_) => self.vert = Some(contents),
+                _ => return
+            }
         }
 
         self.state = 1;
