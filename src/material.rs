@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
-use std::old_io::File;
-use std::old_io::BufferedReader;
+use std::fs::File;
+use std::io::{BufReader, Read, Write};
 use std::collections::hash_map::Entry::{Occupied,Vacant};
 //use std::default::Default;
 //use toml;
@@ -87,7 +87,8 @@ impl Material
 
     pub fn new_from_file(file_path : &str) -> Material
     {
-        let file = File::open(&Path::new(file_path)).read_to_string().unwrap();
+        let mut file = String::new();
+        File::open(&Path::new(file_path)).ok().unwrap().read_to_string(&mut file);
         let mat : Material = json::decode(file.as_slice()).unwrap();
         mat
     }
@@ -96,7 +97,8 @@ impl Material
     {
         //TODO 
 
-        let file = File::open(&Path::new(self.name.as_slice())).read_to_string().unwrap();
+        let mut file = String::new();
+        File::open(&Path::new(self.name.as_slice())).ok().unwrap().read_to_string(&mut file);
         //let mut mat : Material = json::decode(file.as_slice()).unwrap();
         let mat : Material = match json::decode(file.as_slice()){
             Ok(m) => m,
@@ -134,7 +136,7 @@ impl Material
 
     pub fn save(&self)
     {
-        let mut file = File::create(&Path::new(self.name.as_slice()));
+        let mut file = File::create(&Path::new(self.name.as_slice())).ok().unwrap();
         /*
         //let mut stdwriter = stdio::stdout();
         let mut encoder = json::PrettyEncoder::new(&mut file.unwrap());
@@ -149,7 +151,7 @@ impl Material
             let _ = self.encode(&mut encoder);
         }
 
-        let result = file.write_str(s.as_slice());
+        let result = file.write(s.as_slice().as_bytes());
     }
 
     /*
