@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
-//use std::old_io::File;
 use std::fs::File;
-//use std::old_io::BufferedReader;
 use std::io::{BufReader, BufRead, BufReadExt, Read};
 use libc::{c_char, c_uint};
 use std::ptr;

@@ -2,7 +2,8 @@ use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};
 use std::rc::Rc;
 use std::cell::RefCell;
-use std::old_io::File;
+use std::fs::File;
+use std::io::{Read,Write};
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use uuid::Uuid;
 use toml;
@@ -32,7 +33,8 @@ impl Scene
 
     pub fn new_from_file(file_path : &str) -> Scene
     {
-        let file = File::open(&Path::new(file_path)).read_to_string().unwrap();
+        let mut file = String::new();
+        File::open(&Path::new(file_path)).ok().unwrap().read_to_string(&mut file);
         let scene : Scene = json::decode(file.as_slice()).unwrap();
 
         scene.post_read();
@@ -74,14 +76,14 @@ impl Scene
     {
         println!("save scene todo serialize");
 
-        let mut file = File::create(&Path::new(self.name.as_slice()));
+        let mut file = File::create(&Path::new(self.name.as_slice())).ok().unwrap();
         let mut s = String::new();
         {
             let mut encoder = json::Encoder::new_pretty(&mut s);
             let _ = self.encode(&mut encoder);
         }
 
-        let result = file.write_str(s.as_slice());
+        let result = file.write(s.as_slice().as_bytes());
     }
 
     pub fn object_find(&self, name : &str) -> Option<Arc<RwLock<object::Object>>>
