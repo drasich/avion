@@ -5,7 +5,7 @@ use mesh_render;
 use resource;
 use std::sync::{Arc,RwLock};
 
-struct Table
+pub struct Table
 {
     height : f64,
     width : f64,

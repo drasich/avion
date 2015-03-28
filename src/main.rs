@@ -12,8 +12,8 @@
 #![allow(improper_ctypes)]
 //#![allow(ctypes)]
 
-//extern crate serialize;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
+extern crate byteorder;
 extern crate libc;
 //extern crate sync;
 extern crate png;

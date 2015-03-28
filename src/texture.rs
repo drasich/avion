@@ -2,6 +2,7 @@ use png;
 use libc::{c_uint, c_void};
 use rustc_serialize::{Encodable, Encoder, Decoder, Decodable};
 use std::mem;
+use std::path::Path;
 
 #[repr(C)]
 pub struct CglTexture;
@@ -74,7 +75,7 @@ impl Texture
                  let data = match img.pixels {
                      //png::RGB8(ref pixels) => pixels.as_ptr(),
                      png::PixelsByColorType::RGBA8(ref pixels) =>  { 
-                         for i in range(0usize, 8) { 
+                         for i in 0usize..8 { 
                              println!("{}RGBA{} : {}", self.name, i, pixels[i]);
                          }
                          pixels.as_ptr()

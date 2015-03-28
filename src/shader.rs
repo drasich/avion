@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::fs::File;
-use std::io::{BufReader, BufRead, BufReadExt, Read};
+use std::io::{BufReader, BufRead, Read};
 use libc::{c_char, c_uint};
 use std::ptr;
 use std::str::FromStr;
 use std::ffi::CString;
+use std::path::Path;
 //use std::default::Default;
 //use toml;
 
@@ -117,8 +118,10 @@ impl Shader
 
     pub fn read(&mut self)
     {
-        let path = Path::new(self.name.clone());
-        let mut file = BufReader::new(File::open(&path).ok().unwrap());
+        let mut file = {
+            let path = Path::new(&self.name);
+            BufReader::new(File::open(&path).ok().unwrap())
+        };
 
         let mut frag = String::new();
         let mut vert = String::new();

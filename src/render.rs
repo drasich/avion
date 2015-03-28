@@ -840,7 +840,7 @@ fn create_grid(m : &mut mesh::Mesh, num : i32, space : i32)
     let xc = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.4f64);
     let zc = vec::Vec4::new(0f64,0.4745f64,1f64,0.4f64);
 
-    for i in  range(-num, num) {
+    for i in  -num..num {
         let p1 = vec::Vec3::new((i*space) as f64, 0f64, (-space*num) as f64);
         let p2 = vec::Vec3::new((i*space) as f64, 0f64, (space*num) as f64);
         let s = geometry::Segment::new(p1,p2);
@@ -852,7 +852,7 @@ fn create_grid(m : &mut mesh::Mesh, num : i32, space : i32)
         }
     }
 
-    for i in  range(-num, num) {
+    for i in  -num..num {
         let p1 = vec::Vec3::new((-space*num) as f64, 0f64, (i*space) as f64);
         let p2 = vec::Vec3::new((space*num) as f64, 0f64, (i*space) as f64);
         let s = geometry::Segment::new(p1,p2);

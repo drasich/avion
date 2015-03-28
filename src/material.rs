@@ -3,6 +3,7 @@ use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::fs::File;
 use std::io::{BufReader, Read, Write};
 use std::collections::hash_map::Entry::{Occupied,Vacant};
+use std::path::Path;
 //use std::default::Default;
 //use toml;
 

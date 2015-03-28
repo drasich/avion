@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Entry::{Occupied,Vacant};
-use std::old_io::File;
+use std::fs::File;
 use rustc_serialize::{Encodable, Encoder, Decoder, Decodable};
+use byteorder::{LittleEndian, ReadBytesExt};
+use std::path::Path;
+use std::io::Read;
 
 //use libc::{c_char, c_int, c_uint, c_void};
 use libc::{c_uint, c_void};
@@ -245,30 +248,34 @@ impl Mesh
         };
 
        {
-           let typelen = file.read_le_u16().unwrap();
+           let typelen = file.read_u16::<LittleEndian>().unwrap();
            println!("number : {} ", typelen);
-           let typevec = file.read_exact(typelen as usize).unwrap();
+           let mut typevec = vec![0u8; typelen as usize];
+           //file.read(typelen as usize).unwrap();
+           file.read(&mut typevec);
            let typename = String::from_utf8(typevec).unwrap();
            println!("type name : {} ", typename);
 
-           let len = file.read_le_u16().unwrap();
+           let len = file.read_u16::<LittleEndian>().unwrap();
            println!("number : {} ", len);
-           let namevec = file.read_exact(len as usize).unwrap();
+           let mut namevec = vec![0u8; len as usize];
+           //let namevec = file.read_exact(len as usize).unwrap();
+           file.read(&mut namevec);
            let name = String::from_utf8(namevec).unwrap();
            println!("name : {} ", name);
        }
 
        {
-           let vertex_count = file.read_le_u16().unwrap();
+           let vertex_count = file.read_u16::<LittleEndian>().unwrap();
            let count = (vertex_count as usize) * 3usize;
            let mut vvv : Vec<f32> = Vec::with_capacity(count);
 
            println!("vertex count : {} ", vertex_count);
            let mut min = vec::Vec3::zero();
            let mut max = vec::Vec3::zero();
-           for i in range(0usize, count)
+           for i in 0usize..count
            {
-               let x = file.read_le_f32().unwrap();
+               let x = file.read_f32::<LittleEndian>().unwrap();
                vvv.push(x);
 
                let x = x as f64;
@@ -307,14 +314,14 @@ impl Mesh
        }
 
        {
-           let faces_count = file.read_le_u16().unwrap();
+           let faces_count = file.read_u16::<LittleEndian>().unwrap();
            let count = (faces_count as usize) * 3usize;
            let mut fff : Vec<u32> = Vec::with_capacity(count);
 
            println!("faces count : {} ", faces_count);
-           for _ in range(0usize, count)
+           for _ in 0usize..count
            {
-               let x = file.read_le_u16().unwrap();
+               let x = file.read_u16::<LittleEndian>().unwrap();
                fff.push(x as u32);
            }
 
@@ -333,15 +340,15 @@ impl Mesh
        }
 
        {
-           let normals_count = file.read_le_u16().unwrap();
+           let normals_count = file.read_u16::<LittleEndian>().unwrap();
            if normals_count > 0 {
                let count = (normals_count as usize) * 3usize;
                let mut nnn : Vec<f32> = Vec::with_capacity(count);
 
                println!("normals count : {} ", normals_count);
-               for _ in range(0usize, count)
+               for _ in 0usize..count
                {
-                   let x = file.read_le_f32().unwrap();
+                   let x = file.read_f32::<LittleEndian>().unwrap();
                    nnn.push(x as f32);
                }
 
@@ -355,15 +362,15 @@ impl Mesh
        }
 
        {
-           let uv_count = file.read_le_u16().unwrap();
+           let uv_count = file.read_u16::<LittleEndian>().unwrap();
            if uv_count > 0 {
                let count = (uv_count as usize) * 2usize;
                let mut uuu : Vec<f32> = Vec::with_capacity(count);
 
                println!("uvs count : {} ", uv_count);
-               for _ in range(0usize, count)
+               for _ in 0usize..count
                {
-                   let x = file.read_le_f32().unwrap();
+                   let x = file.read_f32::<LittleEndian>().unwrap();
                    //TODO invert y in png
                    /*
                    if i % 2u == 1u
@@ -459,7 +466,7 @@ impl Mesh
         vvv.push(s.p1.z as f32);
 
         let mut colbuf : Vec<f32> = Vec::with_capacity(8);
-        for i in range(0u32, 2) {
+        for i in 0u32..2 {
             colbuf.push(color.x as f32);
             colbuf.push(color.y as f32);
             colbuf.push(color.z as f32);

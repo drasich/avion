@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io::{Read,Write};
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use uuid::Uuid;
+use std::path::Path;
 use toml;
 
 use object;
