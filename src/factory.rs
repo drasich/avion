@@ -54,6 +54,7 @@ impl Factory {
             children : LinkedList::new(),
             parent : None,
             //transform : box transform::Transform::new()
+            components : Vec::new()
         }
     }
     

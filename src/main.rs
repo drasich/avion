@@ -59,6 +59,8 @@ mod transform;
 
 mod model;
 
+mod component;
+
 fn main() {
     /*
     let mut c = property::Chris::new();

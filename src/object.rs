@@ -12,10 +12,19 @@ use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::hash_map::Entry::{Occupied,Vacant};
 use uuid;
 use uuid::Uuid;
+use core::marker::Sized;
+
+pub trait Component
+{
+    fn copy(&self) -> Box<Component>;
+    fn update(&self, &mut Object, dt : f64) {}
+    //fn update(&self, dt : f64) {}
+}
+
 
 //#[derive(Decodable, Encodable)]
 //#[derive(Encodable)]
-#[derive(Clone)]
+//#[derive(Clone)]
 pub struct Object
 {
     pub name : String,
@@ -30,10 +39,34 @@ pub struct Object
     pub children : LinkedList<Arc<RwLock<Object>>>,
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
+    pub components : Vec<Box<Component>>
 }
 
 unsafe impl Send for Object {}
 unsafe impl Sync for Object {}
+
+impl Clone for Object {
+
+    fn clone(&self) -> Object {
+        let mut components = Vec::new();
+        for c in self.components.iter() {
+            let cc = (*c).copy();
+            components.push(cc);
+        }
+        Object {
+            name : self.name.clone(),
+            id : self.id.clone(),//?
+            mesh_render : self.mesh_render.clone(),
+            position : self.position.clone(),
+            orientation : self.orientation.clone(),
+            scale : self.scale.clone(),
+            children : self.children.clone(), //LinkedList::new(),
+            parent : self.parent.clone(), //None,
+            //transform : box transform::Transform::new()
+            components : components
+        }
+    }
+}
 
 impl Object
 {
@@ -148,6 +181,28 @@ impl Object
         }
     }
 
+    pub fn update(&mut self, dt : f64)
+    {
+        let mut comps = self.components.iter();
+
+        //comps.update(self, dt);
+        /*
+        for c in comps
+        {
+            c.update(self,dt);
+        }
+        */
+
+        loop {
+            match comps.next() { 
+                None => break,
+                Some(i) => {
+                    //i.update(self,dt);
+                }
+            }
+        }
+    }
+
 
 }
 
@@ -182,6 +237,7 @@ impl Decodable for Object {
           //parent: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
           parent: None,
           //transform : box transform::Transform::new()
+          components : Vec::new()
         })
     })
   }
