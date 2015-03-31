@@ -17,7 +17,7 @@ use core::marker::Sized;
 pub trait Component
 {
     fn copy(&self) -> Box<Component>;
-    fn update(&self, &mut Object, dt : f64) {}
+    fn update(&self, dt : f64) {}
     //fn update(&self, dt : f64) {}
 }
 
@@ -183,16 +183,17 @@ impl Object
 
     pub fn update(&mut self, dt : f64)
     {
-        let mut comps = self.components.iter();
+        let comps = self.components.iter();
 
         //comps.update(self, dt);
-        /*
+        //*
         for c in comps
         {
-            c.update(self,dt);
+            c.update(dt);
         }
-        */
+        //*/
 
+        /*
         loop {
             match comps.next() { 
                 None => break,
@@ -201,6 +202,12 @@ impl Object
                 }
             }
         }
+        */
+    }
+
+    pub fn add_component(&mut self, c : Box<Component>)
+    {
+        self.components.push(c);
     }
 
 
