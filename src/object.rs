@@ -13,12 +13,16 @@ use std::collections::hash_map::Entry::{Occupied,Vacant};
 use uuid;
 use uuid::Uuid;
 use core::marker::Sized;
+use std::rc::Rc;
+use std::cell::RefCell;
+
+use std::sync::mpsc::channel;
 
 pub trait Component
 {
-    fn copy(&self) -> Box<Component>;
-    fn update(&self, dt : f64) {}
-    //fn update(&self, dt : f64) {}
+    fn copy(&self) -> Rc<RefCell<Box<Component>>>;
+    //fn update(&mut self, dt : f64) {}
+    fn update(&self, ob : &Object, dt : f64) {}
 }
 
 
@@ -39,7 +43,7 @@ pub struct Object
     pub children : LinkedList<Arc<RwLock<Object>>>,
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
-    pub components : Vec<Box<Component>>
+    pub components : Vec<Rc<RefCell<Box<Component>>>>
 }
 
 unsafe impl Send for Object {}
@@ -50,7 +54,7 @@ impl Clone for Object {
     fn clone(&self) -> Object {
         let mut components = Vec::new();
         for c in self.components.iter() {
-            let cc = (*c).copy();
+            let cc = (*c).borrow().copy();
             components.push(cc);
         }
         Object {
@@ -185,29 +189,16 @@ impl Object
     {
         let comps = self.components.iter();
 
-        //comps.update(self, dt);
-        //*
         for c in comps
         {
-            c.update(dt);
+            c.borrow_mut().update(self,dt);
         }
-        //*/
-
-        /*
-        loop {
-            match comps.next() { 
-                None => break,
-                Some(i) => {
-                    //i.update(self,dt);
-                }
-            }
-        }
-        */
     }
 
-    pub fn add_component(&mut self, c : Box<Component>)
+    pub fn add_component(&mut self, c : Rc<RefCell<Box<Component>>>)
     {
         self.components.push(c);
+        //let (tx, rx) = channel();
     }
 
 
