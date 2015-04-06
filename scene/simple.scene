@@ -7,31 +7,31 @@
       "id": "2d977dae-7d47-419e-8335-1a9fe2cb39a2",
       "mesh_render": {
         "mesh": {
-          "name": "model/skeletonmesh.mesh"
+          "name": "model/robot.mesh"
         },
         "material": {
-          "name": "material/simple.mat"
+          "name": "material/color.mat"
         }
       },
       "position": {
-        "x": -6.164148,
-        "y": 0.0,
-        "z": -2.169883
+        "x": -6.455209,
+        "y": 2.282786,
+        "z": -2.162505
       },
       "orientation": {
         "variant": "AngleXYZ",
         "fields": [
           {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
+            "x": -0.1,
+            "y": -0.3,
+            "z": -0.7
           }
         ]
       },
       "scale": {
-        "x": 0.1,
-        "y": 0.1,
-        "z": 0.1
+        "x": 9.8,
+        "y": 10.0,
+        "z": 9.9
       },
       "children": [
         {

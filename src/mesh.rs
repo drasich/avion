@@ -178,6 +178,12 @@ pub enum DrawType
     Lines
 }
 
+pub struct VertexInfo
+{
+    pub position : vec::Vec3,
+    pub normal : vec::Vec3
+}
+
 pub struct Mesh
 {
     pub name : String,
@@ -188,7 +194,7 @@ pub struct Mesh
     pub buffers_f32 : HashMap<String, Box<Buffer<f32>>>, //TODO check
     pub buffers_u32 : HashMap<String, Box<Buffer<u32>>>, //TODO check
     pub draw_type : DrawType,
-    pub aabox : Option<geometry::AABox>
+    pub aabox : Option<geometry::AABox>,
 }
 
 impl Mesh
@@ -251,7 +257,6 @@ impl Mesh
            let typelen = file.read_u16::<LittleEndian>().unwrap();
            println!("number : {} ", typelen);
            let mut typevec = vec![0u8; typelen as usize];
-           //file.read(typelen as usize).unwrap();
            file.read(&mut typevec);
            let typename = String::from_utf8(typevec).unwrap();
            println!("type name : {} ", typename);
@@ -259,7 +264,6 @@ impl Mesh
            let len = file.read_u16::<LittleEndian>().unwrap();
            println!("number : {} ", len);
            let mut namevec = vec![0u8; len as usize];
-           //let namevec = file.read_exact(len as usize).unwrap();
            file.read(&mut namevec);
            let name = String::from_utf8(namevec).unwrap();
            println!("name : {} ", name);
@@ -394,6 +398,33 @@ impl Mesh
        }
 
        //TODO weights
+       {
+           let group_count = file.read_u16::<LittleEndian>().unwrap();
+           if group_count > 0 {
+               for g in 0..group_count {
+                   //TODO just this name is used
+                   let group_name = read_string(&mut file);
+                   let weight_count = file.read_u16::<LittleEndian>().unwrap();
+                   println!("group name : {}, weight count : {} ", group_name, weight_count);
+                   //TODO this is not used
+                   for w in 0..weight_count as usize {
+                       let index = file.read_u16::<LittleEndian>().unwrap();
+                       let weight = file.read_f32::<LittleEndian>().unwrap();
+                   }
+               }
+           }
+       }
+
+       {
+           let vertex_weight_count = file.read_u16::<LittleEndian>().unwrap();
+           for _ in 0..vertex_weight_count {
+               let weight_count = file.read_u16::<LittleEndian>().unwrap();
+               for _ in 0..weight_count {
+                   let index = file.read_u16::<LittleEndian>().unwrap();
+                   let weight = file.read_f32::<LittleEndian>().unwrap();
+               }
+           }
+       }
 
        self.state = 1;
     }
@@ -716,6 +747,15 @@ impl Decodable for Mesh {
         })
     })
   }
+}
+
+pub fn read_string(file: &mut File ) -> String
+{
+    let typelen = file.read_u16::<LittleEndian>().unwrap();
+    println!("number : {} ", typelen);
+    let mut typevec = vec![0u8; typelen as usize];
+    file.read(&mut typevec);
+    String::from_utf8(typevec).unwrap()
 }
 
 /*

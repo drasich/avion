@@ -1,0 +1,9 @@
+{
+  "name": "material/color.mat",
+  "shader": {
+    "name": "shader/color.sh"
+  },
+  "textures": {},
+  "uniforms": {}
+}
+

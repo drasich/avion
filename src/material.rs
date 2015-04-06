@@ -97,10 +97,21 @@ impl Material
     pub fn read(&mut self)
     {
         //TODO 
+        //let mut file = String::new();
 
-        let mut file = String::new();
-        File::open(&Path::new(self.name.as_slice())).ok().unwrap().read_to_string(&mut file);
+        let file = match File::open(&Path::new(self.name.as_slice())){
+            Ok(mut f) => {
+                let mut file = String::new();
+                f.read_to_string(&mut file);
+                file
+            },
+            Err(e) => {
+                println!("Error reading file '{}. Error : {}", self.name, e);
+                return;
+            }
+        };
         //let mut mat : Material = json::decode(file.as_slice()).unwrap();
+
         let mat : Material = match json::decode(file.as_slice()){
             Ok(m) => m,
             Err(e) => { 
