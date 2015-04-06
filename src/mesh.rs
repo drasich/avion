@@ -41,6 +41,7 @@ extern {
         count : c_uint);
 }
 
+#[derive(Copy)]
 pub enum BufferType
 {
     Vertex,
@@ -74,7 +75,7 @@ unsafe impl Sync for Mesh {}
 unsafe impl<T> Send for Buffer<T> {}
 unsafe impl<T> Sync for Buffer<T> {}
 
-impl<T> Buffer<T>
+impl<T:Clone> Buffer<T>
 {
     pub fn new(name: String, data : Vec<T>, buffer_type : BufferType) -> Buffer<T>
     {
@@ -84,6 +85,16 @@ impl<T> Buffer<T>
             cgl_buffer : None,
             buffer_type : buffer_type,
             //state : BufferState::Created
+        }
+    }
+
+    pub fn copy(&self) -> Buffer<T>
+    {
+        Buffer {
+            name : self.name.clone(),
+            data : self.data.clone(),
+            cgl_buffer : None,
+            buffer_type : self.buffer_type
         }
     }
 }
@@ -195,6 +206,7 @@ pub struct Mesh
     pub buffers_u32 : HashMap<String, Box<Buffer<u32>>>, //TODO check
     pub draw_type : DrawType,
     pub aabox : Option<geometry::AABox>,
+    pub buffers_f32_base : HashMap<String, Box<Buffer<f32>>>, //TODO check
 }
 
 impl Mesh
@@ -208,7 +220,8 @@ impl Mesh
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
            draw_type : Faces,
-           aabox : None
+           aabox : None,
+           buffers_f32_base : HashMap::new(),
        };
 
        /*
@@ -233,7 +246,8 @@ impl Mesh
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
            draw_type : Faces,
-           aabox : None
+           aabox : None,
+           buffers_f32_base : HashMap::new(),
        };
         
        m
@@ -311,10 +325,14 @@ impl Mesh
                    vvv,
                    Vertex));
                    */
-           self.buffers_f32.insert(bufname.clone(), box Buffer::new(
-                   bufname.clone(),
-                   vvv,
-                   BufferType::Vertex));
+           let buf = Buffer::new(
+               bufname.clone(),
+               vvv,
+               BufferType::Vertex);
+
+           self.buffers_f32_base.insert(bufname.clone(), box buf.copy());
+           self.buffers_f32.insert(bufname.clone(), box buf);
+
        }
 
        {
@@ -743,7 +761,8 @@ impl Decodable for Mesh {
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
            draw_type : Faces,
-           aabox : None
+           aabox : None,
+           buffers_f32_base : HashMap::new(),
         })
     })
   }

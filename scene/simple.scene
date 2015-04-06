@@ -135,9 +135,9 @@
       "id": "ff632432-da7c-4d25-bd3f-e999f9d3c87a",
       "mesh_render": null,
       "position": {
-        "x": 53.262164,
+        "x": 54.510571,
         "y": 9.129946,
-        "z": 55.4627
+        "z": 56.51413
       },
       "orientation": {
         "variant": "Quat",
@@ -160,13 +160,13 @@
   ],
   "camera": {
     "data": {
-      "fovy": 0.340863,
+      "fovy": 0.300807,
       "fovy_base": 0.392699,
       "near": 1.0,
       "far": 10000.0,
-      "aspect": 1.990783,
-      "width": 864.0,
-      "height": 434.0,
+      "aspect": 1.480418,
+      "width": 567.0,
+      "height": 383.0,
       "height_base": 500,
       "yaw": -0.784898,
       "pitch": -0.105723,
@@ -199,9 +199,9 @@
       "id": "ff632432-da7c-4d25-bd3f-e999f9d3c87a",
       "mesh_render": null,
       "position": {
-        "x": 53.262164,
+        "x": 54.510571,
         "y": 9.129946,
-        "z": 55.4627
+        "z": 56.51413
       },
       "orientation": {
         "variant": "Quat",
