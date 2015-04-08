@@ -200,13 +200,13 @@ pub struct Mesh
     pub name : String,
     pub state : i32,
     //pub buffers : HashMap<String, Box<BufferSend+'static+Send+Sync>>, //TODO check
-    pub buffers : HashMap<String, Box<BufferSend+Send+Sync>>, //TODO check
+     buffers : HashMap<String, Box<BufferSend+Send+Sync>>, //TODO check
     //pub buffers : HashMap<String, Box<BufferSend+'static>>, //TODO check
-    pub buffers_f32 : HashMap<String, Box<Buffer<f32>>>, //TODO check
-    pub buffers_u32 : HashMap<String, Box<Buffer<u32>>>, //TODO check
+    buffers_f32 : HashMap<String, Box<Buffer<f32>>>, //TODO check
+    buffers_u32 : HashMap<String, Box<Buffer<u32>>>, //TODO check
     pub draw_type : DrawType,
     pub aabox : Option<geometry::AABox>,
-    pub buffers_f32_base : HashMap<String, Box<Buffer<f32>>>, //TODO check
+    buffers_f32_base : HashMap<String, Box<Buffer<f32>>>, //TODO check
 }
 
 impl Mesh
@@ -375,11 +375,13 @@ impl Mesh
                }
 
                let bufname = String::from_str("normal");
+               let buf = Buffer::new(
+                   bufname.clone(),
+                   nnn,
+                   BufferType::Normal);
 
-               self.buffers.insert(bufname.clone(), box Buffer::new(
-                       bufname.clone(),
-                       nnn,
-                       BufferType::Normal));
+               self.buffers_f32_base.insert(bufname.clone(), box buf.copy());
+               self.buffers.insert(bufname.clone(), box buf);
            }
        }
 
