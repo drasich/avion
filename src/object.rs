@@ -22,7 +22,7 @@ pub trait Component
 {
     fn copy(&self) -> Rc<RefCell<Box<Component>>>;
     //fn update(&mut self, dt : f64) {}
-    fn update(&self, ob : &Object, dt : f64) {}
+    fn update(&mut self, ob : &mut Object, dt : f64) {}
 }
 
 
@@ -43,7 +43,7 @@ pub struct Object
     pub children : LinkedList<Arc<RwLock<Object>>>,
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
-    pub components : Vec<Rc<RefCell<Box<Component>>>>
+    pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component>>>>>>
 }
 
 unsafe impl Send for Object {}
@@ -53,7 +53,7 @@ impl Clone for Object {
 
     fn clone(&self) -> Object {
         let mut components = Vec::new();
-        for c in self.components.iter() {
+        for c in self.components.borrow().iter() {
             let cc = (*c).borrow().copy();
             components.push(cc);
         }
@@ -67,7 +67,7 @@ impl Clone for Object {
             children : self.children.clone(), //LinkedList::new(),
             parent : self.parent.clone(), //None,
             //transform : box transform::Transform::new()
-            components : components
+            components : Rc::new(RefCell::new(components))
         }
     }
 }
@@ -187,9 +187,11 @@ impl Object
 
     pub fn update(&mut self, dt : f64)
     {
-        let comps = self.components.iter();
+        let comps_clone = self.components.clone();
+        let comps = comps_clone.borrow();
+        let comps_it = comps.iter();
 
-        for c in comps
+        for c in comps_it
         {
             c.borrow_mut().update(self,dt);
         }
@@ -197,7 +199,7 @@ impl Object
 
     pub fn add_component(&mut self, c : Rc<RefCell<Box<Component>>>)
     {
-        self.components.push(c);
+        self.components.borrow_mut().push(c);
         //let (tx, rx) = channel();
     }
 
@@ -235,7 +237,7 @@ impl Decodable for Object {
           //parent: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
           parent: None,
           //transform : box transform::Transform::new()
-          components : Vec::new()
+          components : Rc::new(RefCell::new(Vec::new()))
         })
     })
   }

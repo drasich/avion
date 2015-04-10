@@ -22,7 +22,7 @@
         "variant": "AngleXYZ",
         "fields": [
           {
-            "x": -0.1,
+            "x": 794.9,
             "y": -0.3,
             "z": -0.7
           }
@@ -83,7 +83,7 @@
         "variant": "AngleXYZ",
         "fields": [
           {
-            "x": 184.699969,
+            "x": 979.699969,
             "y": 80.699995,
             "z": -175.199959
           }
@@ -113,13 +113,12 @@
         "z": -2000.0
       },
       "orientation": {
-        "variant": "Quat",
+        "variant": "AngleXYZ",
         "fields": [
           {
-            "x": 0.0,
+            "x": 795.0,
             "y": 0.0,
-            "z": 0.0,
-            "w": 1.0
+            "z": 0.0
           }
         ]
       },
@@ -160,13 +159,13 @@
   ],
   "camera": {
     "data": {
-      "fovy": 0.300807,
+      "fovy": 0.050265,
       "fovy_base": 0.392699,
       "near": 1.0,
       "far": 10000.0,
-      "aspect": 1.480418,
-      "width": 567.0,
-      "height": 383.0,
+      "aspect": 5.875,
+      "width": 376.0,
+      "height": 64.0,
       "height_base": 500,
       "yaw": -0.784898,
       "pitch": -0.105723,

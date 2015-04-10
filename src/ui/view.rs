@@ -756,6 +756,8 @@ impl GameView {
     }
 
     fn draw(&mut self) {
+        self.scene.borrow_mut().update(0.01f64);
+
         self.render.draw(&self.scene.borrow().objects);
     }
 

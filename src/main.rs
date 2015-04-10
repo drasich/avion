@@ -61,7 +61,13 @@ mod model;
 
 mod component;
 
+static mut sTest : i32 = 5;
+
 fn main() {
+    unsafe {
+    sTest = 4432;
+    }
+
     /*
     let mut c = property::Chris::new();
     //let yep  = c.cget_property("x");

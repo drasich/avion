@@ -11,6 +11,7 @@ use toml;
 
 use object;
 use camera;
+use component;
 
 pub struct Scene
 {
@@ -59,12 +60,15 @@ impl Scene
                     }
                 };
 
-                if o.read().unwrap().id == id {
+                let ob_id = o.read().unwrap().id.clone();
+
+                if ob_id == id {
                     println!("fiiiiiiiiiiiiiiiiiiiiind");
                     cam.object = o.clone();
                 }
                 else {
                     println!("it is not {}", o.read().unwrap().name);
+                    o.write().unwrap().add_component(Rc::new(RefCell::new(Box::new(component::player::Player::new()))));
                 }
             }
             else {
@@ -219,6 +223,13 @@ impl Scene
         mat
     }
     */
+
+    pub fn update(&mut self, dt : f64)
+    {
+        for o in self.objects.iter() {
+            o.write().unwrap().update(dt);
+        }
+    }
 }
 
 //impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RwLock<object::Object>> {

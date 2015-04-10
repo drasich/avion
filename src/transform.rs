@@ -57,6 +57,11 @@ impl Orientation
         Orientation::Quat(*q)
     }
 
+    pub fn new_with_angle_xyz(v : &vec::Vec3) -> Orientation
+    {
+        Orientation::AngleXYZ(*v)
+    }
+
     pub fn new_quat() -> Orientation
     {
         Orientation::Quat(vec::Quat::identity())
