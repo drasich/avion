@@ -3,7 +3,7 @@
   "id": "472ada79-efd8-4c91-80ed-57804f97a10b",
   "objects": [
     {
-      "name": "skeleton001",
+      "name": "robot",
       "id": "2d977dae-7d47-419e-8335-1a9fe2cb39a2",
       "mesh_render": {
         "mesh": {
@@ -22,7 +22,7 @@
         "variant": "AngleXYZ",
         "fields": [
           {
-            "x": 794.9,
+            "x": 3246.9,
             "y": -0.3,
             "z": -0.7
           }
@@ -83,7 +83,7 @@
         "variant": "AngleXYZ",
         "fields": [
           {
-            "x": 979.699969,
+            "x": 1631.699969,
             "y": 80.699995,
             "z": -175.199959
           }
@@ -116,7 +116,7 @@
         "variant": "AngleXYZ",
         "fields": [
           {
-            "x": 795.0,
+            "x": 1447.0,
             "y": 0.0,
             "z": 0.0
           }
@@ -159,13 +159,13 @@
   ],
   "camera": {
     "data": {
-      "fovy": 0.050265,
+      "fovy": 0.340863,
       "fovy_base": 0.392699,
       "near": 1.0,
       "far": 10000.0,
-      "aspect": 5.875,
-      "width": 376.0,
-      "height": 64.0,
+      "aspect": 1.990783,
+      "width": 864.0,
+      "height": 434.0,
       "height_base": 500,
       "yaw": -0.784898,
       "pitch": -0.105723,

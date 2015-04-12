@@ -60,15 +60,22 @@ impl Scene
                     }
                 };
 
-                let ob_id = o.read().unwrap().id.clone();
+                let (ob_id, name) = {
+                    let ob = o.read().unwrap();
+                    (ob.id.clone(), ob.name.clone())
+                };
 
                 if ob_id == id {
                     println!("fiiiiiiiiiiiiiiiiiiiiind");
                     cam.object = o.clone();
                 }
-                else {
+                else if name == "robot"{
                     println!("it is not {}", o.read().unwrap().name);
-                    o.write().unwrap().add_component(Rc::new(RefCell::new(Box::new(component::player::Player::new()))));
+                    let comp_mgr = component::manager::COMP_MGR.lock().unwrap();
+                    let pc = comp_mgr.create_component("player").unwrap();
+                    o.write().unwrap().add_component(
+                        //Rc::new(RefCell::new(Box::new(component::player::Player::new()))));
+                        Rc::new(RefCell::new(pc)));
                 }
             }
             else {

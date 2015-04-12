@@ -32,5 +32,6 @@ git = "https://github.com/rust-lang/uuid.git"
 rustc-serialize = "0.3.0"
 #toml = "0.1"
 byteorder = "*"
+lazy_static = "0.1.*"
 
 

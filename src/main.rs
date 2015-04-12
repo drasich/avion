@@ -22,6 +22,9 @@ extern crate toml;
 extern crate uuid;
 extern crate core;
 
+#[macro_use]
+extern crate lazy_static;
+
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
 use std::sync::{RwLock, Arc};
@@ -60,12 +63,36 @@ mod transform;
 mod model;
 
 mod component;
+use component::manager;
 
 static mut sTest : i32 = 5;
 
 fn main() {
     unsafe {
     sTest = 4432;
+    }
+
+    {
+     println!("The map has {} entries.", *component::manager::COUNT);
+    }
+
+    {
+    let mut hash = &mut component::manager::HASHMAP.lock().unwrap();
+    println!("going to insert 5");
+    hash.insert(5, "cinq");
+    println!("The entry for `1` is \"{}\".", hash.get(&1).unwrap());
+    println!("The entry for `0` is \"{}\".", hash.get(&0).unwrap());
+    println!("The entry for `5` is \"{}\".", hash.get(&5).unwrap());
+    }
+
+    {
+     println!("The map has {} entries.", *component::manager::COUNT);
+    }
+
+    {
+        //let mut cm = component::Manager::new();
+        let mut cm = component::manager::COMP_MGR.lock().unwrap();
+        cm.register_component("player", component::player::player_new);
     }
 
     /*

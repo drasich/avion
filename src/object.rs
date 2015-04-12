@@ -5,6 +5,7 @@ use transform;
 use shader;
 use resource;
 use material;
+use component::Component;
 
 use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};//,RWLockReadGuard};
@@ -18,13 +19,13 @@ use std::cell::RefCell;
 
 use std::sync::mpsc::channel;
 
-pub trait Component
-{
-    fn copy(&self) -> Rc<RefCell<Box<Component>>>;
-    //fn update(&mut self, dt : f64) {}
-    fn update(&mut self, ob : &mut Object, dt : f64) {}
-}
+pub trait Enco : Decodable + Encodable{}
 
+pub struct Compo {
+    //pub name : String,
+    //pub component : Option<Rc<RefCell<Box<Component>>>>,
+    pub data : Box<Encodable>
+}
 
 //#[derive(Decodable, Encodable)]
 //#[derive(Encodable)]
@@ -43,7 +44,8 @@ pub struct Object
     pub children : LinkedList<Arc<RwLock<Object>>>,
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
-    pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component>>>>>>
+    pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component>>>>>>,
+    pub compo : Rc<RefCell<Vec<Rc<RefCell<Box<Compo>>>>>>
 }
 
 unsafe impl Send for Object {}
@@ -67,7 +69,8 @@ impl Clone for Object {
             children : self.children.clone(), //LinkedList::new(),
             parent : self.parent.clone(), //None,
             //transform : box transform::Transform::new()
-            components : Rc::new(RefCell::new(components))
+            components : Rc::new(RefCell::new(components)),
+            compo : Rc::new(RefCell::new(Vec::new()))
         }
     }
 }
@@ -237,7 +240,8 @@ impl Decodable for Object {
           //parent: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
           parent: None,
           //transform : box transform::Transform::new()
-          components : Rc::new(RefCell::new(Vec::new()))
+          components : Rc::new(RefCell::new(Vec::new())),
+          compo : Rc::new(RefCell::new(Vec::new()))
         })
     })
   }
@@ -256,6 +260,13 @@ impl Encodable  for Object {
           try!(encoder.emit_struct_field( "children", 6usize, |encoder| self.children.encode(encoder)));
           //try!(encoder.emit_struct_field( "transform", 7u, |encoder| self.transform.encode(encoder)));
           //try!(encoder.emit_struct_field( "parent", 6u, |encoder| self.parent.encode(encoder)));
+          //try!(encoder.emit_struct_field( "components", 7usize, |encoder| self.components.encode(encoder)));
+
+          let c = self.compo.borrow();
+          if c.len() > 0 {
+              let d= &*c[0].borrow().data as &Encodable;
+              //try!(encoder.emit_struct_field( "compo", 7usize, |encoder| d.encode(encoder)));
+          }
           Ok(())
       })
   }
