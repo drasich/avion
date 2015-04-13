@@ -282,9 +282,11 @@ impl RenderPass
                 }
 
                 if can_render {
-                    let object = ob.get_world_matrix();
-                    let m = matrix * &object ;
-                    shader.uniform_set("matrix", &m);
+                    {
+                    let object_mat = ob.get_world_matrix();
+                    let object_mat_world = matrix * &object_mat ;
+                    shader.uniform_set("matrix", &object_mat_world);
+                    }
 
                     match mb.buffer_u32_get("faces") {
                         //Some(ref bind) =>

@@ -333,9 +333,11 @@ impl Matrix4
 }
 
 //impl<'a> Mul<&'a Matrix4, Matrix4> for &'a Matrix4 {
-impl<'a> Mul for &'a Matrix4 {
+//impl<'a,'b> Mul for &'a Matrix4 {
+impl<'a,'b> Mul<&'b Matrix4> for &'a Matrix4 {
+//impl Mul for Matrix4 {
     type Output = Matrix4;
-    fn mul(self, other: &'a Matrix4) -> Matrix4 {
+    fn mul(self, other: &'b Matrix4) -> Matrix4 {
         let mut out : [f64; 16] = [0f64; 16];
 
         let m = self.data;

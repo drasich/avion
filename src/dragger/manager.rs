@@ -43,7 +43,7 @@ pub struct DraggerManager
     current : usize
 }
 
-#[derive(Copy,Debug)]
+#[derive(Copy,Clone,Debug)]
 pub enum State
 {
     Idle,
@@ -68,7 +68,7 @@ pub enum Operation
     Rotation(vec::Quat)
 }
 
-#[derive(Copy)]
+#[derive(Copy,Clone)]
 pub enum Repere
 {
     Global,
@@ -380,7 +380,7 @@ impl Dragger
 
     fn set_state(&mut self, state : State)
     {
-        fn set_color(s : &Self, color : vec::Vec4){
+        fn set_color(s : &Dragger, color : vec::Vec4){
             if let Some(mat) = s.object.write().unwrap().get_material() {
                 mat.write().unwrap().set_uniform_data(
                     "color",

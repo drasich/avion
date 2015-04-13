@@ -41,7 +41,7 @@ extern {
         count : c_uint);
 }
 
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub enum BufferType
 {
     Vertex,

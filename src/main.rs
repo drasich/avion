@@ -4,6 +4,8 @@
 #![feature(box_syntax)]
 #![feature(alloc)]
 #![feature(std_misc,core,collections,libc)]
+#![feature(convert)]
+#![feature(step_by)]
 
 //TODO remove
 #![allow(unused_variables)]

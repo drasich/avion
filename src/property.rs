@@ -51,7 +51,7 @@ impl<T:Any+Clone> PropertyRead for T
   }
 }
 */
-impl<T:'static> PropertyRead for resource::ResTT<T>
+impl<T:Any> PropertyRead for resource::ResTT<T>
 {
   fn get_property(&self) -> Option<Box<Any>>
   {
@@ -181,7 +181,8 @@ impl<T:PropertyWrite> PropertyWrite for Box<T>
   }
 }
 
-impl<T:PropertyWrite+'static+Clone+resource::Create> PropertyWrite for Option<T>
+//impl<T:PropertyWrite+'static+Clone+resource::Create> PropertyWrite for Option<T>
+impl<T:PropertyWrite+Any+Clone+resource::Create> PropertyWrite for Option<T>
 {
     fn test_set_property(&mut self, value: &Any)
     {
@@ -285,7 +286,7 @@ impl<T:PropertyGet> PropertyGet for Option<T>
 }
 
 
-impl<T> PropertyWrite for resource::ResTT<T> where T: 'static
+impl<T> PropertyWrite for resource::ResTT<T> where T:Any
 {
     fn test_set_property(&mut self, value: &Any)
     {

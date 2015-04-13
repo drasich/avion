@@ -239,29 +239,13 @@ impl Scene
     }
 }
 
-//impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RwLock<object::Object>> {
-impl Encodable for RwLock<object::Object> {
-  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
-      self.read().unwrap().encode(encoder)
-  }
-}
-
-//impl<S: Decoder<E>, E> Decodable<S, E> for Arc<RwLock<object::Object>> {
-//fn decode(decoder: &mut S) -> Result<Arc<RwLock<object::Object>>, E> {
-impl Decodable for RwLock<object::Object> {
-  fn decode<D : Decoder>(decoder: &mut D) -> Result<RwLock<object::Object>, D::Error> {
-      //Ok(Arc::new(RwLock::new(try!(Decodable::decode(decoder)))))
-      Ok(RwLock::new(try!(Decodable::decode(decoder))))
-  }
-}
-
 impl Encodable for Scene {
   fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Scene", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0usize, |encoder| self.name.encode(encoder)));
           try!(encoder.emit_struct_field( "id", 1usize, |encoder| self.id.encode(encoder)));
-          try!(encoder.emit_struct_field( "objects", 2usize, |encoder| self.objects.encode(encoder)));
-          try!(encoder.emit_struct_field( "camera", 3usize, |encoder| self.camera.encode(encoder)));
+          //try!(encoder.emit_struct_field( "objects", 2usize, |encoder| self.objects.encode(encoder)));
+          //try!(encoder.emit_struct_field( "camera", 3usize, |encoder| self.camera.encode(encoder)));
           Ok(())
       })
   }
@@ -274,12 +258,13 @@ impl Decodable for Scene {
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
           id: try!(decoder.read_struct_field("id", 0, |decoder| Decodable::decode(decoder))),
          //id : Uuid::new_v4(),
-          //objects: LinkedList::new(),
-          objects: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
+          objects: LinkedList::new(),
+          //objects: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
           //tests: try!(decoder.read_struct_field("objects", 0, |decoder| Decodable::decode(decoder))),
           //tests: LinkedList::new()
           //camera : None //try!(decoder.read_struct_field("camera", 0, |decoder| Decodable::decode(decoder)))
-          camera : try!(decoder.read_struct_field("camera", 0, |decoder| Decodable::decode(decoder)))
+          //camera : try!(decoder.read_struct_field("camera", 0, |decoder| Decodable::decode(decoder)))
+          camera : None
         })
     })
   }

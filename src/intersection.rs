@@ -2,7 +2,6 @@ use object;
 use geometry;
 use mesh;
 use resource;
-use std::iter::range_step;
 use std::num::Float;
 use std::f64::EPSILON;
 
@@ -93,7 +92,8 @@ pub fn ray_mesh(
     match m.buffer_u32_get("faces"){
         None => return out,
         Some(ref b) => {
-            for i in range_step(0, b.data.len(), 3) {
+            //for i in range_step(0, b.data.len(), 3) {
+            for i in (0..b.data.len()).step_by(3) {
                 let index = b.data[i] as usize;
                 let v0 = get_vertex(&vertices.data, index) * *scale;
                 //let v0 = get_vertex(&vertices.data, index).mul(*scale);
@@ -530,7 +530,8 @@ pub fn is_object_in_planes(planes : &[geometry::Plane], o : &object::Object)
             )
     }
 
-    for i in range_step(0, faces.data.len(), 3) {
+    //for i in range_step(0, faces.data.len(), 3) {
+    for i in (0..faces.data.len()).step_by(3) {
         let index = faces.data[i] as usize;
         let v0 = get_vertex(&vertices.data, index) * o.scale;
         let index = faces.data[i+1] as usize;

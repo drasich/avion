@@ -15,7 +15,7 @@ extern {
     pub fn cgl_fbo_destroy(fbo : *const CglFbo);
 }
 
-#[derive(RustcDecodable, RustcEncodable, Copy)]
+#[derive(RustcDecodable, RustcEncodable, Copy, Clone)]
 pub enum Attachment
 {
     Depth,
