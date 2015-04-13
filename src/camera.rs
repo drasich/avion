@@ -138,7 +138,7 @@ impl ObjectKind {
     }
 }
 
-//#[derive(RustcDecodable,RustcEncodable)]
+#[derive(RustcDecodable,RustcEncodable)]
 pub struct Camera
 {
     pub data : CameraData,
@@ -431,18 +431,4 @@ impl Camera
     }
 
 }
-
-/*
-impl Decodable for RwLock<Camera> {
-  fn decode<D : Decoder>(decoder: &mut D) -> Result<RwLock<Camera>, D::Error> {
-      Ok(RwLock::new(try!(Decodable::decode(decoder))))
-  }
-}
-
-impl Encodable for RwLock<Camera> {
-  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
-      self.read().unwrap().encode(encoder)
-  }
-}
-*/
 

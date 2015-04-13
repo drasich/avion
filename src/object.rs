@@ -27,6 +27,8 @@ pub struct Compo {
     pub data : Box<Encodable>
 }
 
+pub struct ThreadObject(Arc<RwLock<Object>>);
+
 //#[derive(Decodable, Encodable)]
 //#[derive(Encodable)]
 //#[derive(Clone)]
@@ -42,6 +44,7 @@ pub struct Object
     //pub angles : vec::Vec3,
     pub scale : vec::Vec3,
     pub children : LinkedList<Arc<RwLock<Object>>>,
+    //pub children : LinkedList<ThreadObject>,
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
     pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component>>>>>>,
@@ -236,8 +239,8 @@ impl Decodable for Object {
           position: try!(decoder.read_struct_field("position", 0, |decoder| Decodable::decode(decoder))),
           orientation: try!(decoder.read_struct_field("orientation", 0, |decoder| Decodable::decode(decoder))),
           scale: try!(decoder.read_struct_field("scale", 0, |decoder| Decodable::decode(decoder))),
-          //children: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
-          children : LinkedList::new(),
+          children: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
+          //children : LinkedList::new(),
           //parent: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
           parent: None,
           //transform : box transform::Transform::new()
@@ -258,7 +261,7 @@ impl Encodable  for Object {
           try!(encoder.emit_struct_field( "position", 3usize, |encoder| self.position.encode(encoder)));
           try!(encoder.emit_struct_field( "orientation", 4usize, |encoder| self.orientation.encode(encoder)));
           try!(encoder.emit_struct_field( "scale", 5usize, |encoder| self.scale.encode(encoder)));
-          //try!(encoder.emit_struct_field( "children", 6usize, |encoder| self.children.encode(encoder)));
+          try!(encoder.emit_struct_field( "children", 6usize, |encoder| self.children.encode(encoder)));
           //try!(encoder.emit_struct_field( "transform", 7u, |encoder| self.transform.encode(encoder)));
           //try!(encoder.emit_struct_field( "parent", 6u, |encoder| self.parent.encode(encoder)));
           //try!(encoder.emit_struct_field( "components", 7usize, |encoder| self.components.encode(encoder)));
@@ -331,7 +334,6 @@ impl Decodable for ObjectRef {
   }
 }
 
-
 impl Encodable  for ObjectRef {
   fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("ObjectRef", 1, |encoder| {
@@ -340,23 +342,4 @@ impl Encodable  for ObjectRef {
       })
   }
 }
-
-/*
-//impl <S: Encoder<E>, E> Encodable<S, E> for Arc<RwLock<object::Object>> {
-impl Encodable for RwLock<Object> {
-  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
-      self.read().unwrap().encode(encoder)
-  }
-}
-
-//impl<S: Decoder<E>, E> Decodable<S, E> for Arc<RwLock<object::Object>> {
-//fn decode(decoder: &mut S) -> Result<Arc<RwLock<object::Object>>, E> {
-impl Decodable for RwLock<Object> {
-  fn decode<D : Decoder>(decoder: &mut D) -> Result<RwLock<Object>, D::Error> {
-      //Ok(Arc::new(RwLock::new(try!(Decodable::decode(decoder)))))
-      Ok(RwLock::new(try!(Decodable::decode(decoder))))
-  }
-}
-*/
-
 
