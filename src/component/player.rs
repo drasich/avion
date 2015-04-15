@@ -7,7 +7,7 @@ use object::Object;
 use transform;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Clone, RustcEncodable, RustcDecodable)]
 pub struct Player
 {
     pub speed : f64
@@ -51,12 +51,12 @@ impl Component for PlayerBehavior
 
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Clone, RustcEncodable, RustcDecodable)]
 pub struct Enemy {
     name : String
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Clone, RustcEncodable, RustcDecodable)]
 pub struct Collider {
     name : String
 }

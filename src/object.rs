@@ -54,6 +54,7 @@ impl Clone for Object {
             let cc = (*c).borrow().copy();
             components.push(cc);
         }
+        let comp_data = self.comp_data.borrow().clone();
         Object {
             name : self.name.clone(),
             id : self.id.clone(),//?
@@ -65,7 +66,7 @@ impl Clone for Object {
             parent : self.parent.clone(), //None,
             //transform : box transform::Transform::new()
             components : Rc::new(RefCell::new(components)),
-            comp_data : Rc::new(RefCell::new(Vec::new()))
+            comp_data : Rc::new(RefCell::new(comp_data))
         }
     }
 }
@@ -199,6 +200,15 @@ impl Object
     {
         self.components.borrow_mut().push(c);
         //let (tx, rx) = channel();
+    }
+
+    pub fn get_comp_data<T>(&self) -> Option<T>
+    {
+        for c in self.comp_data.borrow().iter()
+        {
+
+        }
+        None
     }
 
 

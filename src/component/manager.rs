@@ -16,7 +16,7 @@ pub trait Component
     fn get_name(&self) -> String;
 }
 
-#[derive(RustcEncodable, RustcDecodable)]
+#[derive(Clone, RustcEncodable, RustcDecodable)]
 pub enum CompData
 {
     Player(Player),
