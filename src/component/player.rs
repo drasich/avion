@@ -13,6 +13,8 @@ pub struct Player
     pub speed : f64
 }
 
+pub struct PlayerBehavior;
+
 impl Player
 {
     pub fn new() -> Player
@@ -25,14 +27,14 @@ impl Player
 
 pub fn player_new() -> Box<Component>
 {
-    box Player::new()
+    box PlayerBehavior
 }
 
-impl Component for Player
+impl Component for PlayerBehavior
 {
     fn copy(&self) -> Rc<RefCell<Box<Component>>>
     {
-        Rc::new(RefCell::new(box Player { speed : 3f64 }))
+        Rc::new(RefCell::new(box PlayerBehavior))
     }
 
     //fn update(&mut self, dt : f64) {}
@@ -44,7 +46,18 @@ impl Component for Player
     }
 
     fn get_name(&self) -> String {
-        "player".to_string()
+        "player_behavior".to_string()
     }
 
 }
+
+#[derive(RustcEncodable, RustcDecodable)]
+pub struct Enemy {
+    name : String
+}
+
+#[derive(RustcEncodable, RustcDecodable)]
+pub struct Collider {
+    name : String
+}
+

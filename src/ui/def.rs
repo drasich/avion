@@ -217,7 +217,7 @@ pub extern fn exit_cb(data: *mut c_void) -> () {
     {
         match v.context.borrow().scene {
             Some(ref s) => {
-                //s.borrow().save();
+                s.borrow().save();
 
                 //old
                 //s.read().unwrap().save();

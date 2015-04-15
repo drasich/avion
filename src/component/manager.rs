@@ -3,8 +3,10 @@ use std::sync::{Arc, Mutex};
 use std::rc::Rc;
 use std::cell::RefCell;
 use object::Object;
+use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 //use std::thread;
 ///use std::sync::mpsc::channel;
+use component::player::{Player, Enemy, Collider};
 
 pub trait Component
 {
@@ -12,6 +14,14 @@ pub trait Component
     fn copy(&self) -> Rc<RefCell<Box<Component>>>;
     fn update(&mut self, ob : &mut Object, dt : f64) {}
     fn get_name(&self) -> String;
+}
+
+#[derive(RustcEncodable, RustcDecodable)]
+pub enum CompData
+{
+    Player(Player),
+    Enemy(Enemy),
+    Collider(Collider)
 }
 
 type ComponentCreationFn = fn() -> Box<Component>;
@@ -66,3 +76,25 @@ lazy_static! {
 }
 
 fn times_two(n: u32) -> u32 { n * 2 }
+
+impl Encodable for Component {
+  fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
+      encoder.emit_struct("Component", 1, |encoder| {
+          try!(encoder.emit_struct_field( "name", 0usize, |encoder| self.get_name().encode(encoder)));
+          Ok(())
+      })
+  }
+}
+
+impl Decodable for Box<Component> {
+  fn decode<D : Decoder>(decoder: &mut D) -> Result<Box<Component>, D::Error> {
+    decoder.read_struct("root", 0, |decoder| {
+          let name : String = try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder)));
+          let comp_mgr = COMP_MGR.lock().unwrap();
+          Ok(
+              comp_mgr.create_component(name.as_slice()).unwrap()
+            )
+    })
+  }
+}
+

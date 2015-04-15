@@ -5,7 +5,7 @@ use transform;
 use shader;
 use resource;
 use material;
-use component::Component;
+use component::{Component,CompData};
 
 use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};//,RWLockReadGuard};
@@ -18,14 +18,6 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 use std::sync::mpsc::channel;
-
-pub trait Enco : Decodable + Encodable{}
-
-pub struct Compo {
-    //pub name : String,
-    //pub component : Option<Rc<RefCell<Box<Component>>>>,
-    pub data : Box<Encodable>
-}
 
 pub struct ThreadObject(Arc<RwLock<Object>>);
 
@@ -48,7 +40,7 @@ pub struct Object
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
     pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component>>>>>>,
-    pub compo : Rc<RefCell<Vec<Rc<RefCell<Box<Compo>>>>>>
+    pub comp_data : Rc<RefCell<Vec<Rc<RefCell<Box<CompData>>>>>>
 }
 
 unsafe impl Send for Object {}
@@ -73,7 +65,7 @@ impl Clone for Object {
             parent : self.parent.clone(), //None,
             //transform : box transform::Transform::new()
             components : Rc::new(RefCell::new(components)),
-            compo : Rc::new(RefCell::new(Vec::new()))
+            comp_data : Rc::new(RefCell::new(Vec::new()))
         }
     }
 }
@@ -244,8 +236,10 @@ impl Decodable for Object {
           //parent: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
           parent: None,
           //transform : box transform::Transform::new()
-          components : Rc::new(RefCell::new(Vec::new())),
-          compo : Rc::new(RefCell::new(Vec::new()))
+          //components : Rc::new(RefCell::new(Vec::new())),
+          //comp_data : Rc::new(RefCell::new(Vec::new()))
+          components: try!(decoder.read_struct_field("components", 0, |decoder| Decodable::decode(decoder))),
+          comp_data: try!(decoder.read_struct_field("comp_data", 0, |decoder| Decodable::decode(decoder))),
         })
     })
   }
@@ -265,16 +259,13 @@ impl Encodable  for Object {
           //try!(encoder.emit_struct_field( "transform", 7u, |encoder| self.transform.encode(encoder)));
           //try!(encoder.emit_struct_field( "parent", 6u, |encoder| self.parent.encode(encoder)));
           //try!(encoder.emit_struct_field( "components", 7usize, |encoder| self.components.encode(encoder)));
-
-          let c = self.compo.borrow();
-          if c.len() > 0 {
-              let d= &*c[0].borrow().data as &Encodable;
-              //try!(encoder.emit_struct_field( "compo", 7usize, |encoder| d.encode(encoder)));
-          }
+          try!(encoder.emit_struct_field( "components", 7usize, |encoder| self.components.encode(encoder)));
+          try!(encoder.emit_struct_field( "comp_data", 8usize, |encoder| self.comp_data.encode(encoder)));
           Ok(())
       })
   }
 }
+
 
 /*
 impl Clone for Object

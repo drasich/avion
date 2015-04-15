@@ -1,6 +1,7 @@
 pub use self::manager::{
     Component,
-    Manager
+    Manager,
+    CompData
 };
 
 pub mod player;

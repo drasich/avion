@@ -69,14 +69,16 @@ impl Scene
                     println!("fiiiiiiiiiiiiiiiiiiiiind");
                     cam.object = o.clone();
                 }
+                /*
                 else if name == "robot"{
                     println!("it is not {}", o.read().unwrap().name);
                     let comp_mgr = component::manager::COMP_MGR.lock().unwrap();
-                    let pc = comp_mgr.create_component("player").unwrap();
+                    let pc = comp_mgr.create_component("player_behavior").unwrap();
                     o.write().unwrap().add_component(
                         //Rc::new(RefCell::new(Box::new(component::player::Player::new()))));
                         Rc::new(RefCell::new(pc)));
                 }
+                */
             }
             else {
                 println!("nooooooooo camera");
@@ -244,8 +246,8 @@ impl Encodable for Scene {
       encoder.emit_struct("Scene", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0usize, |encoder| self.name.encode(encoder)));
           try!(encoder.emit_struct_field( "id", 1usize, |encoder| self.id.encode(encoder)));
-          //try!(encoder.emit_struct_field( "objects", 2usize, |encoder| self.objects.encode(encoder)));
-          //try!(encoder.emit_struct_field( "camera", 3usize, |encoder| self.camera.encode(encoder)));
+          try!(encoder.emit_struct_field( "objects", 2usize, |encoder| self.objects.encode(encoder)));
+          try!(encoder.emit_struct_field( "camera", 3usize, |encoder| self.camera.encode(encoder)));
           Ok(())
       })
   }

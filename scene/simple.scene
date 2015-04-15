@@ -22,7 +22,7 @@
         "variant": "AngleXYZ",
         "fields": [
           {
-            "x": 3246.9,
+            "x": 3787.9,
             "y": -0.3,
             "z": -0.7
           }
@@ -59,9 +59,17 @@
             "y": 1.0,
             "z": 1.0
           },
-          "children": []
+          "children": [],
+          "components": [],
+          "comp_data": []
         }
-      ]
+      ],
+      "components": [
+        {
+          "name": "player_behavior"
+        }
+      ],
+      "comp_data": []
     },
     {
       "name": "skeleton002",
@@ -94,7 +102,9 @@
         "y": 0.1,
         "z": 0.1
       },
-      "children": []
+      "children": [],
+      "components": [],
+      "comp_data": []
     },
     {
       "name": "plane",
@@ -127,7 +137,9 @@
         "y": 81.0,
         "z": 81.0
       },
-      "children": []
+      "children": [],
+      "components": [],
+      "comp_data": []
     },
     {
       "name": "camera",
@@ -154,18 +166,20 @@
         "y": 1.0,
         "z": 1.0
       },
-      "children": []
+      "children": [],
+      "components": [],
+      "comp_data": []
     }
   ],
   "camera": {
     "data": {
-      "fovy": 0.340863,
+      "fovy": 0.050265,
       "fovy_base": 0.392699,
       "near": 1.0,
       "far": 10000.0,
-      "aspect": 1.990783,
-      "width": 864.0,
-      "height": 434.0,
+      "aspect": 1.0,
+      "width": 64.0,
+      "height": 64.0,
       "height_base": 500,
       "yaw": -0.784898,
       "pitch": -0.105723,
@@ -218,7 +232,9 @@
         "y": 1.0,
         "z": 1.0
       },
-      "children": []
+      "children": [],
+      "components": [],
+      "comp_data": []
     },
     "id": "58a28ac7-01ee-4cf6-9552-bb9760a21cea",
     "object_id": "ff632432-da7c-4d25-bd3f-e999f9d3c87a"
