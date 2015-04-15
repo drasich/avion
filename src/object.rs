@@ -16,6 +16,7 @@ use uuid::Uuid;
 use core::marker::Sized;
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::any::Any;
 
 use std::sync::mpsc::channel;
 
@@ -40,7 +41,7 @@ pub struct Object
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
     pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component>>>>>>,
-    pub comp_data : Rc<RefCell<Vec<Rc<RefCell<Box<CompData>>>>>>
+    pub comp_data : Vec<Box<CompData>>
 }
 
 unsafe impl Send for Object {}
@@ -54,7 +55,7 @@ impl Clone for Object {
             let cc = (*c).borrow().copy();
             components.push(cc);
         }
-        let comp_data = self.comp_data.borrow().clone();
+        let comp_data = self.comp_data.clone();
         Object {
             name : self.name.clone(),
             id : self.id.clone(),//?
@@ -66,7 +67,7 @@ impl Clone for Object {
             parent : self.parent.clone(), //None,
             //transform : box transform::Transform::new()
             components : Rc::new(RefCell::new(components)),
-            comp_data : Rc::new(RefCell::new(comp_data))
+            comp_data : comp_data
         }
     }
 }
@@ -202,14 +203,32 @@ impl Object
         //let (tx, rx) = channel();
     }
 
-    pub fn get_comp_data<T>(&self) -> Option<T>
+    pub fn get_comp_data<T:Any>(&self) -> Option<&T>
     {
-        for c in self.comp_data.borrow().iter()
+        for c in self.comp_data.iter()
         {
-
+             if let Some(s) = c.get_comp::<T>() {
+                 return Some(s);
+             }
+             //if cd.unwrap().is::<T>() {
+             //}
         }
         None
     }
+
+    pub fn get_mut_comp_data<T:Any>(&mut self) -> Option<&mut T>
+    {
+        for c in self.comp_data.iter_mut()
+        {
+             if let Some(s) = c.get_mut_comp::<T>() {
+                 return Some(s);
+             }
+             //if cd.unwrap().is::<T>() {
+             //}
+        }
+        None
+    }
+
 
 
 }

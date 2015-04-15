@@ -22,7 +22,7 @@
         "variant": "AngleXYZ",
         "fields": [
           {
-            "x": 3787.9,
+            "x": 4172.9,
             "y": -0.3,
             "z": -0.7
           }
@@ -173,13 +173,13 @@
   ],
   "camera": {
     "data": {
-      "fovy": 0.050265,
+      "fovy": 0.340863,
       "fovy_base": 0.392699,
       "near": 1.0,
       "far": 10000.0,
-      "aspect": 1.0,
-      "width": 64.0,
-      "height": 64.0,
+      "aspect": 1.990783,
+      "width": 864.0,
+      "height": 434.0,
       "height_base": 500,
       "yaw": -0.784898,
       "pitch": -0.105723,

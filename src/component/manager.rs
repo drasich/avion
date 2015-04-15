@@ -4,6 +4,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use object::Object;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use std::any::Any;
 //use std::thread;
 ///use std::sync::mpsc::channel;
 use component::player::{Player, Enemy, Collider};
@@ -22,6 +23,32 @@ pub enum CompData
     Player(Player),
     Enemy(Enemy),
     Collider(Collider)
+}
+
+impl CompData
+{
+    pub fn get_comp<T:Any>(&self) -> Option<&T>
+    {
+        match *self {
+            CompData::Player(ref p) => {
+                let anyp = p as &Any;
+                anyp.downcast_ref::<T>()
+            },
+            _ => None
+        }
+    }
+
+    pub fn get_mut_comp<T:Any>(&mut self) -> Option<&mut T>
+    {
+        match *self {
+            CompData::Player(ref mut p) => {
+                let anyp = p as &mut Any;
+                anyp.downcast_mut::<T>()
+            },
+            _ => None
+        }
+    }
+
 }
 
 type ComponentCreationFn = fn() -> Box<Component>;

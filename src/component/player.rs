@@ -40,6 +40,15 @@ impl Component for PlayerBehavior
     //fn update(&mut self, dt : f64) {}
     fn update(&mut self, ob : &mut Object, dt : f64)
     {
+        let speed = {
+            match ob.get_mut_comp_data::<Player>(){
+                Some(s) => s.speed,
+                None => 0f64
+            }
+        };
+
+        //let yep = ob.get_mut_comp_data::<Player>();
+
         let mut ori = ob.orientation.get_angle_xyz();
         ori.x += 1f64;
         ob.orientation = transform::Orientation::new_with_angle_xyz(&ori);

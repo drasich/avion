@@ -55,7 +55,7 @@ impl Factory {
             parent : None,
             //transform : box transform::Transform::new()
             components : Rc::new(RefCell::new(Vec::new())),
-            comp_data : Rc::new(RefCell::new(Vec::new()))
+            comp_data : Vec::new()
         }
     }
     
