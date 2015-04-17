@@ -78,6 +78,11 @@ impl Scene
                         //Rc::new(RefCell::new(Box::new(component::player::Player::new()))));
                         Rc::new(RefCell::new(pc)));
                 */
+                    /*
+                    let mut p = component::player::Player::new();
+                p.speed = 5.0f;
+                    o.write().unwrap().add_comp_data(box component::CompData::Player(p));
+                    */
                 }
             }
             else {

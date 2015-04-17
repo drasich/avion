@@ -22,7 +22,7 @@
         "variant": "AngleXYZ",
         "fields": [
           {
-            "x": 4172.9,
+            "x": 5033.9,
             "y": -0.3,
             "z": -0.7
           }
@@ -69,7 +69,16 @@
           "name": "player_behavior"
         }
       ],
-      "comp_data": []
+      "comp_data": [
+        {
+          "variant": "Player",
+          "fields": [
+            {
+              "speed": 3.0
+            }
+          ]
+        }
+      ]
     },
     {
       "name": "skeleton002",
@@ -173,13 +182,13 @@
   ],
   "camera": {
     "data": {
-      "fovy": 0.340863,
+      "fovy": 0.050265,
       "fovy_base": 0.392699,
       "near": 1.0,
       "far": 10000.0,
-      "aspect": 1.990783,
-      "width": 864.0,
-      "height": 434.0,
+      "aspect": 1.0,
+      "width": 64.0,
+      "height": 64.0,
       "height_base": 500,
       "yaw": -0.784898,
       "pitch": -0.105723,
