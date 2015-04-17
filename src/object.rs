@@ -203,6 +203,12 @@ impl Object
         //let (tx, rx) = channel();
     }
 
+    pub fn add_comp_data(&mut self, c : Box<CompData>)
+    {
+        self.comp_data.push(c);
+        //let (tx, rx) = channel();
+    }
+
     pub fn get_comp_data<T:Any>(&self) -> Option<&T>
     {
         for c in self.comp_data.iter()

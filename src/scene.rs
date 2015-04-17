@@ -69,16 +69,16 @@ impl Scene
                     println!("fiiiiiiiiiiiiiiiiiiiiind");
                     cam.object = o.clone();
                 }
-                /*
                 else if name == "robot"{
+                /*
                     println!("it is not {}", o.read().unwrap().name);
                     let comp_mgr = component::manager::COMP_MGR.lock().unwrap();
                     let pc = comp_mgr.create_component("player_behavior").unwrap();
                     o.write().unwrap().add_component(
                         //Rc::new(RefCell::new(Box::new(component::player::Player::new()))));
                         Rc::new(RefCell::new(pc)));
-                }
                 */
+                }
             }
             else {
                 println!("nooooooooo camera");

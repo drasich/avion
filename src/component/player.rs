@@ -50,7 +50,7 @@ impl Component for PlayerBehavior
         //let yep = ob.get_mut_comp_data::<Player>();
 
         let mut ori = ob.orientation.get_angle_xyz();
-        ori.x += 1f64;
+        ori.x += speed;
         ob.orientation = transform::Orientation::new_with_angle_xyz(&ori);
     }
 
