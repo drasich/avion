@@ -2,6 +2,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use component::Component;
+use component::manager::Encode;
 //use object::ComponentFunc;
 use object::Object;
 use transform;
@@ -68,5 +69,16 @@ pub struct Enemy {
 #[derive(Clone, RustcEncodable, RustcDecodable)]
 pub struct Collider {
     name : String
+}
+
+
+impl Encode for Player
+{
+  fn encode_this<E : Encoder>(&self, encoder: &mut E)// -> Result<(), &str>
+  {
+      let _ = self.encode(encoder);
+
+  }
+
 }
 

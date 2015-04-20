@@ -41,7 +41,7 @@ pub struct Object
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
     pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component>>>>>>,
-    pub comp_data : Vec<Box<CompData>>
+    pub comp_data : Vec<Box<CompData>>,
 }
 
 unsafe impl Send for Object {}
@@ -67,7 +67,7 @@ impl Clone for Object {
             parent : self.parent.clone(), //None,
             //transform : box transform::Transform::new()
             components : Rc::new(RefCell::new(components)),
-            comp_data : comp_data
+            comp_data : comp_data,
         }
     }
 }

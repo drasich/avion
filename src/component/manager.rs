@@ -17,6 +17,11 @@ pub trait Component
     fn get_name(&self) -> String;
 }
 
+pub trait Encode
+{
+  fn encode_this<E: Encoder>(&self, encoder: &mut E);// -> Result<(), &str>;
+}
+
 #[derive(Clone, RustcEncodable, RustcDecodable)]
 pub enum CompData
 {
