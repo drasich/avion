@@ -34,3 +34,16 @@ struct Frame {
    time : f64,
    data : FrameData
 }
+
+enum Data
+{
+    Position,
+    Quaternion,
+    Euler,
+    Scale
+}
+
+struct Curve
+{
+    bone : Bone
+}
