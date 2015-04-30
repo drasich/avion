@@ -38,6 +38,7 @@ use std::mem;
 mod resource;
 mod shader;
 mod material;
+mod armature;
 mod mesh;
 mod mesh_render;
 mod render;

@@ -315,7 +315,7 @@ impl Mesh
            }
 
            self.aabox = Some(geometry::AABox::new(min,max));
-           println!("__________bos is : {:?}", self.aabox);
+           println!("__________aabox is : {:?}", self.aabox);
 
            let bufname = String::from_str("position");
 
@@ -437,11 +437,16 @@ impl Mesh
 
        {
            let vertex_weight_count = file.read_u16::<LittleEndian>().unwrap();
+           println!("vertex weight count : {} ", vertex_weight_count);
            for _ in 0..vertex_weight_count {
                let weight_count = file.read_u16::<LittleEndian>().unwrap();
+               if weight_count > 0 {
+                println!("  weight count : {} ", weight_count);
+               }
                for _ in 0..weight_count {
                    let index = file.read_u16::<LittleEndian>().unwrap();
                    let weight = file.read_f32::<LittleEndian>().unwrap();
+                    println!("    index, weight : {}, {} ", index, weight);
                }
            }
        }
