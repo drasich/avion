@@ -259,6 +259,16 @@ impl Quat
         }
     }
 
+    pub fn new(x : f64, y : f64, z : f64, w : f64) -> Quat
+    {
+        Quat {
+            x : x, 
+            y : y,
+            z : z,
+            w : w
+        }
+    }
+
     pub fn length2(&self) -> f64
     {
         self.x*self.x + self.y*self.y + self.z*self.z + self.w*self.w

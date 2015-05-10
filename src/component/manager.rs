@@ -8,6 +8,7 @@ use std::any::Any;
 //use std::thread;
 ///use std::sync::mpsc::channel;
 use component::player::{Player, Enemy, Collider};
+use armature::Armature;
 
 pub trait Component
 {
@@ -27,7 +28,8 @@ pub enum CompData
 {
     Player(Player),
     Enemy(Enemy),
-    Collider(Collider)
+    Collider(Collider),
+    Armature(Armature)
 }
 
 impl CompData
