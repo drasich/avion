@@ -109,6 +109,7 @@ enum FrameData
 {
     Position(vec::Vec3),
     Orientation(vec::Quat),
+    Scale(vec::Vec3),
 }
 
 #[derive(Clone)]
@@ -117,7 +118,7 @@ struct Frame {
    data : FrameData
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum Data
 {
     Position,
@@ -181,7 +182,11 @@ impl Curve
                     let q = read_quat(file);
                     FrameData::Orientation(q)
                 },
-                _ => panic!("not done yet")
+                Data::Scale => {
+                    let s = read_vec3(file);
+                    FrameData::Scale(s)
+                },
+                _ => panic!("not done yet :  {:?} ", curve.data )
             };
 
             let frame = Frame {
