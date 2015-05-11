@@ -15,12 +15,14 @@ use vec;
 
 fn read_string(file : &mut File) -> String
 {
+    /*
     let typelen = file.read_u16::<LittleEndian>().unwrap();
     println!("number : {} ", typelen);
     let mut typevec = vec![0u8; typelen as usize];
     file.read(&mut typevec);
     let typename = String::from_utf8(typevec).unwrap();
     println!("type name : {} ", typename);
+    */
 
     let len = file.read_u16::<LittleEndian>().unwrap();
     println!("number : {} ", len);
@@ -70,8 +72,11 @@ impl Bone {
     fn new(file : &mut File) -> Bone 
     {
         let name = read_string(file);
+        println!("name: {}", name);
         let pos = read_vec3(file);
+        println!("pos: {:?}", pos);
         let rot = read_quat(file);
+        println!("rot: {:?}", rot);
 
         let mut bone = Bone {
             name : name,
@@ -135,8 +140,6 @@ impl Curve
 {
     fn new(file : &mut File, bone_index : usize) -> Curve
     {
-        //TODO
-        //let bone_name = read_string(file);
         let data_kind_str = read_string(file);
 
         let data_kind = match data_kind_str.as_slice() {
@@ -147,13 +150,47 @@ impl Curve
             _ => panic!("armature curve : no such kind")
         };
 
-        let curve = Curve {
+        let frames_nb = file.read_u16::<LittleEndian>().unwrap() as usize;
+
+        let mut curve = Curve {
             bone : bone_index,
             data : data_kind,
-            frames : Vec::new(),
+            frames : Vec::with_capacity(frames_nb),
             frame_start : 0f64,
             frame_end : 0f64
         };
+
+        for i in 0usize..frames_nb
+        {
+            let time = file.read_f32::<LittleEndian>().unwrap() as f64;
+
+            if time < curve.frame_start {
+                curve.frame_start = time;
+            }
+
+            if time > curve.frame_end {
+                curve.frame_end = time;
+            }
+
+            let data = match curve.data {
+                Data::Position => {
+                    let pos = read_vec3(file);
+                    FrameData::Position(pos)
+                } ,
+                Data::Quaternion => {
+                    let q = read_quat(file);
+                    FrameData::Orientation(q)
+                },
+                _ => panic!("not done yet")
+            };
+
+            let frame = Frame {
+                time : time,
+                data : data
+            };
+
+            curve.frames.push(frame);
+        }
 
         curve
     }
@@ -169,7 +206,7 @@ struct Action
 }
 
 impl Action {
-    fn new(file : &mut File) -> Action 
+    fn new(file : &mut File, armature : &Armature) -> Action 
     {
         let name = read_string(file);
 
@@ -184,8 +221,11 @@ impl Action {
         println!("curves count : {} ", curves_nb);
 
         for i in 0usize..curves_nb {
+            //TODO I have to modify the data, to use an index instead of bone name
             //TODO
-            //let curve = Curve::new(file);
+            let bone_name = read_string(file);
+            let bone_index = armature.find_bone(bone_name.as_slice());
+            let curve = Curve::new(file, bone_index);
         }
 
         action
@@ -248,7 +288,7 @@ impl Armature {
             }
         };
 
-        let string_type = "string type" ;//read_string(&mut file);
+        let string_type = read_string(&mut file);
         let yop = read_string(&mut file);
         //self.name = yop.clone();
 
@@ -275,9 +315,20 @@ impl Armature {
         println!("action count : {} ", action_count);
 
         for i in 0usize..action_count {
-            let action = Action::new(&mut file);
+            let action = Action::new(&mut file, self);
             self.actions.push(action);
         }
+    }
+
+    pub fn find_bone(&self, name : &str) -> usize
+    {
+        for i in 0..self.bones.len() {
+            if self.bones[i].name == name{
+                return i;
+            }
+        }
+
+        return 0usize;
     }
 
 }
