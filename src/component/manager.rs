@@ -13,9 +13,23 @@ use armature::Armature;
 pub trait Component
 {
     //fn new(&self) -> Rc<RefCell<Box<Component>>>;
-    fn copy(&self) -> Rc<RefCell<Box<Component>>>;
+    fn copy(&self) -> Rc<RefCell<Box<Component>>>
+    {
+        let comp_mgr = COMP_MGR.lock().unwrap();
+        let comp = comp_mgr.create_component(self.get_name().as_slice()).unwrap();
+        Rc::new(RefCell::new(comp))
+    }
+    fn load(&mut self) {}
     fn update(&mut self, ob : &mut Object, dt : f64) {}
+
     fn get_name(&self) -> String;
+    /*
+    fn get_dependencies(&self) -> Vec<String>
+    {
+        return Vec::new()
+    }
+    */
+
 }
 
 pub trait Encode
