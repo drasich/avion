@@ -6,6 +6,8 @@
 #![feature(std_misc,core,collections,libc)]
 #![feature(convert)]
 #![feature(step_by)]
+#![feature(scoped)]
+#![feature(zero_one)]
 
 //TODO remove
 #![allow(unused_variables)]

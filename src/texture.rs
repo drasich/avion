@@ -51,7 +51,9 @@ impl Texture
             return
         }
 
-        let result = png::load_png(&Path::new(self.name.as_slice()));
+        //let result = png::load_png(&Path::new(self.name.as_str()));
+        let path : &Path = self.name.as_ref();
+        let result = png::load_png(path);
         
         match result {
             Err(_) => {},
