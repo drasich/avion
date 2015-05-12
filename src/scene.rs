@@ -38,7 +38,7 @@ impl Scene
     {
         let mut file = String::new();
         File::open(&Path::new(file_path)).ok().unwrap().read_to_string(&mut file);
-        let scene : Scene = json::decode(file.as_slice()).unwrap();
+        let scene : Scene = json::decode(file.as_ref()).unwrap();
 
         scene.post_read();
 
@@ -100,22 +100,23 @@ impl Scene
     pub fn save(&self)
     {
         println!("save scene todo serialize");
-
-        let mut file = File::create(&Path::new(self.name.as_slice())).ok().unwrap();
+        let path : &Path = self.name.as_ref();
+        let mut file = File::create(path).ok().unwrap();
         let mut s = String::new();
         {
             let mut encoder = json::Encoder::new_pretty(&mut s);
             let _ = self.encode(&mut encoder);
         }
 
-        let result = file.write(s.as_slice().as_bytes());
+        //let result = file.write(s.as_ref().as_bytes());
+        let result = file.write(s.as_bytes());
     }
 
     pub fn object_find(&self, name : &str) -> Option<Arc<RwLock<object::Object>>>
     {
         for o in self.objects.iter()
         {
-            if o.read().unwrap().name.as_slice() == name {
+            if o.read().unwrap().name == name {
                 return Some(o.clone());
             }
         }

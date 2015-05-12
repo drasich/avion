@@ -276,7 +276,12 @@ impl Property
     pub fn update_object_property(&self, object : &PropertyShow, prop : &str)
     {
         for (f,pv) in self.pv.iter() {
-            if f.as_slice().starts_with(prop) {
+            let starts_with_prop = {
+                let fstr : &str = f.as_ref();
+                fstr.starts_with(prop)
+            };
+
+            if starts_with_prop {
                 let yep = make_vec_from_string(f).tail().to_vec();
                 match find_property_show(object, yep.clone()) {
                     Some(ppp) => {
@@ -295,7 +300,9 @@ impl Property
         }
 
         for (f,pv) in self.pv.iter() {
-            if f.as_slice() == but {
+            let fstr : &str = f.as_ref();
+            //if f.as_ref() as &str == but {
+            if fstr == but {
                 println!("buuuuuuuuuuuuuuuuuuuuuuuuuut: {} ", f);
                 continue;
             }
@@ -802,7 +809,13 @@ extern fn contract(
 
     for (key,pv) in clone.iter() {
         println!("cccccccccccccccccontract  start with key '{}' ", key);
-        if key.as_slice().starts_with(path) && key.as_slice() != path  {
+        let starts_with_path = {
+            let ks : &str = key.as_ref();
+            ks.starts_with(path) && ks != path
+        };
+
+        //if key.as_ref().starts_with(path) && key.as_ref() != path  {
+        if starts_with_path {
             println!("yes, '{}' starts with '{}'", key, path);
             match p.pv.remove(key) {
                 Some(_) => println!("yes I removed {}", key),
@@ -1048,7 +1061,7 @@ impl<T> PropertyShow for resource::ResTT<T>
 
         if depth > 0 {
             let s = field.to_string() + "/name";
-            self.name.create_widget(property, s.as_slice(), depth-1);
+            self.name.create_widget(property, s.as_ref(), depth-1);
         }
     }
 
@@ -1086,7 +1099,7 @@ macro_rules! property_show_impl(
                     let s = field.to_string()
                     + "/"//.to_string()
                     + stringify!($member);//.to_string();
-                    self.$member.create_widget(property, s.as_slice(), depth-1);
+                    self.$member.create_widget(property, s.as_ref(), depth-1);
                  )+
                 }
             }
@@ -1136,7 +1149,7 @@ fn join_string(path : &Vec<String>) -> String
         if !first {
             s.push('/');
         }
-        s.push_str(v.as_slice());
+        s.push_str(v.as_ref());
         first = false;
     }
 
@@ -1163,9 +1176,9 @@ Option<&PropertyShow>
 
     match path.len() {
         0 =>  None,
-        1 => p.get_property(path[0].as_slice()),
+        1 => p.get_property(path[0].as_ref()),
         _ => { 
-             match p.get_property(path[0].as_slice()) {
+             match p.get_property(path[0].as_ref()) {
                  Some(ppp) => {
                      find_property_show(ppp, path.tail().to_vec())
                  },

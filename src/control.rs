@@ -446,7 +446,7 @@ impl Control
         let vs = name.tail().to_vec();
 
         //o.write().set_property_hier(vs, new);
-        o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), new);
+        o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
 
         let s = join_string(&name);
         return operation::Change::DirectChange(s);
@@ -461,7 +461,7 @@ impl Control
 
         let mut i = 0;
         for o in obs.iter_mut() {
-            //o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), new);
+            //o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
             o.write().unwrap().position = sp[i] + translation;
             i = i+1;
         }
@@ -478,7 +478,7 @@ impl Control
 
         let mut i = 0;
         for o in obs.iter_mut() {
-            //o.write().unwrap().test_set_property_hier(join_string(&vs).as_slice(), new);
+            //o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
             o.write().unwrap().scale = sp[i] * scale;
             i = i+1;
         }
@@ -687,7 +687,7 @@ impl Control
                     };
 
                     for o in s.borrow().objects.iter() {
-                        let b = intersection::is_object_in_planes(planes.as_slice(), &*o.read().unwrap());
+                        let b = intersection::is_object_in_planes(planes.as_ref(), &*o.read().unwrap());
                         if b {
                             c.selected.push_back(o.clone());
                         }
@@ -867,7 +867,7 @@ fn join_string(path : &Vec<String>) -> String
         if !first {
             s.push('/');
         }
-        s.push_str(v.as_slice());
+        s.push_str(v.as_ref());
         first = false;
     }
 

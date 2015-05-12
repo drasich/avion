@@ -118,7 +118,7 @@ impl OperationTrait for Operation
                 let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
-                    ob.test_set_property_hier(s.as_slice(), &**new);
+                    ob.test_set_property_hier(s.as_ref(), &**new);
                     ids.push_back(ob.id.clone());
                 }
                 return Change::Objects(s, ids);
@@ -129,7 +129,7 @@ impl OperationTrait for Operation
                 let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
-                    ob.set_property_hier(s.as_slice(), property::WriteValue::None);
+                    ob.set_property_hier(s.as_ref(), property::WriteValue::None);
                     ids.push_back(ob.id.clone());
                 }
                 return Change::Objects(s, ids);
@@ -140,7 +140,7 @@ impl OperationTrait for Operation
                 let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
-                    ob.set_property_hier(s.as_slice(), property::WriteValue::Some);
+                    ob.set_property_hier(s.as_ref(), property::WriteValue::Some);
                     ids.push_back(ob.id.clone());
                 }
                 return Change::Objects(s, ids);
@@ -152,7 +152,7 @@ impl OperationTrait for Operation
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(
-                        s.as_slice(),
+                        s.as_ref(),
                         &*new[i]);
                     i = i +1;
                     ids.push_back(ob.id.clone());
@@ -171,7 +171,7 @@ impl OperationTrait for Operation
             },
             OperationData::SetSceneCamera(ref s, _, ref new)   => {
                 println!("operation set camera");
-                let mut sc = s.borrow_mut();
+                let sc = s.borrow();
                 if let Some(ref c) = sc.camera {
                     if let Some(ref o) = *new {
                         println!("I set thhe camera !!!!!!!");
@@ -202,7 +202,7 @@ impl OperationTrait for Operation
                 let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
-                    ob.test_set_property_hier(s.as_slice(), &**old);
+                    ob.test_set_property_hier(s.as_ref(), &**old);
                     ids.push_back(ob.id.clone());
                 }
                 return Change::Objects(s, ids);
@@ -213,7 +213,7 @@ impl OperationTrait for Operation
                 let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
-                    ob.test_set_property_hier(s.as_slice(), &**old);
+                    ob.test_set_property_hier(s.as_ref(), &**old);
                     ids.push_back(ob.id.clone());
                 }
                 return Change::Objects(s, ids);
@@ -224,7 +224,7 @@ impl OperationTrait for Operation
                 let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
-                    ob.set_property_hier(s.as_slice(), property::WriteValue::None);
+                    ob.set_property_hier(s.as_ref(), property::WriteValue::None);
                     ids.push_back(ob.id.clone());
                 }
                 return Change::Objects(s, ids);
@@ -236,7 +236,7 @@ impl OperationTrait for Operation
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(
-                        s.as_slice(),
+                        s.as_ref(),
                         &*old[i]);
                     i = i +1;
                     ids.push_back(ob.id.clone());
@@ -256,7 +256,7 @@ impl OperationTrait for Operation
                 return Change::SceneAdd(sc.id.clone(), get_ids(obs));
             },
             OperationData::SetSceneCamera(ref s, ref old, _)   => {
-                let mut sc = s.borrow_mut();
+                let sc = s.borrow();
                 if let Some(ref c) = sc.camera {
                     if let Some(ref o) = *old {
                         c.borrow_mut().object = o.clone();
@@ -373,7 +373,7 @@ fn join_string(path : &Vec<String>) -> String
         if !first {
             s.push('/');
         }
-        s.push_str(v.as_slice());
+        s.push_str(v.as_ref());
         first = false;
     }
 

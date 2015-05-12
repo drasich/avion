@@ -1,7 +1,7 @@
 use vec;
 //use std::num::Zero;
-use std::fmt;
 use std::num::Float;
+use std::fmt;
 use std::ops::{Mul};
 
 pub struct Matrix4
@@ -393,10 +393,11 @@ impl fmt::Debug for Matrix4
             let line = format!("{}, {}, {}, {} \n", self.data[i], self.data[i + 4], self.data[i + 8], self.data[i + 12]);
             //printf("  %f %f %f %f\n", m[i], m[i+4], m[i+8], m[i+12]);
 
-            yep.push_str(line.as_slice());
+            yep.push_str(line.as_ref());
         }
 
-        write!(fmt, "{}", yep.as_slice())
+        let yepstr : &str = yep.as_ref();
+        write!(fmt, "{}", yepstr)
 
     }
 }

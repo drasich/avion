@@ -40,7 +40,7 @@ impl Component for ArmatureAnimation
         "armature_animation".to_string()
     }
 
-    fn new(ob : &Object) -> ArmatureAnimation
+    fn new(ob : &Object) -> Component
     {
         let arm = {
             match ob.get_mut_comp_data::<armature::Armature>(){

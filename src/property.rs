@@ -213,7 +213,7 @@ impl<T:PropertyWrite+Any+Clone+resource::Create> PropertyWrite for Option<T>
       match value.downcast_ref::<String>() {
           Some(s) => {
               println!("it is string");
-              match s.as_slice() {
+              match s.as_ref() {
                   "Some" => {
                       let some : T = resource::Create::create("nonameyet");
                       *self = Some(some);
@@ -235,7 +235,7 @@ impl<T:PropertyWrite+Any+Clone+resource::Create> PropertyWrite for Option<T>
               Some(v) => v,
               None => return
           };
-          match s.as_slice() {
+          match s.as_ref() {
               "Some" => {
                   let some : T = resource::Create::create("nonameyet");
                   *self = Some(some);
@@ -330,7 +330,7 @@ impl PropertyWrite for transform::Orientation
 
       match value.downcast_ref::<String>() {
           Some(s) => {
-              match s.as_slice() {
+              match s.as_ref() {
                   "AngleXYZ" => self.to_angle_xyz(),
                   "Quat" => self.to_quat(),
                   _ => println!("no such type")
@@ -349,7 +349,7 @@ impl PropertyWrite for transform::Orientation
               Some(v) => v,
               None => return
           };
-          match s.as_slice() {
+          match s.as_ref() {
               "AngleXYZ" => self.to_angle_xyz(),
               "Quat" => self.to_quat(),
               _ => println!("no such type")
@@ -386,7 +386,7 @@ impl PropertyWrite for transform::Transform
       match vs.len() {
           0 => {},
           1 => {
-              match vs[0].as_slice() {
+              match vs[0].as_ref() {
                   "position" => self.position.test_set_property(value),
                   "orientation" => self.orientation.test_set_property(value),
                   _ => println!("no such member")
@@ -394,11 +394,11 @@ impl PropertyWrite for transform::Transform
           },
           _ => {
               let yep = join_string(&vs.tail().to_vec());
-              match vs[0].as_slice() {
+              match vs[0].as_ref() {
                   "position" => 
-                      self.position.test_set_property_hier(yep.as_slice(), value),
+                      self.position.test_set_property_hier(yep.as_ref(), value),
                   "orientation" =>
-                      self.orientation.test_set_property_hier(yep.as_slice(), value),
+                      self.orientation.test_set_property_hier(yep.as_ref(), value),
                   _ => println!("no such member")
               }
           }
@@ -427,7 +427,7 @@ fn join_string(path : &Vec<String>) -> String
         if !first {
             s.push('/');
         }
-        s.push_str(v.as_slice());
+        s.push_str(v.as_ref());
         first = false;
     }
 
@@ -469,7 +469,7 @@ macro_rules! property_test_impl(
                         let yep : String = v.tail().connect("/");
                         match v[0] {
                             $(
-                                stringify!($member) => self.$member.test_set_property_hier(yep.as_slice(),value),
+                                stringify!($member) => self.$member.test_set_property_hier(yep.as_ref(),value),
                                 )+
                                 _ => println!(">>>> 1 , no such member,hier : {}, {}", v[0], name)
                         }
@@ -499,7 +499,7 @@ macro_rules! property_test_impl(
                         let yep : String = v.tail().connect("/");
                         match v[0] {
                             $(
-                                stringify!($member) => self.$member.set_property_hier(yep.as_slice(),value),
+                                stringify!($member) => self.$member.set_property_hier(yep.as_ref(),value),
                                 )+
                                 _ => println!(">>>> 1 , no such member,hier : {}, {}", v[0], name)
                         }
@@ -544,7 +544,7 @@ macro_rules! property_get_impl(
                         let yep : String = v.tail().connect("/");
                         match v[0] {
                             $(
-                                stringify!($member) => self.$member.get_property_hier(yep.as_slice()),
+                                stringify!($member) => self.$member.get_property_hier(yep.as_ref()),
                                 )+
                                 _ => {
                                     println!(">>>> 1 , no such member,hier : {}, {}", v[0], name);

@@ -2,7 +2,6 @@ use std::collections::LinkedList;
 use std::rc::{Rc,Weak};
 use std::cell::RefCell;
 use std::sync::{RwLock, Arc};
-use std::num::Float;
 use object;
 use mesh;
 use vec;

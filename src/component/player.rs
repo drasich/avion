@@ -59,6 +59,13 @@ impl Component for PlayerBehavior
         "player_behavior".to_string()
     }
 
+    /*
+    fn new(ob : &Object) -> Box<Component>
+    {
+        box PlayerBehavior
+    }
+    */
+
 }
 
 #[derive(Clone, RustcEncodable, RustcDecodable)]

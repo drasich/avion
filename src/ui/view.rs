@@ -358,7 +358,7 @@ impl View
                         }
                     }
 
-                    if name.as_slice() == "object/name" {
+                    if name == "object/name" {
                         match self.tree.clone() {
                             Some(ref mut t) =>
                                 match t.borrow_state() {
@@ -373,7 +373,7 @@ impl View
                 }
             },
             operation::Change::DirectChange(ref name) => {
-                self.handle_direct_change(name.as_slice());
+                self.handle_direct_change(name.as_ref());
             },
             operation::Change::RectVisibleSet(b) => {
                 if let Some(w) = self.window {
@@ -643,7 +643,7 @@ pub extern fn key_down(
             }
         };
 
-        match key_str.as_slice() {
+        match key_str.as_ref() {
             "Return" => {
                 if let Some(ref cmd) = view.command {
                     println!("pressed return show popup");
@@ -656,7 +656,7 @@ pub extern fn key_down(
             }
         }
 
-        c.key_down(modifier, keyname_str.as_slice(), key_str.as_slice(), timestamp)
+        c.key_down(modifier, keyname_str.as_ref(), key_str.as_ref(), timestamp)
     };
 
     view.handle_control_change(&change);

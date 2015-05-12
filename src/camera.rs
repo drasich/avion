@@ -1,7 +1,6 @@
 use std::sync::{RwLock, Arc};
 use std::f64::consts;
 use std::default::Default;
-use std::num::Float;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 
 use vec;

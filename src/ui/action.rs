@@ -169,10 +169,10 @@ pub extern fn play_scene(data : *const c_void)
     println!("play scene");
     let gv = ui::view::GameView::new(camera, scene);
     ad.holder.borrow_mut().gameview = Some(gv);
-    unsafe {
+    //unsafe {
         //let win = ui::jk_window_new();
         //let gl = ui::jk_glview_new(win, ptr::null(),);
-    }
+    //}
 }
 
 

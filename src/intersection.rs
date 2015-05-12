@@ -2,7 +2,6 @@ use object;
 use geometry;
 use mesh;
 use resource;
-use std::num::Float;
 use std::f64::EPSILON;
 
 use vec::{Vec3, Quat};

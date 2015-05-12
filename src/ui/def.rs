@@ -169,7 +169,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         if let Some(w) = v.window {
             unsafe {
                 {
-                let yo : *const c_void = unsafe { mem::transmute(v) };
+                let yo : *const c_void = mem::transmute(v);
                 ui::window_callback_set(
                     w,
                     yo, 

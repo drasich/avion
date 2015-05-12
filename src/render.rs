@@ -198,7 +198,7 @@ impl RenderPass
                         let yep = resource::resource_get(&mut *texture_manager.write().unwrap(), img);
                         match yep {
                             Some(yoyo) => {
-                                shader.texture_set(name.as_slice(), & *yoyo.read().unwrap(),i);
+                                shader.texture_set(name.as_ref(), & *yoyo.read().unwrap(),i);
                                 i = i +1;
                             },
                             None => {}
@@ -214,8 +214,8 @@ impl RenderPass
                                     fbo : & *fff,
                                     attachment : *attachment
                                 };
-                                //shader.texture_set(name.as_slice(), & *yoyo.read().unwrap(),i);
-                                shader.texture_set(name.as_slice(), &fbosamp,i);
+                                //shader.texture_set(name.as_ref(), & *yoyo.read().unwrap(),i);
+                                shader.texture_set(name.as_ref(), &fbosamp,i);
                                 i = i +1;
                             },
                             None => {}
@@ -226,7 +226,7 @@ impl RenderPass
             }
 
             for (k,v) in material.uniforms.iter() {
-                shader.uniform_set(k.as_slice(), &(**v));
+                shader.uniform_set(k.as_ref(), &(**v));
             }
 
         }
@@ -242,10 +242,10 @@ impl RenderPass
                 let mut can_render = true;
                 let mut vertex_data_count = 0;
                 for (name, cgl_att) in shader.attributes.iter() {
-                    match mb.buffer_get(name.as_slice()){
+                    match mb.buffer_get(name.as_ref()){
                         Some(ref cb) => {
                             cb.utilise(*cgl_att);
-                            if name.as_slice() == "position" {
+                            if name == "position" {
                                 vertex_data_count = cb.size_get();
                             }
                             continue;
@@ -253,10 +253,10 @@ impl RenderPass
                         None => ()
                     }
 
-                    match mb.buffer_f32_get(name.as_slice()){
+                    match mb.buffer_f32_get(name.as_ref()){
                         Some(ref cb) => {
                             cb.utilise(*cgl_att);
-                            if name.as_slice() == "position" {
+                            if name == "position" {
                                 vertex_data_count = cb.size_get();
                             }
                             continue;
@@ -264,10 +264,10 @@ impl RenderPass
                         None => (),
                     }
 
-                    match mb.buffer_u32_get(name.as_slice()){
+                    match mb.buffer_u32_get(name.as_ref()){
                         Some(ref cb) => {
                             cb.utilise(*cgl_att);
-                            if name.as_slice() == "position" {
+                            if name == "position" {
                                 vertex_data_count = cb.size_get();
                             }
                             continue;

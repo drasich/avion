@@ -1,5 +1,4 @@
 use std::fmt;
-use std::num::Float;
 use std::f64::consts;
 use std::ops::{Mul, BitXor, Add, Sub, Div};
 

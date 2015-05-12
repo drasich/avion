@@ -16,7 +16,7 @@ pub trait Component
     fn copy(&self) -> Rc<RefCell<Box<Component>>>
     {
         let comp_mgr = COMP_MGR.lock().unwrap();
-        let comp = comp_mgr.create_component(self.get_name().as_slice()).unwrap();
+        let comp = comp_mgr.create_component(self.get_name().as_ref()).unwrap();
         Rc::new(RefCell::new(comp))
     }
     fn load(&mut self) {}
@@ -29,6 +29,7 @@ pub trait Component
         return Vec::new()
     }
     */
+    //fn new(ob : &Object) -> Box<Component>
 
 }
 
@@ -140,7 +141,7 @@ impl Decodable for Box<Component> {
           let name : String = try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder)));
           let comp_mgr = COMP_MGR.lock().unwrap();
           Ok(
-              comp_mgr.create_component(name.as_slice()).unwrap()
+              comp_mgr.create_component(name.as_ref()).unwrap()
             )
     })
   }
