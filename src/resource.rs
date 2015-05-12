@@ -105,7 +105,7 @@ impl <T:'static+Create+Send+Sync> ResTT<T>
     {
         match self.resource {
             ResNone | ResWait => {
-                let data = manager.request_use_no_proc(self.name.as_slice());
+                let data = manager.request_use_no_proc(self.name.as_ref());
                 self.resource = ResTest::ResData(data);
             },
             _ => {}
@@ -117,7 +117,7 @@ impl <T:'static+Create+Send+Sync> ResTT<T>
         match self.resource {
             ResTest::ResData(ref rd) => rd.clone(),
             _ => {
-                let data = manager.request_use_no_proc(self.name.as_slice());
+                let data = manager.request_use_no_proc(self.name.as_ref());
                 self.resource = ResTest::ResData(data.clone());
                 data
             }
@@ -248,7 +248,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                 let (tx, rx) = channel::<Arc<RwLock<T>>>();
                 let guard = thread::scoped(move || {
                     //sleep(::std::time::duration::Duration::seconds(5));
-                    let mt : T = Create::create(ss.as_slice());
+                    let mt : T = Create::create(ss.as_ref());
                     let m = Arc::new(RwLock::new(mt));
                     m.write().unwrap().inittt();
                     let result = tx.send(m.clone());
@@ -357,7 +357,7 @@ pub fn resource_get<T:'static+Create+Send+Sync>(
     let mut the_res : Option<Arc<RwLock<T>>> = None;
     match res.resource{
         ResNone | ResWait => {
-            res.resource = manager.request_use(res.name.as_slice());
+            res.resource = manager.request_use(res.name.as_ref());
             match res.resource {
                 ResData(ref data) => {
                     the_res = Some(data.clone());

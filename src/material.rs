@@ -34,10 +34,10 @@ impl Sampler
     {
         match *self {
             ImageFile(ref img) => {
-                img.name.as_slice()
+                img.name.as_ref()
             },
             Fbo(ref f, _) => {
-                f.name.as_slice()
+                f.name.as_ref()
             }
         }
     }
@@ -90,7 +90,7 @@ impl Material
     {
         let mut file = String::new();
         File::open(&Path::new(file_path)).ok().unwrap().read_to_string(&mut file);
-        let mat : Material = json::decode(file.as_slice()).unwrap();
+        let mat : Material = json::decode(file.as_ref()).unwrap();
         mat
     }
 
@@ -99,20 +99,23 @@ impl Material
         //TODO 
         //let mut file = String::new();
 
-        let file = match File::open(&Path::new(self.name.as_slice())){
-            Ok(mut f) => {
-                let mut file = String::new();
-                f.read_to_string(&mut file);
-                file
-            },
-            Err(e) => {
-                println!("Error reading file '{}. Error : {}", self.name, e);
-                return;
+        let file = {
+            let path : &Path = self.name.as_ref();
+            match File::open(path){
+                Ok(mut f) => {
+                    let mut file = String::new();
+                    f.read_to_string(&mut file);
+                    file
+                },
+                Err(e) => {
+                    println!("Error reading file '{}. Error : {}", self.name, e);
+                    return;
+                }
             }
         };
-        //let mut mat : Material = json::decode(file.as_slice()).unwrap();
+        //let mut mat : Material = json::decode(file.as_ref()).unwrap();
 
-        let mat : Material = match json::decode(file.as_slice()){
+        let mat : Material = match json::decode(file.as_ref()){
             Ok(m) => m,
             Err(e) => { 
                 println!("{}, line {}: error reading material '{}': {:?}, creating new material",
@@ -120,14 +123,14 @@ impl Material
                          line!(),
                          self.name,
                          e); 
-                Material::new(self.name.as_slice())
+                Material::new(self.name.as_ref())
             }
         };
 
         self.name = mat.name.clone();
         match mat.shader {
             Some(s) => 
-                self.shader = Some(resource::ResTT::new(s.name.as_slice())),
+                self.shader = Some(resource::ResTT::new(s.name.as_ref())),
             None => self.shader = None
         }
 
@@ -135,10 +138,10 @@ impl Material
         {
             match *v {
                 ImageFile(ref img) => {
-                    self.textures.insert(k.clone(), ImageFile(resource::ResTT::new(img.name.as_slice())));
+                    self.textures.insert(k.clone(), ImageFile(resource::ResTT::new(img.name.as_ref())));
                 },
                 Fbo(ref f, ref a) => {
-                    self.textures.insert(k.clone(), Fbo(resource::ResTT::new(f.name.as_slice()), *a));
+                    self.textures.insert(k.clone(), Fbo(resource::ResTT::new(f.name.as_ref()), *a));
                 }
             }
         }
@@ -148,7 +151,8 @@ impl Material
 
     pub fn save(&self)
     {
-        let mut file = File::create(&Path::new(self.name.as_slice())).ok().unwrap();
+        let path : &Path = self.name.as_ref();
+        let mut file = File::create(path).ok().unwrap();
         /*
         //let mut stdwriter = stdio::stdout();
         let mut encoder = json::PrettyEncoder::new(&mut file.unwrap());
@@ -163,7 +167,7 @@ impl Material
             let _ = self.encode(&mut encoder);
         }
 
-        let result = file.write(s.as_slice().as_bytes());
+        let result = file.write(s.as_bytes());
     }
 
     /*

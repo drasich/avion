@@ -143,7 +143,7 @@ impl Curve
     {
         let data_kind_str = read_string(file);
 
-        let data_kind = match data_kind_str.as_slice() {
+        let data_kind = match data_kind_str.as_ref() {
             "position" => Data::Position,
             "quaternion" => Data::Quaternion,
             "euler" => Data::Euler,
@@ -215,7 +215,7 @@ impl Action {
     {
         let name = read_string(file);
 
-        let mut action = Action {
+        let action = Action {
             name : name,
             curves : Vec::new(),
             frame_start: 0f64,
@@ -229,7 +229,7 @@ impl Action {
             //TODO I have to modify the data, to use an index instead of bone name
             //TODO
             let bone_name = read_string(file);
-            let bone_index = armature.find_bone(bone_name.as_slice());
+            let bone_index = armature.find_bone(bone_name.as_ref());
             let curve = Curve::new(file, bone_index);
         }
 
@@ -285,7 +285,8 @@ impl Armature {
         }
         */
 
-        let mut file = match File::open(&Path::new(self.name.as_slice())) {
+        let path : &Path = self.name.as_ref();
+        let mut file = match File::open(path) {
             Ok(f) => {f},
             Err(e) => {
                 println!("Error reading file '{}'. Error: {}", self.name, e);

@@ -259,7 +259,8 @@ impl Mesh
             return;
         }
 
-        let mut file = match File::open(&Path::new(self.name.as_slice())) {
+        let path : &Path = self.name.as_ref();
+        let mut file = match File::open(path) {
             Ok(f) => {f},
             Err(e) => {
                 println!("Error reading file '{}'. Error: {}", self.name, e);
@@ -541,7 +542,7 @@ impl Mesh
             },
             Occupied(entry) => {
                 let en = entry.into_mut();
-                en.data.push_all(vvv.as_slice());
+                en.data.push_all(vvv.as_ref());
             }
         };
 
@@ -557,7 +558,7 @@ impl Mesh
             },
             Occupied(entry) => {
                 let en = entry.into_mut();
-                en.data.push_all(colbuf.as_slice());
+                en.data.push_all(colbuf.as_ref());
             }
         };
 

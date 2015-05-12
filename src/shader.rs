@@ -136,14 +136,14 @@ impl Shader
             Err(_) => return
         }
 
-        self.read_vert_frag(vert.as_slice(), frag.as_slice());
+        self.read_vert_frag(vert.as_ref(), frag.as_ref());
 
         //TODO remove from here
         self.cgl_init();
 
         for line in file.lines() {
             let l = line.unwrap();
-            let split : Vec<&str> = l.as_slice().split(',').collect();
+            let split : Vec<&str> = l.split(',').collect();
             if split[0] == "att" {
                 let size : u32;
                 /*let op : Option<u32> = FromStr::from_str(split[2]);
