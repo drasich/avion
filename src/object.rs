@@ -44,6 +44,8 @@ pub struct Object
     pub comp_data : Vec<Box<CompData>>,
 }
 
+//Real object that the user use (like object state)
+// TODO rename to object
 pub struct ObjectRom
 {
     pub name : String,
@@ -53,12 +55,24 @@ pub struct ObjectRom
     pub position : vec::Vec3,
     pub orientation : transform::Orientation,
     pub scale : vec::Vec3,
-    pub children : Vec<uuid::Uuid>,
+    pub children : Vec<ObjectRom>,
     pub parent : Option<uuid::Uuid>,
     //pub transform : Box<transform::Transform>
     pub components : Vec<String>,
     pub comp_data : Vec<Box<CompData>>,
+    
+    pub instance : Option<ObjectInstance>
 }
+
+// only used by engine, not editable by yser, not encodable
+pub struct ObjectInstance
+{
+    pub mesh_render : Option<mesh_render::MeshRender>,
+    //pub children : LinkedList<Arc<RwLock<ObjectInstance>>>,
+    pub parent : Option<Arc<RwLock<ObjectRom>>>,
+    pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component>>>>>>,
+}
+
 
 unsafe impl Send for Object {}
 unsafe impl Sync for Object {}

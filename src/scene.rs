@@ -22,6 +22,14 @@ pub struct Scene
     pub camera : Option<Rc<RefCell<camera::Camera>>>
 }
 
+pub struct SceneRom
+{
+    pub name : String,
+    pub id : Uuid,
+    pub objects : Vec<object::ObjectRom>,
+    pub camera : Option<camera::CameraRom>
+}
+
 impl Scene
 {
     /*
