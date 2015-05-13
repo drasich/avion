@@ -1,15 +1,17 @@
 //use component;
 use std::rc::Rc;
 use std::cell::RefCell;
-use component::Component;
+use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
+
+
+use component::{Component, CompData};
 use component::manager::Encode;
 //use object::ComponentFunc;
 use object::Object;
 use transform;
-use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
-
 use armature;
 use mesh;
+use resource;
 
 pub enum State
 {
@@ -22,7 +24,8 @@ pub enum State
 pub struct ArmatureAnimation
 {
     state : State,
-    armature : armature::Armature,
+    //armature : armature::Armature,
+    armature : resource::ResTT<armature::Armature>,
     mesh : Option<mesh::Mesh>,
 }
 
@@ -46,7 +49,7 @@ impl Component for ArmatureAnimation
     fn new(ob : &Object) -> ArmatureAnimation
     {
         let arm = {
-            match ob.get_comp_data::<armature::Armature>(){
+            match ob.get_comp_data::<armature::ArmaturePath>(){
                 Some(a) => a.clone(),
                 None => panic!("no armature data")
             }
@@ -54,7 +57,7 @@ impl Component for ArmatureAnimation
 
         ArmatureAnimation {
             state : State::Idle,
-            armature : arm,
+            armature : resource::ResTT::new(arm.as_ref()),
             mesh : None
         }
     }

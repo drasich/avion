@@ -249,6 +249,8 @@ impl Action {
     }
 }
 
+pub type ArmaturePath = String;
+
 
 //TODO clone : only have one instance of the base armature
 // and have ArmatureInstance for the variation
@@ -260,7 +262,8 @@ pub struct Armature
     rotation : vec::Quat,
     scale : vec::Vec3,
     actions : Vec<Action>,
-    bones : Vec<Bone>
+    bones : Vec<Bone>,
+    pub state : usize
 }
 
 impl Armature {
@@ -273,7 +276,8 @@ impl Armature {
             rotation : vec::Quat::identity(),
             scale : vec::Vec3::zero(),
             actions : Vec::new(),
-            bones : Vec::new()
+            bones : Vec::new(),
+            state : 0usize
         }
     }
 
@@ -324,6 +328,9 @@ impl Armature {
             let action = Action::new(&mut file, self);
             self.actions.push(action);
         }
+
+        self.state = 1usize;
+
     }
 
     pub fn find_bone(&self, name : &str) -> usize
@@ -358,7 +365,8 @@ impl Decodable for Armature {
           rotation : vec::Quat::identity(),
           scale : vec::Vec3::zero(),
           actions : Vec::new(),
-          bones : Vec::new()
+          bones : Vec::new(),
+          state : 0usize
         })
     })
   }

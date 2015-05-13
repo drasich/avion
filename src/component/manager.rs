@@ -8,7 +8,7 @@ use std::any::Any;
 //use std::thread;
 ///use std::sync::mpsc::channel;
 use component::player::{Player, Enemy, Collider};
-use armature::Armature;
+use armature::ArmaturePath;
 
 pub trait Component
 {
@@ -38,13 +38,14 @@ pub trait Encode
   fn encode_this<E: Encoder>(&self, encoder: &mut E);// -> Result<(), &str>;
 }
 
+
 #[derive(Clone, RustcEncodable, RustcDecodable)]
 pub enum CompData
 {
     Player(Player),
     Enemy(Enemy),
     Collider(Collider),
-    Armature(Armature)
+    Armature(ArmaturePath)
 }
 
 impl CompData

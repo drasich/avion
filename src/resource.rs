@@ -3,6 +3,8 @@ use texture;
 use shader;
 use fbo;
 use material;
+use armature;
+
 use rustc_serialize::{Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
@@ -202,6 +204,22 @@ impl Create for fbo::Fbo
         //TODO
     }
 }
+
+impl Create for armature::Armature
+{
+    fn create(name : &str) -> armature::Armature
+    {
+        armature::Armature::new(name)
+    }
+
+    fn inittt(&mut self)
+    {
+        if self.state == 0 {
+            self.file_read();
+        }
+    }
+}
+
 
 
 

@@ -91,6 +91,9 @@ impl Scene
                     println!("++++++++++ arm name _after_read_ :  {}", a.name);
                     o.write().unwrap().add_comp_data(box component::CompData::Armature(a));
                     */
+
+                    //let arm_path = String::from_str("armature/robot_armature.arm");
+                    //o.write().unwrap().add_comp_data(box component::CompData::Armature(arm_path));
                 }
             }
             else {
