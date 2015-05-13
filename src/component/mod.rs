@@ -6,3 +6,4 @@ pub use self::manager::{
 
 pub mod player;
 pub mod manager;
+pub mod armature_animation;

@@ -84,11 +84,13 @@ impl Scene
                 p.speed = 5.0f;
                     o.write().unwrap().add_comp_data(box component::CompData::Player(p));
                     */
+                    /*
                     let mut a = armature::Armature::new("armature/robot_armature.arm");
                     println!("++++++++++ arm name : {}", a.name);
                     a.file_read();
                     println!("++++++++++ arm name _after_read_ :  {}", a.name);
                     o.write().unwrap().add_comp_data(box component::CompData::Armature(a));
+                    */
                 }
             }
             else {

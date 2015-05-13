@@ -29,7 +29,7 @@ pub trait Component
         return Vec::new()
     }
     */
-    //fn new(ob : &Object) -> Box<Component>
+    fn new(ob : &Object) -> Self where Self : Sized; 
 
 }
 

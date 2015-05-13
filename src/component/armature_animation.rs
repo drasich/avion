@@ -8,6 +8,9 @@ use object::Object;
 use transform;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 
+use armature;
+use mesh;
+
 pub enum State
 {
     Idle,
@@ -40,36 +43,21 @@ impl Component for ArmatureAnimation
         "armature_animation".to_string()
     }
 
-    fn new(ob : &Object) -> Component
+    fn new(ob : &Object) -> ArmatureAnimation
     {
         let arm = {
-            match ob.get_mut_comp_data::<armature::Armature>(){
-                Some(a) => a,
+            match ob.get_comp_data::<armature::Armature>(){
+                Some(a) => a.clone(),
                 None => panic!("no armature data")
             }
         };
+
+        ArmatureAnimation {
+            state : State::Idle,
+            armature : arm,
+            mesh : None
+        }
     }
-
-}
-
-#[derive(Clone, RustcEncodable, RustcDecodable)]
-pub struct Enemy {
-    name : String
-}
-
-#[derive(Clone, RustcEncodable, RustcDecodable)]
-pub struct Collider {
-    name : String
-}
-
-
-impl Encode for Player
-{
-  fn encode_this<E : Encoder>(&self, encoder: &mut E)// -> Result<(), &str>
-  {
-      let _ = self.encode(encoder);
-
-  }
 
 }
 

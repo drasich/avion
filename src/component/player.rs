@@ -66,6 +66,10 @@ impl Component for PlayerBehavior
     }
     */
 
+    fn new(ob : &Object) -> Self
+    {
+        PlayerBehavior
+    }
 }
 
 #[derive(Clone, RustcEncodable, RustcDecodable)]
