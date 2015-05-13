@@ -46,7 +46,9 @@ impl Component for ArmatureAnimation
         "armature_animation".to_string()
     }
 
-    fn new(ob : &Object) -> ArmatureAnimation
+    //fn new(ob : &Object) -> ArmatureAnimation
+    /*
+    fn new(ob : &Object) -> Box<Component>
     {
         let arm = {
             match ob.get_comp_data::<armature::ArmaturePath>(){
@@ -55,12 +57,33 @@ impl Component for ArmatureAnimation
             }
         };
 
-        ArmatureAnimation {
+        let arm_anim = ArmatureAnimation {
             state : State::Idle,
             armature : resource::ResTT::new(arm.as_ref()),
             mesh : None
-        }
-    }
+        };
 
+        box arm_anim
+    }
+    */
+
+}
+
+pub fn new(ob : &Object) -> Box<Component>
+{
+    let arm = {
+        match ob.get_comp_data::<armature::ArmaturePath>(){
+            Some(a) => a.clone(),
+            None => panic!("no armature data")
+        }
+    };
+
+    let arm_anim = ArmatureAnimation {
+        state : State::Idle,
+        armature : resource::ResTT::new(arm.as_ref()),
+        mesh : None
+    };
+
+    box arm_anim
 }
 

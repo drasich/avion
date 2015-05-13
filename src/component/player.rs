@@ -26,6 +26,7 @@ impl Player
     }
 }
 
+//pub fn player_new(ob : &Object) -> Box<Component>
 pub fn player_new() -> Box<Component>
 {
     box PlayerBehavior
@@ -66,10 +67,12 @@ impl Component for PlayerBehavior
     }
     */
 
-    fn new(ob : &Object) -> Self
+    /*
+    fn new(ob : &Object) -> Box<Component>
     {
-        PlayerBehavior
+        box PlayerBehavior
     }
+    */
 }
 
 #[derive(Clone, RustcEncodable, RustcDecodable)]

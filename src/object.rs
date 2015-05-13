@@ -44,6 +44,22 @@ pub struct Object
     pub comp_data : Vec<Box<CompData>>,
 }
 
+pub struct ObjectRom
+{
+    pub name : String,
+    pub id : uuid::Uuid,
+    //pub mesh_render : Option<mesh_render::MeshRender>,
+    pub mesh_render : Option<(String, String)>,
+    pub position : vec::Vec3,
+    pub orientation : transform::Orientation,
+    pub scale : vec::Vec3,
+    pub children : Vec<uuid::Uuid>,
+    pub parent : Option<uuid::Uuid>,
+    //pub transform : Box<transform::Transform>
+    pub components : Vec<String>,
+    pub comp_data : Vec<Box<CompData>>,
+}
+
 unsafe impl Send for Object {}
 unsafe impl Sync for Object {}
 

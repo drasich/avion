@@ -29,7 +29,15 @@ pub trait Component
         return Vec::new()
     }
     */
-    fn new(ob : &Object) -> Self where Self : Sized; 
+    //fn new(ob : &Object) -> Self where Self : Sized; 
+    /*
+    fn new(ob : &Object) -> Box<Component> 
+    {
+        let comp_mgr = COMP_MGR.lock().unwrap();
+        let comp = comp_mgr.create_component("remove").unwrap();
+        comp
+    }
+    */
 
 }
 
@@ -75,6 +83,7 @@ impl CompData
 }
 
 type ComponentCreationFn = fn() -> Box<Component>;
+//type ComponentCreationFn = fn(&Object) -> Box<Component>;
 
 pub struct Manager {
     name : String,
