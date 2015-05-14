@@ -5,6 +5,7 @@ use transform;
 use shader;
 use resource;
 use material;
+use component;
 use component::{Component,CompData};
 
 use std::collections::{LinkedList};
@@ -42,6 +43,7 @@ pub struct Object
     //pub transform : Box<transform::Transform>
     pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component>>>>>>,
     pub comp_data : Vec<Box<CompData>>,
+    pub comp_string : Vec<String>,
 }
 
 //Real object that the user use (like object state)
@@ -98,6 +100,7 @@ impl Clone for Object {
             //transform : box transform::Transform::new()
             components : Rc::new(RefCell::new(components)),
             comp_data : comp_data,
+            comp_string : self.comp_string.clone()
         }
     }
 }
@@ -230,7 +233,12 @@ impl Object
     pub fn add_component(&mut self, c : Rc<RefCell<Box<Component>>>)
     {
         self.components.borrow_mut().push(c);
-        //let (tx, rx) = channel();
+    }
+
+    pub fn add_comp_string(&mut self, c : &str) 
+    {
+        self.comp_string.push(c.to_string());
+
     }
 
     pub fn add_comp_data(&mut self, c : Box<CompData>)
@@ -265,7 +273,23 @@ impl Object
         None
     }
 
+    pub fn init_components(&mut self, comp_mgr : &component::Manager)
+    {
+        let mut comps = Vec::new();
 
+        for c in self.comp_string.iter() {
+            let pc = comp_mgr.create_component(c.as_ref()).unwrap();
+            comps.push(
+                Rc::new(RefCell::new(pc)));
+        }
+
+        self.components = Rc::new(RefCell::new(comps));
+
+        for child in self.children.iter()
+        {
+            child.write().unwrap().init_components(comp_mgr);
+        }
+    }
 
 }
 
@@ -301,10 +325,11 @@ impl Decodable for Object {
           //parent: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
           parent: None,
           //transform : box transform::Transform::new()
-          //components : Rc::new(RefCell::new(Vec::new())),
+          components : Rc::new(RefCell::new(Vec::new())),
           //comp_data : Rc::new(RefCell::new(Vec::new()))
-          components: try!(decoder.read_struct_field("components", 0, |decoder| Decodable::decode(decoder))),
+          //components: try!(decoder.read_struct_field("components", 0, |decoder| Decodable::decode(decoder))),
           comp_data: try!(decoder.read_struct_field("comp_data", 0, |decoder| Decodable::decode(decoder))),
+          comp_string: try!(decoder.read_struct_field("components", 0, |decoder| Decodable::decode(decoder))),
         })
     })
   }
@@ -324,7 +349,7 @@ impl Encodable  for Object {
           //try!(encoder.emit_struct_field( "transform", 7u, |encoder| self.transform.encode(encoder)));
           //try!(encoder.emit_struct_field( "parent", 6u, |encoder| self.parent.encode(encoder)));
           //try!(encoder.emit_struct_field( "components", 7usize, |encoder| self.components.encode(encoder)));
-          try!(encoder.emit_struct_field( "components", 7usize, |encoder| self.components.encode(encoder)));
+          try!(encoder.emit_struct_field( "components", 7usize, |encoder| self.comp_string.encode(encoder)));
           try!(encoder.emit_struct_field( "comp_data", 8usize, |encoder| self.comp_data.encode(encoder)));
           Ok(())
       })

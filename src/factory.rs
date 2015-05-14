@@ -56,6 +56,7 @@ impl Factory {
             //transform : box transform::Transform::new()
             components : Rc::new(RefCell::new(Vec::new())),
             comp_data : Vec::new(),
+            comp_string : Vec::new(),
         }
     }
     

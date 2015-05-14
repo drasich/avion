@@ -152,15 +152,17 @@ pub extern fn play_scene(data : *const c_void)
     let contextc = control.context.clone();
     let context = contextc.borrow();
     let scene = if let Some(ref s) = context.scene {
-        s.clone()
+        let scene = s.clone();
+        scene.borrow_mut().init_components();
+        scene
     }
     else {
         return;
     };
     //let factory = control.factory.clone();
     
-    let camera = if let Some(ref s) = scene.borrow().camera {
-        s.clone()
+    let camera = if let Some(ref c) = scene.borrow().camera {
+        c.clone()
     }
     else {
         return;

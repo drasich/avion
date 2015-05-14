@@ -136,6 +136,7 @@ lazy_static! {
 
 fn times_two(n: u32) -> u32 { n * 2 }
 
+/*
 impl Encodable for Component {
   fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       encoder.emit_struct("Component", 1, |encoder| {
@@ -156,4 +157,5 @@ impl Decodable for Box<Component> {
     })
   }
 }
+*/
 

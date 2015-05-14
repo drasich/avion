@@ -102,11 +102,22 @@ impl Scene
 
                     //let arm_path = String::from_str("armature/robot_armature.arm");
                     //o.write().unwrap().add_comp_data(box component::CompData::Armature(arm_path));
+                    //o.write().unwrap().add_comp_string("player_behavior");
                 }
             }
             else {
                 println!("nooooooooo camera");
             }
+        }
+    }
+
+    pub fn init_components(&self)
+    {
+        let comp_mgr = component::manager::COMP_MGR.lock().unwrap();
+
+        for o in self.objects.iter()
+        {
+            o.write().unwrap().init_components(&comp_mgr);
         }
     }
 
