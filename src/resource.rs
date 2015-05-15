@@ -232,6 +232,8 @@ pub struct ResourceManager<T>
 unsafe impl<T:Send> Send for ResourceManager<T> {}
 unsafe impl<T:Sync> Sync for ResourceManager<T> {}
 
+type ReceiveResource<T> = fn(ResTest<T>);
+
 impl<T:'static+Create+Sync+Send> ResourceManager<T> {
     pub fn new() -> ResourceManager<T>
     {
@@ -306,6 +308,76 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
         }
     }
 
+        //TODO wip
+    pub fn request_use_and_call<F>(&mut self, name : &str, f : F) -> ResTest<T> where F : Fn(ResTest<T>), F:Send +'static
+    {
+        let ms1 = self.resources.clone();
+        let mut ms1w = ms1.write().unwrap();
+
+        let key = String::from_str(name);
+
+        let v : &mut ResTest<T> = match ms1w.entry(key) {
+        //let v : &mut ResTest<T> = match ms1w.entry(&s) {
+            Entry::Vacant(entry) => entry.insert(ResTest::ResNone),
+            Entry::Occupied(entry) => entry.into_mut(),
+        };
+
+        let s = String::from_str(name);
+        let msc = self.resources.clone();
+
+        match *v 
+        {
+            ResNone => {
+                *v = ResTest::ResWait;
+
+                let ss = s.clone();
+
+                let (tx, rx) = channel::<Arc<RwLock<T>>>();
+                let guard = thread::scoped(move || {
+                    //sleep(::std::time::duration::Duration::seconds(5));
+                    let mt : T = Create::create(ss.as_ref());
+                    let m = Arc::new(RwLock::new(mt));
+                    m.write().unwrap().inittt();
+                    let result = tx.send(m.clone());
+                });
+
+                let result = guard.join();
+
+                thread::spawn( move || {
+                    loop {
+                    match rx.try_recv() {
+                        Err(_) => {},
+                        Ok(value) =>  { 
+                            let mut mscwww = msc.write().unwrap();
+                            let rd = ResTest::ResData(value.clone());
+                            f(rd);
+
+                            match mscwww.entry(s.clone()) {
+                                //Entry::Vacant(entry) => entry.insert(ResTest::ResNone),
+                                Entry::Vacant(entry) => entry.insert(ResTest::ResData(value.clone())),
+                                Entry::Occupied(mut entry) => { 
+                                    *entry.get_mut() = ResTest::ResData(value.clone());
+                                    entry.into_mut()
+                                }
+                            };
+
+                            break; }
+                    }
+                    }
+                });
+
+                return ResTest::ResWait;
+            },
+            ResTest::ResData(ref yep) => {
+                return ResTest::ResData(yep.clone());
+            },
+            ResTest::ResWait => {
+                return ResTest::ResWait;
+            }
+        }
+    }
+
+
     pub fn request_use_no_proc(&mut self, name : &str) -> Arc<RwLock<T>>
     {
         let ms1 = self.resources.clone();
@@ -372,10 +444,14 @@ pub fn resource_get<T:'static+Create+Send+Sync>(
     res: &mut ResTT<T>) 
     -> Option<Arc<RwLock<T>>>
 {
+    let mut test = 5i64;
+
     let mut the_res : Option<Arc<RwLock<T>>> = None;
     match res.resource{
         ResNone | ResWait => {
-            res.resource = manager.request_use(res.name.as_ref());
+            let mut yo = |dance| println!("resource load complete ---------------------");
+            res.resource = manager.request_use_and_call(res.name.as_ref(), yo);
+            //res.resource = manager.request_use(res.name.as_ref());
             match res.resource {
                 ResData(ref data) => {
                     the_res = Some(data.clone());

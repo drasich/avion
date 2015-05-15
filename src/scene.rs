@@ -102,7 +102,9 @@ impl Scene
 
                     //let arm_path = String::from_str("armature/robot_armature.arm");
                     //o.write().unwrap().add_comp_data(box component::CompData::Armature(arm_path));
+
                     //o.write().unwrap().add_comp_string("player_behavior");
+                    //o.write().unwrap().add_comp_string("armature_animation");
                 }
             }
             else {

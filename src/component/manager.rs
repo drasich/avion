@@ -13,12 +13,14 @@ use armature::ArmaturePath;
 pub trait Component
 {
     //fn new(&self) -> Rc<RefCell<Box<Component>>>;
-    fn copy(&self) -> Rc<RefCell<Box<Component>>>
+    fn copy(&self) -> Rc<RefCell<Box<Component>>>;
+    /*
     {
         let comp_mgr = COMP_MGR.lock().unwrap();
         let comp = comp_mgr.create_component(self.get_name().as_ref()).unwrap();
         Rc::new(RefCell::new(comp))
     }
+    */
     fn load(&mut self) {}
     fn update(&mut self, ob : &mut Object, dt : f64) {}
 
@@ -65,6 +67,10 @@ impl CompData
                 let anyp = p as &Any;
                 anyp.downcast_ref::<T>()
             },
+            CompData::Armature(ref p) => {
+                let anyp = p as &Any;
+                anyp.downcast_ref::<T>()
+            },
             _ => None
         }
     }
@@ -82,8 +88,8 @@ impl CompData
 
 }
 
-type ComponentCreationFn = fn() -> Box<Component>;
-//type ComponentCreationFn = fn(&Object) -> Box<Component>;
+//type ComponentCreationFn = fn() -> Box<Component>;
+type ComponentCreationFn = fn(&Object) -> Box<Component>;
 
 pub struct Manager {
     name : String,
@@ -106,13 +112,15 @@ impl Manager {
         self.components.insert(name.to_string(), f);
     }
 
-    pub fn create_component(&self, name : &str) -> Option<Box<Component>>
+    pub fn get_component_create_fn(&self, name : &str) -> Option<&ComponentCreationFn>
     {
+        //self.components.get(&name.to_string())
         match self.components.get(&name.to_string()) {
-            Some(f) => Some(f()),
+            Some(f) => Some(f),
             None => None
         }
     }
+
 }
 
 

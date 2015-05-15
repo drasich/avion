@@ -13,6 +13,7 @@ use armature;
 use mesh;
 use resource;
 
+#[derive(Copy,Clone)]
 pub enum State
 {
     Idle,
@@ -26,7 +27,7 @@ pub struct ArmatureAnimation
     state : State,
     //armature : armature::Armature,
     armature : resource::ResTT<armature::Armature>,
-    mesh : Option<mesh::Mesh>,
+    mesh : Option<resource::ResTT<mesh::Mesh>>,
 }
 
 impl Component for ArmatureAnimation
@@ -37,6 +38,18 @@ impl Component for ArmatureAnimation
         Rc::new(RefCell::new(box))
     }
     */
+
+    fn copy(&self) -> Rc<RefCell<Box<Component>>>
+    {
+        Rc::new(RefCell::new(
+                box ArmatureAnimation
+                {
+                    state : self.state,
+                    armature : self.armature.clone(),
+                    mesh : self.mesh.clone()
+
+                }))
+    }
 
     fn update(&mut self, ob : &mut Object, dt : f64)
     {
@@ -71,6 +84,7 @@ impl Component for ArmatureAnimation
 
 pub fn new(ob : &Object) -> Box<Component>
 {
+    println!("armature anim new---->>>>");
     let arm = {
         match ob.get_comp_data::<armature::ArmaturePath>(){
             Some(a) => a.clone(),

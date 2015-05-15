@@ -278,9 +278,9 @@ impl Object
         let mut comps = Vec::new();
 
         for c in self.comp_string.iter() {
-            let pc = comp_mgr.create_component(c.as_ref()).unwrap();
-            comps.push(
-                Rc::new(RefCell::new(pc)));
+            let f = comp_mgr.get_component_create_fn(c.as_ref()).unwrap();
+            let pc = f(self);
+            comps.push(Rc::new(RefCell::new(pc)));
         }
 
         self.components = Rc::new(RefCell::new(comps));

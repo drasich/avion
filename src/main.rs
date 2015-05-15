@@ -98,11 +98,9 @@ fn main() {
         //let mut cm = component::Manager::new();
         let mut cm = component::manager::COMP_MGR.lock().unwrap();
         cm.register_component("player_behavior", component::player::player_new);
-        /*
         cm.register_component(
             "armature_animation",
             component::armature_animation::new);
-            */
     }
 
     /*

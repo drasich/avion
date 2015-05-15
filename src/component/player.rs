@@ -26,8 +26,8 @@ impl Player
     }
 }
 
-//pub fn player_new(ob : &Object) -> Box<Component>
-pub fn player_new() -> Box<Component>
+pub fn player_new(ob : &Object) -> Box<Component>
+//pub fn player_new() -> Box<Component>
 {
     box PlayerBehavior
 }
