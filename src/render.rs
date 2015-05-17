@@ -106,7 +106,6 @@ impl RenderPass
 
     pub fn draw_frame(
         &self,
-        material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
         resource : &resource::ResourceGroup,
         ) -> ()
     {
@@ -131,7 +130,6 @@ impl RenderPass
                     shader,
                     &mut *ob,
                     &matrix, 
-                    material_manager.clone(),
                     resource
                     );
             }
@@ -144,7 +142,6 @@ impl RenderPass
         shader : &shader::Shader,
         ob : &mut object::Object,
         matrix : &matrix::Matrix4,
-        material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
         resource : &resource::ResourceGroup,
         )
     {
@@ -154,7 +151,7 @@ impl RenderPass
                 let mmm = match mr.material.resource {
                     resource::ResTest::ResData(ref rd) => Some(rd.clone()),
                     _ =>
-                        resource::resource_get(&mut *material_manager.write().unwrap(), &mut mr.material)
+                        resource::resource_get(&mut *resource.material_manager.borrow_mut(), &mut mr.material)
                 };
 
                 (resource::resource_get(&mut *resource.mesh_manager.borrow_mut(), &mut mr.mesh),
@@ -319,7 +316,6 @@ pub struct Render
 {
     passes : HashMap<String, Box<RenderPass>>, //TODO check
 
-    material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
     resource : Rc<resource::ResourceGroup>,
 
     camera : Rc<RefCell<camera::Camera>>,
@@ -358,12 +354,10 @@ impl Render {
             cam.pan(&vec::Vec3::new(0f64,0f64,50f64));
         }
 
-        let material_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
 
 
         let r = Render { 
             passes : HashMap::new(),
-            material_manager : material_manager.clone(),
             camera : camera,
             camera_ortho : camera_ortho,
             fbo_all : fbo_all,
@@ -383,6 +377,7 @@ impl Render {
         };
 
         let shader_manager = &resource.shader_manager;
+        let material_manager = &resource.material_manager;
 
         {
             let m = Arc::new(RwLock::new(mesh::Mesh::new()));
@@ -411,7 +406,7 @@ impl Render {
             let mr = resource::ResTT::new_with_res("quad", rs);
 
             shader_manager.borrow_mut().request_use_no_proc("shader/outline.sh");
-            let outline_mat = material_manager.write().unwrap().request_use_no_proc("material/outline.mat");
+            let outline_mat = material_manager.borrow_mut().request_use_no_proc("material/outline.mat");
             let outline_res = resource::ResTT::new_with_res("material/outline.mat", resource::ResTest::ResData(outline_mat));
 
             r.quad_outline.write().unwrap().mesh_render = Some(
@@ -427,7 +422,7 @@ impl Render {
             let mr = resource::ResTT::new_with_res("quad", rs);
 
             //shader_manager.write().unwrap().request_use_no_proc("shader/all.sh");
-            let all_mat = material_manager.write().unwrap().request_use_no_proc("material/fbo_all.mat");
+            let all_mat = material_manager.borrow_mut().request_use_no_proc("material/fbo_all.mat");
             let all_res = resource::ResTT::new_with_res("material/fbo_all.mat", resource::ResTest::ResData(all_mat));
 
             r.quad_all.write().unwrap().mesh_render = Some(
@@ -503,7 +498,7 @@ impl Render {
             prepare_passes_object(
                 o.clone(),
                 &mut self.passes,
-                self.material_manager.clone(),
+                &mut self.resource.material_manager.borrow_mut(),
                 &mut self.resource.shader_manager.borrow_mut(),
                 self.camera.clone());
         }
@@ -511,7 +506,7 @@ impl Render {
         prepare_passes_object(
             self.grid.clone(),
             &mut self.passes,
-            self.material_manager.clone(),
+            &mut self.resource.material_manager.borrow_mut(),
             &mut self.resource.shader_manager.borrow_mut(),
             self.camera.clone());
 
@@ -529,7 +524,7 @@ impl Render {
         prepare_passes_object(
             self.camera_repere.clone(),
             &mut self.passes,
-            self.material_manager.clone(),
+            &mut self.resource.material_manager.borrow_mut(),
             &mut self.resource.shader_manager.borrow_mut(),
             self.camera_ortho.clone());
     }
@@ -551,7 +546,7 @@ impl Render {
             prepare_passes_object(
                 o.clone(),
                 &mut self.passes,
-                self.material_manager.clone(),
+                &mut self.resource.material_manager.borrow_mut(),
                 &mut self.resource.shader_manager.borrow_mut(),
                 self.camera.clone());
         }
@@ -570,7 +565,7 @@ impl Render {
         prepare_passes_object(
             o.clone(),
             &mut self.passes,
-            self.material_manager.clone(),
+            &mut self.resource.material_manager.borrow_mut(),
             &mut self.resource.shader_manager.borrow_mut(),
             self.camera_ortho.clone());
         }
@@ -589,7 +584,7 @@ impl Render {
         prepare_passes_object(
             o.clone(),
             &mut self.passes,
-            self.material_manager.clone(),
+            &mut self.resource.material_manager.borrow_mut(),
             &mut self.resource.shader_manager.borrow_mut(),
             self.camera.clone());
         }
@@ -607,7 +602,6 @@ impl Render {
         for p in self.passes.values()
         {
             p.draw_frame(
-                self.material_manager.clone(),
                 &self.resource
                 );
         }
@@ -619,7 +613,6 @@ impl Render {
         for p in self.passes.values()
         {
             p.draw_frame(
-                self.material_manager.clone(),
                 &self.resource
                 );
         }
@@ -647,7 +640,6 @@ impl Render {
         for p in self.passes.values()
         {
             p.draw_frame(
-                self.material_manager.clone(),
                 &self.resource
                 );
         }
@@ -663,7 +655,6 @@ impl Render {
             for p in self.passes.values()
             {
                 p.draw_frame(
-                    self.material_manager.clone(),
                     &self.resource
                     );
             }
@@ -713,7 +704,6 @@ impl Render {
             for p in self.passes.values()
             {
                 p.draw_frame(
-                    self.material_manager.clone(),
                     &self.resource
                     );
             }
@@ -725,7 +715,7 @@ impl Render {
 fn prepare_passes_object(
     o : Arc<RwLock<object::Object>>,
     passes : &mut HashMap<String, Box<RenderPass>>, 
-    material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
+    material_manager : &mut resource::ResourceManager<material::Material>,
     shader_manager : &mut resource::ResourceManager<shader::Shader>,
     camera : Rc<RefCell<camera::Camera>>
     )
@@ -737,7 +727,7 @@ fn prepare_passes_object(
             prepare_passes_object(
                 c.clone(),
                 passes,
-                material_manager.clone(),
+                material_manager,
                 shader_manager,
                 camera.clone());
         }
@@ -751,7 +741,7 @@ fn prepare_passes_object(
 
         let material = match *render {
             Some(ref mut mr) => { 
-                mr.material.get_resource(&mut *material_manager.write().unwrap())
+                mr.material.get_resource(material_manager)
             },
             None => return
         };
