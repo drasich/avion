@@ -129,7 +129,7 @@ extern {
 pub struct Master
 {
     pub factory : factory::Factory,
-    pub resource : resource::ResourceGroup,
+    pub resource : Rc<resource::ResourceGroup>,
     views : LinkedList<Box<View>>,
 }
 
@@ -138,7 +138,7 @@ impl Master
     fn _new() -> Master
     {
         let factory = factory::Factory::new();
-        let resource = resource::ResourceGroup::new();
+        let resource = Rc::new(resource::ResourceGroup::new());
 
         let mut m = Master {
             factory : factory,
@@ -146,7 +146,7 @@ impl Master
             views : LinkedList::new(),
         };
 
-        let v = box View::new(&m.factory);
+        let v = box View::new(&m.factory, m.resource.clone());
         m.views.push_back(v);
 
         m

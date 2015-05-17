@@ -469,11 +469,11 @@ pub fn resource_get<T:'static+Create+Send+Sync>(
 
 pub struct ResourceGroup
 {
-    mesh_manager : RefCell<ResourceManager<mesh::Mesh>>,
-    shader_manager : RefCell<ResourceManager<shader::Shader>>,
-    texture_manager : RefCell<ResourceManager<texture::Texture>>,
-    material_manager : RefCell<ResourceManager<material::Material>>,
-    fbo_manager : RefCell<ResourceManager<fbo::Fbo>>,
+    pub mesh_manager : RefCell<ResourceManager<mesh::Mesh>>,
+    pub shader_manager : RefCell<ResourceManager<shader::Shader>>,
+    pub texture_manager : RefCell<ResourceManager<texture::Texture>>,
+    pub material_manager : RefCell<ResourceManager<material::Material>>,
+    pub fbo_manager : RefCell<ResourceManager<fbo::Fbo>>,
 }
 
 impl ResourceGroup
@@ -481,8 +481,8 @@ impl ResourceGroup
     pub fn new() -> ResourceGroup
     {
         let mut fbo_manager = ResourceManager::new();
-        let fbo_all = fbo_manager.request_use_no_proc("fbo_all");
-        let fbo_selected = fbo_manager.request_use_no_proc("fbo_selected");
+        //let fbo_all = fbo_manager.request_use_no_proc("fbo_all");
+        //let fbo_selected = fbo_manager.request_use_no_proc("fbo_selected");
 
         ResourceGroup {
             mesh_manager : RefCell::new(ResourceManager::new()),

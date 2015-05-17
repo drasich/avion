@@ -81,12 +81,13 @@ pub struct View
     pub dragger : Rc<RefCell<dragger::DraggerManager>>,
 
     pub camera : Rc<RefCell<camera::Camera>>,
-    pub holder : Rc<RefCell<Holder>>
+    pub holder : Rc<RefCell<Holder>>,
+    //pub resource : Rc<resource::ResourceGroup>,
 }
 
 impl View
 {
-    pub fn new(factory: &factory::Factory) -> View
+    pub fn new(factory: &factory::Factory, resource : Rc<resource::ResourceGroup>) -> View
     //pub fn new(factory: Rc<RefCell<factory::Factory>>) -> View
     {
         //let factory = factory.borrow_mut();
@@ -120,7 +121,7 @@ impl View
                     dragger.clone()
                     )));
 
-        let render = box Render::new(factory, camera.clone());
+        let render = box Render::new(factory, resource, camera.clone());
 
         let v = View {
             render : render,
