@@ -107,7 +107,6 @@ impl RenderPass
     pub fn draw_frame(
         &self,
         material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
-        texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
         resource : &resource::ResourceGroup,
         ) -> ()
     {
@@ -133,7 +132,6 @@ impl RenderPass
                     &mut *ob,
                     &matrix, 
                     material_manager.clone(),
-                    texture_manager.clone(),
                     resource
                     );
             }
@@ -147,7 +145,6 @@ impl RenderPass
         ob : &mut object::Object,
         matrix : &matrix::Matrix4,
         material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
-        texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
         resource : &resource::ResourceGroup,
         )
     {
@@ -172,7 +169,7 @@ impl RenderPass
             for (_,t) in material.textures.iter_mut() {
                 match *t {
                     material::Sampler::ImageFile(ref mut img) => {
-                        let yep = resource::resource_get(&mut *texture_manager.write().unwrap(), img);
+                        let yep = resource::resource_get(&mut *resource.texture_manager.borrow_mut(), img);
                         match yep.clone() {
                             None => {},
                             Some(yy) => {
@@ -191,7 +188,7 @@ impl RenderPass
             for (name,t) in material.textures.iter_mut() {
                 match *t {
                     material::Sampler::ImageFile(ref mut img) => {
-                        let yep = resource::resource_get(&mut *texture_manager.write().unwrap(), img);
+                        let yep = resource::resource_get(&mut *resource.texture_manager.borrow_mut(), img);
                         match yep {
                             Some(yoyo) => {
                                 shader.texture_set(name.as_ref(), & *yoyo.read().unwrap(),i);
@@ -322,7 +319,6 @@ pub struct Render
 {
     passes : HashMap<String, Box<RenderPass>>, //TODO check
 
-    texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
     material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
     resource : Rc<resource::ResourceGroup>,
 
@@ -367,7 +363,6 @@ impl Render {
 
         let r = Render { 
             passes : HashMap::new(),
-            texture_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
             material_manager : material_manager.clone(),
             camera : camera,
             camera_ortho : camera_ortho,
@@ -613,7 +608,6 @@ impl Render {
         {
             p.draw_frame(
                 self.material_manager.clone(),
-                self.texture_manager.clone(),
                 &self.resource
                 );
         }
@@ -626,7 +620,6 @@ impl Render {
         {
             p.draw_frame(
                 self.material_manager.clone(),
-                self.texture_manager.clone(),
                 &self.resource
                 );
         }
@@ -655,7 +648,6 @@ impl Render {
         {
             p.draw_frame(
                 self.material_manager.clone(),
-                self.texture_manager.clone(),
                 &self.resource
                 );
         }
@@ -672,7 +664,6 @@ impl Render {
             {
                 p.draw_frame(
                     self.material_manager.clone(),
-                    self.texture_manager.clone(),
                     &self.resource
                     );
             }
@@ -723,7 +714,6 @@ impl Render {
             {
                 p.draw_frame(
                     self.material_manager.clone(),
-                    self.texture_manager.clone(),
                     &self.resource
                     );
             }
