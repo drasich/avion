@@ -82,7 +82,7 @@ impl Component for ArmatureAnimation
 
 }
 
-pub fn new(ob : &Object) -> Box<Component>
+pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
 {
     println!("armature anim new---->>>>");
     let arm = {

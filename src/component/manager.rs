@@ -9,6 +9,7 @@ use std::any::Any;
 ///use std::sync::mpsc::channel;
 use component::player::{Player, Enemy, Collider};
 use armature::ArmaturePath;
+use resource;
 
 pub trait Component
 {
@@ -89,7 +90,7 @@ impl CompData
 }
 
 //type ComponentCreationFn = fn() -> Box<Component>;
-type ComponentCreationFn = fn(&Object) -> Box<Component>;
+type ComponentCreationFn = fn(&Object, &resource::ResourceGroup) -> Box<Component>;
 
 pub struct Manager {
     name : String,

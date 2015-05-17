@@ -13,6 +13,7 @@ use armature;
 use object;
 use camera;
 use component;
+use resource;
 
 pub struct Scene
 {
@@ -113,13 +114,13 @@ impl Scene
         }
     }
 
-    pub fn init_components(&self)
+    pub fn init_components(&self, resource : &resource::ResourceGroup)
     {
         let comp_mgr = component::manager::COMP_MGR.lock().unwrap();
 
         for o in self.objects.iter()
         {
-            o.write().unwrap().init_components(&comp_mgr);
+            o.write().unwrap().init_components(&comp_mgr, resource);
         }
     }
 

@@ -7,6 +7,7 @@ use component::manager::Encode;
 use object::Object;
 use transform;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use resource;
 
 #[derive(Clone, RustcEncodable, RustcDecodable)]
 pub struct Player
@@ -26,7 +27,7 @@ impl Player
     }
 }
 
-pub fn player_new(ob : &Object) -> Box<Component>
+pub fn player_new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
 //pub fn player_new() -> Box<Component>
 {
     box PlayerBehavior

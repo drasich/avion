@@ -16,6 +16,7 @@ use ui::Window;
 use ui::Master;
 use ui;
 use control::Control;
+use resource;
 
 #[repr(C)]
 pub struct JkAction;
@@ -45,7 +46,8 @@ pub struct ActionData
     tree : Rc<RefCell<Box<ui::Tree>>>,
     property : Rc<RefCell<Box<ui::Property>>>,
     control : Rc<RefCell<Control>>,
-    holder : Rc<RefCell<ui::view::Holder>>
+    holder : Rc<RefCell<ui::view::Holder>>,
+    resource : Rc<resource::ResourceGroup>
 }
 
 impl ActionData
@@ -55,13 +57,15 @@ impl ActionData
     property : Rc<RefCell<Box<ui::Property>>>,
     control : Rc<RefCell<Control>>,
     holder : Rc<RefCell<ui::view::Holder>>,
+    resource : Rc<resource::ResourceGroup>
     ) -> ActionData
     {
         ActionData {
             tree : tree,
             property : property,
             control : control,
-            holder : holder
+            holder : holder,
+            resource: resource
         }
     }
 }
@@ -153,7 +157,7 @@ pub extern fn play_scene(data : *const c_void)
     let context = contextc.borrow();
     let scene = if let Some(ref s) = context.scene {
         let scene = s.clone();
-        scene.borrow_mut().init_components();
+        scene.borrow_mut().init_components(&ad.resource);
         scene
     }
     else {
@@ -169,7 +173,7 @@ pub extern fn play_scene(data : *const c_void)
     };
 
     println!("play scene");
-    let gv = ui::view::GameView::new(camera, scene);
+    let gv = ui::view::GameView::new(camera, scene, ad.resource.clone());
     ad.holder.borrow_mut().gameview = Some(gv);
     //unsafe {
         //let win = ui::jk_window_new();

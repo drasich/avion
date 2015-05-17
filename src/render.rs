@@ -911,11 +911,15 @@ pub struct GameRender
 {
     passes : HashMap<String, Box<RenderPass>>, //TODO check
 
+    resource: Rc<resource::ResourceGroup>,
+
+        /*
     mesh_manager : Arc<RwLock<resource::ResourceManager<mesh::Mesh>>>,
     shader_manager : Arc<RwLock<resource::ResourceManager<shader::Shader>>>,
     texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
     material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
     fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>,
+    */
 
     camera : Rc<RefCell<camera::Camera>>,
     //camera_ortho : Rc<RefCell<camera::Camera>>,
@@ -926,6 +930,7 @@ impl GameRender {
     //TODO remove dragger and put "view_objects"
     pub fn new(//factory: &mut factory::Factory,
                camera : Rc<RefCell<camera::Camera>>,
+               resource : Rc<resource::ResourceGroup>
                //dragger : Arc<RwLock<object::Object>>,
                ) -> GameRender
     {
@@ -938,18 +943,23 @@ impl GameRender {
         }
         */
 
+        /*
         let material_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
         let shader_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
         let fbo_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
+        */
 
         let r = GameRender { 
             passes : HashMap::new(),
             //mesh_manager : factory.mesh_manager.clone(),
+            /*
             mesh_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
             shader_manager : shader_manager.clone(),
             texture_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
             material_manager : material_manager.clone(),
             fbo_manager : fbo_manager,
+            */
+            resource : resource,
             camera : camera,
             //camera_ortho : camera_ortho,
         };
@@ -998,17 +1008,14 @@ impl GameRender {
             p.passes.clear();
         }
 
-            println!("chris todo uncomment and fix");
-        /*
         for o in list.iter() {
             prepare_passes_object(
                 o.clone(),
                 &mut self.passes,
-                self.material_manager.clone(),
-                &mut *self.shader_manager.clone().write().unwrap(),
+                &mut self.resource.material_manager.borrow_mut(),
+                &mut self.resource.shader_manager.borrow_mut(),
                 self.camera.clone());
         }
-        */
     }
 
     pub fn draw(
@@ -1020,16 +1027,7 @@ impl GameRender {
 
         for p in self.passes.values()
         {
-            println!("chris todo uncomment and fix");
-            /*
-            p.draw_frame(
-                self.mesh_manager.clone(),
-                self.material_manager.clone(),
-                self.shader_manager.clone(),
-                self.texture_manager.clone(),
-                self.fbo_manager.clone(),
-                );
-                */
+            p.draw_frame(&self.resource);
         }
     }
 }

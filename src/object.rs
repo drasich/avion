@@ -273,13 +273,13 @@ impl Object
         None
     }
 
-    pub fn init_components(&mut self, comp_mgr : &component::Manager)
+    pub fn init_components(&mut self, comp_mgr : &component::Manager, resource : &resource::ResourceGroup)
     {
         let mut comps = Vec::new();
 
         for c in self.comp_string.iter() {
             let f = comp_mgr.get_component_create_fn(c.as_ref()).unwrap();
-            let pc = f(self);
+            let pc = f(self, resource);
             comps.push(Rc::new(RefCell::new(pc)));
         }
 
@@ -287,7 +287,7 @@ impl Object
 
         for child in self.children.iter()
         {
-            child.write().unwrap().init_components(comp_mgr);
+            child.write().unwrap().init_components(comp_mgr, resource);
         }
     }
 

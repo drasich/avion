@@ -82,7 +82,7 @@ pub struct View
 
     pub camera : Rc<RefCell<camera::Camera>>,
     pub holder : Rc<RefCell<Holder>>,
-    //pub resource : Rc<resource::ResourceGroup>,
+    pub resource : Rc<resource::ResourceGroup>,
 }
 
 impl View
@@ -121,7 +121,7 @@ impl View
                     dragger.clone()
                     )));
 
-        let render = box Render::new(factory, resource, camera.clone());
+        let render = box Render::new(factory, resource.clone(), camera.clone());
 
         let v = View {
             render : render,
@@ -137,7 +137,8 @@ impl View
             dragger : dragger,
 
             camera : camera,
-            holder : Rc::new(RefCell::new(Holder { gameview : None }))
+            holder : Rc::new(RefCell::new(Holder { gameview : None })),
+            resource : resource
         };
 
         return v;
@@ -182,7 +183,8 @@ impl View
             t.clone(),
             p.clone(),
             control.clone(),
-            self.holder.clone()
+            self.holder.clone(),
+            self.resource.clone()
         );
 
         a.borrow().add_button("christest", ui::action::add_empty, ad.clone());
@@ -717,7 +719,8 @@ impl GameView {
     pub fn new(
         //factory: &mut factory::Factory,
         camera : Rc<RefCell<camera::Camera>>,
-        scene : Rc<RefCell<scene::Scene>>
+        scene : Rc<RefCell<scene::Scene>>,
+        resource : Rc<resource::ResourceGroup>
         ) -> Box<GameView>
     {
         /*
@@ -734,7 +737,7 @@ impl GameView {
         };
 
         //let render = box GameRender::new(factory, camera);
-        let render = box GameRender::new(camera);
+        let render = box GameRender::new(camera, resource);
 
         let v = box GameView {
             render : render,
