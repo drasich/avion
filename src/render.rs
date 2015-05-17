@@ -108,7 +108,6 @@ impl RenderPass
         &self,
         material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
         texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
-        fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>,
         resource : &resource::ResourceGroup,
         ) -> ()
     {
@@ -135,7 +134,6 @@ impl RenderPass
                     &matrix, 
                     material_manager.clone(),
                     texture_manager.clone(),
-                    fbo_manager.clone(),
                     resource
                     );
             }
@@ -150,7 +148,6 @@ impl RenderPass
         matrix : &matrix::Matrix4,
         material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
         texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
-        fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>,
         resource : &resource::ResourceGroup,
         )
     {
@@ -204,7 +201,6 @@ impl RenderPass
                         }
                     },
                     material::Sampler::Fbo(ref mut fbo, ref attachment) => {
-                        //let yep = resource::resource_get(&mut *fbo_manager.write().unwrap(), fbo);
                         let yep = resource::resource_get(&mut *resource.fbo_manager.borrow_mut(), fbo);
                         match yep {
                             Some(yoyo) => {
@@ -328,7 +324,6 @@ pub struct Render
 
     texture_manager : Arc<RwLock<resource::ResourceManager<texture::Texture>>>,
     material_manager : Arc<RwLock<resource::ResourceManager<material::Material>>>,
-    fbo_manager : Arc<RwLock<resource::ResourceManager<fbo::Fbo>>>,
     resource : Rc<resource::ResourceGroup>,
 
     camera : Rc<RefCell<camera::Camera>>,
@@ -357,10 +352,6 @@ impl Render {
                //dragger : Arc<RwLock<object::Object>>,
                ) -> Render
     {
-        let fbo_manager = Arc::new(RwLock::new(resource::ResourceManager::new()));
-        //let fbo_all = fbo_manager.write().unwrap().request_use_no_proc("fbo_all");
-        //let fbo_selected = fbo_manager.write().unwrap().request_use_no_proc("fbo_selected");
-
         let fbo_all = resource.fbo_manager.borrow_mut().request_use_no_proc("fbo_all");
         let fbo_selected = resource.fbo_manager.borrow_mut().request_use_no_proc("fbo_selected");
 
@@ -378,7 +369,6 @@ impl Render {
             passes : HashMap::new(),
             texture_manager : Arc::new(RwLock::new(resource::ResourceManager::new())),
             material_manager : material_manager.clone(),
-            fbo_manager : fbo_manager.clone(),
             camera : camera,
             camera_ortho : camera_ortho,
             fbo_all : fbo_all,
@@ -624,7 +614,6 @@ impl Render {
             p.draw_frame(
                 self.material_manager.clone(),
                 self.texture_manager.clone(),
-                self.fbo_manager.clone(),
                 &self.resource
                 );
         }
@@ -638,7 +627,6 @@ impl Render {
             p.draw_frame(
                 self.material_manager.clone(),
                 self.texture_manager.clone(),
-                self.fbo_manager.clone(),
                 &self.resource
                 );
         }
@@ -668,7 +656,6 @@ impl Render {
             p.draw_frame(
                 self.material_manager.clone(),
                 self.texture_manager.clone(),
-                self.fbo_manager.clone(),
                 &self.resource
                 );
         }
@@ -686,7 +673,6 @@ impl Render {
                 p.draw_frame(
                     self.material_manager.clone(),
                     self.texture_manager.clone(),
-                    self.fbo_manager.clone(),
                     &self.resource
                     );
             }
@@ -738,7 +724,6 @@ impl Render {
                 p.draw_frame(
                     self.material_manager.clone(),
                     self.texture_manager.clone(),
-                    self.fbo_manager.clone(),
                     &self.resource
                     );
             }
