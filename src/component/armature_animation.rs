@@ -54,33 +54,12 @@ impl Component for ArmatureAnimation
 
     fn update(&mut self, ob : &mut Object, dt : f64)
     {
+        println!("update armature anim");
     }
 
     fn get_name(&self) -> String {
         "armature_animation".to_string()
     }
-
-    //fn new(ob : &Object) -> ArmatureAnimation
-    /*
-    fn new(ob : &Object) -> Box<Component>
-    {
-        let arm = {
-            match ob.get_comp_data::<armature::ArmaturePath>(){
-                Some(a) => a.clone(),
-                None => panic!("no armature data")
-            }
-        };
-
-        let arm_anim = ArmatureAnimation {
-            state : State::Idle,
-            armature : resource::ResTT::new(arm.as_ref()),
-            mesh : None
-        };
-
-        box arm_anim
-    }
-    */
-
 }
 
 pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>

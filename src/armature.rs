@@ -199,6 +199,36 @@ impl Curve
 
         curve
     }
+
+    fn get_frames(&self, time : f64) -> (&Frame,&Frame)
+    {
+        let mut start = None;
+        let mut end = None;
+        let mut last = None;
+
+        for f in self.frames.iter() {
+            last = Some(f);
+
+            if time == f.time {
+                return (f, f);
+            }
+            else if time > f.time {
+                start = Some(f);
+            }
+            else if time < f.time {
+                end = Some(f);
+                break;
+            }
+        }
+
+        let last = last.unwrap();
+
+        match (start, end) {
+            (Some(s), Some(e)) => (s, e),
+            (Some(s), None) => (s, last),
+            (None, _) => (last, last),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -281,6 +311,13 @@ impl Armature {
         }
     }
 
+    pub fn create_instance(&self) -> ArmatureInstance
+    {
+        ArmatureInstance {
+            bones : self.bones.clone()
+        }
+    }
+
     pub fn file_read(&mut self) 
     {
         /*
@@ -344,8 +381,21 @@ impl Armature {
         return 0usize;
     }
 
+    pub fn find_action(&self, name : &str) -> Option<&Action>
+    {
+        for i in 0..self.actions.len() {
+            if self.actions[i].name == name{
+                return Some(&self.actions[i]);
+            }
+        }
+
+        None
+    }
+
+
 }
 
+/*
 impl Encodable for Armature {
   fn encode<E : Encoder>(&self, encoder: &mut E) -> Result<(), E::Error> {
       println!("______ encode _________ name ::: {}", self.name);
@@ -371,4 +421,64 @@ impl Decodable for Armature {
     })
   }
 }
+*/
 
+
+pub struct ArmatureInstance
+{
+    bones : Vec<Bone>
+}
+
+impl ArmatureInstance
+{
+    pub fn set_pose(&mut self, armature : &Armature, action_name : &str, time : f64)
+    {
+        let action = match armature.find_action(action_name) {
+            Some(a) => a,
+            None => { println!("no such action  {}", action_name);  return }
+        };
+
+        let frame = {
+            let mut f = time*30f64;
+
+            if f < action.frame_start {
+                f = action.frame_start;
+            }
+            if f > action.frame_end {
+                f = action.frame_end;
+            }
+
+            f
+        };
+
+        for curve in action.curves.iter()
+        {
+            let bone_index = curve.bone;
+            let (start, end) = curve.get_frames(frame);
+
+            let ratio = if start.time != end.time {
+                (frame - start.time) / (end.time - start.time)
+            }
+            else {
+                0f64
+            };
+
+            match (&start.data, &end.data) {
+                (&FrameData::Position(s), &FrameData::Position(e)) => {
+                    let v1 = s * (1f64 -ratio);
+                    let v2 = e * (1f64 -ratio);
+                    self.bones[bone_index].position = v1 + v2;
+                },
+                (&FrameData::Orientation(s), &FrameData::Orientation(e)) => {
+                    println!("todo anim orientation");
+                    //TODO
+                    //bone->rotation = quat_slerp(start->quat, end->quat, ratio);
+                },
+                (&FrameData::Scale(s), &FrameData::Scale(e)) => {
+                },
+                (_,_) => println!("not yet")
+            };
+        }
+
+    }
+}
