@@ -184,7 +184,7 @@ impl DraggerMouse for TranslationMove {
     }
 }
 
-pub fn create_dragger_translation_group(factory : &mut factory::Factory)
+pub fn create_dragger_translation_group(factory : &factory::Factory)
     -> DraggerGroup
 {
     let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);

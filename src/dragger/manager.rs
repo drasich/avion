@@ -96,7 +96,7 @@ pub struct Dragger
 
 impl DraggerManager
 {
-    pub fn new(factory : &mut factory::Factory) -> DraggerManager
+    pub fn new(factory : &factory::Factory) -> DraggerManager
     {
         let mut dm = DraggerManager {
             draggers : Vec::with_capacity(3),
@@ -293,7 +293,7 @@ impl DraggerManager
 }
 
 fn create_dragger(
-    factory : &mut factory::Factory,
+    factory : &factory::Factory,
     name : &str,
     mesh : &str,
     color : vec::Vec4) -> object::Object
@@ -328,7 +328,7 @@ fn create_mat_res(color : vec::Vec4, name : &str) -> resource::ResTT<material::M
 impl Dragger
 {
     pub fn new(
-        factory : &mut factory::Factory,
+        factory : &factory::Factory,
         name : &str,
         mesh : &str,
         constraint : vec::Vec3,

@@ -352,7 +352,7 @@ pub struct Render
 impl Render {
 
     //TODO remove dragger and put "view_objects"
-    pub fn new(factory: &mut factory::Factory,
+    pub fn new(factory: &factory::Factory,
                camera : Rc<RefCell<camera::Camera>>,
                //dragger : Arc<RwLock<object::Object>>,
                ) -> Render

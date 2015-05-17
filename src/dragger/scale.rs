@@ -100,7 +100,7 @@ impl DraggerMouse for ScaleOperation {
     }
 }
 
-pub fn create_scale_draggers(factory : &mut factory::Factory)
+pub fn create_scale_draggers(factory : &factory::Factory)
     -> DraggerGroup
 {
     let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);

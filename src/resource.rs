@@ -16,6 +16,9 @@ use std::sync::mpsc::channel;
 use self::ResTest::{ResData,ResWait,ResNone};
 use std::thread;
 
+use std::rc::Rc;
+use std::cell::RefCell;
+
 
 /*
 //#[deriving(Decodable, Encodable)]
@@ -309,7 +312,8 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
     }
 
         //TODO wip
-    pub fn request_use_and_call<F>(&mut self, name : &str, f : F) -> ResTest<T> where F : Fn(ResTest<T>), F:Send +'static
+    pub fn request_use_and_call<F>(&mut self, name : &str, f : F) 
+        -> ResTest<T> where F : Fn(ResTest<T>), F:Send +'static
     {
         let ms1 = self.resources.clone();
         let mut ms1w = ms1.write().unwrap();
@@ -444,14 +448,10 @@ pub fn resource_get<T:'static+Create+Send+Sync>(
     res: &mut ResTT<T>) 
     -> Option<Arc<RwLock<T>>>
 {
-    let mut test = 5i64;
-
     let mut the_res : Option<Arc<RwLock<T>>> = None;
     match res.resource{
         ResNone | ResWait => {
-            let mut yo = |dance| println!("resource load complete ---------------------");
-            res.resource = manager.request_use_and_call(res.name.as_ref(), yo);
-            //res.resource = manager.request_use(res.name.as_ref());
+            res.resource = manager.request_use(res.name.as_ref());
             match res.resource {
                 ResData(ref data) => {
                     the_res = Some(data.clone());
@@ -467,3 +467,29 @@ pub fn resource_get<T:'static+Create+Send+Sync>(
     the_res
 }
 
+pub struct ResourceGroup
+{
+    mesh_manager : RefCell<ResourceManager<mesh::Mesh>>,
+    shader_manager : RefCell<ResourceManager<shader::Shader>>,
+    texture_manager : RefCell<ResourceManager<texture::Texture>>,
+    material_manager : RefCell<ResourceManager<material::Material>>,
+    fbo_manager : RefCell<ResourceManager<fbo::Fbo>>,
+}
+
+impl ResourceGroup
+{
+    pub fn new() -> ResourceGroup
+    {
+        let mut fbo_manager = ResourceManager::new();
+        let fbo_all = fbo_manager.request_use_no_proc("fbo_all");
+        let fbo_selected = fbo_manager.request_use_no_proc("fbo_selected");
+
+        ResourceGroup {
+            mesh_manager : RefCell::new(ResourceManager::new()),
+            shader_manager : RefCell::new(ResourceManager::new()),
+            texture_manager : RefCell::new(ResourceManager::new()),
+            material_manager : RefCell::new(ResourceManager::new()),
+            fbo_manager : RefCell::new(fbo_manager)
+        }
+    }
+}

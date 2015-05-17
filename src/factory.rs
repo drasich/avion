@@ -2,7 +2,7 @@ use std::default::Default;
 use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use uuid;
 
 use object;
@@ -32,7 +32,7 @@ impl Factory {
     }
 
     //fn create_id(&mut self) -> u32
-    fn create_id(&mut self) -> uuid::Uuid
+    fn create_id(&self) -> uuid::Uuid
     {
         return uuid::Uuid::new_v4();
         //self.id = self.id + 1;
@@ -40,7 +40,7 @@ impl Factory {
         //return self.id;
     }
 
-    pub fn create_object(&mut self, name : &str) -> object::Object
+    pub fn create_object(&self, name : &str) -> object::Object
     {
         object::Object {
             name : String::from_str(name),
@@ -60,7 +60,7 @@ impl Factory {
         }
     }
     
-    pub fn create_camera(&mut self) -> camera::Camera
+    pub fn create_camera(&self) -> camera::Camera
     {
         let c = camera::Camera {
             data : Default::default(),
@@ -74,7 +74,7 @@ impl Factory {
         c
     }
 
-    pub fn create_scene(&mut self, name : &str) -> scene::Scene
+    pub fn create_scene(&self, name : &str) -> scene::Scene
     {
         scene::Scene {
             name : String::from_str(name),

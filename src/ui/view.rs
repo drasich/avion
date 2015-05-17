@@ -86,7 +86,7 @@ pub struct View
 
 impl View
 {
-    pub fn new(factory: &mut factory::Factory) -> View
+    pub fn new(factory: &factory::Factory) -> View
     //pub fn new(factory: Rc<RefCell<factory::Factory>>) -> View
     {
         //let factory = factory.borrow_mut();
