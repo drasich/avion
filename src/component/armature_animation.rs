@@ -2,6 +2,7 @@
 use std::rc::Rc;
 use std::cell::RefCell;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use std::sync::{RwLock, Arc};
 
 
 use component::{Component, CompData};
@@ -26,7 +27,7 @@ pub struct ArmatureAnimation
 {
     state : State,
     //armature : armature::Armature,
-    armature : resource::ResTT<armature::Armature>,
+    armature : Arc<RwLock<armature::Armature>>,
     mesh : Option<resource::ResTT<mesh::Mesh>>,
 }
 
@@ -94,7 +95,7 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
 
     let arm_anim = ArmatureAnimation {
         state : State::Idle,
-        armature : resource::ResTT::new(arm.as_ref()),
+        armature : resource.armature_manager.borrow_mut().request_use_no_proc(arm.as_ref()),
         mesh : None
     };
 

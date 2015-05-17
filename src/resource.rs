@@ -474,6 +474,7 @@ pub struct ResourceGroup
     pub texture_manager : RefCell<ResourceManager<texture::Texture>>,
     pub material_manager : RefCell<ResourceManager<material::Material>>,
     pub fbo_manager : RefCell<ResourceManager<fbo::Fbo>>,
+    pub armature_manager : RefCell<ResourceManager<armature::Armature>>,
 }
 
 impl ResourceGroup
@@ -489,7 +490,8 @@ impl ResourceGroup
             shader_manager : RefCell::new(ResourceManager::new()),
             texture_manager : RefCell::new(ResourceManager::new()),
             material_manager : RefCell::new(ResourceManager::new()),
-            fbo_manager : RefCell::new(fbo_manager)
+            fbo_manager : RefCell::new(fbo_manager),
+            armature_manager : RefCell::new(ResourceManager::new()),
         }
     }
 }
