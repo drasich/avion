@@ -7,7 +7,7 @@ use material;
 pub struct MeshRender
 {
     pub mesh : resource::ResTT<mesh::Mesh>,
-    pub material : resource::ResTT<material::Material>
+    pub material : resource::ResTT<material::Material>,
 }
 
 impl MeshRender

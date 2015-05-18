@@ -472,7 +472,7 @@ impl ArmatureInstance
                 (&FrameData::Orientation(s), &FrameData::Orientation(e)) => {
                     println!("todo anim orientation");
                     //TODO
-                    //bone->rotation = quat_slerp(start->quat, end->quat, ratio);
+                    self.bones[bone_index].rotation = vec::quat_slerp(s, e, ratio);
                 },
                 (&FrameData::Scale(s), &FrameData::Scale(e)) => {
                 },

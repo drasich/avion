@@ -1,6 +1,7 @@
 use std::fmt;
 use std::f64::consts;
 use std::ops::{Mul, BitXor, Add, Sub, Div};
+use std::f64::EPSILON;
 
 #[derive(RustcDecodable, RustcEncodable, Clone, Copy)]
 pub struct Vec3
@@ -419,6 +420,10 @@ impl Quat
         *self * (1f64/ self.length())
     }
 
+    pub fn dot(&self, other : &Quat) -> f64
+    {
+        self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w
+    }
 
 }
 
@@ -556,6 +561,19 @@ impl Mul<f64> for Quat {
     }
 }
 
+impl Add<Quat> for Quat {
+    type Output = Quat;
+    fn add(self, q: Quat) -> Quat {
+        Quat {
+            x : self.x + q.x,
+            y : self.y + q.y,
+            z : self.z + q.z,
+            w : self.w + q.w
+        }
+    }
+}
+
+
 impl PartialEq for Vec3 {
 
     fn eq(&self, other: &Vec3) -> bool
@@ -579,4 +597,46 @@ fn test_quat_rotate() {
     //TODO
     assert_eq!(1isize, 1isize);
 }
+
+
+pub fn quat_slerp(from : Quat, to : Quat, t : f64) -> Quat
+{
+  //double omega, cosomega, sinomega, scale_from, scale_to ;
+
+  let mut quatTo = to.clone();
+  //printf("  quatto : %f, %f, %f, %f\n", quatTo.x, quatTo.y, quatTo.z, quatTo.w);
+  let mut cosomega = from.dot(&to);
+
+  if ( cosomega < 0f64 ) { 
+    cosomega = -cosomega; 
+    quatTo = to * -1f64; //quatTo = -to;
+  }
+
+  let (scale_from, scale_to) = {
+      if (1f64 - cosomega) > EPSILON {
+          let omega = cosomega.acos() ;  // 0 <= omega <= Pi (see man acos)
+          let sinomega = omega.sin() ;  // this sinomega should always be +ve so
+          // could try sinomega=sqrt(1-cosomega*cosomega) to avoid a sin()?
+          let scale_from = ((1.0-t)*omega).sin()/sinomega;
+          let scale_to = (t*omega).sin()/sinomega ;
+          (scale_from,scale_to)
+      } else {
+          // --------------------------------------------------
+          //   The ends of the vectors are very close
+          //   we can use simple linear interpolation - no need
+          //   to worry about the "spherical" interpolation
+          //   --------------------------------------------------
+          let scale_from = 1.0 - t ;
+          let scale_to = t ;
+          (scale_from,scale_to)
+      }
+  };
+
+  //Quat q = quat_add(quat_mul_scalar(from, scale_from),quat_mul_scalar(quatTo,scale_to));
+  let q = (from * scale_from) + (quatTo * scale_to);
+
+  q
+}
+
+
 

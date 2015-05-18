@@ -29,6 +29,9 @@ pub struct ArmatureAnimation
     //armature : armature::Armature,
     armature : Arc<RwLock<armature::Armature>>,
     mesh : Option<resource::ResTT<mesh::Mesh>>,
+
+    //TODO mesh component + dependencies
+    //mesh_base : Option<resource::ResTT<MeshRenderComponent>>,
 }
 
 impl Component for ArmatureAnimation
