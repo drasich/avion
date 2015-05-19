@@ -145,165 +145,151 @@ impl RenderPass
         resource : &resource::ResourceGroup,
         )
     {
-
-        let (themesh, the_mat) = match ob.mesh_render {
-            Some(ref mut mr) => { 
-                let mmm = match mr.material.resource {
-                    resource::ResTest::ResData(ref rd) => Some(rd.clone()),
-                    _ =>
-                        resource::resource_get(&mut *resource.material_manager.borrow_mut(), &mut mr.material)
-                };
-
-                (resource::resource_get(&mut *resource.mesh_manager.borrow_mut(), &mut mr.mesh),
-                mmm)
-            },
+        let (mat, m) = match get_mesh_render(ob, resource) {
+            Some((mat, m)) => (mat, m),
             None => return
         };
 
-        if let Some(ref mat) = the_mat {
-            let mut material = mat.write().unwrap();
+        let mut material = mat.write().unwrap();
 
-            for (_,t) in material.textures.iter_mut() {
-                match *t {
-                    material::Sampler::ImageFile(ref mut img) => {
-                        let yep = resource::resource_get(&mut *resource.texture_manager.borrow_mut(), img);
-                        match yep.clone() {
-                            None => {},
-                            Some(yy) => {
-                                let mut yoyo = yy.write().unwrap();
-                                if yoyo.state == 1 {
-                                    yoyo.init();
-                                }
+        for (_,t) in material.textures.iter_mut() {
+            match *t {
+                material::Sampler::ImageFile(ref mut img) => {
+                    let yep = resource::resource_get(&mut *resource.texture_manager.borrow_mut(), img);
+                    match yep.clone() {
+                        None => {},
+                        Some(yy) => {
+                            let mut yoyo = yy.write().unwrap();
+                            if yoyo.state == 1 {
+                                yoyo.init();
                             }
                         }
-                    },
-                    _ => {} //fbo so nothing to do
-                }
+                    }
+                },
+                _ => {} //fbo so nothing to do
             }
-
-            let mut i = 0u32;
-            for (name,t) in material.textures.iter_mut() {
-                match *t {
-                    material::Sampler::ImageFile(ref mut img) => {
-                        let yep = resource::resource_get(&mut *resource.texture_manager.borrow_mut(), img);
-                        match yep {
-                            Some(yoyo) => {
-                                shader.texture_set(name.as_ref(), & *yoyo.read().unwrap(),i);
-                                i = i +1;
-                            },
-                            None => {}
-                        }
-                    },
-                    material::Sampler::Fbo(ref mut fbo, ref attachment) => {
-                        let yep = resource::resource_get(&mut *resource.fbo_manager.borrow_mut(), fbo);
-                        match yep {
-                            Some(yoyo) => {
-                                let fc = yoyo.clone();
-                                let fff = fc.read().unwrap();
-                                let fbosamp = uniform::FboSampler { 
-                                    fbo : & *fff,
-                                    attachment : *attachment
-                                };
-                                //shader.texture_set(name.as_ref(), & *yoyo.read().unwrap(),i);
-                                shader.texture_set(name.as_ref(), &fbosamp,i);
-                                i = i +1;
-                            },
-                            None => {}
-                        }
-                    },
-                    //_ => {println!("todo fbo"); }
-                }
-            }
-
-            for (k,v) in material.uniforms.iter() {
-                shader.uniform_set(k.as_ref(), &(**v));
-            }
-
         }
 
-        //TODO chris
-        match themesh  {
-            None => return,
-            Some(ref m) => {
-                let mut mb = m.write().unwrap();
-                if mb.state == 1 {
-                    mb.init_buffers();
+        let mut i = 0u32;
+        for (name,t) in material.textures.iter_mut() {
+            match *t {
+                material::Sampler::ImageFile(ref mut img) => {
+                    let yep = resource::resource_get(&mut *resource.texture_manager.borrow_mut(), img);
+                    match yep {
+                        Some(yoyo) => {
+                            shader.texture_set(name.as_ref(), & *yoyo.read().unwrap(),i);
+                            i = i +1;
+                        },
+                        None => {}
+                    }
+                },
+                material::Sampler::Fbo(ref mut fbo, ref attachment) => {
+                    let yep = resource::resource_get(&mut *resource.fbo_manager.borrow_mut(), fbo);
+                    match yep {
+                        Some(yoyo) => {
+                            let fc = yoyo.clone();
+                            let fff = fc.read().unwrap();
+                            let fbosamp = uniform::FboSampler { 
+                                fbo : & *fff,
+                                attachment : *attachment
+                            };
+                            //shader.texture_set(name.as_ref(), & *yoyo.read().unwrap(),i);
+                            shader.texture_set(name.as_ref(), &fbosamp,i);
+                            i = i +1;
+                        },
+                        None => {}
+                    }
+                },
+                //_ => {println!("todo fbo"); }
+            }
+        }
+
+        for (k,v) in material.uniforms.iter() {
+            shader.uniform_set(k.as_ref(), &(**v));
+        }
+
+        //Mesh
+
+        let mut mb = m.write().unwrap();
+        if mb.state == 1 {
+            mb.init_buffers();
+        }
+
+        let mut can_render = true;
+        let mut vertex_data_count = 0;
+        for (name, cgl_att) in shader.attributes.iter() {
+            match mb.buffer_get(name.as_ref()){
+                Some(ref cb) => {
+                    cb.utilise(*cgl_att);
+                    if name == "position" {
+                        vertex_data_count = cb.size_get();
+                    }
+                    continue;
+                },
+                None => ()
+            }
+
+            match mb.buffer_f32_get(name.as_ref()){
+                Some(ref cb) => {
+                    cb.utilise(*cgl_att);
+                    if name == "position" {
+                        vertex_data_count = cb.size_get();
+                    }
+                    continue;
+                },
+                None => (),
+            }
+
+            match mb.buffer_u32_get(name.as_ref()){
+                Some(ref cb) => {
+                    cb.utilise(*cgl_att);
+                    if name == "position" {
+                        vertex_data_count = cb.size_get();
+                    }
+                    continue;
+                },
+                None => {
+                    //println!("while sending attributes, this mesh does 
+                    //not have the '{}' buffer, not rendering", name);
+                    can_render = false;
+                    break;
                 }
-                let mut can_render = true;
-                let mut vertex_data_count = 0;
-                for (name, cgl_att) in shader.attributes.iter() {
-                    match mb.buffer_get(name.as_ref()){
-                        Some(ref cb) => {
-                            cb.utilise(*cgl_att);
-                            if name == "position" {
-                                vertex_data_count = cb.size_get();
-                            }
-                            continue;
-                        },
-                        None => ()
-                    }
+            }
+        }
 
-                    match mb.buffer_f32_get(name.as_ref()){
-                        Some(ref cb) => {
-                            cb.utilise(*cgl_att);
-                            if name == "position" {
-                                vertex_data_count = cb.size_get();
-                            }
-                            continue;
-                        },
-                        None => (),
-                    }
+        if !can_render {
+            return;
+        }
 
-                    match mb.buffer_u32_get(name.as_ref()){
-                        Some(ref cb) => {
-                            cb.utilise(*cgl_att);
-                            if name == "position" {
-                                vertex_data_count = cb.size_get();
-                            }
-                            continue;
-                        },
-                        None => {
-                            //println!("while sending attributes, this mesh does 
-                            //not have the '{}' buffer, not rendering", name);
-                            can_render = false;
-                            break;
+        {
+            let object_mat = ob.get_world_matrix();
+            let object_mat_world = matrix * &object_mat ;
+            shader.uniform_set("matrix", &object_mat_world);
+        }
+
+        match mb.buffer_u32_get("faces") {
+            //Some(ref bind) =>
+            Some(bind) => unsafe {
+                match (**bind).cgl_buffer_get() {
+                    Some(b) => {
+                        let faces_data_count = bind.size_get();
+                        cgl_draw_faces(b, faces_data_count as c_uint);
+                        cgl_draw_end();
+                    },
+                    None => ()
+                }
+            },
+            None => {
+                match mb.draw_type {
+                    mesh::DrawType::Lines => {
+                        let vc : usize = vertex_data_count/3;
+                        unsafe {
+                            cgl_draw_lines(vc as c_uint);
                         }
-                    }
-                }
-
-                if can_render {
-                    {
-                    let object_mat = ob.get_world_matrix();
-                    let object_mat_world = matrix * &object_mat ;
-                    shader.uniform_set("matrix", &object_mat_world);
-                    }
-
-                    match mb.buffer_u32_get("faces") {
-                        //Some(ref bind) =>
-                        Some(bind) => unsafe {
-                            match (**bind).cgl_buffer_get() {
-                                Some(b) => {
-                                    let faces_data_count = bind.size_get();
-                                    cgl_draw_faces(b, faces_data_count as c_uint);
-                                    cgl_draw_end();
-                                },
-                                None => ()
-                            }
-                        },
-                        None => {
-                            match mb.draw_type {
-                                mesh::DrawType::Lines => {
-                                    let vc : usize = vertex_data_count/3;
-                                    unsafe {
-                                        cgl_draw_lines(vc as c_uint);
-                                    }
-                                },
-                                _ => {
-                                    unsafe {
-                                        cgl_draw(vertex_data_count as c_uint);
-                                    }
-                                }
-                            }
+                    },
+                    _ => {
+                        unsafe {
+                            cgl_draw(vertex_data_count as c_uint);
                         }
                     }
                 }
@@ -1031,4 +1017,36 @@ impl GameRender {
         }
     }
 }
+
+fn get_mesh_render(ob : &mut object::Object, resource : &resource::ResourceGroup) -> 
+Option<(Arc<RwLock<material::Material>>, Arc<RwLock<mesh::Mesh>>)>
+{
+    let (themesh, the_mat) = match ob.mesh_render {
+        //let (themesh, the_mat) = match ob.get_mesh_render() {
+        Some(ref mut mr) => { 
+            let mmm = match mr.material.resource {
+                resource::ResTest::ResData(ref rd) => Some(rd.clone()),
+                _ =>
+                    resource::resource_get(&mut *resource.material_manager.borrow_mut(), &mut mr.material)
+            };
+
+            (resource::resource_get(&mut *resource.mesh_manager.borrow_mut(), &mut mr.mesh),
+            mmm)
+        },
+        None => return None
+    };
+
+    let mat = match the_mat {
+        Some(mat) => mat,
+        _ => return None
+    };
+
+    let mesh = match themesh {
+        Some(m) => m,
+        _ => return None
+    };
+
+    Some((mat, mesh))
+}
+
 

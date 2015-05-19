@@ -11,8 +11,7 @@ use std::collections::hash_map::Entry;
 use std::collections::hash_map::Entry::{Occupied,Vacant};
 use std::sync::{RwLock, Arc};
 use std::sync::mpsc::channel;
-//use std::io::timer::sleep;
-//use std::time::duration::Duration;
+//use std::time::Duration;
 use self::ResTest::{ResData,ResWait,ResNone};
 use std::thread;
 
@@ -229,7 +228,7 @@ impl Create for armature::Armature
 
 pub struct ResourceManager<T>
 {
-    resources : Arc<RwLock<HashMap<String, ResTest<T>>>>,
+    resources : HashMap<String, Arc<RwLock<ResTest<T>>>>,
 }
 
 unsafe impl<T:Send> Send for ResourceManager<T> {}
@@ -241,77 +240,68 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
     pub fn new() -> ResourceManager<T>
     {
         ResourceManager {
-            resources : Arc::new(RwLock::new(HashMap::new())),
+            resources : HashMap::new(),
         }
     }
 
     pub fn request_use(&mut self, name : &str) -> ResTest<T>
     {
-        let ms1 = self.resources.clone();
-        let mut ms1w = ms1.write().unwrap();
-
         let key = String::from_str(name);
 
-        let v : &mut ResTest<T> = match ms1w.entry(key) {
-        //let v : &mut ResTest<T> = match ms1w.entry(&s) {
-            Entry::Vacant(entry) => entry.insert(ResTest::ResNone),
-            Entry::Occupied(entry) => entry.into_mut(),
+        let va : Arc<RwLock<ResTest<T>>> = match self.resources.entry(key) {
+            Entry::Vacant(entry) => entry.insert(Arc::new(RwLock::new(ResTest::ResNone))).clone(),
+            Entry::Occupied(entry) => entry.into_mut().clone(),
         };
 
-        let s = String::from_str(name);
-        let msc = self.resources.clone();
-
-        match *v 
         {
-            ResNone => {
-                *v = ResTest::ResWait;
+            let v : &mut ResTest<T> = &mut *va.write().unwrap();
 
-                let ss = s.clone();
-
-                let (tx, rx) = channel::<Arc<RwLock<T>>>();
-                let guard = thread::scoped(move || {
-                    //sleep(::std::time::duration::Duration::seconds(5));
-                    let mt : T = Create::create(ss.as_ref());
-                    let m = Arc::new(RwLock::new(mt));
-                    m.write().unwrap().inittt();
-                    let result = tx.send(m.clone());
-                });
-
-                let result = guard.join();
-
-                thread::spawn( move || {
-                    loop {
-                    match rx.try_recv() {
-                        Err(_) => {},
-                        Ok(value) =>  { 
-                            let mut mscwww = msc.write().unwrap();
-
-                            match mscwww.entry(s.clone()) {
-                                //Entry::Vacant(entry) => entry.insert(ResTest::ResNone),
-                                Entry::Vacant(entry) => entry.insert(ResTest::ResData(value.clone())),
-                                Entry::Occupied(mut entry) => { 
-                                    *entry.get_mut() = ResTest::ResData(value.clone());
-                                    entry.into_mut()
-                                }
-                            };
-
-                            break; }
-                    }
-                    }
-                });
-
-                return ResTest::ResWait;
-            },
-            ResTest::ResData(ref yep) => {
-                return ResTest::ResData(yep.clone());
-            },
-            ResTest::ResWait => {
-                return ResTest::ResWait;
+            match *v {
+                ResTest::ResData(ref yep) => {
+                    return ResTest::ResData(yep.clone());
+                },
+                ResTest::ResWait => {
+                    return ResTest::ResWait;
+                },
+                ResTest::ResNone => {
+                    *v = ResTest::ResWait;
+                },
             }
         }
+
+        let s = String::from_str(name);
+
+        let (tx, rx) = channel::<Arc<RwLock<T>>>();
+        let guard = thread::spawn(move || {
+            //thread::sleep(::std::time::Duration::seconds(5));
+            //thread::sleep_ms(5000);
+            let mt : T = Create::create(s.as_ref());
+            let m = Arc::new(RwLock::new(mt));
+            m.write().unwrap().inittt();
+            let result = tx.send(m.clone());
+        });
+
+        //let result = guard.join();
+
+        thread::spawn( move || {
+            loop {
+                match rx.try_recv() {
+                    Err(_) => {},
+                    Ok(value) =>  { 
+                        let mut entry = &mut *va.write().unwrap();
+                        *entry = ResTest::ResData(value.clone());
+                        break; }
+                }
+            }
+        });
+
+        return ResTest::ResWait;
+
+
     }
 
         //TODO wip
+        /*
     pub fn request_use_and_call<F>(&mut self, name : &str, f : F) 
         -> ResTest<T> where F : Fn(ResTest<T>), F:Send +'static
     {
@@ -380,19 +370,19 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
             }
         }
     }
+    */
 
 
     pub fn request_use_no_proc(&mut self, name : &str) -> Arc<RwLock<T>>
     {
-        let ms1 = self.resources.clone();
-        let mut ms1w = ms1.write().unwrap();
-
         let key = String::from_str(name);
 
-        let v : &mut ResTest<T> = match ms1w.entry(key) {
-            Vacant(entry) => entry.insert(ResNone),
-            Occupied(entry) => entry.into_mut(),
+        let va : Arc<RwLock<ResTest<T>>> = match self.resources.entry(key) {
+            Vacant(entry) => entry.insert(Arc::new(RwLock::new(ResNone))).clone(),
+            Occupied(entry) => entry.into_mut().clone(),
         };
+
+        let v : &mut ResTest<T> = &mut *va.write().unwrap();
 
         match *v 
         {
@@ -481,7 +471,6 @@ impl ResourceGroup
 {
     pub fn new() -> ResourceGroup
     {
-        let mut fbo_manager = ResourceManager::new();
         //let fbo_all = fbo_manager.request_use_no_proc("fbo_all");
         //let fbo_selected = fbo_manager.request_use_no_proc("fbo_selected");
 
@@ -490,7 +479,7 @@ impl ResourceGroup
             shader_manager : RefCell::new(ResourceManager::new()),
             texture_manager : RefCell::new(ResourceManager::new()),
             material_manager : RefCell::new(ResourceManager::new()),
-            fbo_manager : RefCell::new(fbo_manager),
+            fbo_manager : RefCell::new(ResourceManager::new()),
             armature_manager : RefCell::new(ResourceManager::new()),
         }
     }

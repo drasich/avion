@@ -7,6 +7,7 @@ use resource;
 use material;
 use component;
 use component::{Component,CompData};
+use mesh;
 
 use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};//,RWLockReadGuard};
