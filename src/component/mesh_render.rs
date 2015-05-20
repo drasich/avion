@@ -14,7 +14,25 @@ use mesh_render;
 use resource;
 use material;
 
+#[derive(RustcDecodable, RustcEncodable, Clone)]
 pub struct MeshRender
+{
+    pub mesh : String,
+    pub material : String
+}
+
+impl MeshRender
+{
+    pub fn new(mesh : &str, material : &str) -> MeshRender
+    {
+        MeshRender {
+            mesh : mesh.to_string(),
+            material : material.to_string()
+        }
+    }
+}
+
+pub struct MeshRenderer
 {
     mesh : Arc<RwLock<mesh::Mesh>>,
     material : Arc<RwLock<material::Material>>,
@@ -23,12 +41,12 @@ pub struct MeshRender
     material_instance : Option<material::Material>,
 }
 
-impl Component for MeshRender
+impl Component for MeshRenderer
 {
     fn copy(&self) -> Rc<RefCell<Box<Component>>>
     {
         Rc::new(RefCell::new(
-                box MeshRender
+                box MeshRenderer
                 {
                     mesh : self.mesh.clone(),
                     material : self.material.clone(),
@@ -55,7 +73,7 @@ impl Component for MeshRender
     }
 }
 
-impl MeshRender {
+impl MeshRenderer{
     fn create_mesh_instance(&mut self)
     {
         //self.mesh_instance = 
@@ -72,7 +90,7 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
         }
     };
 
-    let mr = MeshRender {
+    let mr = MeshRenderer {
         mesh : resource.mesh_manager.borrow_mut().request_use_no_proc(mesh_render.mesh.as_ref()),
         material : resource.material_manager.borrow_mut().request_use_no_proc(mesh_render.material.as_ref()),
         mesh_instance : None,

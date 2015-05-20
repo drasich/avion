@@ -111,6 +111,21 @@ impl Scene
             else {
                 println!("nooooooooo camera");
             }
+
+            /*
+            let mut ob =  o.write().unwrap();
+            let mr = match ob.mesh_render {
+                Some(ref mr) => {
+                    Some((mr.mesh.name.clone(), mr.material.name.clone()))
+                },
+                None => None
+            };
+
+            if let Some((mesh, mat)) = mr {
+                let mere = component::mesh_render::MeshRender::new(mesh.as_ref(), mat.as_ref());
+                ob.add_comp_data(box component::CompData::MeshRender(mere));
+            }
+            */
         }
     }
 

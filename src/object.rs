@@ -317,7 +317,7 @@ impl Decodable for Object {
          Ok(Object{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
           id: try!(decoder.read_struct_field("id", 0, |decoder| Decodable::decode(decoder))),
-          mesh_render: try!(decoder.read_struct_field("mesh_render", 0, |decoder| Decodable::decode(decoder))),
+          mesh_render: None, //try!(decoder.read_struct_field("mesh_render", 0, |decoder| Decodable::decode(decoder))),
           position: try!(decoder.read_struct_field("position", 0, |decoder| Decodable::decode(decoder))),
           orientation: try!(decoder.read_struct_field("orientation", 0, |decoder| Decodable::decode(decoder))),
           scale: try!(decoder.read_struct_field("scale", 0, |decoder| Decodable::decode(decoder))),
@@ -342,7 +342,7 @@ impl Encodable  for Object {
       encoder.emit_struct("Object", 1, |encoder| {
           try!(encoder.emit_struct_field( "name", 0usize, |encoder| self.name.encode(encoder)));
           try!(encoder.emit_struct_field( "id", 1usize, |encoder| self.id.encode(encoder)));
-          try!(encoder.emit_struct_field( "mesh_render", 2usize, |encoder| self.mesh_render.encode(encoder)));
+          //try!(encoder.emit_struct_field( "mesh_render", 2usize, |encoder| self.mesh_render.encode(encoder)));
           try!(encoder.emit_struct_field( "position", 3usize, |encoder| self.position.encode(encoder)));
           try!(encoder.emit_struct_field( "orientation", 4usize, |encoder| self.orientation.encode(encoder)));
           try!(encoder.emit_struct_field( "scale", 5usize, |encoder| self.scale.encode(encoder)));

@@ -9,6 +9,7 @@ use std::any::Any;
 ///use std::sync::mpsc::channel;
 use component::player::{Player, Enemy, Collider};
 use armature::ArmaturePath;
+use component::mesh_render::MeshRender;
 use resource;
 
 pub trait Component
@@ -56,7 +57,8 @@ pub enum CompData
     Player(Player),
     Enemy(Enemy),
     Collider(Collider),
-    Armature(ArmaturePath)
+    Armature(ArmaturePath),
+    MeshRender(MeshRender)
 }
 
 impl CompData
