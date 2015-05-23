@@ -10,7 +10,7 @@ use resource::Create;
 use shader;
 use material;
 use transform;
-use mesh_render;
+use component::mesh_render;
 use geometry;
 use intersection;
 use matrix;
@@ -34,7 +34,6 @@ pub type DraggerGroup = Vec<Rc<RefCell<Dragger>>>;
 
 pub struct DraggerManager
 {
-
     pub draggers : Vec<DraggerGroup>, //Vec<Rc<RefCell<Dragger>>>,
     mouse_start : vec::Vec2,
     mouse : Option<Box<DraggerMouse+'static>>,
@@ -96,7 +95,7 @@ pub struct Dragger
 
 impl DraggerManager
 {
-    pub fn new(factory : &factory::Factory) -> DraggerManager
+    pub fn new(factory : &factory::Factory, resource : &resource::ResourceGroup) -> DraggerManager
     {
         let mut dm = DraggerManager {
             draggers : Vec::with_capacity(3),
@@ -106,13 +105,13 @@ impl DraggerManager
             current : 0usize
         };
 
-        let tr = create_dragger_translation_group(factory);
+        let tr = create_dragger_translation_group(factory, resource);
         dm.draggers.push(tr);
 
-        let sc = create_scale_draggers(factory);
+        let sc = create_scale_draggers(factory, resource);
         dm.draggers.push(sc);
 
-        let sc = create_rotation_draggers(factory);
+        let sc = create_rotation_draggers(factory, resource);
         dm.draggers.push(sc);
 
         dm
@@ -294,22 +293,23 @@ impl DraggerManager
 
 fn create_dragger(
     factory : &factory::Factory,
+    resource : &resource::ResourceGroup,
     name : &str,
     mesh : &str,
     color : vec::Vec4) -> object::Object
 {
     let mut dragger = factory.create_object(name);
-    let mat = create_mat_res(color, name);
+    let mat = create_mat(color, name);
 
-    dragger.mesh_render = 
-        Some(mesh_render::MeshRender::new_with_mat(
-        mesh, mat));
+    dragger.mesh_render = Some(mesh_render::MeshRenderer::new_with_mat(
+        mesh,
+        mat,
+        resource));
 
     dragger
 }
 
-
-fn create_mat_res(color : vec::Vec4, name : &str) -> resource::ResTT<material::Material>
+fn create_mat(color : vec::Vec4, name : &str) -> Arc<RwLock<material::Material>>
 {
     let mut mat : material::Material = Create::create("material/dragger.mat");
     mat.inittt();
@@ -317,6 +317,13 @@ fn create_mat_res(color : vec::Vec4, name : &str) -> resource::ResTT<material::M
         "color",
         shader::UniformData::Vec4(color));
     let matarc = Arc::new(RwLock::new(mat));
+
+    matarc
+}
+
+fn create_mat_res(color : vec::Vec4, name : &str) -> resource::ResTT<material::Material>
+{
+    let matarc = create_mat(color, name);
 
     let rs = resource::ResTest::ResData(matarc);
     let mr = resource::ResTT::new_with_res("dragger_x_mat", rs);
@@ -329,6 +336,7 @@ impl Dragger
 {
     pub fn new(
         factory : &factory::Factory,
+        resource : &resource::ResourceGroup,
         name : &str,
         mesh : &str,
         constraint : vec::Vec3,
@@ -339,8 +347,7 @@ impl Dragger
         ) -> Dragger
     {
         Dragger {
-            //object : Arc::new(RwLock::new(create_dragger_tr(factory, name, color))),
-            object : Arc::new(RwLock::new(create_dragger(factory, name, mesh, color))),
+            object : Arc::new(RwLock::new(create_dragger(factory, resource, name, mesh, color))),
             constraint : constraint,
             ori : ori,
             kind : kind,
@@ -410,16 +417,12 @@ impl Dragger
         let position = ob.position;
         let rotation = ob.orientation.as_quat();
         let scale = vec::Vec3::new(s, s, s);
+
         let mesh = match ob.mesh_render {
             None => return (false,0f64),
             Some(ref mr) => {
-                match mr.mesh.resource {
-                    resource::ResTest::ResData(ref m) => {
-                        m.read().unwrap()
-                    },
-                    _ => return (false,0f64)
-                }
-            }
+                mr.mesh.read().unwrap()
+            },
         };
 
         let aabox = match mesh.aabox {

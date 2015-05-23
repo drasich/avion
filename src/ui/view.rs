@@ -87,13 +87,15 @@ pub struct View
 
 impl View
 {
-    pub fn new(factory: &factory::Factory, resource : Rc<resource::ResourceGroup>) -> View
+    pub fn new(
+        factory: &factory::Factory,
+        resource : Rc<resource::ResourceGroup>) -> View
     //pub fn new(factory: Rc<RefCell<factory::Factory>>) -> View
     {
         //let factory = factory.borrow_mut();
 
         let scene_path = "scene/simple.scene";
-        let mut ss = scene::Scene::new_from_file(scene_path);
+        let mut ss = scene::Scene::new_from_file(scene_path, &*resource);
         if let None = ss.camera {
             let mut cam = factory.create_camera();
             cam.pan(&vec::Vec3::new(-100f64,20f64,100f64));
@@ -112,7 +114,7 @@ impl View
 
         let context = Rc::new(RefCell::new(context::Context::new()));
         context.borrow_mut().scene = Some(scene.clone());
-        let dragger = Rc::new(RefCell::new(dragger::DraggerManager::new(factory)));
+        let dragger = Rc::new(RefCell::new(dragger::DraggerManager::new(factory, &*resource)));
 
         let control = Rc::new(RefCell::new(
                 Control::new(

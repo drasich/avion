@@ -15,8 +15,10 @@ pub struct Table
 pub fn create_table_object(factory : &mut factory::Factory, table : Table) -> object::Object
 {
     let mut o = factory.create_object("table");
+    /*
     let m = create_table_mesh(table);
     o.mesh_render = Some(create_mesh_render(m));
+    */
     o
 }
 

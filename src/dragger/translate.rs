@@ -184,7 +184,9 @@ impl DraggerMouse for TranslationMove {
     }
 }
 
-pub fn create_dragger_translation_group(factory : &factory::Factory)
+pub fn create_dragger_translation_group(
+    factory : &factory::Factory,
+    resource : &resource::ResourceGroup)
     -> DraggerGroup
 {
     let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
@@ -195,6 +197,7 @@ pub fn create_dragger_translation_group(factory : &factory::Factory)
 
     let dragger_x = Dragger::new(
         factory,
+        resource,
         "dragger_x",
         mesh,
         vec::Vec3::new(1f64,0f64,0f64),
@@ -206,6 +209,7 @@ pub fn create_dragger_translation_group(factory : &factory::Factory)
 
     let dragger_y = Dragger::new(
         factory,
+        resource,
         "dragger_y",
         mesh,
         vec::Vec3::new(0f64,1f64,0f64),
@@ -217,6 +221,7 @@ pub fn create_dragger_translation_group(factory : &factory::Factory)
 
     let dragger_z = Dragger::new(
         factory,
+        resource,
         "dragger_z",
         mesh,
         vec::Vec3::new(0f64,0f64,1f64),
@@ -228,6 +233,7 @@ pub fn create_dragger_translation_group(factory : &factory::Factory)
 
     let dragger_xy = Dragger::new(
         factory,
+        resource,
         "dragger_xy",
         mesh_plane,
         vec::Vec3::new(1f64,1f64,0f64),
@@ -240,6 +246,7 @@ pub fn create_dragger_translation_group(factory : &factory::Factory)
 
     let dragger_xz = Dragger::new(
         factory,
+        resource,
         "dragger_xz",
         mesh_plane,
         vec::Vec3::new(1f64,0f64,1f64),
@@ -252,6 +259,7 @@ pub fn create_dragger_translation_group(factory : &factory::Factory)
 
     let dragger_yz = Dragger::new(
         factory,
+        resource,
         "dragger_yz",
         mesh_plane,
         vec::Vec3::new(0f64,1f64,1f64),

@@ -100,7 +100,9 @@ impl DraggerMouse for ScaleOperation {
     }
 }
 
-pub fn create_scale_draggers(factory : &factory::Factory)
+pub fn create_scale_draggers(
+    factory : &factory::Factory,
+    resource : &resource::ResourceGroup)
     -> DraggerGroup
 {
     let red = vec::Vec4::new(1.0f64,0.247f64,0.188f64,0.5f64);
@@ -111,6 +113,7 @@ pub fn create_scale_draggers(factory : &factory::Factory)
 
     let dragger_x = Dragger::new(
         factory,
+        resource,
         "scale_x",
         mesh,
         vec::Vec3::new(1f64,0f64,0f64),
@@ -122,6 +125,7 @@ pub fn create_scale_draggers(factory : &factory::Factory)
 
     let dragger_y = Dragger::new(
         factory,
+        resource,
         "scale_y",
         mesh,
         vec::Vec3::new(0f64,1f64,0f64),
@@ -133,6 +137,7 @@ pub fn create_scale_draggers(factory : &factory::Factory)
 
     let dragger_z = Dragger::new(
         factory,
+        resource,
         "scale_z",
         mesh,
         vec::Vec3::new(0f64,0f64,1f64),

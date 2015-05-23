@@ -43,18 +43,18 @@ impl Scene
     }
     */
 
-    pub fn new_from_file(file_path : &str) -> Scene
+    pub fn new_from_file(file_path : &str, resource :&resource::ResourceGroup) -> Scene
     {
         let mut file = String::new();
         File::open(&Path::new(file_path)).ok().unwrap().read_to_string(&mut file);
         let scene : Scene = json::decode(file.as_ref()).unwrap();
 
-        scene.post_read();
+        scene.post_read(resource);
 
         scene
     }
 
-    fn post_read(&self)
+    fn post_read(&self, resource : &resource::ResourceGroup)
     {
         for o in self.objects.iter()
         {
@@ -126,6 +126,24 @@ impl Scene
                 ob.add_comp_data(box component::CompData::MeshRender(mere));
             }
             */
+
+            let mut ob =  o.write().unwrap();
+            let mut b =false;
+            if let Some(mrd) = ob.get_comp_data::<armature::ArmaturePath>(){
+                println!("there is armature path");
+            }
+            if let Some(mrd) = ob.get_comp_data::<component::mesh_render::MeshRender>(){
+                b = true;
+            }
+            if b {
+                println!("adding mesh renderer to {}", ob.name);
+                ob.mesh_render = 
+                    Some(component::mesh_render::MeshRenderer::new(&*ob,&*resource));
+            }
+            else {
+                println!("{} nononono mesh renderer", ob.name);
+            }
+
         }
     }
 

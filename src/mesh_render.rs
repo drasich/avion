@@ -3,12 +3,6 @@ use mesh;
 use resource;
 use material;
 
-pub struct MeshRenderData
-{
-    pub mesh : String,
-    pub material : String
-}
-
 #[derive(RustcDecodable, RustcEncodable, Clone)]
 pub struct MeshRender
 {

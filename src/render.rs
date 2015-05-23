@@ -16,7 +16,7 @@ use object;
 use camera;
 use matrix;
 use texture;
-use mesh_render;
+use component::mesh_render;
 use fbo;
 use vec;
 use factory;
@@ -368,62 +368,55 @@ impl Render {
         {
             let m = Arc::new(RwLock::new(mesh::Mesh::new()));
             create_grid(&mut *m.write().unwrap(), 100i32, 10i32);
-            let rs = resource::ResTest::ResData(m);
-            let mr = resource::ResTT::new_with_res("grid", rs);
 
-            r.grid.write().unwrap().mesh_render =
-                Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
+            let mere = mesh_render::MeshRenderer::new_with_mesh(
+                m,
+                "material/line.mat",
+                &*resource);
+            r.grid.write().unwrap().mesh_render = Some(mere);
         }
 
         {
             let m = Arc::new(RwLock::new(mesh::Mesh::new()));
             create_repere(&mut *m.write().unwrap(), 40f64 );
-            let rs = resource::ResTest::ResData(m);
-            let mr = resource::ResTT::new_with_res("repere", rs);
 
-            r.camera_repere.write().unwrap().mesh_render =
-                Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
+            let mere = mesh_render::MeshRenderer::new_with_mesh(
+                m,
+                "material/line.mat",
+                &*resource);
+            r.camera_repere.write().unwrap().mesh_render = Some(mere);
         }
 
         {
             let m = Arc::new(RwLock::new(mesh::Mesh::new()));
             m.write().unwrap().add_quad(1f32, 1f32);
-            let rs = resource::ResTest::ResData(m);
-            let mr = resource::ResTT::new_with_res("quad", rs);
 
             shader_manager.borrow_mut().request_use_no_proc("shader/outline.sh");
             let outline_mat = material_manager.borrow_mut().request_use_no_proc("material/outline.mat");
-            let outline_res = resource::ResTT::new_with_res("material/outline.mat", resource::ResTest::ResData(outline_mat));
 
-            r.quad_outline.write().unwrap().mesh_render = Some(
-                mesh_render::MeshRender::new_with_mesh_and_mat(
-                    mr,
-                    outline_res));
+            let mere = mesh_render::MeshRenderer::new_with_mesh_and_mat(m, outline_mat);
+            r.quad_outline.write().unwrap().mesh_render = Some(mere);
         }
 
         {
             let m = Arc::new(RwLock::new(mesh::Mesh::new()));
             m.write().unwrap().add_quad(1f32, 1f32);
-            let rs = resource::ResTest::ResData(m);
-            let mr = resource::ResTT::new_with_res("quad", rs);
 
             //shader_manager.write().unwrap().request_use_no_proc("shader/all.sh");
             let all_mat = material_manager.borrow_mut().request_use_no_proc("material/fbo_all.mat");
-            let all_res = resource::ResTT::new_with_res("material/fbo_all.mat", resource::ResTest::ResData(all_mat));
 
-            r.quad_all.write().unwrap().mesh_render = Some(
-                mesh_render::MeshRender::new_with_mesh_and_mat(
-                    mr,
-                    all_res));
+            let mere = mesh_render::MeshRenderer::new_with_mesh_and_mat(m, all_mat);
+            r.quad_all.write().unwrap().mesh_render = Some(mere);
         }
 
         {
             let m = Arc::new(RwLock::new(mesh::Mesh::new()));
-            let rs = resource::ResTest::ResData(m);
-            let mr = resource::ResTT::new_with_res("line", rs);
 
-            r.line.write().unwrap().mesh_render =
-                Some(mesh_render::MeshRender::new_with_mesh(mr, "material/line.mat"));
+            let mere = mesh_render::MeshRenderer::new_with_mesh(
+                m,
+                "material/line.mat",
+                &*resource);
+            r.line.write().unwrap().mesh_render = Some(mere);
         }
 
         r
@@ -725,16 +718,11 @@ fn prepare_passes_object(
         let ocname = occ.name.clone();
         let render = &mut occ.mesh_render;
 
-        let material = match *render {
+        let mat = match *render {
             Some(ref mut mr) => { 
-                mr.material.get_resource(material_manager)
+                &mr.material
             },
             None => return
-        };
-
-        let mat = match material {
-            None => return,
-            Some(m) => m
         };
 
         let mmm = &mut mat.write().unwrap().shader;
@@ -836,6 +824,7 @@ fn create_repere(m : &mut mesh::Mesh, len : f64)
 }
 
 
+/*
 fn add_box_only_first_object(
     line : &mut object::Object, 
     objects : &LinkedList<Arc<RwLock<object::Object>>>, 
@@ -891,6 +880,7 @@ fn add_box_only_first_object(
         break;
     }
 }
+*/
 
 
 pub struct GameRender
@@ -1021,32 +1011,10 @@ impl GameRender {
 fn get_mesh_render(ob : &mut object::Object, resource : &resource::ResourceGroup) -> 
 Option<(Arc<RwLock<material::Material>>, Arc<RwLock<mesh::Mesh>>)>
 {
-    let (themesh, the_mat) = match ob.mesh_render {
-        //let (themesh, the_mat) = match ob.get_mesh_render() {
-        Some(ref mut mr) => { 
-            let mmm = match mr.material.resource {
-                resource::ResTest::ResData(ref rd) => Some(rd.clone()),
-                _ =>
-                    resource::resource_get(&mut *resource.material_manager.borrow_mut(), &mut mr.material)
-            };
-
-            (resource::resource_get(&mut *resource.mesh_manager.borrow_mut(), &mut mr.mesh),
-            mmm)
-        },
-        None => return None
-    };
-
-    let mat = match the_mat {
-        Some(mat) => mat,
-        _ => return None
-    };
-
-    let mesh = match themesh {
-        Some(m) => m,
-        _ => return None
-    };
-
-    Some((mat, mesh))
+    match ob.mesh_render {
+        Some(ref mr) => Some((mr.material.clone(), mr.mesh.clone())),
+        None => None
+    }
 }
 
 

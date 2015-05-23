@@ -3,6 +3,7 @@ use geometry;
 use mesh;
 use resource;
 use std::f64::EPSILON;
+use component::mesh_render;
 
 use vec::{Vec3, Quat};
 
@@ -34,18 +35,14 @@ pub fn ray_object(ray : &geometry::Ray, o : &object::Object) -> IntersectionRay
     match o.mesh_render {
         None => return out,
         Some(ref mr) => {
-            match mr.mesh.resource {
-                resource::ResTest::ResData(ref m) => {
-                    let wp = o.world_position();
-                    let wq = o.world_orientation();
-                    let ws = o.world_scale();
+            let wp = o.world_position();
+            let wq = o.world_orientation();
+            let ws = o.world_scale();
 
-                    //TODO
-                    //let ir_box = ray_box(ray, .... 
-                    return ray_mesh(ray, &*m.read().unwrap(), &wp, &wq, &ws);
-                },
-                _ => return out
-            }
+            //TODO
+            //let ir_box = ray_box(ray, .... 
+            let m = &mr.mesh;
+            return ray_mesh(ray, &*m.read().unwrap(), &wp, &wq, &ws);
         }
     }
 }
@@ -473,11 +470,7 @@ pub fn is_object_in_planes(planes : &[geometry::Plane], o : &object::Object)
         None => 
             return is_position_in_planes(planes, o.position),
         Some(ref mr) => {
-            match mr.mesh.resource {
-                resource::ResTest::ResData(ref m) => m.read().unwrap(),
-                _ =>
-                    return is_position_in_planes(planes, o.position)
-            }
+            mr.mesh.read().unwrap()
         }
     };
 

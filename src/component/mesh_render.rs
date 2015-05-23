@@ -10,7 +10,6 @@ use component::manager::Encode;
 use object::Object;
 use transform;
 use mesh;
-use mesh_render;
 use resource;
 use material;
 
@@ -32,13 +31,14 @@ impl MeshRender
     }
 }
 
+#[derive(Clone)]
 pub struct MeshRenderer
 {
-    mesh : Arc<RwLock<mesh::Mesh>>,
-    material : Arc<RwLock<material::Material>>,
+    pub mesh : Arc<RwLock<mesh::Mesh>>,
+    pub material : Arc<RwLock<material::Material>>,
 
-    mesh_instance : Option<Rc<RefCell<mesh::Mesh>>>,
-    material_instance : Option<material::Material>,
+    pub mesh_instance : Option<Rc<RefCell<mesh::Mesh>>>,
+    pub material_instance : Option<material::Material>,
 }
 
 impl Component for MeshRenderer
@@ -78,25 +78,66 @@ impl MeshRenderer{
     {
         //self.mesh_instance = 
     }
+
+    pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> MeshRenderer
+    {
+        let mesh_render = {
+            match ob.get_comp_data::<MeshRender>(){
+                Some(m) => m.clone(),
+                None => panic!("no mesh data")
+            }
+        };
+
+        MeshRenderer {
+            mesh : resource.mesh_manager.borrow_mut().request_use_no_proc(mesh_render.mesh.as_ref()),
+            material : resource.material_manager.borrow_mut().request_use_no_proc(mesh_render.material.as_ref()),
+            mesh_instance : None,
+            material_instance : None,
+        }
+    }
+
+    pub fn new_with_mesh(
+        mesh : Arc<RwLock<mesh::Mesh>>,
+        material : &str,
+        resource : &resource::ResourceGroup) -> MeshRenderer
+    {
+        MeshRenderer {
+            mesh : mesh,
+            material : resource.material_manager.borrow_mut().request_use_no_proc(material.as_ref()),
+            mesh_instance : None,
+            material_instance : None,
+        }
+    }
+
+    pub fn new_with_mat(
+        mesh : &str, 
+        material : Arc<RwLock<material::Material>>,
+        resource : &resource::ResourceGroup) -> MeshRenderer
+    {
+        MeshRenderer {
+            mesh : resource.mesh_manager.borrow_mut().request_use_no_proc(mesh.as_ref()),
+            material : material,
+            mesh_instance : None,
+            material_instance : None,
+        }
+    }
+
+
+    pub fn new_with_mesh_and_mat(
+        mesh : Arc<RwLock<mesh::Mesh>>,
+        material : Arc<RwLock<material::Material>>) -> MeshRenderer
+    {
+        MeshRenderer {
+            mesh : mesh,
+            material : material,
+            mesh_instance : None,
+            material_instance : None,
+        }
+    }
 }
 
 pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
 {
-    println!("mesh new---->>>>");
-    let mesh_render = {
-        match ob.get_comp_data::<mesh_render::MeshRenderData>(){
-            Some(m) => m.clone(),
-            None => panic!("no armature data")
-        }
-    };
-
-    let mr = MeshRenderer {
-        mesh : resource.mesh_manager.borrow_mut().request_use_no_proc(mesh_render.mesh.as_ref()),
-        material : resource.material_manager.borrow_mut().request_use_no_proc(mesh_render.material.as_ref()),
-        mesh_instance : None,
-        material_instance : None,
-    };
-
-    box mr
+    box MeshRenderer::new(ob, resource)
 }
 

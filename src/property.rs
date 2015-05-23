@@ -513,7 +513,8 @@ macro_rules! property_test_impl(
 property_test_impl!(vec::Vec3,[x,y,z]);
 property_test_impl!(vec::Quat,[x,y,z,w]);
 property_test_impl!(mesh_render::MeshRender,[mesh,material]);
-property_test_impl!(object::Object,[name,position,orientation,scale,mesh_render]);
+//property_test_impl!(object::Object,[name,position,orientation,scale,mesh_render]);
+property_test_impl!(object::Object,[name,position,orientation,scale]);
 
 macro_rules! property_get_impl(
     ($my_type:ty, [ $($member:ident),+ ]) => ( 
@@ -563,4 +564,6 @@ property_get_impl!(vec::Quat,[x,y,z,w]);
 property_get_impl!(resource::ResTT<mesh::Mesh>,[name]);
 property_get_impl!(resource::ResTT<material::Material>,[name]);
 property_get_impl!(mesh_render::MeshRender,[mesh,material]);
-property_get_impl!(object::Object,[name,position,orientation,scale,mesh_render]);
+//property_get_impl!(object::Object,[name,position,orientation,scale,mesh_render]);
+property_get_impl!(object::Object,[name,position,orientation,scale]);
+

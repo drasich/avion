@@ -74,6 +74,10 @@ impl CompData
                 let anyp = p as &Any;
                 anyp.downcast_ref::<T>()
             },
+            CompData::MeshRender(ref c) => {
+                let anyp = c as &Any;
+                anyp.downcast_ref::<T>()
+            },
             _ => None
         }
     }
@@ -82,6 +86,14 @@ impl CompData
     {
         match *self {
             CompData::Player(ref mut p) => {
+                let anyp = p as &mut Any;
+                anyp.downcast_mut::<T>()
+            },
+            CompData::Armature(ref mut p) => {
+                let anyp = p as &mut Any;
+                anyp.downcast_mut::<T>()
+            },
+            CompData::MeshRender(ref mut p) => {
                 let anyp = p as &mut Any;
                 anyp.downcast_mut::<T>()
             },

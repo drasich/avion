@@ -1,12 +1,12 @@
 use vec;
 use matrix;
-use mesh_render;
 use transform;
 use shader;
 use resource;
 use material;
 use component;
 use component::{Component,CompData};
+use component::mesh_render;
 use mesh;
 
 use std::collections::{LinkedList};
@@ -32,7 +32,7 @@ pub struct Object
     pub name : String,
     //pub id : u32,
     pub id : uuid::Uuid,
-    pub mesh_render : Option<mesh_render::MeshRender>,
+    pub mesh_render : Option<mesh_render::MeshRenderer>,
     pub position : vec::Vec3,
     //pub orientation : vec::Quat,
     pub orientation : transform::Orientation,
@@ -70,7 +70,7 @@ pub struct ObjectRom
 // only used by engine, not editable by yser, not encodable
 pub struct ObjectInstance
 {
-    pub mesh_render : Option<mesh_render::MeshRender>,
+    pub mesh_render : Option<mesh_render::MeshRenderer>,
     //pub children : LinkedList<Arc<RwLock<ObjectInstance>>>,
     pub parent : Option<Arc<RwLock<ObjectRom>>>,
     pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component>>>>>>,
@@ -92,7 +92,9 @@ impl Clone for Object {
         Object {
             name : self.name.clone(),
             id : self.id.clone(),//?
-            mesh_render : self.mesh_render.clone(),
+            mesh_render : if let Some(ref mr) = self.mesh_render {
+                Some(mr.clone())
+            } else {None},
             position : self.position.clone(),
             orientation : self.orientation.clone(),
             scale : self.scale.clone(),
@@ -196,12 +198,7 @@ impl Object
             None => return
         };
 
-        match render.material.resource {
-            resource::ResTest::ResData(ref d) => {
-                d.write().unwrap().set_uniform_data(name, data);
-            },
-            _ => {}
-        }
+        render.material.write().unwrap().set_uniform_data(name, data);
     }
 
     pub fn get_material(&self) -> Option<Arc<RwLock<material::Material>>>
@@ -211,12 +208,7 @@ impl Object
             None => return None
         };
 
-        match render.material.resource {
-            resource::ResTest::ResData(ref d) => {
-                Some(d.clone())
-            },
-            _ => None
-        }
+        Some(render.material.clone())
     }
 
     pub fn update(&mut self, dt : f64)

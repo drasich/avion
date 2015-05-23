@@ -1139,7 +1139,8 @@ property_show_impl!(vec::Quat,[x,y,z,w]);
 property_show_impl!(transform::Transform,[position,orientation]);
 property_show_impl!(mesh_render::MeshRender,[mesh,material]);
 property_show_impl!(object::Object,
-                     [name,position,orientation,scale,mesh_render]);
+                     [name,position,orientation,scale]);
+                     //[name,position,orientation,scale,mesh_render]);
 
 fn join_string(path : &Vec<String>) -> String
 {
