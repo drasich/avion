@@ -5,6 +5,7 @@ DONE
 - id system
 
 TODO
+- separate texture and img
 - transform property update_changed in propertyshow.update_widget
 
   - for each objects of the scene, keep a list of references of ui objects that use

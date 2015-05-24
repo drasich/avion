@@ -119,6 +119,7 @@ impl Frustum
 }
 */
 
+#[derive(Clone)]
 pub struct AABox
 {
     pub min : Vec3,

@@ -218,16 +218,6 @@ impl RenderPass
         let mut can_render = true;
         let mut vertex_data_count = 0;
         for (name, cgl_att) in shader.attributes.iter() {
-            match mb.buffer_get(name.as_ref()){
-                Some(ref cb) => {
-                    cb.utilise(*cgl_att);
-                    if name == "position" {
-                        vertex_data_count = cb.size_get();
-                    }
-                    continue;
-                },
-                None => ()
-            }
 
             match mb.buffer_f32_get(name.as_ref()){
                 Some(ref cb) => {

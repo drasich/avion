@@ -3,6 +3,7 @@ use libc::{c_uint, c_void};
 use rustc_serialize::{Encodable, Encoder, Decoder, Decodable};
 use std::mem;
 use std::path::Path;
+use std::cell::Cell;
 
 #[repr(C)]
 pub struct CglTexture;
@@ -24,7 +25,8 @@ pub struct Texture
 {
     name : String,
     pub state : i32,
-    pub image : Option<png::Image>,
+    //state : i32,
+    image : Option<png::Image>,
     pub cgl_texture: Option<*const CglTexture>,
 } 
 

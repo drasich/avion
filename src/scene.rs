@@ -136,14 +136,9 @@ impl Scene
                 b = true;
             }
             if b {
-                println!("adding mesh renderer to {}", ob.name);
                 ob.mesh_render = 
                     Some(component::mesh_render::MeshRenderer::new(&*ob,&*resource));
             }
-            else {
-                println!("{} nononono mesh renderer", ob.name);
-            }
-
         }
     }
 

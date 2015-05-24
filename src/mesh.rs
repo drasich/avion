@@ -60,6 +60,7 @@ enum BufferState
 }
 */
 
+#[derive(Clone)]
 pub struct Buffer<T>
 {
     pub name: String,
@@ -107,6 +108,11 @@ pub trait BufferSend
     fn cgl_buffer_get(&self) -> Option<*const CglBuffer>;
     //fn update(&mut self) -> ();
 }
+
+/*
+pub trait BufferSendTest : BufferSend + Clone{}
+impl<T: BufferSend + Clone> BufferSendTest for T {}
+*/
 
 impl<T> BufferSend for Buffer<T> {
     fn send(&mut self) -> ()
@@ -182,6 +188,7 @@ impl<T> BufferSend for Buffer<T> {
     }
 }
 
+#[derive(Clone)]
 pub enum DrawType
 {
     Faces,
@@ -195,13 +202,14 @@ pub struct VertexInfo
     pub normal : vec::Vec3
 }
 
+
+
+#[derive(Clone)]
 pub struct Mesh
 {
     pub name : String,
     pub state : i32,
-    //pub buffers : HashMap<String, Box<BufferSend+'static+Send+Sync>>, //TODO check
-     buffers : HashMap<String, Box<BufferSend+Send+Sync>>, //TODO check
-    //pub buffers : HashMap<String, Box<BufferSend+'static>>, //TODO check
+    //buffers : HashMap<String, Box<BufferSend+Send+Sync>>, //TODO check
     buffers_f32 : HashMap<String, Box<Buffer<f32>>>, //TODO check
     buffers_u32 : HashMap<String, Box<Buffer<u32>>>, //TODO check
     pub draw_type : DrawType,
@@ -216,7 +224,6 @@ impl Mesh
        let m = Mesh {
            name : String::from_str("mesh_new"),
            state : 0,
-           buffers : HashMap::new(),
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
            draw_type : Faces,
@@ -242,7 +249,6 @@ impl Mesh
        let m = Mesh {
            name : String::from_str(path),
            state : 0,
-           buffers : HashMap::new(),
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
            draw_type : Faces,
@@ -320,12 +326,6 @@ impl Mesh
 
            let bufname = String::from_str("position");
 
-           /*
-           self.buffers.insert(bufname.clone(), box Buffer::new(
-                   bufname.clone(),
-                   vvv,
-                   Vertex));
-                   */
            let buf = Buffer::new(
                bufname.clone(),
                vvv,
@@ -350,12 +350,6 @@ impl Mesh
 
            let bufname = String::from_str("faces");
 
-           /*
-           self.buffers.insert(bufname.clone(), box Buffer::new(
-                   bufname.clone(),
-                   fff,
-                   Index));
-                   */
            self.buffers_u32.insert(bufname.clone(), box Buffer::new(
                    bufname.clone(),
                    fff,
@@ -382,7 +376,7 @@ impl Mesh
                    BufferType::Normal);
 
                self.buffers_f32_base.insert(bufname.clone(), box buf.copy());
-               self.buffers.insert(bufname.clone(), box buf);
+               self.buffers_f32.insert(bufname.clone(), box buf);
            }
        }
 
@@ -411,7 +405,7 @@ impl Mesh
 
                let bufname = String::from_str("texcoord");
 
-               self.buffers.insert(bufname.clone(), box Buffer::new(
+               self.buffers_f32.insert(bufname.clone(), box Buffer::new(
                        bufname.clone(),
                        uuu,
                        BufferType::Uv));
@@ -467,9 +461,6 @@ impl Mesh
     pub fn init_buffers(&mut self)
     {
         if self.state == 1 {
-            for (_,b) in self.buffers.iter_mut() {
-                b.send();
-            }
             for (_,b) in self.buffers_u32.iter_mut() {
                 b.send();
             }
@@ -495,17 +486,6 @@ impl Mesh
         let s = String::from_str(name);
 
         match self.buffers_u32.get(&s) {
-            Some(b) => return Some(b),
-            None => None,
-        }
-    }
-
-    pub fn buffer_get(&self, name : &str) -> Option<&Box<BufferSend+Send+Sync>>
-    //pub fn buffer_get(&self, name : &str) -> Option<&Box<BufferSend>>
-    {
-        let s = String::from_str(name);
-
-        match self.buffers.get(&s) {
             Some(b) => return Some(b),
             None => None,
         }
@@ -742,7 +722,10 @@ impl resource::ResourceT for Mesh
         }
         
         if self.state == 1 {
-            for (_,b) in self.buffers.iter_mut() {
+            for (_,b) in self.buffers_f32.iter_mut() {
+                Some(b.send());
+            }
+            for (_,b) in self.buffers_u32.iter_mut() {
                 Some(b.send());
             }
             self.state = 11;
@@ -765,7 +748,6 @@ impl Decodable for Mesh {
          Ok(Mesh{
           name: try!(decoder.read_struct_field("name", 0, |decoder| Decodable::decode(decoder))),
            state : 0,
-           buffers : HashMap::new(),
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
            draw_type : Faces,

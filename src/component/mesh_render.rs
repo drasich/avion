@@ -37,8 +37,11 @@ pub struct MeshRenderer
     pub mesh : Arc<RwLock<mesh::Mesh>>,
     pub material : Arc<RwLock<material::Material>>,
 
-    pub mesh_instance : Option<Rc<RefCell<mesh::Mesh>>>,
-    pub material_instance : Option<material::Material>,
+    //pub mesh_instance : Option<Rc<RefCell<mesh::Mesh>>>,
+    //pub mesh_instance : Option<Arc<mesh::Mesh>>,
+    pub mesh_instance : Option<Box<mesh::Mesh>>,
+    //pub mesh_instance : Option<Rc<mesh::Mesh>>,
+    pub material_instance : Option<Box<material::Material>>,
 }
 
 impl Component for MeshRenderer
@@ -134,6 +137,42 @@ impl MeshRenderer{
             material_instance : None,
         }
     }
+
+    pub fn get_mesh_instance(&self) -> 
+        Option<(&material::Material, &mesh::Mesh)>
+        //Option<&'a mesh::Mesh>
+        {
+            let me =
+            match self.mesh_instance {
+                Some(ref m) => &*m,
+                None => return None
+            };
+
+            let ma =
+            match self.material_instance {
+                Some(ref m) => &*m,
+                None => return None
+            };
+
+            Some((ma,me))
+
+            /*
+            match (self.material_instance,self.mesh_instance) {
+                (Some(ref mat),  Some(ref mesh)) => Some((&*mat, &*mesh)),
+                (_,_) => None
+            }
+            */
+
+
+            /*
+            let mat = self.material.read();
+            let mesh = self.mesh.read();
+            (&*mat.unwrap(),
+            &*mesh.unwrap())
+            */
+        }
+
+
 }
 
 pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
