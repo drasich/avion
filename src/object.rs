@@ -42,7 +42,7 @@ pub struct Object
     //pub children : LinkedList<ThreadObject>,
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
-    pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component>>>>>>,
+    pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component+'static>>>>>>,
     pub comp_data : Vec<Box<CompData>>,
     pub comp_string : Vec<String>,
 }
@@ -283,6 +283,22 @@ impl Object
             child.write().unwrap().init_components(comp_mgr, resource);
         }
     }
+
+    //pub fn get_component<T:Component>(& self) -> Option<Rc<RefCell<Box<T>>>>
+    pub fn get_component<T:Component>(& self) -> Option<Rc<RefCell<Box<Component>>>>
+    {
+        for c in self.components.borrow().iter()
+        {
+            let cc : &mut Any = &mut *c.borrow_mut();
+
+            //if let Some(ccc) = cc.downcast_mut::<T>() {
+            if cc.is::<T>() {
+                return Some(c.clone());
+            }
+        }
+        None
+    }
+
 
 }
 

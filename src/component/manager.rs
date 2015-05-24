@@ -12,7 +12,7 @@ use armature::ArmaturePath;
 use component::mesh_render::MeshRender;
 use resource;
 
-pub trait Component
+pub trait Component : Any
 {
     //fn new(&self) -> Rc<RefCell<Box<Component>>>;
     fn copy(&self) -> Rc<RefCell<Box<Component>>>;

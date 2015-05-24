@@ -59,6 +59,14 @@ impl Component for ArmatureAnimation
     fn update(&mut self, ob : &mut Object, dt : f64)
     {
         println!("update armature anim");
+        let mr = 
+            if let Some(ref mr) = ob.mesh_render {
+                mr
+            }
+        else {
+            return;
+        };
+
     }
 
     fn get_name(&self) -> String {
