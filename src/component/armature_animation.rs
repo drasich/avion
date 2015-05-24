@@ -32,6 +32,7 @@ pub struct ArmatureAnimation
 
     //TODO mesh component + dependencies
     //mesh_base : Option<resource::ResTT<MeshRenderComponent>>,
+    //mesh_renderer : Rc<component::meshrender::MeshRenderer>,
 }
 
 impl Component for ArmatureAnimation

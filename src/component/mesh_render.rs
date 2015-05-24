@@ -77,9 +77,9 @@ impl Component for MeshRenderer
 }
 
 impl MeshRenderer{
-    fn create_mesh_instance(&mut self)
+    fn create_mesh_instance(&mut self) 
     {
-        //self.mesh_instance = 
+        self.mesh_instance = Some(box self.mesh.read().unwrap().clone())
     }
 
     pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> MeshRenderer
@@ -138,7 +138,7 @@ impl MeshRenderer{
         }
     }
 
-    pub fn get_mesh_instance(&self) -> 
+    pub fn get_mesh_mat_instance(&self) -> 
         Option<(&material::Material, &mesh::Mesh)>
         //Option<&'a mesh::Mesh>
         {
@@ -172,6 +172,25 @@ impl MeshRenderer{
             */
         }
 
+    pub fn get_mat_instance(&mut self) -> 
+        Option<&mut material::Material>
+        //Option<&'a mesh::Mesh>
+        {
+            match self.material_instance {
+                Some(ref mut m) => Some(&mut *m),
+                None => return None
+            }
+        }
+
+    pub fn get_mesh_instance(&mut self) -> 
+        Option<&mut mesh::Mesh>
+        //Option<&'a mesh::Mesh>
+        {
+            match self.mesh_instance {
+                Some(ref mut m) => Some(&mut *m),
+                None => return None
+            }
+        }
 
 }
 
