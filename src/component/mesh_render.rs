@@ -39,7 +39,7 @@ pub struct MeshRenderer
 
     //pub mesh_instance : Option<Rc<RefCell<mesh::Mesh>>>,
     //pub mesh_instance : Option<Arc<mesh::Mesh>>,
-    pub mesh_instance : RefCell<Option<Box<mesh::Mesh>>>,
+    pub mesh_instance : Option<Box<mesh::Mesh>>,
     //pub mesh_instance : Option<Rc<mesh::Mesh>>,
     pub material_instance : Option<Box<material::Material>>,
 }
