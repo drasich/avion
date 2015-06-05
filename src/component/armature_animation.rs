@@ -67,6 +67,12 @@ impl Component for ArmatureAnimation
             return;
         };
 
+
+        //TODO get the current animation pose with the action name and the time.
+        // get the bones translation and rotation DIFFERENCE with the original pose.
+        // ...
+        //get the original mesh and apply weights 
+
     }
 
     fn get_name(&self) -> String {
