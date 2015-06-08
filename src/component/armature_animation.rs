@@ -28,6 +28,7 @@ pub struct ArmatureAnimation
     state : State,
     //armature : armature::Armature,
     armature : Arc<RwLock<armature::Armature>>,
+    arm_instance : armature::ArmatureInstance,
     mesh : Option<resource::ResTT<mesh::Mesh>>,
 
     //TODO mesh component + dependencies
@@ -51,7 +52,8 @@ impl Component for ArmatureAnimation
                 {
                     state : self.state,
                     armature : self.armature.clone(),
-                    mesh : self.mesh.clone()
+                    mesh : self.mesh.clone(),
+                    arm_instance : self.arm_instance.clone()
 
                 }))
     }
@@ -67,6 +69,7 @@ impl Component for ArmatureAnimation
             return;
         };
 
+        //let normal_pose = 
 
         //TODO get the current animation pose with the action name and the time.
         // get the bones translation and rotation DIFFERENCE with the original pose.
@@ -90,9 +93,13 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
         }
     };
 
+    let armature = resource.armature_manager.borrow_mut().request_use_no_proc(arm.as_ref());
+    let instance = armature.read().unwrap().create_instance();
+
     let arm_anim = ArmatureAnimation {
         state : State::Idle,
-        armature : resource.armature_manager.borrow_mut().request_use_no_proc(arm.as_ref()),
+        armature : armature,
+        arm_instance : instance,
         mesh : None
     };
 

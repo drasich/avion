@@ -424,6 +424,7 @@ impl Decodable for Armature {
 */
 
 
+#[derive(Clone)]
 pub struct ArmatureInstance
 {
     bones : Vec<Bone>
