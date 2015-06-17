@@ -30,6 +30,8 @@ pub struct ArmatureAnimation
     armature : Arc<RwLock<armature::Armature>>,
     arm_instance : armature::ArmatureInstance,
     mesh : Option<resource::ResTT<mesh::Mesh>>,
+    action : Option<String>,
+    time : f64
 
     //TODO mesh component + dependencies
     //mesh_base : Option<resource::ResTT<MeshRenderComponent>>,
@@ -53,7 +55,9 @@ impl Component for ArmatureAnimation
                     state : self.state,
                     armature : self.armature.clone(),
                     mesh : self.mesh.clone(),
-                    arm_instance : self.arm_instance.clone()
+                    arm_instance : self.arm_instance.clone(),
+                    action : self.action.clone(),
+                    time : self.time
 
                 }))
     }
@@ -68,6 +72,17 @@ impl Component for ArmatureAnimation
         else {
             return;
         };
+
+        let action = if let Some(ref a) = self.action {
+            a
+        }
+        else {
+            return
+        };
+
+        self.time = self.time + dt;
+
+        self.arm_instance.set_pose(&*self.armature.read().unwrap(), action.as_str(), self.time);
 
         //let normal_pose = 
 
@@ -100,7 +115,9 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
         state : State::Idle,
         armature : armature,
         arm_instance : instance,
-        mesh : None
+        mesh : None,
+        action : None,
+        time : 0f64
     };
 
     box arm_anim
