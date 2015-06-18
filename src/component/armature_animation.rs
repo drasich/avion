@@ -84,6 +84,10 @@ impl Component for ArmatureAnimation
 
         self.arm_instance.set_pose(&*self.armature.read().unwrap(), action.as_str(), self.time);
 
+        if let Some(ref m) = self.mesh {
+            //m.apply_armature_pose(self.arm_instance);
+        }
+
         //let normal_pose = 
 
         //TODO get the current animation pose with the action name and the time.

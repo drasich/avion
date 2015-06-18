@@ -82,6 +82,12 @@ impl MeshRenderer{
         self.mesh_instance = Some(box self.mesh.read().unwrap().clone())
     }
 
+    //TODO
+    fn get_or_create_mesh_instance(&mut self) //-> &mut Mesh
+    {
+        self.mesh_instance = Some(box self.mesh.read().unwrap().clone())
+    }
+
     pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> MeshRenderer
     {
         let mesh_render = {
