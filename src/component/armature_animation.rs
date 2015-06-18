@@ -65,8 +65,8 @@ impl Component for ArmatureAnimation
     fn update(&mut self, ob : &mut Object, dt : f64)
     {
         println!("update armature anim");
-        let mr = 
-            if let Some(ref mr) = ob.mesh_render {
+        let mut mr = 
+            if let Some(ref mut mr) = ob.mesh_render {
                 mr
             }
         else {
@@ -84,9 +84,10 @@ impl Component for ArmatureAnimation
 
         self.arm_instance.set_pose(&*self.armature.read().unwrap(), action.as_str(), self.time);
 
-        if let Some(ref m) = self.mesh {
+        let mut mi = mr.get_or_create_mesh_instance();
+            //if let Some(ref m) = mr.mesh_instance {
             //m.apply_armature_pose(self.arm_instance);
-        }
+            //}
 
         //let normal_pose = 
 
@@ -127,3 +128,6 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
     box arm_anim
 }
 
+
+//TODO
+//fn update_mesh_with_armature(mesh_instance : &mut mesh::Mesh

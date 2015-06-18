@@ -83,9 +83,20 @@ impl MeshRenderer{
     }
 
     //TODO
-    fn get_or_create_mesh_instance(&mut self) //-> &mut Mesh
+    //pub fn get_or_create_mesh_instance<'a>(&'a mut self) -> &'a mut Box<mesh::Mesh>
+    //pub fn get_or_create_mesh_instance<'a>(&'a mut self) -> &'a mut mesh::Mesh
+    pub fn get_or_create_mesh_instance(& mut self) -> & mut mesh::Mesh
     {
-        self.mesh_instance = Some(box self.mesh.read().unwrap().clone())
+        if self.mesh_instance.is_none() {
+            self.mesh_instance = Some(box self.mesh.read().unwrap().clone())
+        }
+
+        //let yo = self.mesh_instance.unwrap();
+
+        match self.mesh_instance {
+            Some(ref mut mi) => &mut *mi,
+            None => panic!("impossible")
+        }
     }
 
     pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> MeshRenderer
