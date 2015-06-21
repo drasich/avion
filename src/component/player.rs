@@ -54,7 +54,7 @@ impl Component for PlayerBehavior
 
         let mut ori = ob.orientation.get_angle_xyz();
         ori.x += speed;
-        ob.orientation = transform::Orientation::new_with_angle_xyz(&ori);
+        //ob.orientation = transform::Orientation::new_with_angle_xyz(&ori);
     }
 
     fn get_name(&self) -> String {

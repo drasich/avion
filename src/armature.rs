@@ -244,6 +244,7 @@ impl Action {
     fn new(file : &mut File, armature : &Armature) -> Action 
     {
         let name = read_string(file);
+        println!("action name : {}",name);
 
         let action = Action {
             name : name,

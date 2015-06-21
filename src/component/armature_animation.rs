@@ -65,12 +65,12 @@ impl Component for ArmatureAnimation
 
     fn update(&mut self, ob : &mut Object, dt : f64)
     {
-        println!("update armature anim");
         let mut mr = 
             if let Some(ref mut mr) = ob.mesh_render {
                 mr
             }
         else {
+            println!("update armature anim : no mesh");
             return;
         };
 
@@ -78,8 +78,11 @@ impl Component for ArmatureAnimation
             a
         }
         else {
+            println!("update armature anim : no action");
             return
         };
+
+        println!("update armature anim");
 
         self.time = self.time + dt;
 
@@ -126,7 +129,7 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
         armature : armature,
         arm_instance : instance,
         mesh : None,
-        action : None,
+        action : Some(String::from_str("walk")),//None,
         time : 0f64
     };
 
