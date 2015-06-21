@@ -56,16 +56,16 @@ fn read_quat(file : &mut File) -> vec::Quat
 
 
 #[derive(Clone)]
-struct Bone
+pub struct Bone
 {
     //doesnt change
-    name : String,
-    position_base : vec::Vec3,
-    rotation_base : vec::Quat,
-    children : Vec<Bone>,
+    pub name : String,
+    pub position_base : vec::Vec3,
+    pub rotation_base : vec::Quat,
+    pub children : Vec<Bone>,
 
-    position : vec::Vec3,
-    rotation : vec::Quat,
+    pub position : vec::Vec3,
+    pub rotation : vec::Quat,
 }
 
 impl Bone {
@@ -314,6 +314,9 @@ impl Armature {
     pub fn create_instance(&self) -> ArmatureInstance
     {
         ArmatureInstance {
+            position : self.position,
+            rotation : self.rotation,
+            scale : self.scale,
             bones : self.bones.clone()
         }
     }
@@ -381,6 +384,12 @@ impl Armature {
         return 0usize;
     }
 
+    pub fn get_bone(&self, index : usize) -> &Bone
+    {
+        &self.bones[index]
+    }
+
+
     pub fn find_action(&self, name : &str) -> Option<&Action>
     {
         for i in 0..self.actions.len() {
@@ -427,7 +436,10 @@ impl Decodable for Armature {
 #[derive(Clone)]
 pub struct ArmatureInstance
 {
-    bones : Vec<Bone>
+    pub position : vec::Vec3,
+    pub rotation : vec::Quat,
+    pub scale : vec::Vec3,
+    pub bones : Vec<Bone>
 }
 
 impl ArmatureInstance
@@ -482,4 +494,10 @@ impl ArmatureInstance
         }
 
     }
+
+    pub fn get_bone(&self, index : usize) -> &Bone
+    {
+        &self.bones[index]
+    }
+
 }

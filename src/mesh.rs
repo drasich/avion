@@ -202,6 +202,12 @@ pub struct VertexInfo
     pub normal : vec::Vec3
 }
 
+#[derive(Clone)]
+pub struct Weight
+{
+    pub index : u16, // bone index
+    pub weight : f32
+}
 
 
 #[derive(Clone)]
@@ -215,6 +221,7 @@ pub struct Mesh
     pub draw_type : DrawType,
     pub aabox : Option<geometry::AABox>,
     buffers_f32_base : HashMap<String, Box<Buffer<f32>>>, //TODO check
+    pub weights : Vec<Vec<Weight>>
 }
 
 impl Mesh
@@ -229,6 +236,7 @@ impl Mesh
            draw_type : Faces,
            aabox : None,
            buffers_f32_base : HashMap::new(),
+           weights : Vec::new()
        };
 
        /*
@@ -254,6 +262,7 @@ impl Mesh
            draw_type : Faces,
            aabox : None,
            buffers_f32_base : HashMap::new(),
+           weights : Vec::new(),
        };
         
        m
@@ -435,14 +444,20 @@ impl Mesh
            println!("vertex weight count : {} ", vertex_weight_count);
            for _ in 0..vertex_weight_count {
                let weight_count = file.read_u16::<LittleEndian>().unwrap();
+               let mut weights = Vec::with_capacity(weight_count as usize);
+                
                if weight_count > 0 {
-                println!("  weight count : {} ", weight_count);
+                   println!("  weight count : {} ", weight_count);
                }
                for _ in 0..weight_count {
                    let index = file.read_u16::<LittleEndian>().unwrap();
                    let weight = file.read_f32::<LittleEndian>().unwrap();
                     println!("    index, weight : {}, {} ", index, weight);
+                    let w = Weight { index : index, weight : weight };
+                    weights.push(w);
                }
+
+               self.weights.push(weights);
            }
        }
 
@@ -476,6 +491,16 @@ impl Mesh
         let s = String::from_str(name);
 
         match self.buffers_f32.get(&s) {
+            Some(b) => return Some(b),
+            None => None,
+        }
+    }
+
+    pub fn buffer_f32_get_mut(&mut self, name : &str) -> Option<&mut Box<Buffer<f32>>>
+    {
+        let s = String::from_str(name);
+
+        match self.buffers_f32.get_mut(&s) {
             Some(b) => return Some(b),
             None => None,
         }
@@ -753,6 +778,7 @@ impl Decodable for Mesh {
            draw_type : Faces,
            aabox : None,
            buffers_f32_base : HashMap::new(),
+           weights : Vec::new()
         })
     })
   }

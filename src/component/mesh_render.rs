@@ -99,6 +99,11 @@ impl MeshRenderer{
         }
     }
 
+    pub fn get_mesh(&self) -> Arc<RwLock<mesh::Mesh>>
+    {
+        self.mesh.clone()
+    }
+
     pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> MeshRenderer
     {
         let mesh_render = {

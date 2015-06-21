@@ -13,6 +13,7 @@ use transform;
 use armature;
 use mesh;
 use resource;
+use vec;
 
 #[derive(Copy,Clone)]
 pub enum State
@@ -84,7 +85,11 @@ impl Component for ArmatureAnimation
 
         self.arm_instance.set_pose(&*self.armature.read().unwrap(), action.as_str(), self.time);
 
+        let base_mesh = mr.get_mesh();
+        let base = base_mesh.read().unwrap();
         let mut mi = mr.get_or_create_mesh_instance();
+        update_mesh_with_armature(&base, mi, &self.arm_instance);
+
             //if let Some(ref m) = mr.mesh_instance {
             //m.apply_armature_pose(self.arm_instance);
             //}
@@ -128,6 +133,100 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
     box arm_anim
 }
 
-
 //TODO
-//fn update_mesh_with_armature(mesh_instance : &mut mesh::Mesh
+fn update_mesh_with_armature(
+    base : &mesh::Mesh,
+    mesh : &mut mesh::Mesh,
+    arm : &armature::ArmatureInstance)
+{
+    let mut i = 0;
+    for v in base.weights.iter() {
+        //TODO get vertex and normal
+        let vertex_pos = if let Some(b) = base.buffer_f32_get("position") {
+            vec::Vec3::new(
+                b.data[i*3] as f64,
+                b.data[i*3+ 1] as f64,
+                b.data[i*3+ 2] as f64)
+        }
+        else {
+            println!("no buffer position in base");
+            return;
+        };
+        let vertex_nor = if let Some(b) = base.buffer_f32_get("normal") {
+            vec::Vec3::new(
+                b.data[i*3] as f64,
+                b.data[i*3+ 1] as f64,
+                b.data[i*3+ 2] as f64)
+        }
+        else {
+            println!("no buffer normal in base");
+            return;
+        };
+
+        //TODO rotation
+        let mut translation = vec::Vec3::zero();
+        let mut rotation = vec::Quat::identity();
+        for w in v.iter() {
+            //TODO TODO
+            // slime used to try to find the bone with name
+            println!("this is wrong because we cannot find children like this");
+            let bone = arm.get_bone(w.index as usize);
+
+            if w.weight == 0f32 {
+                continue;
+            }
+
+            let bone_trans = bone.position * arm.scale;
+            let bone_trans_weight = bone_trans * w.weight;
+
+            let mut mytranslation = bone.rotation_base.inverse().rotate_vec3(&bone_trans_weight);
+
+            let bone_rot_weight = vec::quat_slerp(
+                vec::Quat::identity(),
+                bone.rotation.inverse(),
+                w.weight as f64);
+
+            let mut realposbase = bone.position_base * arm.scale;
+            realposbase = realposbase + arm.position;
+
+            let vipos_bone = vertex_pos - realposbase;
+            let mut tr_rot = bone_rot_weight.rotate_vec3(&vipos_bone);
+            tr_rot = tr_rot - vipos_bone;
+            mytranslation = mytranslation + tr_rot;
+
+            translation = translation + mytranslation;
+        }
+
+        let newpos = vertex_pos + translation;
+        let newnor = rotation.rotate_vec3(&vertex_nor);
+
+        mesh.state = 1;
+
+        if let Some(b) = mesh.buffer_f32_get_mut("position") {
+            b.data[i*3] = newpos.x as f32;
+            b.data[i*3+ 1] = newpos.y as f32;
+            b.data[i*3+ 2] = newpos.z as f32;
+        }
+        else {
+            println!("no buffer position");
+        };
+
+        if let Some(b) = mesh.buffer_f32_get_mut("normal") {
+            b.data[i*3] = newnor.x as f32;
+            b.data[i*3+ 1] = newnor.y as f32;
+            b.data[i*3+ 2] = newnor.z as f32;
+        }
+        else {
+            println!("no buffer normal");
+            return;
+        };
+
+        i = i+1;
+    }
+
+
+
+
+
+}
+
