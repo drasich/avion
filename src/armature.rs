@@ -65,6 +65,8 @@ pub struct Bone
     pub children : Vec<Bone>,
 
     pub position : vec::Vec3,
+    pub head : vec::Vec3,
+    pub tail : vec::Vec3,
     pub rotation : vec::Quat,
 }
 
@@ -75,6 +77,11 @@ impl Bone {
         println!("name: {}", name);
         let pos = read_vec3(file);
         println!("pos: {:?}", pos);
+        let head = read_vec3(file);
+        println!("head : {:?}", head);
+        let tail = read_vec3(file);
+        println!("tail : {:?}", tail);
+
         let rot = read_quat(file);
         println!("rot: {:?}", rot);
 
@@ -84,6 +91,8 @@ impl Bone {
             rotation_base : rot,
             children : Vec::new(),
             position: pos,
+            head: head,
+            tail: tail,
             rotation : rot
         };
 
@@ -480,7 +489,7 @@ impl ArmatureInstance
             match (&start.data, &end.data) {
                 (&FrameData::Position(s), &FrameData::Position(e)) => {
                     let v1 = s * (1f64 -ratio);
-                    let v2 = e * (1f64 -ratio);
+                    let v2 = e * ratio;
                     self.bones[bone_index].position = v1 + v2;
                 },
                 (&FrameData::Orientation(s), &FrameData::Orientation(e)) => {
