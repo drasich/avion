@@ -23,6 +23,9 @@ use factory;
 use transform;
 use uniform;
 
+use armature;
+use component::armature_animation;
+
 use geometry;
 
 use mesh::BufferSend;
@@ -137,6 +140,14 @@ impl RenderPass
 
     }
 
+    fn draw_armature(
+        &self,
+        armature : Arc<RwLock<armature::ArmatureInstance>>,
+        matrix : &matrix::Matrix4)
+    {
+
+    }
+
     fn draw_object(
         &self,
         shader : &shader::Shader,
@@ -147,6 +158,12 @@ impl RenderPass
     {
         //TODO
         //println!("TODO rework this");
+        println!("do you have armature animation");
+        match ob.get_component::<armature_animation::ArmatureAnimation>() {
+            Some(aa) => { println!("{} I have an armature animation!!!!!!!!!!!!!", ob.name)},
+            None => { }//println!("{} nooooooo", ob.name)}
+        };
+        println!("do you have armature animation finish");
 
         if ob.mesh_render.is_none() {
             return

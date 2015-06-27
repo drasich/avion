@@ -289,11 +289,18 @@ impl Object
     {
         for c in self.components.borrow().iter()
         {
-            let cc : &mut Any = &mut *c.borrow_mut();
+            let ccc = & *c.borrow();
+            println!("comp : {}", ccc.get_name());
+            //let cc : &mut Any = &mut *c.borrow_mut();
+            let cc : & Any = ccc;
 
-            //if let Some(ccc) = cc.downcast_mut::<T>() {
-            if cc.is::<T>() {
+            if let Some(ccc) = cc.downcast_ref::<T>() {
+            //if cc.is::<&T>() {
+                println!("okkkkkkkkkkkkkkk");
                 return Some(c.clone());
+            }
+            else {
+                println!("itis not good ");
             }
         }
         None
