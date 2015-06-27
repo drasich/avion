@@ -9,6 +9,11 @@
 #![feature(scoped)]
 #![feature(zero_one)]
 
+#![feature(vec_push_all)]
+#![feature(rc_weak)]
+#![feature(borrow_state)]
+#![feature(slice_extras)]
+
 //TODO remove
 #![allow(unused_variables)]
 #![allow(dead_code)]
