@@ -10,6 +10,7 @@ use std::any::Any;
 use component::player::{Player, Enemy, Collider};
 use armature::ArmaturePath;
 use component::mesh_render::MeshRender;
+use component::armature_animation::ArmatureAnimation;
 use resource;
 
 pub trait Component : Any
@@ -44,6 +45,16 @@ pub trait Component : Any
     */
 
 }
+
+#[derive(Clone)]
+pub enum Components
+{
+    MeshRender(MeshRender),
+    ArmatureAnimation(ArmatureAnimation),
+    //PlayerBehavior(PlayerBehavior)
+}
+
+
 
 pub trait Encode
 {

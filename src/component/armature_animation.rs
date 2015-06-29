@@ -24,6 +24,7 @@ pub enum State
     Stop
 }
 
+#[derive(Clone)]
 pub struct ArmatureAnimation
 {
     state : State,
