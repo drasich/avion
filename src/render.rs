@@ -158,12 +158,14 @@ impl RenderPass
     {
         //TODO
         //println!("TODO rework this");
+        /*
         println!("do you have armature animation");
         match ob.get_component::<armature_animation::ArmatureAnimation>() {
             Some(aa) => { println!("{} I have an armature animation!!!!!!!!!!!!!", ob.name)},
             None => { }//println!("{} nooooooo", ob.name)}
         };
         println!("do you have armature animation finish");
+        */
 
         if ob.mesh_render.is_none() {
             return

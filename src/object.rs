@@ -5,7 +5,7 @@ use shader;
 use resource;
 use material;
 use component;
-use component::{Component,CompData};
+use component::{Component,CompData, Components};
 use component::mesh_render;
 use mesh;
 
@@ -42,7 +42,8 @@ pub struct Object
     //pub children : LinkedList<ThreadObject>,
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
-    pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component+'static>>>>>>,
+    //pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component+'static>>>>>>,
+    pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Components>>>>>>,
     pub comp_data : Vec<Box<CompData>>,
     pub comp_string : Vec<String>,
 }
@@ -85,8 +86,8 @@ impl Clone for Object {
     fn clone(&self) -> Object {
         let mut components = Vec::new();
         for c in self.components.borrow().iter() {
-            let cc = (*c).borrow().copy();
-            components.push(cc);
+            let cc = (*c).borrow().clone();
+            components.push(Rc::new(RefCell::new(cc)));
         }
         let comp_data = self.comp_data.clone();
         Object {
@@ -223,7 +224,7 @@ impl Object
         }
     }
 
-    pub fn add_component(&mut self, c : Rc<RefCell<Box<Component>>>)
+    pub fn add_component(&mut self, c : Rc<RefCell<Box<Components>>>)
     {
         self.components.borrow_mut().push(c);
     }
@@ -284,6 +285,7 @@ impl Object
         }
     }
 
+    /*
     //pub fn get_component<T:Component>(& self) -> Option<Rc<RefCell<Box<T>>>>
     pub fn get_component<T:Component>(& self) -> Option<Rc<RefCell<Box<Component>>>>
     {
@@ -305,6 +307,7 @@ impl Object
         }
         None
     }
+    */
 
 
 }

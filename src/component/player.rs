@@ -1,7 +1,7 @@
 //use component;
 use std::rc::Rc;
 use std::cell::RefCell;
-use component::Component;
+use component::{Component,Components};
 use component::manager::Encode;
 //use object::ComponentFunc;
 use object::Object;
@@ -15,6 +15,7 @@ pub struct Player
     pub speed : f64
 }
 
+#[derive(Clone)]
 pub struct PlayerBehavior;
 
 impl Player
@@ -27,18 +28,20 @@ impl Player
     }
 }
 
-pub fn player_new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
+pub fn player_new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Components>
 //pub fn player_new() -> Box<Component>
 {
-    box PlayerBehavior
+    box Components::PlayerBehavior(PlayerBehavior)
 }
 
 impl Component for PlayerBehavior
 {
+    /*
     fn copy(&self) -> Rc<RefCell<Box<Component>>>
     {
         Rc::new(RefCell::new(box PlayerBehavior))
     }
+    */
 
     //fn update(&mut self, dt : f64) {}
     fn update(&mut self, ob : &mut Object, dt : f64)

@@ -9,14 +9,15 @@ use std::any::Any;
 ///use std::sync::mpsc::channel;
 use component::player::{Player, Enemy, Collider};
 use armature::ArmaturePath;
-use component::mesh_render::MeshRender;
+use component::mesh_render::{MeshRender, MeshRenderer};
 use component::armature_animation::ArmatureAnimation;
+use component::player::PlayerBehavior;
 use resource;
 
 pub trait Component : Any
 {
     //fn new(&self) -> Rc<RefCell<Box<Component>>>;
-    fn copy(&self) -> Rc<RefCell<Box<Component>>>;
+    //fn copy(&self) -> Rc<RefCell<Box<Component>>>;
     /*
     {
         let comp_mgr = COMP_MGR.lock().unwrap();
@@ -49,11 +50,33 @@ pub trait Component : Any
 #[derive(Clone)]
 pub enum Components
 {
-    MeshRender(MeshRender),
+    MeshRender(MeshRenderer),
     ArmatureAnimation(ArmatureAnimation),
-    //PlayerBehavior(PlayerBehavior)
+    PlayerBehavior(PlayerBehavior)
 }
 
+impl Component for Components
+{
+    /*
+    fn copy(&self) -> Rc<RefCell<Box<Component>>>
+    {
+        //TODO
+        Rc::new(RefCell::new(box PlayerBehavior))
+    }
+    */
+
+    fn get_name(&self) -> String
+    {
+        match *self {
+            Components::MeshRender(ref p) => {
+                p.get_name()
+            },
+            _ => String::from_str("no_name_implemented")
+        }
+
+    }
+
+}
 
 
 pub trait Encode
@@ -115,7 +138,7 @@ impl CompData
 }
 
 //type ComponentCreationFn = fn() -> Box<Component>;
-type ComponentCreationFn = fn(&Object, &resource::ResourceGroup) -> Box<Component>;
+type ComponentCreationFn = fn(&Object, &resource::ResourceGroup) -> Box<Components>;
 
 pub struct Manager {
     name : String,

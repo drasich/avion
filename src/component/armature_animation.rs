@@ -5,7 +5,7 @@ use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::sync::{RwLock, Arc};
 
 
-use component::{Component, CompData};
+use component::{Component, Components, CompData};
 use component::manager::Encode;
 //use object::ComponentFunc;
 use object::Object;
@@ -49,6 +49,7 @@ impl Component for ArmatureAnimation
     }
     */
 
+    /*
     fn copy(&self) -> Rc<RefCell<Box<Component>>>
     {
         Rc::new(RefCell::new(
@@ -63,6 +64,7 @@ impl Component for ArmatureAnimation
 
                 }))
     }
+    */
 
     fn update(&mut self, ob : &mut Object, dt : f64)
     {
@@ -112,7 +114,7 @@ impl Component for ArmatureAnimation
     }
 }
 
-pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
+pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Components>
 {
     println!("armature anim new---->>>>");
     let arm = {

@@ -46,6 +46,7 @@ pub struct MeshRenderer
 
 impl Component for MeshRenderer
 {
+    /*
     fn copy(&self) -> Rc<RefCell<Box<Component>>>
     {
         Rc::new(RefCell::new(
@@ -65,6 +66,7 @@ impl Component for MeshRenderer
                     //},
                 }))
     }
+    */
 
     fn update(&mut self, ob : &mut Object, dt : f64)
     {
