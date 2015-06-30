@@ -55,6 +55,28 @@ pub enum Components
     PlayerBehavior(PlayerBehavior)
 }
 
+impl Components {
+    pub fn get_comp<T:Any>(&self) -> Option<&T>
+    {
+        match *self {
+            Components::MeshRender(ref p) => {
+                let anyp = p as &Any;
+                anyp.downcast_ref::<T>()
+            },
+            Components::ArmatureAnimation(ref p) => {
+                let anyp = p as &Any;
+                anyp.downcast_ref::<T>()
+            },
+            Components::PlayerBehavior(ref p) => {
+                let anyp = p as &Any;
+                anyp.downcast_ref::<T>()
+            },
+            //_ => None
+        }
+    }
+
+}
+
 impl Component for Components
 {
     /*
@@ -71,10 +93,34 @@ impl Component for Components
             Components::MeshRender(ref p) => {
                 p.get_name()
             },
-            _ => String::from_str("no_name_implemented")
+            Components::ArmatureAnimation(ref p) => {
+                p.get_name()
+            },
+            Components::PlayerBehavior(ref p) => {
+                p.get_name()
+            },
+            //_ => String::from_str("no_name_implemented")
         }
 
     }
+
+    fn update(&mut self, ob : &mut Object, dt : f64)
+    {
+        match *self {
+            Components::MeshRender(ref mut p) => {
+                p.update(ob, dt);
+            },
+            Components::ArmatureAnimation(ref mut p) => {
+                p.update(ob, dt);
+            },
+            Components::PlayerBehavior(ref mut p) => {
+                p.update(ob, dt);
+            },
+            //_ => String::from_str("no_name_implemented")
+        }
+
+    }
+
 
 }
 

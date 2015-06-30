@@ -285,13 +285,17 @@ impl Object
         }
     }
 
-    /*
-    //pub fn get_component<T:Component>(& self) -> Option<Rc<RefCell<Box<T>>>>
-    pub fn get_component<T:Component>(& self) -> Option<Rc<RefCell<Box<Component>>>>
+    pub fn get_component<T:Any>(& self) -> Option<Rc<RefCell<Box<Components>>>>
+    //pub fn get_component<T:Component>(& self) -> Option<Rc<RefCell<Box<Component>>>>
     {
         for c in self.components.borrow().iter()
         {
             let ccc = & *c.borrow();
+            if let Some(s) = ccc.get_comp::<T>() {
+                return Some(c.clone());
+            }
+
+             /*
             println!("comp : {}", ccc.get_name());
             //let cc : &mut Any = &mut *c.borrow_mut();
             let cc : & Any = ccc;
@@ -304,10 +308,10 @@ impl Object
             else {
                 println!("itis not good ");
             }
+            */
         }
         None
     }
-    */
 
 
 }

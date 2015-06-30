@@ -17,7 +17,7 @@ use material;
 pub struct MeshRender
 {
     pub mesh : String,
-    pub material : String
+    pub material : String,
 }
 
 impl MeshRender
@@ -26,7 +26,7 @@ impl MeshRender
     {
         MeshRender {
             mesh : mesh.to_string(),
-            material : material.to_string()
+            material : material.to_string(),
         }
     }
 }

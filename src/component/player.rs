@@ -53,6 +53,7 @@ impl Component for PlayerBehavior
             }
         };
 
+
         //let yep = ob.get_mut_comp_data::<Player>();
 
         let mut ori = ob.orientation.get_angle_xyz();

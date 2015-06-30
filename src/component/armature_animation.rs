@@ -136,7 +136,7 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Components>
         time : 0f64
     };
 
-    box arm_anim
+    box Components::ArmatureAnimation(arm_anim)
 }
 
 //TODO
