@@ -53,6 +53,7 @@ impl Component for PlayerBehavior
             }
         };
 
+        println!("update player");
 
         //let yep = ob.get_mut_comp_data::<Player>();
 

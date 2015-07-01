@@ -30,7 +30,7 @@ pub struct ArmatureAnimation
     state : State,
     //armature : armature::Armature,
     armature : Arc<RwLock<armature::Armature>>,
-    arm_instance : armature::ArmatureInstance,
+    pub arm_instance : armature::ArmatureInstance,
     mesh : Option<resource::ResTT<mesh::Mesh>>,
     action : Option<String>,
     time : f64

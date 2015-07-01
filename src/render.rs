@@ -142,10 +142,19 @@ impl RenderPass
 
     fn draw_armature(
         &self,
-        armature : Arc<RwLock<armature::ArmatureInstance>>,
+        armature : &armature::ArmatureInstance,
         matrix : &matrix::Matrix4)
     {
+        /*
+        let color = vec::Vec4::new(1f64,1f64,1f64,1.0f64);
 
+        for b in armature.bones.iter() {
+            let p1 = armature.position + b.position;
+            let p2 = p1 + b.tail;
+            let s = geometry::Segment::new(p1,p2);
+            self.line.add_line(s, color);
+        }
+        */
     }
 
     fn draw_object(
@@ -158,14 +167,6 @@ impl RenderPass
     {
         //TODO
         //println!("TODO rework this");
-        /*
-        println!("do you have armature animation");
-        match ob.get_component::<armature_animation::ArmatureAnimation>() {
-            Some(aa) => { println!("{} I have an armature animation!!!!!!!!!!!!!", ob.name)},
-            None => { }//println!("{} nooooooo", ob.name)}
-        };
-        println!("do you have armature animation finish");
-        */
 
         if ob.mesh_render.is_none() {
             return
@@ -411,7 +412,34 @@ impl Render {
                 &mut self.resource.material_manager.borrow_mut(),
                 &mut self.resource.shader_manager.borrow_mut(),
                 self.camera.clone());
+            //TODO prepare armature here
+            
+            match o.read().unwrap().get_component::<armature_animation::ArmatureAnimation>() {
+                Some(aa) => {
+                    //TODO add armature bones to line
+                    /*
+                    let armature = aa.arm_instance;
+                    let color = vec::Vec4::new(1f64,1f64,1f64,1.0f64);
+
+                    for b in armature.bones.iter() {
+                        let p1 = armature.position + b.position;
+                        let p2 = p1 + b.tail;
+                        let s = geometry::Segment::new(p1,p2);
+                        //self.line.read().unwrap().mesh_render.unwrap().mesh.write().unwrap().add_line(s, color);
+                    }
+                    */
+                }
+                None => {}// println!("{} nooooooo", ob.name)}
+            };
         }
+
+
+        prepare_passes_object(
+            self.line.clone(),
+            &mut self.passes,
+            &mut self.resource.material_manager.borrow_mut(),
+            &mut self.resource.shader_manager.borrow_mut(),
+            self.camera.clone());
 
         prepare_passes_object(
             self.grid.clone(),

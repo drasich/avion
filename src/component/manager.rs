@@ -50,6 +50,7 @@ pub trait Component : Any
 #[derive(Clone)]
 pub enum Components
 {
+    Empty,
     MeshRender(MeshRenderer),
     ArmatureAnimation(ArmatureAnimation),
     PlayerBehavior(PlayerBehavior)
@@ -59,6 +60,9 @@ impl Components {
     pub fn get_comp<T:Any>(&self) -> Option<&T>
     {
         match *self {
+            Components::Empty => {
+                None
+            }
             Components::MeshRender(ref p) => {
                 let anyp = p as &Any;
                 anyp.downcast_ref::<T>()
@@ -90,6 +94,9 @@ impl Component for Components
     fn get_name(&self) -> String
     {
         match *self {
+            Components::Empty => {
+                String::from("empty")
+            },
             Components::MeshRender(ref p) => {
                 p.get_name()
             },
@@ -107,6 +114,7 @@ impl Component for Components
     fn update(&mut self, ob : &mut Object, dt : f64)
     {
         match *self {
+            Components::Empty => {},
             Components::MeshRender(ref mut p) => {
                 p.update(ob, dt);
             },
