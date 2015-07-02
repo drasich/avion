@@ -437,18 +437,19 @@ impl Render {
 
                         for b in armature.bones.iter() {
                             if b.name != "Bone_L" {
-                                continue;
+                              //  continue;
                             }
-                            let p1 = arm_pos + cur_rot.rotate_vec3(&(b.head*ob.scale));
+                            let current_bone_rotation = b.rotation_diff;
+                            let p1 = arm_pos + cur_rot.rotate_vec3(&(b.position*ob.scale));
                             //println!("bone : {:?},   pq {:?}", b.head, p1);
-                            println!("bone name : {}, bone head : {:?},   bone tail {:?}", b.name, b.head, b.tail);
+                            //println!("bone name : {}, bone head : {:?},   bone tail {:?}", b.name, b.head, b.tail);
                             let yep = (b.tail - b.head)*ob.scale;
-                            println!("yep : {:?}, bone rotation : {:?}", yep, b.rotation);
-                            //let diff = b.rotation.rotate_vec3(&yep);
-                            //println!("diff : {:?}", diff);
-                            //let p2 = p1 + diff;
-                            let p2 = p1 + yep;
-                            println!("bone : {:?},   p1 {:?}, p2 : {:?}", b.head, p1, p2);
+                            println!("bone name : {}, bone rotation : {:?}", b.name, current_bone_rotation);
+                            let diff = current_bone_rotation.rotate_vec3(&yep);
+                            println!("diff : {:?}", diff);
+                            let p2 = p1 + diff;
+                            //let p2 = p1 + yep;
+                            //println!("bone : {:?},   p1 {:?}, p2 : {:?}", b.head, p1, p2);
                             let s = geometry::Segment::new(p1,p2);
                             mesh.add_line(s, color);
                             //break;

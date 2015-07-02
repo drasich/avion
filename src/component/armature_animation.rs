@@ -88,6 +88,9 @@ impl Component for ArmatureAnimation
         println!("update armature anim");
 
         self.time = self.time + dt;
+        if self.time > 20f64/30f64 {
+            self.time = 0f64;
+        }
 
         self.arm_instance.set_pose(&*self.armature.read().unwrap(), action.as_str(), self.time);
 
@@ -132,7 +135,7 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Components>
         armature : armature,
         arm_instance : instance,
         mesh : None,
-        action : Some(String::from_str("walk")),//None,
+        action : Some(String::from("walk")),//None,
         time : 0f64
     };
 
@@ -189,7 +192,7 @@ fn update_mesh_with_armature(
 
             let bone_rot_weight = vec::quat_slerp(
                 vec::Quat::identity(),
-                bone.rotation.inverse(),
+                bone.rotation_diff.inverse(),
                 w.weight as f64);
 
             let mut realposbase = bone.position_base * arm.scale;
