@@ -415,19 +415,23 @@ impl Render {
             //TODO prepare armature here
             
             match o.read().unwrap().get_component::<armature_animation::ArmatureAnimation>() {
-                Some(aa) => {
+                Some(ref aa) => {
                     //TODO add armature bones to line
-                    /*
-                    let armature = aa.arm_instance;
+                    let armature = &aa.arm_instance;
                     let color = vec::Vec4::new(1f64,1f64,1f64,1.0f64);
 
-                    for b in armature.bones.iter() {
-                        let p1 = armature.position + b.position;
-                        let p2 = p1 + b.tail;
-                        let s = geometry::Segment::new(p1,p2);
-                        //self.line.read().unwrap().mesh_render.unwrap().mesh.write().unwrap().add_line(s, color);
+                    let line : &object::Object = &self.line.read().unwrap();
+                    if let Some(ref mr) = line.mesh_render
+                    {
+                        let mut mesh = mr.mesh.write().unwrap();
+
+                        for b in armature.bones.iter() {
+                            let p1 = armature.position + b.position;
+                            let p2 = p1 + b.tail;
+                            let s = geometry::Segment::new(p1,p2);
+                            mesh.add_line(s, color);
+                        }
                     }
-                    */
                 }
                 None => {}// println!("{} nooooooo", ob.name)}
             };
