@@ -445,7 +445,7 @@ impl fmt::Debug for Vec4
 impl fmt::Debug for Quat
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}, {}, {}, {}", self.x, self.y, self.z, self.w)
+        write!(fmt, "({}, {}, {}, {})", self.x, self.y, self.z, self.w)
     }
 }
 

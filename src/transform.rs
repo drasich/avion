@@ -4,6 +4,7 @@ use std::ptr;
 use libc::{c_char};
 use std::ffi::CString;
 use std::ops::{Mul};
+use std::fmt;
 
 
 #[link(name = "joker")]
@@ -212,11 +213,26 @@ impl Mul<vec::Quat> for Orientation {
     type Output = Orientation;
     fn mul(self, other: vec::Quat) -> Orientation {
         let p = self.as_quat() * other;
+        println!("I made a multiplication and : {:?} ", p);
         match self {
             Orientation::AngleXYZ(_) => 
                 Orientation::AngleXYZ(p.to_euler_deg()),
             Orientation::Quat(_) => 
                 Orientation::Quat(p)
+        }
+    }
+}
+
+impl fmt::Debug for Orientation
+{
+    fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Orientation::AngleXYZ(a) => 
+                //write!(fmt, "({}, {}, {})", a.x, a.y, a.z)
+                write!(fmt, "Angles : {:?}", a),
+            Orientation::Quat(q) => 
+                //Orientation::Quat(p)
+                write!(fmt, "Quat : {:?}", q)
         }
     }
 }

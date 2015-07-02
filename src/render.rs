@@ -414,7 +414,8 @@ impl Render {
                 self.camera.clone());
             //TODO prepare armature here
             
-            match o.read().unwrap().get_component::<armature_animation::ArmatureAnimation>() {
+            let ob =  &*o.read().unwrap();
+            match ob.get_component::<armature_animation::ArmatureAnimation>() {
                 Some(ref aa) => {
                     //TODO add armature bones to line
                     let armature = &aa.arm_instance;
@@ -424,26 +425,39 @@ impl Render {
                     if let Some(ref mr) = line.mesh_render
                     {
                         let mut mesh = mr.mesh.write().unwrap();
+                        mesh.clear_lines();
+
+                        let arm_pos = ob.position + ob.orientation.rotate_vec3(&(armature.position*ob.scale));
+                        let mut cur_rot = ob.orientation.as_quat() * armature.rotation;
+
+                        //println!("ob pos : {:?},  armature position {:?}, {:?}", ob.position, armature.position, arm_pos);
+                        //println!("ob pos : {:?}, ob rot {:?}, ob scale {:?}", ob.position, ob.orientation.as_quat(), ob.scale);
+                        //println!("arm pos : {:?},  armature rot {:?}, arm scale {:?}", armature.position, armature.rotation, armature.scale);
+                        println!("------------------current rotation {:?}", cur_rot);
 
                         for b in armature.bones.iter() {
-                            let p1 = armature.position + b.position;
-                            let p2 = p1 + b.tail;
+                            if b.name != "Bone_L" {
+                                continue;
+                            }
+                            let p1 = arm_pos + cur_rot.rotate_vec3(&(b.head*ob.scale));
+                            //println!("bone : {:?},   pq {:?}", b.head, p1);
+                            println!("bone name : {}, bone head : {:?},   bone tail {:?}", b.name, b.head, b.tail);
+                            let yep = (b.tail - b.head)*ob.scale;
+                            println!("yep : {:?}, bone rotation : {:?}", yep, b.rotation);
+                            //let diff = b.rotation.rotate_vec3(&yep);
+                            //println!("diff : {:?}", diff);
+                            //let p2 = p1 + diff;
+                            let p2 = p1 + yep;
+                            println!("bone : {:?},   p1 {:?}, p2 : {:?}", b.head, p1, p2);
                             let s = geometry::Segment::new(p1,p2);
                             mesh.add_line(s, color);
+                            //break;
                         }
                     }
                 }
                 None => {}// println!("{} nooooooo", ob.name)}
             };
         }
-
-
-        prepare_passes_object(
-            self.line.clone(),
-            &mut self.passes,
-            &mut self.resource.material_manager.borrow_mut(),
-            &mut self.resource.shader_manager.borrow_mut(),
-            self.camera.clone());
 
         prepare_passes_object(
             self.grid.clone(),
@@ -642,6 +656,13 @@ impl Render {
                 self.shader_manager.clone(),
                 self.camera.clone());
              */
+
+            prepare_passes_object(
+                self.line.clone(),
+                &mut self.passes,
+                &mut self.resource.material_manager.borrow_mut(),
+                &mut self.resource.shader_manager.borrow_mut(),
+                self.camera.clone());
 
             for p in self.passes.values()
             {

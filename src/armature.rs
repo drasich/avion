@@ -48,9 +48,9 @@ fn read_quat(file : &mut File) -> vec::Quat
     let x = file.read_f32::<LittleEndian>().unwrap() as f64;
     let y = file.read_f32::<LittleEndian>().unwrap() as f64;
     let z = file.read_f32::<LittleEndian>().unwrap() as f64;
-    let x = file.read_f32::<LittleEndian>().unwrap() as f64;
+    let w = file.read_f32::<LittleEndian>().unwrap() as f64;
 
-    vec::Quat::new(x,y,z,z)
+    vec::Quat::new(x,y,z,w)
 }
 
 
@@ -74,7 +74,7 @@ impl Bone {
     fn new(file : &mut File) -> Bone 
     {
         let name = read_string(file);
-        println!("name: {}", name);
+        println!("------------------------------------------------name---------------------: {}", name);
         let pos = read_vec3(file);
         println!("pos: {:?}", pos);
         let head = read_vec3(file);
