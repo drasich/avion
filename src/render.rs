@@ -142,10 +142,19 @@ impl RenderPass
 
     fn draw_armature(
         &self,
-        armature : Arc<RwLock<armature::ArmatureInstance>>,
+        armature : &armature::ArmatureInstance,
         matrix : &matrix::Matrix4)
     {
+        /*
+        let color = vec::Vec4::new(1f64,1f64,1f64,1.0f64);
 
+        for b in armature.bones.iter() {
+            let p1 = armature.position + b.position;
+            let p2 = p1 + b.tail;
+            let s = geometry::Segment::new(p1,p2);
+            self.line.add_line(s, color);
+        }
+        */
     }
 
     fn draw_object(
@@ -158,12 +167,6 @@ impl RenderPass
     {
         //TODO
         //println!("TODO rework this");
-        println!("do you have armature animation");
-        match ob.get_component::<armature_animation::ArmatureAnimation>() {
-            Some(aa) => { println!("{} I have an armature animation!!!!!!!!!!!!!", ob.name)},
-            None => { }//println!("{} nooooooo", ob.name)}
-        };
-        println!("do you have armature animation finish");
 
         if ob.mesh_render.is_none() {
             return
@@ -409,6 +412,52 @@ impl Render {
                 &mut self.resource.material_manager.borrow_mut(),
                 &mut self.resource.shader_manager.borrow_mut(),
                 self.camera.clone());
+            //TODO prepare armature here
+            
+            let ob =  &*o.read().unwrap();
+            match ob.get_component::<armature_animation::ArmatureAnimation>() {
+                Some(ref aa) => {
+                    //TODO add armature bones to line
+                    let armature = &aa.arm_instance;
+                    let color = vec::Vec4::new(1f64,1f64,1f64,1.0f64);
+
+                    let line : &object::Object = &self.line.read().unwrap();
+                    if let Some(ref mr) = line.mesh_render
+                    {
+                        let mut mesh = mr.mesh.write().unwrap();
+                        mesh.clear_lines();
+
+                        let arm_pos = ob.position + ob.orientation.rotate_vec3(&(armature.position*ob.scale));
+                        let mut cur_rot = ob.orientation.as_quat() * armature.rotation;
+
+                        //println!("ob pos : {:?},  armature position {:?}, {:?}", ob.position, armature.position, arm_pos);
+                        //println!("ob pos : {:?}, ob rot {:?}, ob scale {:?}", ob.position, ob.orientation.as_quat(), ob.scale);
+                        //println!("arm pos : {:?},  armature rot {:?}, arm scale {:?}", armature.position, armature.rotation, armature.scale);
+                        println!("------------------current rotation {:?}", cur_rot);
+
+                        for b in armature.bones.iter() {
+                            if b.name != "Bone_L" {
+                              //  continue;
+                            }
+                            let current_bone_rotation = b.rotation_diff;
+                            let p1 = arm_pos + cur_rot.rotate_vec3(&(b.position*ob.scale));
+                            //println!("bone : {:?},   pq {:?}", b.head, p1);
+                            //println!("bone name : {}, bone head : {:?},   bone tail {:?}", b.name, b.head, b.tail);
+                            let yep = (b.tail - b.head)*ob.scale;
+                            println!("bone name : {}, bone rotation : {:?}", b.name, current_bone_rotation);
+                            let diff = current_bone_rotation.rotate_vec3(&yep);
+                            println!("diff : {:?}", diff);
+                            let p2 = p1 + diff;
+                            //let p2 = p1 + yep;
+                            //println!("bone : {:?},   p1 {:?}, p2 : {:?}", b.head, p1, p2);
+                            let s = geometry::Segment::new(p1,p2);
+                            mesh.add_line(s, color);
+                            //break;
+                        }
+                    }
+                }
+                None => {}// println!("{} nooooooo", ob.name)}
+            };
         }
 
         prepare_passes_object(
@@ -608,6 +657,13 @@ impl Render {
                 self.shader_manager.clone(),
                 self.camera.clone());
              */
+
+            prepare_passes_object(
+                self.line.clone(),
+                &mut self.passes,
+                &mut self.resource.material_manager.borrow_mut(),
+                &mut self.resource.shader_manager.borrow_mut(),
+                self.camera.clone());
 
             for p in self.passes.values()
             {

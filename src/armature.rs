@@ -48,9 +48,9 @@ fn read_quat(file : &mut File) -> vec::Quat
     let x = file.read_f32::<LittleEndian>().unwrap() as f64;
     let y = file.read_f32::<LittleEndian>().unwrap() as f64;
     let z = file.read_f32::<LittleEndian>().unwrap() as f64;
-    let x = file.read_f32::<LittleEndian>().unwrap() as f64;
+    let w = file.read_f32::<LittleEndian>().unwrap() as f64;
 
-    vec::Quat::new(x,y,z,z)
+    vec::Quat::new(x,y,z,w)
 }
 
 
@@ -62,19 +62,20 @@ pub struct Bone
     pub name : String,
     pub position_base : vec::Vec3,
     pub rotation_base : vec::Quat,
-    pub children : Vec<Bone>,
+    pub parent : Option<usize>,
+    pub children : Vec<usize>,
 
     pub position : vec::Vec3,
     pub head : vec::Vec3,
     pub tail : vec::Vec3,
-    pub rotation : vec::Quat,
+    pub rotation_diff : vec::Quat,
 }
 
 impl Bone {
     fn new(file : &mut File) -> Bone 
     {
         let name = read_string(file);
-        println!("name: {}", name);
+        println!("------------------------------------------------name---------------------: {}", name);
         let pos = read_vec3(file);
         println!("pos: {:?}", pos);
         let head = read_vec3(file);
@@ -89,28 +90,41 @@ impl Bone {
             name : name,
             position_base : pos,
             rotation_base : rot,
+            parent : None,
             children : Vec::new(),
             position: pos,
             head: head,
             tail: tail,
-            rotation : rot
+            rotation_diff : vec::Quat::identity()
         };
+
+        let has_parent = file.read_u8().unwrap() as usize;
+        println!(" {} ,,, has parent : {} ", bone.name, has_parent);
+        if has_parent == 1 {
+            let parent = file.read_u16::<LittleEndian>().unwrap() as usize;
+            bone.parent = Some(parent);
+        }
 
         let child_count = file.read_u16::<LittleEndian>().unwrap() as usize;
         println!("child count : {} ", child_count);
 
         for i in 0usize..child_count {
-            let child = Bone::new(file);
-            bone.add_child(child);
+            //let child = Bone::new(file);
+            //bone.add_child(child);
+            let child_index = file.read_u16::<LittleEndian>().unwrap() as usize;
+            bone.children.push(child_index);
         }
 
         bone
     }
 
+    /*
     fn add_child(&mut self, child : Bone)
     {
         self.children.push(child);
     }
+    */
+
 }
 
 #[derive(Clone)]
@@ -139,7 +153,8 @@ enum Data
 #[derive(Clone)]
 struct Curve
 {
-    bone : usize, //Bone, //TODO just reference index, ou autre chose
+    bone_name : String,
+    bone_index : usize, //Bone, //TODO just reference index, ou autre chose
     data : Data,
     frames : Vec<Frame>,
     frame_start : f64,
@@ -148,7 +163,7 @@ struct Curve
 
 impl Curve
 {
-    fn new(file : &mut File, bone_index : usize) -> Curve
+    fn new(file : &mut File, bone_name : String, bone_index : usize) -> Curve
     {
         let data_kind_str = read_string(file);
 
@@ -161,9 +176,11 @@ impl Curve
         };
 
         let frames_nb = file.read_u16::<LittleEndian>().unwrap() as usize;
+        println!("frames nb : {}", frames_nb);
 
         let mut curve = Curve {
-            bone : bone_index,
+            bone_name : bone_name,
+            bone_index : bone_index,
             data : data_kind,
             frames : Vec::with_capacity(frames_nb),
             frame_start : 0f64,
@@ -253,9 +270,9 @@ impl Action {
     fn new(file : &mut File, armature : &Armature) -> Action 
     {
         let name = read_string(file);
-        println!("action name : {}",name);
+        println!("!!!!!!!! action name : {}",name);
 
-        let action = Action {
+        let mut action = Action {
             name : name,
             curves : Vec::new(),
             frame_start: 0f64,
@@ -263,14 +280,22 @@ impl Action {
         };
 
         let curves_nb = file.read_u16::<LittleEndian>().unwrap() as usize;
-        println!("curves count : {} ", curves_nb);
+        println!(".....curves count : {} ", curves_nb);
 
         for i in 0usize..curves_nb {
-            //TODO I have to modify the data, to use an index instead of bone name
-            //TODO
+            //TODO for now use the name
             let bone_name = read_string(file);
-            let bone_index = armature.find_bone(bone_name.as_ref());
-            let curve = Curve::new(file, bone_index);
+            //let bone_index = armature.find_bone(bone_name.as_ref());
+            let bone_index = file.read_u16::<LittleEndian>().unwrap() as usize;
+            println!("...............bone : {}, {} ", bone_name, bone_index);
+            let curve = Curve::new(file, bone_name, bone_index);
+            if curve.frame_start < action.frame_start {
+                action.frame_start = curve.frame_start;
+            }
+            if curve.frame_end > action.frame_end {
+                action.frame_end = curve.frame_end;
+            }
+            action.curves.push(curve);
         }
 
         action
@@ -383,6 +408,7 @@ impl Armature {
 
     }
 
+    /*
     pub fn find_bone(&self, name : &str) -> usize
     {
         for i in 0..self.bones.len() {
@@ -398,6 +424,7 @@ impl Armature {
     {
         &self.bones[index]
     }
+    */
 
 
     pub fn find_action(&self, name : &str) -> Option<&Action>
@@ -454,6 +481,16 @@ pub struct ArmatureInstance
 
 impl ArmatureInstance
 {
+    pub fn get_bone(&self, index : usize) -> &Bone
+    {
+        &self.bones[index]
+    }
+
+    fn get_mut_bone(&mut self, index : usize) -> &mut Bone
+    {
+        &mut self.bones[index]
+    }
+
     pub fn set_pose(&mut self, armature : &Armature, action_name : &str, time : f64)
     {
         let action = match armature.find_action(action_name) {
@@ -474,9 +511,16 @@ impl ArmatureInstance
             f
         };
 
+        println!("frame {}, start {}, end {}, time {}", frame, action.frame_start, action.frame_end, time);
+
         for curve in action.curves.iter()
         {
-            let bone_index = curve.bone;
+            if curve.bone_name != "Bone_L.001" {
+                //continue;
+            }
+            let bone :&mut Bone = self.get_mut_bone(curve.bone_index);
+
+            //println!("doing curve ");
             let (start, end) = curve.get_frames(frame);
 
             let ratio = if start.time != end.time {
@@ -486,16 +530,25 @@ impl ArmatureInstance
                 0f64
             };
 
+            //println!("ratio {}", ratio);
+            println!("going to change bone {}, {}", curve.bone_name,  bone.name);
+
             match (&start.data, &end.data) {
                 (&FrameData::Position(s), &FrameData::Position(e)) => {
                     let v1 = s * (1f64 -ratio);
                     let v2 = e * ratio;
-                    self.bones[bone_index].position = v1 + v2;
+                    //self.bones[bone_index].position = v1 + v2;
                 },
                 (&FrameData::Orientation(s), &FrameData::Orientation(e)) => {
-                    println!("todo anim orientation");
+                    println!("ROT BEFORE : {:?}", 
+                             bone.rotation_diff.to_euler_deg());
                     //TODO
-                    self.bones[bone_index].rotation = vec::quat_slerp(s, e, ratio);
+                    bone.rotation_diff = vec::quat_slerp(s, e, ratio);
+                    println!("todo anim orientation : {:?},\n{:?},\n{:?},\n{:?} ", 
+                             bone.rotation_base.to_euler_deg(),
+                             s.to_euler_deg(),
+                             e.to_euler_deg(),
+                             bone.rotation_diff.to_euler_deg());
                 },
                 (&FrameData::Scale(s), &FrameData::Scale(e)) => {
                 },
@@ -504,10 +557,4 @@ impl ArmatureInstance
         }
 
     }
-
-    pub fn get_bone(&self, index : usize) -> &Bone
-    {
-        &self.bones[index]
-    }
-
 }

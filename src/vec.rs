@@ -425,6 +425,11 @@ impl Quat
         self.x * other.x + self.y * other.y + self.z * other.z + self.w * other.w
     }
 
+    pub fn between(q1 : &Quat, q2 : &Quat) -> Quat
+    {
+        q1.conj() * *q2
+    }
+
 }
 
 impl fmt::Debug for Vec3
@@ -445,7 +450,7 @@ impl fmt::Debug for Vec4
 impl fmt::Debug for Quat
 {
     fn fmt(&self, fmt :&mut fmt::Formatter) -> fmt::Result {
-        write!(fmt, "{}, {}, {}, {}", self.x, self.y, self.z, self.w)
+        write!(fmt, "({}, {}, {}, {})", self.x, self.y, self.z, self.w)
     }
 }
 

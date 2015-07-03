@@ -5,7 +5,7 @@ use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::sync::{RwLock, Arc};
 
 
-use component::{Component, CompData};
+use component::{Component, Components, CompData};
 use component::manager::Encode;
 //use object::ComponentFunc;
 use object::Object;
@@ -30,7 +30,7 @@ pub struct ArmatureAnimation
     state : State,
     //armature : armature::Armature,
     armature : Arc<RwLock<armature::Armature>>,
-    arm_instance : armature::ArmatureInstance,
+    pub arm_instance : armature::ArmatureInstance,
     mesh : Option<resource::ResTT<mesh::Mesh>>,
     action : Option<String>,
     time : f64
@@ -49,6 +49,7 @@ impl Component for ArmatureAnimation
     }
     */
 
+    /*
     fn copy(&self) -> Rc<RefCell<Box<Component>>>
     {
         Rc::new(RefCell::new(
@@ -63,6 +64,7 @@ impl Component for ArmatureAnimation
 
                 }))
     }
+    */
 
     fn update(&mut self, ob : &mut Object, dt : f64)
     {
@@ -86,6 +88,9 @@ impl Component for ArmatureAnimation
         println!("update armature anim");
 
         self.time = self.time + dt;
+        if self.time > 20f64/30f64 {
+            self.time = 0f64;
+        }
 
         self.arm_instance.set_pose(&*self.armature.read().unwrap(), action.as_str(), self.time);
 
@@ -112,7 +117,7 @@ impl Component for ArmatureAnimation
     }
 }
 
-pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
+pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Components>
 {
     println!("armature anim new---->>>>");
     let arm = {
@@ -130,11 +135,11 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
         armature : armature,
         arm_instance : instance,
         mesh : None,
-        action : Some(String::from_str("walk")),//None,
+        action : Some(String::from("walk")),//None,
         time : 0f64
     };
 
-    box arm_anim
+    box Components::ArmatureAnimation(arm_anim)
 }
 
 //TODO
@@ -187,7 +192,7 @@ fn update_mesh_with_armature(
 
             let bone_rot_weight = vec::quat_slerp(
                 vec::Quat::identity(),
-                bone.rotation.inverse(),
+                bone.rotation_diff.inverse(),
                 w.weight as f64);
 
             let mut realposbase = bone.position_base * arm.scale;

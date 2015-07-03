@@ -5,7 +5,7 @@ use shader;
 use resource;
 use material;
 use component;
-use component::{Component,CompData};
+use component::{Component,CompData, Components};
 use component::mesh_render;
 use mesh;
 
@@ -30,19 +30,16 @@ pub struct ThreadObject(Arc<RwLock<Object>>);
 pub struct Object
 {
     pub name : String,
-    //pub id : u32,
     pub id : uuid::Uuid,
     pub mesh_render : Option<mesh_render::MeshRenderer>,
     pub position : vec::Vec3,
-    //pub orientation : vec::Quat,
     pub orientation : transform::Orientation,
-    //pub angles : vec::Vec3,
     pub scale : vec::Vec3,
     pub children : LinkedList<Arc<RwLock<Object>>>,
     //pub children : LinkedList<ThreadObject>,
     pub parent : Option<Arc<RwLock<Object>>>,
     //pub transform : Box<transform::Transform>
-    pub components : Rc<RefCell<Vec<Rc<RefCell<Box<Component+'static>>>>>>,
+    pub components : Vec<Box<Components>>,
     pub comp_data : Vec<Box<CompData>>,
     pub comp_string : Vec<String>,
 }
@@ -84,8 +81,8 @@ impl Clone for Object {
 
     fn clone(&self) -> Object {
         let mut components = Vec::new();
-        for c in self.components.borrow().iter() {
-            let cc = (*c).borrow().copy();
+        for c in self.components.iter() {
+            let cc = c.clone();
             components.push(cc);
         }
         let comp_data = self.comp_data.clone();
@@ -101,7 +98,7 @@ impl Clone for Object {
             children : self.children.clone(), //LinkedList::new(),
             parent : self.parent.clone(), //None,
             //transform : box transform::Transform::new()
-            components : Rc::new(RefCell::new(components)),
+            components : components,
             comp_data : comp_data,
             comp_string : self.comp_string.clone()
         }
@@ -213,19 +210,25 @@ impl Object
 
     pub fn update(&mut self, dt : f64)
     {
-        let comps_clone = self.components.clone();
-        let comps = comps_clone.borrow();
-        let comps_it = comps.iter();
+        let len = self.components.len();
 
-        for c in comps_it
-        {
-            c.borrow_mut().update(self,dt);
+        let mut index = 0;
+        loop {
+            if index >= self.components.len() {
+                break;
+            }
+
+            self.components.push(box Components::Empty);
+            let mut c = self.components.swap_remove(index);
+            c.update(self, dt);
+            self.components[index] = c;
+            index = index +1;
         }
     }
 
-    pub fn add_component(&mut self, c : Rc<RefCell<Box<Component>>>)
+    pub fn add_component(&mut self, c : Box<Components>)
     {
-        self.components.borrow_mut().push(c);
+        self.components.push(c);
     }
 
     pub fn add_comp_string(&mut self, c : &str) 
@@ -273,10 +276,10 @@ impl Object
         for c in self.comp_string.iter() {
             let f = comp_mgr.get_component_create_fn(c.as_ref()).unwrap();
             let pc = f(self, resource);
-            comps.push(Rc::new(RefCell::new(pc)));
+            comps.push(pc);
         }
 
-        self.components = Rc::new(RefCell::new(comps));
+        self.components = comps;
 
         for child in self.children.iter()
         {
@@ -284,24 +287,14 @@ impl Object
         }
     }
 
-    //pub fn get_component<T:Component>(& self) -> Option<Rc<RefCell<Box<T>>>>
-    pub fn get_component<T:Component>(& self) -> Option<Rc<RefCell<Box<Component>>>>
+    pub fn get_component<T:Any>(& self) -> Option<& T>
     {
-        for c in self.components.borrow().iter()
+        for c in self.components.iter()
         {
-            let ccc = & *c.borrow();
-            println!("comp : {}", ccc.get_name());
-            //let cc : &mut Any = &mut *c.borrow_mut();
-            let cc : & Any = ccc;
+            if let Some(s) = c.get_comp::<T>() {
+                return Some(s);
+            }
 
-            if let Some(ccc) = cc.downcast_ref::<T>() {
-            //if cc.is::<&T>() {
-                println!("okkkkkkkkkkkkkkk");
-                return Some(c.clone());
-            }
-            else {
-                println!("itis not good ");
-            }
         }
         None
     }
@@ -341,7 +334,7 @@ impl Decodable for Object {
           //parent: try!(decoder.read_struct_field("children", 0, |decoder| Decodable::decode(decoder))),
           parent: None,
           //transform : box transform::Transform::new()
-          components : Rc::new(RefCell::new(Vec::new())),
+          components : Vec::new(),
           //comp_data : Rc::new(RefCell::new(Vec::new()))
           //components: try!(decoder.read_struct_field("components", 0, |decoder| Decodable::decode(decoder))),
           comp_data: try!(decoder.read_struct_field("comp_data", 0, |decoder| Decodable::decode(decoder))),

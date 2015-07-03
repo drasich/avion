@@ -17,7 +17,7 @@ use material;
 pub struct MeshRender
 {
     pub mesh : String,
-    pub material : String
+    pub material : String,
 }
 
 impl MeshRender
@@ -26,7 +26,7 @@ impl MeshRender
     {
         MeshRender {
             mesh : mesh.to_string(),
-            material : material.to_string()
+            material : material.to_string(),
         }
     }
 }
@@ -46,6 +46,7 @@ pub struct MeshRenderer
 
 impl Component for MeshRenderer
 {
+    /*
     fn copy(&self) -> Rc<RefCell<Box<Component>>>
     {
         Rc::new(RefCell::new(
@@ -65,6 +66,7 @@ impl Component for MeshRenderer
                     //},
                 }))
     }
+    */
 
     fn update(&mut self, ob : &mut Object, dt : f64)
     {
