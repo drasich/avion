@@ -65,9 +65,10 @@ pub struct Bone
     pub parent : Option<usize>,
     pub children : Vec<usize>,
 
-    pub position : vec::Vec3,
     pub head : vec::Vec3,
     pub tail : vec::Vec3,
+
+    pub position_diff : vec::Vec3,
     pub rotation_diff : vec::Quat,
 }
 
@@ -92,7 +93,7 @@ impl Bone {
             rotation_base : rot,
             parent : None,
             children : Vec::new(),
-            position: pos,
+            position_diff: vec::Vec3::zero(),
             head: head,
             tail: tail,
             rotation_diff : vec::Quat::identity()
@@ -538,6 +539,7 @@ impl ArmatureInstance
                     let v1 = s * (1f64 -ratio);
                     let v2 = e * ratio;
                     //self.bones[bone_index].position = v1 + v2;
+                    bone.position_diff = v1 + v2;
                 },
                 (&FrameData::Orientation(s), &FrameData::Orientation(e)) => {
                     println!("ROT BEFORE : {:?}", 

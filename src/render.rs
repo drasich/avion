@@ -440,7 +440,8 @@ impl Render {
                               //  continue;
                             }
                             let current_bone_rotation = b.rotation_diff;
-                            let p1 = arm_pos + cur_rot.rotate_vec3(&(b.position*ob.scale));
+                            let current_bone_position = b.position_base + b.position_diff;
+                            let p1 = arm_pos + cur_rot.rotate_vec3(&(current_bone_position*ob.scale));
                             //println!("bone : {:?},   pq {:?}", b.head, p1);
                             //println!("bone name : {}, bone head : {:?},   bone tail {:?}", b.name, b.head, b.tail);
                             let yep = (b.tail - b.head)*ob.scale;

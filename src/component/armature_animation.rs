@@ -185,7 +185,7 @@ fn update_mesh_with_armature(
                 continue;
             }
 
-            let bone_trans = bone.position * arm.scale;
+            let bone_trans = bone.position_diff * arm.scale;
             let bone_trans_weight = bone_trans * w.weight;
 
             let mut mytranslation = bone.rotation_base.inverse().rotate_vec3(&bone_trans_weight);
