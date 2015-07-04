@@ -135,7 +135,7 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Components>
         armature : armature,
         arm_instance : instance,
         mesh : None,
-        action : Some(String::from("rollmiddle")),//None,
+        action : Some(String::from("walk")),//None,
         time : 0f64
     };
 

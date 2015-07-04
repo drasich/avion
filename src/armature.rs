@@ -92,7 +92,7 @@ impl Bone {
 
         let mut bone = Bone {
             name : name,
-            position_base : pos,
+            position_base : head,
             rotation_base : rot,
             parent : None,
             children : Vec::new(),
@@ -100,7 +100,7 @@ impl Bone {
             head: head,
             tail: tail,
             rotation_diff : vec::Quat::identity(),
-            position_relative: pos,
+            position_relative: head,
             rotation_relative: rot,
         };
 
@@ -592,10 +592,16 @@ impl ArmatureInstance
 
     fn get_bone_position(&self, b : &Bone) -> vec::Vec3
     {
-        let local =  b.position_base;// + b.position_diff;
+        let mut local = b.position_base;// + b.position_diff;
 
         match b.parent{
-            Some(p) => self.get_bone_rotation(&self.bones[p]).rotate_vec3(&local),
+            Some(p) => {
+                let pbone = &self.bones[p];
+                local = pbone.tail + local;
+                //self.get_bone_position(&self.bones[p]) + self.get_bone_rotation(&self.bones[p]).rotate_vec3(&local)
+                //self.get_bone_position(pbone) + pbone.rotation_diff.rotate_vec3(&local)
+                self.get_bone_position(pbone) + self.get_bone_rotation(pbone).rotate_vec3(&local)
+            },
             None => local
         }
     }

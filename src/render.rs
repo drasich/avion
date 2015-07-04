@@ -448,7 +448,7 @@ impl Render {
                             if b.name != "Bone_L" {
                               //  continue;
                             }
-                            let current_bone_rotation = b.rotation_diff;
+                            let current_bone_rotation = cur_rot*b.rotation_relative;
                             let current_bone_position = b.position_relative;//b.position_base + b.position_diff;
                             let p1 = arm_pos + cur_rot.rotate_vec3(&(current_bone_position*ob.scale));
                             //println!("bone : {:?},   pq {:?}", b.head, p1);
