@@ -2,11 +2,10 @@
 //#![feature(trace_macros)]
 //#![feature(slicing_syntax)]
 #![feature(box_syntax)]
-#![feature(alloc)]
-#![feature(std_misc,core,collections,libc)]
+//#![feature(core,collections,libc)]
+#![feature(core,libc)]
 #![feature(convert)]
 #![feature(step_by)]
-#![feature(scoped)]
 #![feature(zero_one)]
 
 #![feature(vec_push_all)]

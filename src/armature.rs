@@ -354,7 +354,7 @@ impl Armature {
     pub fn new(file : &str) -> Armature 
     {
         Armature {
-            name : String::from_str(file),
+            name : String::from(file),
             position : vec::Vec3::zero(),
             rotation : vec::Quat::identity(),
             scale : vec::Vec3::zero(),

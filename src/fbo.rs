@@ -37,7 +37,7 @@ impl Fbo
     pub fn new(name : &str) -> Fbo
     {
         Fbo {
-            name : String::from_str(name),
+            name : String::from(name),
             state : 0,
             cgl_fbo : None,
         }

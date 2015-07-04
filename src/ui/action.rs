@@ -77,7 +77,7 @@ impl Action
         -> Box<Action>
     {
         let a = box Action {
-            name : String::from_str("action_name"),
+            name : String::from("action_name"),
             jk_action : unsafe {window_action_new(window)},
         };
 

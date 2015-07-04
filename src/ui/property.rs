@@ -201,7 +201,7 @@ impl Property
         ) -> Box<Property>
     {
         let p = box Property {
-            name : String::from_str("property_name"),
+            name : String::from("property_name"),
             jk_property_list : unsafe {jk_property_list_new(window)},
             pv : HashMap::new(),
             control : control,

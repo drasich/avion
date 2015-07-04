@@ -79,7 +79,7 @@ impl Tree
         control : Rc<RefCell<Control>>) -> Box<Tree>
     {
         let t = box Tree {
-            name : String::from_str("tree_name"),
+            name : String::from("tree_name"),
             objects : HashMap::new(),
             jk_tree : unsafe {window_tree_new(window)},
             control : control,

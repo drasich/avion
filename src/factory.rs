@@ -43,7 +43,7 @@ impl Factory {
     pub fn create_object(&self, name : &str) -> object::Object
     {
         object::Object {
-            name : String::from_str(name),
+            name : String::from(name),
             id : self.create_id(),
             mesh_render : None,
             position : vec::Vec3::zero(),
@@ -77,7 +77,7 @@ impl Factory {
     pub fn create_scene(&self, name : &str) -> scene::Scene
     {
         scene::Scene {
-            name : String::from_str(name),
+            name : String::from(name),
             id : self.create_id(),
             objects : LinkedList::new(),
             camera : Some(Rc::new(RefCell::new(self.create_camera())))

@@ -51,7 +51,7 @@ impl Shader
                 unsafe {
                     let cgl_att = cgl_shader_attribute_new(cs, attc.as_ptr(), size);
                     if cgl_att != ptr::null() {
-                        self.attributes.insert(String::from_str(name), cgl_att);
+                        self.attributes.insert(String::from(name), cgl_att);
                     }
                 }
         }
@@ -68,7 +68,7 @@ impl Shader
                 unsafe {
                     let cgl_uni = cgl_shader_uniform_new(cs, unic.as_ptr());
                     if cgl_uni != ptr::null() {
-                        self.uniforms.insert(String::from_str(name), cgl_uni);
+                        self.uniforms.insert(String::from(name), cgl_uni);
                     }
                 }
         }
@@ -76,7 +76,7 @@ impl Shader
 
     pub fn uniform_set(&self, name : &str, value : &UniformSend)
     {
-        match self.uniforms.get(&String::from_str(name)) {
+        match self.uniforms.get(&String::from(name)) {
             Some(uni) => value.uniform_send(*uni),
             None => {
                 println!("ERR!!!! : could not find such uniform '{}'",name)
@@ -86,7 +86,7 @@ impl Shader
 
     pub fn texture_set(&self, name : &str, value : &TextureSend, index : u32)
     {
-        match self.uniforms.get(&String::from_str(name)) {
+        match self.uniforms.get(&String::from(name)) {
             Some(uni) => value.uniform_send(*uni, index),
             None => {}//println!("ERR!!!! : could not find such uniform '{}'",name)
         }
@@ -106,7 +106,7 @@ impl Shader
     pub fn new(name : &str) -> Shader
     {
         Shader {
-            name : String::from_str(name),
+            name : String::from(name),
             cgl_shader : None,
             attributes : HashMap::new(),
             uniforms : HashMap::new(),

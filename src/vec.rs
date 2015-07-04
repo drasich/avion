@@ -608,13 +608,13 @@ pub fn quat_slerp(from : Quat, to : Quat, t : f64) -> Quat
 {
   //double omega, cosomega, sinomega, scale_from, scale_to ;
 
-  let mut quatTo = to.clone();
-  //printf("  quatto : %f, %f, %f, %f\n", quatTo.x, quatTo.y, quatTo.z, quatTo.w);
+  let mut quat_to = to.clone();
+  //printf("  quatto : %f, %f, %f, %f\n", quat_to.x, quat_to.y, quat_to.z, quat_to.w);
   let mut cosomega = from.dot(&to);
 
-  if ( cosomega < 0f64 ) { 
+  if cosomega < 0f64 { 
     cosomega = -cosomega; 
-    quatTo = to * -1f64; //quatTo = -to;
+    quat_to = to * -1f64; //quat_to = -to;
   }
 
   let (scale_from, scale_to) = {
@@ -637,8 +637,8 @@ pub fn quat_slerp(from : Quat, to : Quat, t : f64) -> Quat
       }
   };
 
-  //Quat q = quat_add(quat_mul_scalar(from, scale_from),quat_mul_scalar(quatTo,scale_to));
-  let q = (from * scale_from) + (quatTo * scale_to);
+  //Quat q = quat_add(quat_mul_scalar(from, scale_from),quat_mul_scalar(quat_to,scale_to));
+  let q = (from * scale_from) + (quat_to * scale_to);
 
   q
 }

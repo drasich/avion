@@ -99,7 +99,7 @@ impl RenderPass
         camera : Rc<RefCell<camera::Camera>>) -> RenderPass
     {
         RenderPass {
-                  name : String::from_str("passtest"),
+                  name : String::from("passtest"),
                   shader : shader.clone(),
                   //objects : LinkedList::new(),
                   //camera : camera,
@@ -434,7 +434,7 @@ impl Render {
                         let mut mesh = mr.mesh.write().unwrap();
 
                         let arm_pos = ob.position + ob.orientation.rotate_vec3(&(armature.position*ob.scale));
-                        let mut cur_rot = ob.orientation.as_quat() * armature.rotation;
+                        let cur_rot = ob.orientation.as_quat() * armature.rotation;
 
                         for b in armature.bones.iter() {
                             let current_bone_rotation = cur_rot*b.rotation_relative;
