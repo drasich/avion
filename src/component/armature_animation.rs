@@ -97,7 +97,7 @@ impl Component for ArmatureAnimation
         let base_mesh = mr.get_mesh();
         let base = base_mesh.read().unwrap();
         let mut mi = mr.get_or_create_mesh_instance();
-        //update_mesh_with_armature(&base, mi, &self.arm_instance);
+        update_mesh_with_armature(&base, mi, &self.arm_instance);
 
             //if let Some(ref m) = mr.mesh_instance {
             //m.apply_armature_pose(self.arm_instance);
@@ -135,7 +135,7 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Components>
         armature : armature,
         arm_instance : instance,
         mesh : None,
-        action : Some(String::from("roll")),//None,
+        action : Some(String::from("walk")),//None,
         time : 0f64
     };
 
@@ -178,32 +178,23 @@ fn update_mesh_with_armature(
         for w in v.iter() {
             //TODO TODO
             // slime used to try to find the bone with name
-            println!("this is wrong because we cannot find children like this");
             let bone = arm.get_bone(w.index as usize);
 
             if w.weight == 0f32 {
                 continue;
             }
 
-            let bone_trans = bone.position_diff * arm.scale;
-            let bone_trans_weight = bone_trans * w.weight;
+            let vpos_from_bone = vertex_pos - bone.head_from_arm;
 
-            let mut mytranslation = bone.rotation_base.inverse().rotate_vec3(&bone_trans_weight);
-
-            let bone_rot_weight = vec::quat_slerp(
+            let bone_tr_diff = (bone.position_relative - bone.head_from_arm) * w.weight +
+                (bone.rotation_relative.rotate_vec3(&vpos_from_bone)-vpos_from_bone)*w.weight;
+            let bone_rt_diff = vec::quat_slerp(
                 vec::Quat::identity(),
-                bone.rotation_diff.inverse(),
+                bone.rotation_relative,
                 w.weight as f64);
 
-            let mut realposbase = bone.position_base * arm.scale;
-            realposbase = realposbase + arm.position;
-
-            let vipos_bone = vertex_pos - realposbase;
-            let mut tr_rot = bone_rot_weight.rotate_vec3(&vipos_bone);
-            tr_rot = tr_rot - vipos_bone;
-            mytranslation = mytranslation + tr_rot;
-
-            translation = translation + mytranslation;
+            translation = translation + bone_tr_diff;
+            rotation = rotation * bone_rt_diff;
         }
 
         let newpos = vertex_pos + translation;

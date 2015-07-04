@@ -65,6 +65,7 @@ pub struct Bone
     pub parent : Option<usize>,
     pub children : Vec<usize>,
 
+    pub head_from_arm : vec::Vec3,
     pub head : vec::Vec3,
     pub tail : vec::Vec3,
 
@@ -84,6 +85,8 @@ impl Bone {
         println!("pos: {:?}", pos);
         let head = read_vec3(file);
         println!("head : {:?}", head);
+        let head_from_arm = read_vec3(file);
+        println!("head from armature : {:?}", head_from_arm);
         let tail = read_vec3(file);
         println!("tail : {:?}", tail);
 
@@ -98,6 +101,7 @@ impl Bone {
             children : Vec::new(),
             position_diff: vec::Vec3::zero(),
             head: head,
+            head_from_arm: head_from_arm,
             tail: tail,
             rotation_diff : vec::Quat::identity(),
             position_relative: head,
