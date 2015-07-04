@@ -88,7 +88,7 @@ impl Component for ArmatureAnimation
         println!("update armature anim");
 
         self.time = self.time + dt;
-        if self.time > 20f64/30f64 {
+        if self.time > 50f64/30f64 {
             self.time = 0f64;
         }
 
@@ -135,7 +135,7 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Components>
         armature : armature,
         arm_instance : instance,
         mesh : None,
-        action : Some(String::from("walk")),//None,
+        action : Some(String::from("rollmiddle")),//None,
         time : 0f64
     };
 

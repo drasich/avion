@@ -404,6 +404,15 @@ impl Render {
             p.passes.clear();
         }
 
+        {
+            let line : &object::Object = &self.line.read().unwrap();
+            if let Some(ref mr) = line.mesh_render
+            {
+                let mut mesh = mr.mesh.write().unwrap();
+                mesh.clear_lines();
+            }
+        }
+
         //self.passes.clear();
         for o in objects.iter() {
             prepare_passes_object(
@@ -425,7 +434,7 @@ impl Render {
                     if let Some(ref mr) = line.mesh_render
                     {
                         let mut mesh = mr.mesh.write().unwrap();
-                        mesh.clear_lines();
+                        //mesh.clear_lines();
 
                         let arm_pos = ob.position + ob.orientation.rotate_vec3(&(armature.position*ob.scale));
                         let mut cur_rot = ob.orientation.as_quat() * armature.rotation;
@@ -440,7 +449,7 @@ impl Render {
                               //  continue;
                             }
                             let current_bone_rotation = b.rotation_diff;
-                            let current_bone_position = b.position_base + b.position_diff;
+                            let current_bone_position = b.position_relative;//b.position_base + b.position_diff;
                             let p1 = arm_pos + cur_rot.rotate_vec3(&(current_bone_position*ob.scale));
                             //println!("bone : {:?},   pq {:?}", b.head, p1);
                             //println!("bone name : {}, bone head : {:?},   bone tail {:?}", b.name, b.head, b.tail);

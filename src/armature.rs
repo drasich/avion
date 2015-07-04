@@ -70,6 +70,9 @@ pub struct Bone
 
     pub position_diff : vec::Vec3,
     pub rotation_diff : vec::Quat,
+
+    pub position_relative : vec::Vec3,
+    pub rotation_relative : vec::Quat,
 }
 
 impl Bone {
@@ -96,7 +99,9 @@ impl Bone {
             position_diff: vec::Vec3::zero(),
             head: head,
             tail: tail,
-            rotation_diff : vec::Quat::identity()
+            rotation_diff : vec::Quat::identity(),
+            position_relative: pos,
+            rotation_relative: rot,
         };
 
         let has_parent = file.read_u8().unwrap() as usize;
@@ -123,6 +128,13 @@ impl Bone {
     fn add_child(&mut self, child : Bone)
     {
         self.children.push(child);
+    }
+    */
+
+    /*
+    pub fn get_position_relative_to_armature(&self, arm: &ArmatureInstance) -> Vec3
+    {
+        if let Some(
     }
     */
 
@@ -558,5 +570,33 @@ impl ArmatureInstance
             };
         }
 
+        for b in 0..self.bones.len()
+        {
+            self.bones[b].rotation_relative = self.get_bone_rotation(&self.bones[b]);
+            self.bones[b].position_relative = self.get_bone_position(&self.bones[b]);
+        }
+
+    }
+
+    fn get_bone_rotation(&self, b : &Bone) -> vec::Quat
+    {
+        //let local = rotation_base * b.rotation_diff;
+        let local = b.rotation_diff;
+
+        match b.parent{
+            Some(p) => self.get_bone_rotation(&self.bones[p]) * local,
+            None => local
+        }
+
+    }
+
+    fn get_bone_position(&self, b : &Bone) -> vec::Vec3
+    {
+        let local =  b.position_base;// + b.position_diff;
+
+        match b.parent{
+            Some(p) => self.get_bone_rotation(&self.bones[p]).rotate_vec3(&local),
+            None => local
+        }
     }
 }
