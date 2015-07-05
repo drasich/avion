@@ -179,6 +179,8 @@ fn update_mesh_with_armature(
             //TODO TODO
             // slime used to try to find the bone with name
             let bone = arm.get_bone(w.index as usize);
+            let pos_relative = arm.position_relative[w.index as usize];
+            let rot_relative = arm.rotation_relative[w.index as usize];
 
             if w.weight == 0f32 {
                 continue;
@@ -186,11 +188,11 @@ fn update_mesh_with_armature(
 
             let vpos_from_bone = vertex_pos - bone.head_from_arm;
 
-            let bone_tr_diff = (bone.position_relative - bone.head_from_arm) * w.weight +
-                (bone.rotation_relative.rotate_vec3(&vpos_from_bone)-vpos_from_bone)*w.weight;
+            let bone_tr_diff = (pos_relative - bone.head_from_arm) * w.weight +
+                (rot_relative.rotate_vec3(&vpos_from_bone)-vpos_from_bone)*w.weight;
             let bone_rt_diff = vec::quat_slerp(
                 vec::Quat::identity(),
-                bone.rotation_relative,
+                rot_relative,
                 w.weight as f64);
 
             translation = translation + bone_tr_diff;

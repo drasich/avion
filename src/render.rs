@@ -436,12 +436,13 @@ impl Render {
                         let arm_pos = ob.position + ob.orientation.rotate_vec3(&(armature.position*ob.scale));
                         let cur_rot = ob.orientation.as_quat() * armature.rotation;
 
-                        for b in armature.bones.iter() {
-                            let current_bone_rotation = cur_rot*b.rotation_relative;
-                            let current_bone_position = b.position_relative;
+                        for i in 0..armature.get_bones().len() {
+                            let b = armature.get_bone(i);
+                            let current_bone_position = armature.position_relative[i];
+                            let current_bone_rotation = cur_rot*armature.rotation_relative[i];
                             let p1 = arm_pos + cur_rot.rotate_vec3(&(current_bone_position*ob.scale));
-                            let yep = (b.tail - b.head)*ob.scale;
-                            let diff = current_bone_rotation.rotate_vec3(&yep);
+                            let bone_length = (b.tail - b.head)*ob.scale;
+                            let diff = current_bone_rotation.rotate_vec3(&bone_length);
                             let p2 = p1 + diff;
                             let s = geometry::Segment::new(p1,p2);
                             mesh.add_line(s, color);

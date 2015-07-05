@@ -71,9 +71,6 @@ pub struct Bone
 
     pub position_diff : vec::Vec3,
     pub rotation_diff : vec::Quat,
-
-    pub position_relative : vec::Vec3,
-    pub rotation_relative : vec::Quat,
 }
 
 impl Bone {
@@ -104,9 +101,8 @@ impl Bone {
             head_from_arm: head_from_arm,
             tail: tail,
             rotation_diff : vec::Quat::identity(),
-            position_relative: head,
-            //rotation_relative: rot,
-            rotation_relative : vec::Quat::identity(),
+            //position_relative: head,
+            //rotation_relative : vec::Quat::identity(),
         };
 
         let has_parent = file.read_u8().unwrap() as usize;
@@ -366,11 +362,16 @@ impl Armature {
 
     pub fn create_instance(&self) -> ArmatureInstance
     {
+        let pos = vec![vec::Vec3::zero(); self.bones.len()];
+        let rot = vec![vec::Quat::identity(); self.bones.len()];
+
         let mut instance = ArmatureInstance {
             position : self.position,
             rotation : self.rotation,
             scale : self.scale,
-            bones : self.bones.clone()
+            bones : self.bones.clone(),
+            position_relative : pos,
+            rotation_relative : rot,
         };
 
         instance.update_relative_coords();
@@ -498,7 +499,9 @@ pub struct ArmatureInstance
     pub position : vec::Vec3,
     pub rotation : vec::Quat,
     pub scale : vec::Vec3,
-    pub bones : Vec<Bone>
+    bones : Vec<Bone>,
+    pub position_relative : Vec<vec::Vec3>,
+    pub rotation_relative : Vec<vec::Quat>,
 }
 
 impl ArmatureInstance
@@ -506,6 +509,11 @@ impl ArmatureInstance
     pub fn get_bone(&self, index : usize) -> &Bone
     {
         &self.bones[index]
+    }
+
+    pub fn get_bones(&self) -> &Vec<Bone>
+    {
+        &self.bones
     }
 
     fn get_mut_bone(&mut self, index : usize) -> &mut Bone
@@ -569,8 +577,10 @@ impl ArmatureInstance
     {
         for b in 0..self.bones.len()
         {
-            self.bones[b].rotation_relative = self.get_bone_rotation(&self.bones[b]);
-            self.bones[b].position_relative = self.get_bone_position(&self.bones[b]);
+            //self.bones[b].rotation_relative = self.get_bone_rotation(&self.bones[b]);
+            //self.bones[b].position_relative = self.get_bone_position(&self.bones[b]);
+            self.rotation_relative[b] = self.get_bone_rotation(&self.bones[b]);
+            self.position_relative[b] = self.get_bone_position(&self.bones[b]);
         }
     }
 
