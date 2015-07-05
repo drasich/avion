@@ -182,6 +182,8 @@ extern {
     fn property_expand(
         pv : *const PropertyValue);
 
+    fn property_show(obj : *const JkPropertyList, b : bool);
+
 }
 
 pub struct Property
@@ -191,6 +193,7 @@ pub struct Property
     pub pv : HashMap<String, *const PropertyValue>,
     control : Rc<RefCell<Control>>,
     expand_state : HashMap<String, bool>,
+    visible : bool
 }
 
 impl Property
@@ -200,13 +203,16 @@ impl Property
         control : Rc<RefCell<Control>>
         ) -> Box<Property>
     {
-        let p = box Property {
+        let mut p = box Property {
             name : String::from("property_name"),
             jk_property_list : unsafe {jk_property_list_new(window)},
             pv : HashMap::new(),
             control : control,
-            expand_state : HashMap::new()
+            expand_state : HashMap::new(),
+            visible: true
         };
+
+        p.set_visible(false);
 
         unsafe {
             jk_property_list_register_cb(
@@ -376,6 +382,20 @@ impl Property
             }
         }
     }
+
+    pub fn set_visible(&mut self, b : bool)
+    {
+        self.visible = b;
+        unsafe {
+            property_show(self.jk_property_list, b);
+        }
+    }
+
+    pub fn visible(&self) -> bool
+    {
+        self.visible
+    }
+
 }
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
