@@ -33,6 +33,8 @@ extern crate core;
 #[macro_use]
 extern crate lazy_static;
 
+extern crate hlua;
+
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
 use std::sync::{RwLock, Arc};
@@ -73,6 +75,8 @@ mod model;
 
 mod component;
 use component::manager;
+
+use hlua::Lua;
 
 static mut sTest : i32 = 5;
 
@@ -217,6 +221,14 @@ name = "image/base_skeleton_col.png"
         */
 
         //scene.save();
+
+    let mut lua = Lua::new();
+    lua.set("x", 2);
+
+    let cmd : &str = "x = x + 1";
+    lua.execute::<()>(cmd).unwrap();
+    let x: i32 = lua.get("x").unwrap();  // x is equal to 3
+    println!("x is : {} ", x);
 
     //let m = box ui::Master::new();
     //let m = Rc::new(RefCell::new(ui::Master::new()));
