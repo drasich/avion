@@ -215,13 +215,41 @@ impl Object
         Some(render.material.clone())
     }
 
-    pub fn update(&mut self, dt : f64)
+    fn luastuff(&mut self)
     {
         {
 
         let mut lua = lua::State::new();
         lua.openlibs();
-        lua.register("print_ob", print_ob);
+        //lua.registerlib(Some("object"),[("print_ob", print_ob)]);
+        let yop = &[
+            ("print_ob", print_ob as lua::CFunction),
+            ("get_pos", get_pos as lua::CFunction),
+            //("__index", object_index as lua::CFunction),
+        ];
+
+        let meta = &[
+            ("__newindex", object_newindex as lua::CFunction),
+            //("__index", object_index as lua::CFunction),
+            ("__to_string", object_string as lua::CFunction),
+        ];
+
+        lua.newmetatable("yoman.object");
+
+        //debug_lua(&mut lua);
+        lua.pushstring("__index");
+        lua.pushvalue(-2);               /* dup methods table*/
+        lua.rawset(-3); //lua.settable(-3);
+        lua.pushstring("__metatable");
+        lua.pushvalue(-2);              
+        //lua.settable(-3);// lua.rawset(-3);  
+        lua.rawset(-3); //lua.settable(-3);
+
+        lua.registerlib(None, meta);
+        lua.registerlib(Some("object"),yop);
+
+        println!("its okay");
+        lua.pop(1);
 
         // Load the file containing the script we are going to run
         let path = Path::new("chris.lua");
@@ -244,6 +272,10 @@ impl Object
         {
         let ptr : &*mut c_void = unsafe { mem::transmute(&self) };
         lua.pushlightuserdata(*ptr);
+        {
+        lua.getmetatable_reg("yoman.object");
+        lua.setmetatable(-2);
+        }
         }
         lua.rawset(-3);       // Stores the pair in the table
 
@@ -260,7 +292,11 @@ impl Object
 
         }
 
+    }
 
+    pub fn update(&mut self, dt : f64)
+    {
+        self.luastuff();
 
         let len = self.components.len();
 
@@ -487,12 +523,68 @@ impl Encodable  for ObjectRef {
 
 lua_extern! {
     unsafe fn print_ob(lua: &mut lua::ExternState) -> i32 {
+        let test = lua.checkudata(1, "object");
+        //println!("mon test : {:?} ", test);
+
         let ptr = lua.touserdata(1);
         let obp : *mut Object = unsafe { mem::transmute(ptr) };
         let ob = &*obp;
         println!("ok this is my object : {} ,  {:?} ", ob.name, ob.position);
         0
     }
+
+    unsafe fn get_pos(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &*obp;
+        lua.pushnumber(ob.position.x);
+        lua.pushnumber(ob.position.y);
+        lua.pushnumber(ob.position.z);
+        3
+    }
+
+    unsafe fn object_string(lua: &mut lua::ExternState) -> i32 {
+        //let ptr = lua.checkudata(1, "yoman.object");
+        println!("object string.............");
+        //*
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &*obp;
+        lua.pushstring(&ob.name);
+        //lua.pushnumber(ob.position.x);
+        1
+        //*/
+        //0
+    }
+
+    unsafe fn object_index(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &mut *obp;
+        println!("ndex called");
+        0
+    }
+
+    unsafe fn object_newindex(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &mut *obp;
+        println!("new index called");
+        0
+    }
 }
 
 
+fn debug_lua(lua : &mut lua::State)
+{
+    let top = lua.gettop();
+    for i in 1..top+1 { 
+        let t = lua.type_(i);
+        match t {
+            _ => {println!("{}, t : {:?}", i, t) }
+    
+        }
+        println!("  ");
+    }
+    println!("");
+}
