@@ -31,8 +31,11 @@ git = "https://github.com/rust-lang/uuid.git"
 [dependencies.rustc-serialize]
 git = "https://github.com/indefini/rustc-serialize.git"
 
-[dependencies.hlua]
-git = "https://github.com/indefini/hlua"
+#[dependencies.hlua]
+#git = "https://github.com/indefini/hlua"
+
+[dependencies.lua]
+git = "https://github.com/kballard/rust-lua.git"
 
 [dependencies]
 #rustc-serialize = "0.3.14"
@@ -40,5 +43,6 @@ git = "https://github.com/indefini/hlua"
 byteorder = "*"
 lazy_static = "0.1.*"
 #hlua = "0.1"
+libc = "*"
 
 

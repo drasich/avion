@@ -21,6 +21,13 @@ use std::cell::RefCell;
 use std::any::Any;
 
 use std::sync::mpsc::channel;
+use std::mem;
+
+use std::io::{self, Write};
+use std::path::Path;
+use lua;
+use libc::c_void;
+
 
 pub struct ThreadObject(Arc<RwLock<Object>>);
 
@@ -210,6 +217,51 @@ impl Object
 
     pub fn update(&mut self, dt : f64)
     {
+        {
+
+        let mut lua = lua::State::new();
+        lua.openlibs();
+        lua.register("print_ob", print_ob);
+
+        // Load the file containing the script we are going to run
+        let path = Path::new("chris.lua");
+        match lua.loadfile(Some(&path)) {
+            Ok(_) => (),
+            Err(_) => {
+                // If something went wrong, error message is at the top of the stack
+                let _ = writeln!(&mut io::stderr(),
+                "Couldn't load file: {}", lua.describe(-1));
+            }
+        }
+
+        /*
+         * Ok, now here we go: We pass data to the lua script on the stack.
+         * That is, we first have to prepare Lua's virtual stack the way we
+         * want the script to receive it, then ask Lua to run it.
+         */
+        lua.newtable(); // We will pass a table
+        lua.pushstring("ob");
+        {
+        let ptr : &*mut c_void = unsafe { mem::transmute(&self) };
+        lua.pushlightuserdata(*ptr);
+        }
+        lua.rawset(-3);       // Stores the pair in the table
+
+        // By what name is the script going to reference our table?
+        lua.setglobal("foo");
+
+        match lua.pcall(0, lua::MULTRET, 0) {
+            Ok(()) => (),
+            Err(_) => {
+                let _ = writeln!(&mut io::stderr(),
+                "Failed to run script: {}", lua.describe(-1));
+            }
+        }
+
+        }
+
+
+
         let len = self.components.len();
 
         let mut index = 0;
@@ -432,4 +484,15 @@ impl Encodable  for ObjectRef {
       })
   }
 }
+
+lua_extern! {
+    unsafe fn print_ob(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &*obp;
+        println!("ok this is my object : {} ,  {:?} ", ob.name, ob.position);
+        0
+    }
+}
+
 
