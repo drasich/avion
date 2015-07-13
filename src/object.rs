@@ -254,8 +254,9 @@ impl Object
         lua.registerlib(Some("object"),yop);
         let methods = lua.gettop();
 
-        lua.newmetatable("yoman.object");
-        lua.registerlib(None, meta);
+        if lua.newmetatable("yoman.object") {
+            lua.registerlib(None, meta);
+        }
         let metatable = lua.gettop();
 
         //hide metatable
@@ -660,14 +661,24 @@ lua_extern! {
         match lua.checkstring(2) {
             Some(s) => {
                 println!("ihihihih argument 2 is string : {}", s);
-                let f = match s {
-                    "x" => ob.position.x,
-                    "y" => ob.position.y,
-                    "z" => ob.position.z,
+                if s == "position" {
+                    let ptr : *mut c_void = unsafe { mem::transmute(&ob.position) };
+                    lua.pushlightuserdata(ptr);
+                    {
+                        lua.getmetatable_reg("vec3");
+                        lua.setmetatable(-2);
+                    }
+                }
+                else {
+                    let f = match s {
+                        "x" => ob.position.x,
+                        "y" => ob.position.y,
+                        "z" => ob.position.z,
                     _ => 0f64
-                };
-                lua.pushnumber(f);
-                return 1;
+                    };
+                    lua.pushnumber(f);
+                    return 1;
+                }
             },
             None => println!("ihihihihih argument 2 is not a string")
         };
@@ -684,8 +695,62 @@ lua_extern! {
 
         1
     }
+
+    unsafe fn getx(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let vp : *mut vec::Vec3 = unsafe { mem::transmute(ptr) };
+        let v = &*vp;
+        lua.pushnumber(v.x);
+        1
+    }
+
+    unsafe fn gety(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let vp : *mut vec::Vec3 = unsafe { mem::transmute(ptr) };
+        let v = &*vp;
+        lua.pushnumber(v.y);
+        1
+    }
+
+    unsafe fn getz(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let vp : *mut vec::Vec3 = unsafe { mem::transmute(ptr) };
+        let v = &*vp;
+        lua.pushnumber(v.z);
+        1
+    }
+
 }
 
+/*
+fn push_vec3(lua: &mut lua::ExternState, v : &vec::Vec3) -> i32 {
+    let meta = &[
+        ("x", getx as lua::CFunction),
+        ("y", gety as lua::CFunction),
+        ("z", getz as lua::CFunction),
+    ];
+
+    if lua.newmetatable("vec3") {
+        lua.registerlib(None, meta);
+    }
+
+    let metatable = lua.gettop();
+
+    lua.pushstring("__index");
+    lua.pushvalue(metatable);
+    lua.rawset(metatable);
+
+    let ptr : *mut c_void = unsafe { mem::transmute(&v) };
+    lua.pushlightuserdata(ptr);
+    {
+        lua.getmetatable_reg("vec3");
+        lua.setmetatable(-2);
+    }
+
+
+    1
+}
+*/
 
 fn debug_lua(lua : &mut lua::State)
 {
