@@ -225,13 +225,14 @@ impl Object
         let yop = &[
             ("print_ob", print_ob as lua::CFunction),
             ("get_pos", get_pos as lua::CFunction),
+            ("__to_string", object_string as lua::CFunction),
             //("__index", object_index as lua::CFunction),
         ];
 
         let meta = &[
             ("__newindex", object_newindex as lua::CFunction),
             //("__index", object_index as lua::CFunction),
-            ("__to_string", object_string as lua::CFunction),
+            ("__tostring", tostring as lua::CFunction),
         ];
 
         /*
@@ -257,10 +258,29 @@ impl Object
         lua.registerlib(None, meta);
         let metatable = lua.gettop();
 
-        //debug_lua(&mut lua);
+        //hide metatable
+        {
+            lua.pushstring("__metatable");
+            lua.pushvalue(methods);
+            lua.rawset(metatable);
+        }
+
+        {
+            lua.pushstring("__index");
+            lua.pushvalue(metatable);
+            lua.pushvalue(methods);
+            lua.pushcclosure(index_handler,2);
+            lua.rawset(metatable);
+        }
+
+/*
+
         lua.pushstring("__index");
-        lua.pushvalue(-2);               /* dup methods table*/
+        lua.pushvalue(-2);
         lua.rawset(-3); //lua.settable(-3);
+        */
+
+
         //lua.pushstring("__metatable");
         //lua.pushvalue(-2);              
         ////lua.settable(-3);// lua.rawset(-3);  
@@ -587,6 +607,20 @@ lua_extern! {
         //0
     }
 
+    unsafe fn tostring(lua: &mut lua::ExternState) -> i32 {
+        //let ptr = lua.checkudata(1, "yoman.object");
+        println!("tttttttooootostring.............");
+        //*
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &*obp;
+        lua.pushstring(&ob.name);
+        //lua.pushnumber(ob.position.x);
+        1
+        //*/
+        //0
+    }
+
     unsafe fn object_index(lua: &mut lua::ExternState) -> i32 {
         let ptr = lua.touserdata(1);
         let obp : *mut Object = unsafe { mem::transmute(ptr) };
@@ -616,6 +650,39 @@ lua_extern! {
 
 
         0
+    }
+
+    unsafe fn index_handler(lua: &mut lua::ExternState) -> i32 {
+        println!("index handler...........");
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &mut *obp;
+        match lua.checkstring(2) {
+            Some(s) => {
+                println!("ihihihih argument 2 is string : {}", s);
+                let f = match s {
+                    "x" => ob.position.x,
+                    "y" => ob.position.y,
+                    "z" => ob.position.z,
+                    _ => 0f64
+                };
+                lua.pushnumber(f);
+                return 1;
+            },
+            None => println!("ihihihihih argument 2 is not a string")
+        };
+
+
+        //put index on the top
+        lua.pushvalue(2);
+        // upvalueindex(2) gets the methods table
+        lua.rawget(lua::upvalueindex(2));
+        if lua.isnil(-1) {
+            println!("cannot get member : {}", lua.tostring(2).unwrap());
+            return 0;
+        }
+
+        1
     }
 }
 

@@ -9,8 +9,8 @@ yop = foo["ob"]
 object.print_ob(yop)
 --yop.get_pos(yop)
 x,y,z = object.get_pos(yop)
-caca = yop:__to_string()
-print("caca : ", caca)
+--caca = yop:__to_string()
+print("caca : ", yop.x)
 yop["xxx"] = -140
 yop.y = 10
 --for n,v in pairs(metatable) do print(n,v) end
