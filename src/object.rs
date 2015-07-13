@@ -234,19 +234,49 @@ impl Object
             ("__to_string", object_string as lua::CFunction),
         ];
 
+        /*
+        fn set_number(lua : lua::State, f : *mut f64) -> i32
+        {
+            f = lua.checknumber(L, 3);
+            0
+        }
+
+
+        let setters = &[
+        ("x",  set_number,    offsetof(your_t,age)  ),
+        ("y",    set_number, offsetof(your_t,x)    },
+        ("z",    set_number, offsetof(your_t,y)    },
+        {0,0}
+        };
+        */
+
+        lua.registerlib(Some("object"),yop);
+        let methods = lua.gettop();
+
         lua.newmetatable("yoman.object");
+        lua.registerlib(None, meta);
+        let metatable = lua.gettop();
 
         //debug_lua(&mut lua);
         lua.pushstring("__index");
         lua.pushvalue(-2);               /* dup methods table*/
         lua.rawset(-3); //lua.settable(-3);
-        lua.pushstring("__metatable");
-        lua.pushvalue(-2);              
-        //lua.settable(-3);// lua.rawset(-3);  
-        lua.rawset(-3); //lua.settable(-3);
+        //lua.pushstring("__metatable");
+        //lua.pushvalue(-2);              
+        ////lua.settable(-3);// lua.rawset(-3);  
+        //lua.rawset(-3); //lua.settable(-3);
 
-        lua.registerlib(None, meta);
-        lua.registerlib(Some("object"),yop);
+        /*
+        lua.pushstring("__newindex");
+        lua.newtable();              /* table for members you can set */
+        Xet_add(L, your_setters);     /* fill with setters */
+        lua.pushcclosure(newindex_handler, 1);
+        lua_rawset(L, metatable);
+        */
+
+
+        //lua.registerlib(None, meta);
+        //lua.registerlib(Some("object"),yop);
 
         println!("its okay");
         lua.pop(1);
@@ -523,7 +553,7 @@ impl Encodable  for ObjectRef {
 
 lua_extern! {
     unsafe fn print_ob(lua: &mut lua::ExternState) -> i32 {
-        let test = lua.checkudata(1, "object");
+        //let test = lua.checkudata(1, "object");
         //println!("mon test : {:?} ", test);
 
         let ptr = lua.touserdata(1);
@@ -569,7 +599,22 @@ lua_extern! {
         let ptr = lua.touserdata(1);
         let obp : *mut Object = unsafe { mem::transmute(ptr) };
         let ob = &mut *obp;
-        println!("new index called");
+        println!("new index called on {}", ob.name);
+        match lua.checkstring(2) {
+            Some(s) => {
+                println!("argument 2 is string : {}", s);
+                let f = lua.checknumber(3);
+                match s {
+                    "x" => ob.position.x = f,
+                    "y" => ob.position.y = f,
+                    "z" => ob.position.z = f,
+                    _ => println!("not supported")
+                }
+            },
+            None => println!("argument 2 is not a string")
+        };
+
+
         0
     }
 }

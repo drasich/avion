@@ -6,12 +6,13 @@ yop = foo["ob"]
 --metatable.__index = metatable
 --yop.__metatable = metatable
 --print("metatable : ", metatable, " \n");
---object.print_ob(yop)
+object.print_ob(yop)
 --yop.get_pos(yop)
---x,y,z = object.get_pos(yop)
+x,y,z = object.get_pos(yop)
 caca = yop:__to_string()
 print("caca : ", caca)
---yop["position"] = 4
+yop["xxx"] = -140
+yop.y = 10
 --for n,v in pairs(metatable) do print(n,v) end
 print("func start \n");
 --for n,v in pairs(object) do print(n,v) end
