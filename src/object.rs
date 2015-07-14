@@ -302,6 +302,8 @@ impl Object
         println!("its okay");
         lua.pop(1);
 
+        create_vec3_metatable(&mut lua);
+
         // Load the file containing the script we are going to run
         let path = Path::new("chris.lua");
         match lua.loadfile(Some(&path)) {
@@ -662,12 +664,7 @@ lua_extern! {
             Some(s) => {
                 println!("ihihihih argument 2 is string : {}", s);
                 if s == "position" {
-                    let ptr : *mut c_void = unsafe { mem::transmute(&ob.position) };
-                    lua.pushlightuserdata(ptr);
-                    {
-                        lua.getmetatable_reg("vec3");
-                        lua.setmetatable(-2);
-                    }
+                    return push_vec3(lua, &ob.position);
                 }
                 else {
                     let f = match s {
@@ -722,8 +719,8 @@ lua_extern! {
 
 }
 
-/*
-fn push_vec3(lua: &mut lua::ExternState, v : &vec::Vec3) -> i32 {
+fn create_vec3_metatable(lua : &mut lua::State)
+{
     let meta = &[
         ("x", getx as lua::CFunction),
         ("y", gety as lua::CFunction),
@@ -733,24 +730,31 @@ fn push_vec3(lua: &mut lua::ExternState, v : &vec::Vec3) -> i32 {
     if lua.newmetatable("vec3") {
         lua.registerlib(None, meta);
     }
+    else {
+        panic!("table vec3 already exists");
+    }
 
     let metatable = lua.gettop();
 
     lua.pushstring("__index");
     lua.pushvalue(metatable);
     lua.rawset(metatable);
+    lua.pop(1);
+}
 
-    let ptr : *mut c_void = unsafe { mem::transmute(&v) };
-    lua.pushlightuserdata(ptr);
-    {
-        lua.getmetatable_reg("vec3");
-        lua.setmetatable(-2);
+fn push_vec3(lua: &mut lua::ExternState, v : &vec::Vec3) -> i32 {
+
+    println!("pushing vec3");
+    let ptr : *mut c_void = unsafe { mem::transmute(v) };
+
+    unsafe {
+        lua.pushlightuserdata(ptr);
+        //lua.getmetatable_reg("vec3");
+        //lua.setmetatable(-2);
     }
-
 
     1
 }
-*/
 
 fn debug_lua(lua : &mut lua::State)
 {
