@@ -694,9 +694,10 @@ lua_extern! {
     }
 
     unsafe fn getx(lua: &mut lua::ExternState) -> i32 {
-        let ptr = lua.touserdata(1);
-        let vp : *mut vec::Vec3 = unsafe { mem::transmute(ptr) };
-        let v = &*vp;
+        //let ptr = lua.touserdata(1);
+        let ptr = lua.checkudata(1, "vec3");
+        let vp : *mut Pointer<vec::Vec3> = unsafe { mem::transmute(ptr) };
+        let v = &*(*vp).pointer;
         lua.pushnumber(v.x);
         1
     }
@@ -717,6 +718,31 @@ lua_extern! {
         1
     }
 
+}
+
+struct Pointer<T>
+{
+    pointer : *mut T
+}
+
+impl<T> Pointer<T> {
+    fn new(p : *mut T) -> Pointer<T> {
+        Pointer {
+            pointer : p
+        }
+    }
+
+    fn to_void(&mut self) -> *mut c_void {
+        unsafe { mem::transmute(self.pointer) }
+    }
+}
+
+fn set_pointer<T>(p : *mut c_void, data : *mut T)
+{
+    let pointer : *mut Pointer<T> = unsafe { mem::transmute(p) };
+    unsafe {
+        (*pointer).pointer = data; 
+    }
 }
 
 fn create_vec3_metatable(lua : &mut lua::State)
@@ -747,10 +773,17 @@ fn push_vec3(lua: &mut lua::ExternState, v : &vec::Vec3) -> i32 {
     println!("pushing vec3");
     let ptr : *mut c_void = unsafe { mem::transmute(v) };
 
+    let yo = 
+        unsafe {
+        lua.newuserdata(mem::size_of::<Pointer<vec::Vec3>>())
+        };
+
+    set_pointer(yo, ptr);
+
     unsafe {
-        lua.pushlightuserdata(ptr);
-        //lua.getmetatable_reg("vec3");
-        //lua.setmetatable(-2);
+        //lua.pushlightuserdata(ptr);
+        lua.getmetatable_reg("vec3");
+        lua.setmetatable(-2);
     }
 
     1
