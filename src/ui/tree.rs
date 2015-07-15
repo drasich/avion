@@ -51,6 +51,7 @@ extern {
     fn tree_item_expand(item : *const Elm_Object_Item);
     fn tree_deselect_all(item : *const JkTree);
     fn tree_update(tree : *const JkTree);
+    fn tree_show(obj : *const JkTree, b : bool);
 }
 
 pub struct TreeSelectData
@@ -69,7 +70,8 @@ pub struct Tree
     objects : HashMap<Uuid, *const Elm_Object_Item>,
     pub jk_tree : *const JkTree,
     control : Rc<RefCell<Control>>,
-    dont_forward_signal : bool
+    dont_forward_signal : bool,
+    visible : bool
 }
 
 impl Tree
@@ -78,13 +80,16 @@ impl Tree
         window : *const Window,
         control : Rc<RefCell<Control>>) -> Box<Tree>
     {
-        let t = box Tree {
-            name : String::from_str("tree_name"),
+        let mut t = box Tree {
+            name : String::from("tree_name"),
             objects : HashMap::new(),
             jk_tree : unsafe {window_tree_new(window)},
             control : control,
-            dont_forward_signal : false
+            dont_forward_signal : false,
+            visible : true
         };
+
+        t.set_visible(false);
 
         t
     }
@@ -251,6 +256,19 @@ impl Tree
             }
             _ => {}
         }
+    }
+
+    pub fn set_visible(&mut self, b : bool)
+    {
+        self.visible = b;
+        unsafe {
+            tree_show(self.jk_tree, b);
+        }
+    }
+
+    pub fn visible(&self) -> bool
+    {
+        self.visible
     }
 }
 

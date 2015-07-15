@@ -76,7 +76,7 @@ impl Command
         -> Box<Command>
     {
         let c = box Command {
-            name : String::from_str("command_name"),
+            name : String::from("command_name"),
             jk_command : unsafe {window_command_new(window)},
         };
 

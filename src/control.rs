@@ -75,7 +75,7 @@ impl Control
         let mut list = LinkedList::new();
 
         if modifier & (1 << 0) != 0 {
-            println!("pressed shifr");
+            println!("pressed shift");
         }
         else if modifier & (1 << 1) != 0 {
             self.mouse_start = Some(vec::Vec2::new(x as f64, y as f64));
@@ -86,12 +86,12 @@ impl Control
             return list;
         }
 
-        let click = self.dragger.borrow_mut().mouse_down(
-            &*self.camera.borrow(),button, x, y);
-        if click {
-            self.state = State::Dragger;
-            let objs = self.context.borrow().selected.clone();
-            if objs.len() > 0 {
+        let objs = self.context.borrow().selected.clone();
+        if objs.len() > 0 {
+            let click = self.dragger.borrow_mut().mouse_down(
+                &*self.camera.borrow(),button, x, y);
+            if click {
+                self.state = State::Dragger;
                 self.context.borrow_mut().save_positions();
                 self.context.borrow_mut().save_scales();
                 self.context.borrow_mut().save_oris();

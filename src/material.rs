@@ -64,7 +64,7 @@ impl Default for Material
 {
     fn default() -> Material {
           Material {
-            name : String::from_str("default"),
+            name : String::from("default"),
             shader : None,
             state : 0,
             texture : None,
@@ -79,7 +79,7 @@ impl Material
     pub fn new(name : &str) -> Material
     {
         Material {
-            name : String::from_str(name),
+            name : String::from(name),
             shader : None,
             state : 0,
             textures : HashMap::new(),
@@ -191,7 +191,7 @@ impl Material
     pub fn new(name : &str, shader : &str) -> Material
     {
         Material {
-            name : String::from_str(name),
+            name : String::from(name),
             shader : resource::ResTT::new(shader),
             state : 0,
             texture : None

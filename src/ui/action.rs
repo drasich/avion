@@ -32,12 +32,17 @@ extern {
         name : *const c_char,
         data : *const c_void,
         button_callback : ButtonCallback);
+
+    fn action_show(
+        action : *const JkAction,
+        b : bool);
 }
 
 pub struct Action
 {
     name : String,
     jk_action : *const JkAction,
+    visible : bool
 }
 
 #[derive(Clone)]
@@ -76,10 +81,13 @@ impl Action
         window : *const Window)
         -> Box<Action>
     {
-        let a = box Action {
-            name : String::from_str("action_name"),
+        let mut a = box Action {
+            name : String::from("action_name"),
             jk_action : unsafe {window_action_new(window)},
+            visible : true
         };
+
+        a.set_visible(false);
 
         //a.add_button("Add empty", add_empty);
 
@@ -110,6 +118,20 @@ impl Action
                 cb);
         }
     }
+
+    pub fn set_visible(&mut self, b : bool)
+    {
+        self.visible = b;
+        unsafe {
+            action_show(self.jk_action, b);
+        }
+    }
+
+    pub fn visible(&self) -> bool
+    {
+        self.visible
+    }
+
 }
 
 pub extern fn add_empty(data : *const c_void)

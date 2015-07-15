@@ -2,11 +2,10 @@
 //#![feature(trace_macros)]
 //#![feature(slicing_syntax)]
 #![feature(box_syntax)]
-#![feature(alloc)]
-#![feature(std_misc,core,collections,libc)]
+//#![feature(core,collections,libc)]
+#![feature(core,libc)]
 #![feature(convert)]
 #![feature(step_by)]
-#![feature(scoped)]
 #![feature(zero_one)]
 
 #![feature(vec_push_all)]
@@ -34,6 +33,9 @@ extern crate core;
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
+extern crate lua;
+
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
 use std::sync::{RwLock, Arc};
@@ -41,6 +43,10 @@ use std::sync::{RwLock, Arc};
 //use std::cell::RefCell;
 use std::mem;
 //use std::any::{Any, AnyRefExt};
+
+use std::io::{self, Write};
+use std::path::Path;
+use std::process;
 
 mod resource;
 mod shader;
@@ -74,6 +80,7 @@ mod model;
 
 mod component;
 use component::manager;
+
 
 static mut sTest : i32 = 5;
 
@@ -218,6 +225,90 @@ name = "image/base_skeleton_col.png"
         */
 
         //scene.save();
+
+    {
+
+    let mut lua = lua::State::new();
+    lua.openlibs();
+    /*
+    match lua.loadfile(None) {
+        Ok(()) => (),
+        Err(lua::LoadFileError::ErrSyntax) => panic!("syntax error"),
+        Err(lua::LoadFileError::ErrMem) => panic!("memory allocation error"),
+        Err(lua::LoadFileError::ErrFile) => panic!("file error (?!?)")
+    }
+    lua.call(0, 0);
+    */
+
+    // Load the file containing the script we are going to run
+    let path = Path::new("simpleapi.lua");
+    match lua.loadfile(Some(&path)) {
+        Ok(_) => (),
+        Err(_) => {
+            // If something went wrong, error message is at the top of the stack
+            let _ = writeln!(&mut io::stderr(),
+            "Couldn't load file: {}", lua.describe(-1));
+            process::exit(1);
+        }
+    }
+
+    /*
+     * Ok, now here we go: We pass data to the lua script on the stack.
+     * That is, we first have to prepare Lua's virtual stack the way we
+     * want the script to receive it, then ask Lua to run it.
+     */
+    lua.newtable(); // We will pass a table
+
+    for i in 1..6 {
+        lua.pushinteger(i);   // Push the table index
+        lua.pushinteger(i*2); // Push the cell value
+        lua.rawset(-3);       // Stores the pair in the table
+    }
+
+    // By what name is the script going to reference our table?
+    lua.setglobal("foo");
+
+    // Ask Lua to run our little script
+    match lua.pcall(0, lua::MULTRET, 0) {
+        Ok(()) => (),
+        Err(_) => {
+            let _ = writeln!(&mut io::stderr(),
+                             "Failed to run script: {}", lua.describe(-1));
+            process::exit(1);
+        }
+    }
+
+    // Get the returned value at the to of the stack (index -1)
+    let sum = lua.tonumber(-1);
+
+    println!("Script returned: {}", sum);
+
+    lua.pop(1); // Take the returned value out of the stack
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     //let m = box ui::Master::new();
     //let m = Rc::new(RefCell::new(ui::Master::new()));

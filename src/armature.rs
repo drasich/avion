@@ -65,9 +65,11 @@ pub struct Bone
     pub parent : Option<usize>,
     pub children : Vec<usize>,
 
-    pub position : vec::Vec3,
+    pub head_from_arm : vec::Vec3,
     pub head : vec::Vec3,
     pub tail : vec::Vec3,
+
+    pub position_diff : vec::Vec3,
     pub rotation_diff : vec::Quat,
 }
 
@@ -80,6 +82,8 @@ impl Bone {
         println!("pos: {:?}", pos);
         let head = read_vec3(file);
         println!("head : {:?}", head);
+        let head_from_arm = read_vec3(file);
+        println!("head from armature : {:?}", head_from_arm);
         let tail = read_vec3(file);
         println!("tail : {:?}", tail);
 
@@ -88,14 +92,17 @@ impl Bone {
 
         let mut bone = Bone {
             name : name,
-            position_base : pos,
+            position_base : head,
             rotation_base : rot,
             parent : None,
             children : Vec::new(),
-            position: pos,
+            position_diff: vec::Vec3::zero(),
             head: head,
+            head_from_arm: head_from_arm,
             tail: tail,
-            rotation_diff : vec::Quat::identity()
+            rotation_diff : vec::Quat::identity(),
+            //position_relative: head,
+            //rotation_relative : vec::Quat::identity(),
         };
 
         let has_parent = file.read_u8().unwrap() as usize;
@@ -122,6 +129,13 @@ impl Bone {
     fn add_child(&mut self, child : Bone)
     {
         self.children.push(child);
+    }
+    */
+
+    /*
+    pub fn get_position_relative_to_armature(&self, arm: &ArmatureInstance) -> Vec3
+    {
+        if let Some(
     }
     */
 
@@ -336,7 +350,7 @@ impl Armature {
     pub fn new(file : &str) -> Armature 
     {
         Armature {
-            name : String::from_str(file),
+            name : String::from(file),
             position : vec::Vec3::zero(),
             rotation : vec::Quat::identity(),
             scale : vec::Vec3::zero(),
@@ -348,12 +362,21 @@ impl Armature {
 
     pub fn create_instance(&self) -> ArmatureInstance
     {
-        ArmatureInstance {
+        let pos = vec![vec::Vec3::zero(); self.bones.len()];
+        let rot = vec![vec::Quat::identity(); self.bones.len()];
+
+        let mut instance = ArmatureInstance {
             position : self.position,
             rotation : self.rotation,
             scale : self.scale,
-            bones : self.bones.clone()
-        }
+            bones : self.bones.clone(),
+            position_relative : pos,
+            rotation_relative : rot,
+        };
+
+        instance.update_relative_coords();
+
+        instance
     }
 
     pub fn file_read(&mut self) 
@@ -476,7 +499,9 @@ pub struct ArmatureInstance
     pub position : vec::Vec3,
     pub rotation : vec::Quat,
     pub scale : vec::Vec3,
-    pub bones : Vec<Bone>
+    bones : Vec<Bone>,
+    pub position_relative : Vec<vec::Vec3>,
+    pub rotation_relative : Vec<vec::Quat>,
 }
 
 impl ArmatureInstance
@@ -484,6 +509,11 @@ impl ArmatureInstance
     pub fn get_bone(&self, index : usize) -> &Bone
     {
         &self.bones[index]
+    }
+
+    pub fn get_bones(&self) -> &Vec<Bone>
+    {
+        &self.bones
     }
 
     fn get_mut_bone(&mut self, index : usize) -> &mut Bone
@@ -511,16 +541,10 @@ impl ArmatureInstance
             f
         };
 
-        println!("frame {}, start {}, end {}, time {}", frame, action.frame_start, action.frame_end, time);
-
         for curve in action.curves.iter()
         {
-            if curve.bone_name != "Bone_L.001" {
-                //continue;
-            }
             let bone :&mut Bone = self.get_mut_bone(curve.bone_index);
 
-            //println!("doing curve ");
             let (start, end) = curve.get_frames(frame);
 
             let ratio = if start.time != end.time {
@@ -530,31 +554,57 @@ impl ArmatureInstance
                 0f64
             };
 
-            //println!("ratio {}", ratio);
-            println!("going to change bone {}, {}", curve.bone_name,  bone.name);
-
             match (&start.data, &end.data) {
                 (&FrameData::Position(s), &FrameData::Position(e)) => {
                     let v1 = s * (1f64 -ratio);
                     let v2 = e * ratio;
-                    //self.bones[bone_index].position = v1 + v2;
+                    bone.position_diff = v1 + v2;
                 },
                 (&FrameData::Orientation(s), &FrameData::Orientation(e)) => {
-                    println!("ROT BEFORE : {:?}", 
-                             bone.rotation_diff.to_euler_deg());
-                    //TODO
                     bone.rotation_diff = vec::quat_slerp(s, e, ratio);
-                    println!("todo anim orientation : {:?},\n{:?},\n{:?},\n{:?} ", 
-                             bone.rotation_base.to_euler_deg(),
-                             s.to_euler_deg(),
-                             e.to_euler_deg(),
-                             bone.rotation_diff.to_euler_deg());
                 },
                 (&FrameData::Scale(s), &FrameData::Scale(e)) => {
+                    println!("scale not done yet");
                 },
                 (_,_) => println!("not yet")
             };
         }
 
+        self.update_relative_coords();
+    }
+
+    fn update_relative_coords(&mut self)
+    {
+        for b in 0..self.bones.len()
+        {
+            //self.bones[b].rotation_relative = self.get_bone_rotation(&self.bones[b]);
+            //self.bones[b].position_relative = self.get_bone_position(&self.bones[b]);
+            self.rotation_relative[b] = self.get_bone_rotation(&self.bones[b]);
+            self.position_relative[b] = self.get_bone_position(&self.bones[b]);
+        }
+    }
+
+    fn get_bone_rotation(&self, b : &Bone) -> vec::Quat
+    {
+        let local = b.rotation_diff;
+
+        match b.parent{
+            Some(p) => self.get_bone_rotation(&self.bones[p]) * local,
+            None => local
+        }
+    }
+
+    fn get_bone_position(&self, b : &Bone) -> vec::Vec3
+    {
+        let mut local =  b.position_base + b.position_diff;
+
+        match b.parent{
+            Some(p) => {
+                let pbone = &self.bones[p];
+                local = (pbone.tail - pbone.head) + local;
+                self.get_bone_position(pbone) + self.get_bone_rotation(pbone).rotate_vec3(&local)
+            },
+            None => local
+        }
     }
 }

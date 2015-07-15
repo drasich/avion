@@ -38,7 +38,7 @@ impl Texture
     pub fn new(name :&str) -> Texture
     {
         let t = Texture{
-            name: String::from_str(name),
+            name: String::from(name),
             state : 0,
             image : None,
             cgl_texture : None

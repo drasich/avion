@@ -99,7 +99,7 @@ impl RenderPass
         camera : Rc<RefCell<camera::Camera>>) -> RenderPass
     {
         RenderPass {
-                  name : String::from_str("passtest"),
+                  name : String::from("passtest"),
                   shader : shader.clone(),
                   //objects : LinkedList::new(),
                   //camera : camera,
@@ -404,6 +404,15 @@ impl Render {
             p.passes.clear();
         }
 
+        {
+            let line : &object::Object = &self.line.read().unwrap();
+            if let Some(ref mr) = line.mesh_render
+            {
+                let mut mesh = mr.mesh.write().unwrap();
+                mesh.clear_lines();
+            }
+        }
+
         //self.passes.clear();
         for o in objects.iter() {
             prepare_passes_object(
@@ -412,12 +421,10 @@ impl Render {
                 &mut self.resource.material_manager.borrow_mut(),
                 &mut self.resource.shader_manager.borrow_mut(),
                 self.camera.clone());
-            //TODO prepare armature here
             
             let ob =  &*o.read().unwrap();
             match ob.get_component::<armature_animation::ArmatureAnimation>() {
                 Some(ref aa) => {
-                    //TODO add armature bones to line
                     let armature = &aa.arm_instance;
                     let color = vec::Vec4::new(1f64,1f64,1f64,1.0f64);
 
@@ -425,34 +432,20 @@ impl Render {
                     if let Some(ref mr) = line.mesh_render
                     {
                         let mut mesh = mr.mesh.write().unwrap();
-                        mesh.clear_lines();
 
                         let arm_pos = ob.position + ob.orientation.rotate_vec3(&(armature.position*ob.scale));
-                        let mut cur_rot = ob.orientation.as_quat() * armature.rotation;
+                        let cur_rot = ob.orientation.as_quat() * armature.rotation;
 
-                        //println!("ob pos : {:?},  armature position {:?}, {:?}", ob.position, armature.position, arm_pos);
-                        //println!("ob pos : {:?}, ob rot {:?}, ob scale {:?}", ob.position, ob.orientation.as_quat(), ob.scale);
-                        //println!("arm pos : {:?},  armature rot {:?}, arm scale {:?}", armature.position, armature.rotation, armature.scale);
-                        println!("------------------current rotation {:?}", cur_rot);
-
-                        for b in armature.bones.iter() {
-                            if b.name != "Bone_L" {
-                              //  continue;
-                            }
-                            let current_bone_rotation = b.rotation_diff;
-                            let p1 = arm_pos + cur_rot.rotate_vec3(&(b.position*ob.scale));
-                            //println!("bone : {:?},   pq {:?}", b.head, p1);
-                            //println!("bone name : {}, bone head : {:?},   bone tail {:?}", b.name, b.head, b.tail);
-                            let yep = (b.tail - b.head)*ob.scale;
-                            println!("bone name : {}, bone rotation : {:?}", b.name, current_bone_rotation);
-                            let diff = current_bone_rotation.rotate_vec3(&yep);
-                            println!("diff : {:?}", diff);
+                        for i in 0..armature.get_bones().len() {
+                            let b = armature.get_bone(i);
+                            let current_bone_position = armature.position_relative[i];
+                            let current_bone_rotation = cur_rot*armature.rotation_relative[i];
+                            let p1 = arm_pos + cur_rot.rotate_vec3(&(current_bone_position*ob.scale));
+                            let bone_length = (b.tail - b.head)*ob.scale;
+                            let diff = current_bone_rotation.rotate_vec3(&bone_length);
                             let p2 = p1 + diff;
-                            //let p2 = p1 + yep;
-                            //println!("bone : {:?},   p1 {:?}, p2 : {:?}", b.head, p1, p2);
                             let s = geometry::Segment::new(p1,p2);
                             mesh.add_line(s, color);
-                            //break;
                         }
                     }
                 }

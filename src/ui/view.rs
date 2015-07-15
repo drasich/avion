@@ -656,6 +656,27 @@ pub extern fn key_down(
                 }
                 return;
             },
+            "t" => {
+                if let Some(ref t) = view.tree {
+                    let b = t.borrow().visible();
+                    t.borrow_mut().set_visible(!b);
+                }
+                return;
+            },
+            "p" => {
+                if let Some(ref p) = view.property {
+                    let b = p.borrow().visible();
+                    p.borrow_mut().set_visible(!b);
+                }
+                return;
+            },
+            "a" => {
+                if let Some(ref a) = view.action {
+                    let b = a.borrow().visible();
+                    a.borrow_mut().set_visible(!b);
+                }
+                return;
+            },
             _ => {
                 println!("key not implemented : {}", key_str);
             }

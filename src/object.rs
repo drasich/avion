@@ -21,6 +21,13 @@ use std::cell::RefCell;
 use std::any::Any;
 
 use std::sync::mpsc::channel;
+use std::mem;
+
+use std::io::{self, Write};
+use std::path::Path;
+use lua;
+use libc::c_void;
+
 
 pub struct ThreadObject(Arc<RwLock<Object>>);
 
@@ -208,8 +215,142 @@ impl Object
         Some(render.material.clone())
     }
 
+    fn luastuff(&mut self)
+    {
+        {
+
+        let mut lua = lua::State::new();
+        lua.openlibs();
+        //lua.registerlib(Some("object"),[("print_ob", print_ob)]);
+        let yop = &[
+            ("print_ob", print_ob as lua::CFunction),
+            ("get_pos", get_pos as lua::CFunction),
+            ("__to_string", object_string as lua::CFunction),
+            //("__index", object_index as lua::CFunction),
+        ];
+
+        let meta = &[
+            ("__newindex", object_newindex as lua::CFunction),
+            //("__index", object_index as lua::CFunction),
+            ("__tostring", tostring as lua::CFunction),
+        ];
+
+        /*
+        fn set_number(lua : lua::State, f : *mut f64) -> i32
+        {
+            f = lua.checknumber(L, 3);
+            0
+        }
+
+
+        let setters = &[
+        ("x",  set_number,    offsetof(your_t,age)  ),
+        ("y",    set_number, offsetof(your_t,x)    },
+        ("z",    set_number, offsetof(your_t,y)    },
+        {0,0}
+        };
+        */
+
+        lua.registerlib(Some("object"),yop);
+        let methods = lua.gettop();
+
+        if lua.newmetatable("yoman.object") {
+            lua.registerlib(None, meta);
+        }
+        let metatable = lua.gettop();
+
+        //hide metatable
+        {
+            lua.pushstring("__metatable");
+            lua.pushvalue(methods);
+            lua.rawset(metatable);
+        }
+
+        {
+            lua.pushstring("__index");
+            lua.pushvalue(metatable);
+            lua.pushvalue(methods);
+            lua.pushcclosure(index_handler,2);
+            lua.rawset(metatable);
+        }
+
+/*
+
+        lua.pushstring("__index");
+        lua.pushvalue(-2);
+        lua.rawset(-3); //lua.settable(-3);
+        */
+
+
+        //lua.pushstring("__metatable");
+        //lua.pushvalue(-2);              
+        ////lua.settable(-3);// lua.rawset(-3);  
+        //lua.rawset(-3); //lua.settable(-3);
+
+        /*
+        lua.pushstring("__newindex");
+        lua.newtable();              /* table for members you can set */
+        Xet_add(L, your_setters);     /* fill with setters */
+        lua.pushcclosure(newindex_handler, 1);
+        lua_rawset(L, metatable);
+        */
+
+
+        //lua.registerlib(None, meta);
+        //lua.registerlib(Some("object"),yop);
+
+        println!("its okay");
+        lua.pop(1);
+
+        create_vec3_metatable(&mut lua);
+
+        // Load the file containing the script we are going to run
+        let path = Path::new("chris.lua");
+        match lua.loadfile(Some(&path)) {
+            Ok(_) => (),
+            Err(_) => {
+                // If something went wrong, error message is at the top of the stack
+                let _ = writeln!(&mut io::stderr(),
+                "Couldn't load file: {}", lua.describe(-1));
+            }
+        }
+
+        /*
+         * Ok, now here we go: We pass data to the lua script on the stack.
+         * That is, we first have to prepare Lua's virtual stack the way we
+         * want the script to receive it, then ask Lua to run it.
+         */
+        lua.newtable(); // We will pass a table
+        lua.pushstring("ob");
+        {
+        let ptr : &*mut c_void = unsafe { mem::transmute(&self) };
+        lua.pushlightuserdata(*ptr);
+        {
+        lua.getmetatable_reg("yoman.object");
+        lua.setmetatable(-2);
+        }
+        }
+        lua.rawset(-3);       // Stores the pair in the table
+
+        // By what name is the script going to reference our table?
+        lua.setglobal("foo");
+
+        match lua.pcall(0, lua::MULTRET, 0) {
+            Ok(()) => (),
+            Err(_) => {
+                let _ = writeln!(&mut io::stderr(),
+                "Failed to run script: {}", lua.describe(-1));
+            }
+        }
+
+        }
+
+    }
+
     pub fn update(&mut self, dt : f64)
     {
+        self.luastuff();
+
         let len = self.components.len();
 
         let mut index = 0;
@@ -433,3 +574,315 @@ impl Encodable  for ObjectRef {
   }
 }
 
+lua_extern! {
+    unsafe fn print_ob(lua: &mut lua::ExternState) -> i32 {
+        //let test = lua.checkudata(1, "object");
+        //println!("mon test : {:?} ", test);
+
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &*obp;
+        println!("ok this is my object : {} ,  {:?} ", ob.name, ob.position);
+        0
+    }
+
+    unsafe fn get_pos(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &*obp;
+        lua.pushnumber(ob.position.x);
+        lua.pushnumber(ob.position.y);
+        lua.pushnumber(ob.position.z);
+        3
+    }
+
+    unsafe fn object_string(lua: &mut lua::ExternState) -> i32 {
+        //let ptr = lua.checkudata(1, "yoman.object");
+        println!("object string.............");
+        //*
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &*obp;
+        lua.pushstring(&ob.name);
+        //lua.pushnumber(ob.position.x);
+        1
+        //*/
+        //0
+    }
+
+    unsafe fn tostring(lua: &mut lua::ExternState) -> i32 {
+        //let ptr = lua.checkudata(1, "yoman.object");
+        println!("tttttttooootostring.............");
+        //*
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &*obp;
+        lua.pushstring(&ob.name);
+        //lua.pushnumber(ob.position.x);
+        1
+        //*/
+        //0
+    }
+
+    unsafe fn object_index(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &mut *obp;
+        println!("ndex called");
+        0
+    }
+
+    unsafe fn object_newindex(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &mut *obp;
+        println!("new index called on {}", ob.name);
+        match lua.checkstring(2) {
+            Some(s) => {
+                println!("argument 2 is string : {}", s);
+                let f = lua.checknumber(3);
+                match s {
+                    "x" => ob.position.x = f,
+                    "y" => ob.position.y = f,
+                    "z" => ob.position.z = f,
+                    _ => println!("not supported")
+                }
+            },
+            None => println!("argument 2 is not a string")
+        };
+
+
+        0
+    }
+
+    unsafe fn index_handler(lua: &mut lua::ExternState) -> i32 {
+        println!("index handler...........");
+        let ptr = lua.touserdata(1);
+        let obp : *mut Object = unsafe { mem::transmute(ptr) };
+        let ob = &mut *obp;
+        match lua.checkstring(2) {
+            Some(s) => {
+                println!("ihihihih argument 2 is string : {}", s);
+                if s == "position" {
+                    return push_data(lua, &mut ob.position, "vec3");
+                }
+                else {
+                    let f = match s {
+                        "x" => ob.position.x,
+                        "y" => ob.position.y,
+                        "z" => ob.position.z,
+                    _ => 0f64
+                    };
+                    lua.pushnumber(f);
+                    return 1;
+                }
+            },
+            None => println!("ihihihihih argument 2 is not a string")
+        };
+
+
+        //put index on the top
+        lua.pushvalue(2);
+        // upvalueindex(2) gets the methods table
+        lua.rawget(lua::upvalueindex(2));
+        if lua.isnil(-1) {
+            println!("cannot get member : {}", lua.tostring(2).unwrap());
+            return 0;
+        }
+
+        1
+    }
+
+    unsafe fn vec3_index_handler(lua: &mut lua::ExternState) -> i32 {
+        println!("vec3 index handler...........");
+        let ptr = lua.checkudata(1,"vec3");
+        let ld : *mut LuaData<vec::Vec3> = unsafe { mem::transmute(ptr) };
+        let v = match *ld {
+            LuaData::Pointer(p) => &*p,
+            LuaData::Value(ref v) => v
+        };
+        println!("vec3 ::::::::::: {:?}", v);
+        //let v = &*(*vp).pointer;
+        match lua.checkstring(2) {
+            Some(s) => {
+                println!("vec3 {}", s);
+                let f = match s {
+                    "x" => v.x,
+                    "y" => v.y,
+                    "z" => v.z,
+                    _ => 0f64
+                };
+                lua.pushnumber(f);
+                return 1;
+            },
+            None => println!("vec3 argument 2 is not a string")
+        };
+
+        0
+    }
+
+    unsafe fn vec3_newindex_handler(lua: &mut lua::ExternState) -> i32 {
+        println!("new index handler...........");
+        let ptr = lua.checkudata(1,"vec3");
+        let ld : *mut LuaData<vec::Vec3> = unsafe { mem::transmute(ptr) };
+        let v = match *ld {
+            LuaData::Pointer(p) => &mut *p,
+            LuaData::Value(ref mut  v) => v
+        };
+        //let v = &mut *(*vp).pointer;
+        match lua.checkstring(2) {
+            Some(s) => {
+                println!("vec3 {}", s);
+                let f = lua.checknumber(3);
+                match s {
+                    "x" => v.x = f,
+                    "y" => v.y = f,
+                    "z" => v.z = f,
+                    _ => {}
+                };
+            },
+            None => println!("vec3 argument 2 is not a string")
+        };
+
+        0
+    }
+
+
+    /*
+
+    unsafe fn getx(lua: &mut lua::ExternState) -> i32 {
+        //let ptr = lua.touserdata(1);
+        let ptr = lua.checkudata(1, "vec3");
+        let vp : *mut Pointer<vec::Vec3> = unsafe { mem::transmute(ptr) };
+        let v = &*(*vp).pointer;
+        lua.pushnumber(v.x);
+        1
+    }
+
+    unsafe fn gety(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let vp : *mut vec::Vec3 = unsafe { mem::transmute(ptr) };
+        let v = &*vp;
+        lua.pushnumber(v.y);
+        1
+    }
+
+    unsafe fn getz(lua: &mut lua::ExternState) -> i32 {
+        let ptr = lua.touserdata(1);
+        let vp : *mut vec::Vec3 = unsafe { mem::transmute(ptr) };
+        let v = &*vp;
+        lua.pushnumber(v.z);
+        1
+    }
+    */
+
+}
+
+enum LuaData<T>
+{
+    Pointer(*mut T),
+    Value(T)
+}
+
+/*
+struct Pointer<T>
+{
+    pointer : *mut T
+}
+*/
+
+impl<T> LuaData<T> {
+    fn new(p : *mut T) -> LuaData<T> {
+        LuaData::Pointer(p)
+    }
+
+    /*
+    fn to_void(&mut self) -> *mut c_void {
+        unsafe { mem::transmute(self.pointer) }
+    }
+    */
+}
+
+fn set_pointer<T>(p : *mut c_void, data : *mut T)
+{
+    let ld : *mut LuaData<T> = unsafe { mem::transmute(p) };
+    unsafe {
+        *ld = LuaData::Pointer(data);
+    }
+}
+
+fn create_vec3_metatable(lua : &mut lua::State)
+{
+    /*
+    let meta = &[
+        ("x", getx as lua::CFunction),
+        ("y", gety as lua::CFunction),
+        ("z", getz as lua::CFunction),
+    ];
+    */
+
+    if lua.newmetatable("vec3") {
+        //lua.registerlib(None, meta);
+    }
+    else {
+        panic!("table vec3 already exists");
+    }
+
+    let metatable = lua.gettop();
+
+    /*
+    {
+        lua.pushstring("__index");
+        lua.pushvalue(metatable);
+        lua.rawset(metatable);
+    }
+    */
+
+    {
+        lua.pushstring("__index");
+        lua.pushvalue(metatable);
+        lua.pushcclosure(vec3_index_handler,1);
+        lua.rawset(metatable);
+    }
+
+    {
+        lua.pushstring("__newindex");
+        lua.pushvalue(metatable);
+        lua.pushcclosure(vec3_newindex_handler,1);
+        lua.rawset(metatable);
+    }
+
+    lua.pop(1);
+
+}
+
+fn push_data<T>(lua: &mut lua::ExternState, v : &mut T, table : &str) -> i32 {
+
+    let data = 
+        unsafe {
+            lua.newuserdata(mem::size_of::<LuaData<T>>())
+        };
+
+    set_pointer(data, v);
+
+    unsafe {
+        lua.getmetatable_reg(table);
+        lua.setmetatable(-2);
+    }
+
+    1
+}
+
+fn debug_lua(lua : &mut lua::State)
+{
+    let top = lua.gettop();
+    for i in 1..top+1 { 
+        let t = lua.type_(i);
+        match t {
+            _ => {println!("{}, t : {:?}", i, t) }
+    
+        }
+        println!("  ");
+    }
+    println!("");
+}

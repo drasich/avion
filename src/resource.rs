@@ -55,7 +55,7 @@ impl<T:Create+Send+Sync+'static> ResTT<T>
     pub fn new(name : &str) -> ResTT<T>
     {
         ResTT {
-            name : String::from_str(name),
+            name : String::from(name),
             resource : ResTest::ResNone
         }
     }
@@ -71,7 +71,7 @@ impl<T:Create+Send+Sync+'static> ResTT<T>
     pub fn new_with_res(name : &str, res : ResTest<T>) -> ResTT<T>
     {
         ResTT {
-            name : String::from_str(name),
+            name : String::from(name),
             resource : res
         }
     }
@@ -246,7 +246,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
 
     pub fn request_use(&mut self, name : &str) -> ResTest<T>
     {
-        let key = String::from_str(name);
+        let key = String::from(name);
 
         let va : Arc<RwLock<ResTest<T>>> = match self.resources.entry(key) {
             Entry::Vacant(entry) => entry.insert(Arc::new(RwLock::new(ResTest::ResNone))).clone(),
@@ -269,7 +269,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
             }
         }
 
-        let s = String::from_str(name);
+        let s = String::from(name);
 
         let (tx, rx) = channel::<Arc<RwLock<T>>>();
         let guard = thread::spawn(move || {
@@ -288,7 +288,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
                 match rx.try_recv() {
                     Err(_) => {},
                     Ok(value) =>  { 
-                        let mut entry = &mut *va.write().unwrap();
+                        let entry = &mut *va.write().unwrap();
                         *entry = ResTest::ResData(value.clone());
                         break; }
                 }
@@ -308,7 +308,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
         let ms1 = self.resources.clone();
         let mut ms1w = ms1.write().unwrap();
 
-        let key = String::from_str(name);
+        let key = String::from(name);
 
         let v : &mut ResTest<T> = match ms1w.entry(key) {
         //let v : &mut ResTest<T> = match ms1w.entry(&s) {
@@ -316,7 +316,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
             Entry::Occupied(entry) => entry.into_mut(),
         };
 
-        let s = String::from_str(name);
+        let s = String::from(name);
         let msc = self.resources.clone();
 
         match *v 
@@ -375,7 +375,7 @@ impl<T:'static+Create+Sync+Send> ResourceManager<T> {
 
     pub fn request_use_no_proc(&mut self, name : &str) -> Arc<RwLock<T>>
     {
-        let key = String::from_str(name);
+        let key = String::from(name);
 
         let va : Arc<RwLock<ResTest<T>>> = match self.resources.entry(key) {
             Vacant(entry) => entry.insert(Arc::new(RwLock::new(ResNone))).clone(),

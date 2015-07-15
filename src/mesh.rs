@@ -229,7 +229,7 @@ impl Mesh
     pub fn new() -> Mesh
     {
        let m = Mesh {
-           name : String::from_str("mesh_new"),
+           name : String::from("mesh_new"),
            state : 0,
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
@@ -240,7 +240,7 @@ impl Mesh
        };
 
        /*
-       let bufname = String::from_str("position");
+       let bufname = String::from("position");
 
        m.buffers.insert(bufname.clone(), 
                         box Buffer::new(
@@ -255,7 +255,7 @@ impl Mesh
     pub fn new_from_file(path : &str) -> Mesh
     {
        let m = Mesh {
-           name : String::from_str(path),
+           name : String::from(path),
            state : 0,
            buffers_f32 : HashMap::new(),
            buffers_u32 : HashMap::new(),
@@ -333,7 +333,7 @@ impl Mesh
            self.aabox = Some(geometry::AABox::new(min,max));
            println!("__________aabox is : {:?}", self.aabox);
 
-           let bufname = String::from_str("position");
+           let bufname = String::from("position");
 
            let buf = Buffer::new(
                bufname.clone(),
@@ -357,7 +357,7 @@ impl Mesh
                fff.push(x as u32);
            }
 
-           let bufname = String::from_str("faces");
+           let bufname = String::from("faces");
 
            self.buffers_u32.insert(bufname.clone(), box Buffer::new(
                    bufname.clone(),
@@ -378,7 +378,7 @@ impl Mesh
                    nnn.push(x as f32);
                }
 
-               let bufname = String::from_str("normal");
+               let bufname = String::from("normal");
                let buf = Buffer::new(
                    bufname.clone(),
                    nnn,
@@ -412,7 +412,7 @@ impl Mesh
                    }
                }
 
-               let bufname = String::from_str("texcoord");
+               let bufname = String::from("texcoord");
 
                self.buffers_f32.insert(bufname.clone(), box Buffer::new(
                        bufname.clone(),
@@ -488,7 +488,7 @@ impl Mesh
 
     pub fn buffer_f32_get(&self, name : &str) -> Option<&Box<Buffer<f32>>>
     {
-        let s = String::from_str(name);
+        let s = String::from(name);
 
         match self.buffers_f32.get(&s) {
             Some(b) => return Some(b),
@@ -498,7 +498,7 @@ impl Mesh
 
     pub fn buffer_f32_get_mut(&mut self, name : &str) -> Option<&mut Box<Buffer<f32>>>
     {
-        let s = String::from_str(name);
+        let s = String::from(name);
 
         match self.buffers_f32.get_mut(&s) {
             Some(b) => return Some(b),
@@ -508,7 +508,7 @@ impl Mesh
 
     pub fn buffer_u32_get(&self, name : &str) -> Option<&Box<Buffer<u32>>>
     {
-        let s = String::from_str(name);
+        let s = String::from(name);
 
         match self.buffers_u32.get(&s) {
             Some(b) => return Some(b),
@@ -535,7 +535,7 @@ impl Mesh
             colbuf.push(color.w as f32);
         }
 
-        let name = String::from_str("position");
+        let name = String::from("position");
         match self.buffers_f32.entry(name.clone()) {
             Vacant(entry) => {
                 let buffer = box Buffer::new(
@@ -551,7 +551,7 @@ impl Mesh
             }
         };
 
-        let name = String::from_str("color");
+        let name = String::from("color");
         match self.buffers_f32.entry(name.clone()) {
             Vacant(entry) => {
                 let buffer = box Buffer::new(
@@ -636,16 +636,16 @@ impl Mesh
 
     pub fn clear_lines(&mut self)
     {
-        let name = String::from_str("position");
+        let name = String::from("position");
         self.buffers_f32.remove(&name);
-        let name = String::from_str("color");
+        let name = String::from("color");
         self.buffers_f32.remove(&name);
     }
 
     pub fn add_quad(&mut self, w : f32, h : f32)
     {
         {
-        let name = String::from_str("position");
+        let name = String::from("position");
         let hw = w/2f32;
         let hh = h/2f32;
         let mut vvv : Vec<f32> = Vec::with_capacity(4*3);
@@ -681,7 +681,7 @@ impl Mesh
         }
 
         {
-        let name = String::from_str("faces");
+        let name = String::from("faces");
         let mut fff : Vec<u32> = Vec::with_capacity(6);
         fff.push(0u32);
         fff.push(1u32);
@@ -705,7 +705,7 @@ impl Mesh
         }
 
         {
-            let name = String::from_str("texcoord");
+            let name = String::from("texcoord");
             let mut uuu : Vec<f32> = Vec::with_capacity(4*2);
             uuu.push(0f32);
             uuu.push(0f32);
