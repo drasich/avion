@@ -12,7 +12,8 @@ object.print_ob(yop)
 --yop.get_pos(yop)
 x,y,z = object.get_pos(yop)
 --caca = yop:__to_string()
-print("caca : ", yop.position:x())
+yop.position.x = yop.position.x - 0.1
+print("caca : ", yop.position.x)
 --yop["xxx"] = -140
 --yop.y = 10
 for n,v in pairs(metatablepos) do print(n,v) end

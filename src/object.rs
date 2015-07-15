@@ -693,6 +693,53 @@ lua_extern! {
         1
     }
 
+    unsafe fn vec3_index_handler(lua: &mut lua::ExternState) -> i32 {
+        println!("index handler...........");
+        let ptr = lua.checkudata(1,"vec3");
+        let vp : *mut Pointer<vec::Vec3> = unsafe { mem::transmute(ptr) };
+        let v = &*(*vp).pointer;
+        match lua.checkstring(2) {
+            Some(s) => {
+                println!("vec3 {}", s);
+                let f = match s {
+                    "x" => v.x,
+                    "y" => v.y,
+                    "z" => v.z,
+                    _ => 0f64
+                };
+                lua.pushnumber(f);
+                return 1;
+            },
+            None => println!("vec3 argument 2 is not a string")
+        };
+
+        0
+    }
+
+    unsafe fn vec3_newindex_handler(lua: &mut lua::ExternState) -> i32 {
+        println!("new index handler...........");
+        let ptr = lua.checkudata(1,"vec3");
+        let vp : *mut Pointer<vec::Vec3> = unsafe { mem::transmute(ptr) };
+        let v = &mut *(*vp).pointer;
+        match lua.checkstring(2) {
+            Some(s) => {
+                println!("vec3 {}", s);
+                let f = lua.checknumber(3);
+                match s {
+                    "x" => v.x = f,
+                    "y" => v.y = f,
+                    "z" => v.z = f,
+                    _ => {}
+                };
+            },
+            None => println!("vec3 argument 2 is not a string")
+        };
+
+        0
+    }
+
+
+
     unsafe fn getx(lua: &mut lua::ExternState) -> i32 {
         //let ptr = lua.touserdata(1);
         let ptr = lua.checkudata(1, "vec3");
@@ -747,14 +794,16 @@ fn set_pointer<T>(p : *mut c_void, data : *mut T)
 
 fn create_vec3_metatable(lua : &mut lua::State)
 {
+    /*
     let meta = &[
         ("x", getx as lua::CFunction),
         ("y", gety as lua::CFunction),
         ("z", getz as lua::CFunction),
     ];
+    */
 
     if lua.newmetatable("vec3") {
-        lua.registerlib(None, meta);
+        //lua.registerlib(None, meta);
     }
     else {
         panic!("table vec3 already exists");
@@ -762,10 +811,30 @@ fn create_vec3_metatable(lua : &mut lua::State)
 
     let metatable = lua.gettop();
 
-    lua.pushstring("__index");
-    lua.pushvalue(metatable);
-    lua.rawset(metatable);
+    /*
+    {
+        lua.pushstring("__index");
+        lua.pushvalue(metatable);
+        lua.rawset(metatable);
+    }
+    */
+
+    {
+        lua.pushstring("__index");
+        lua.pushvalue(metatable);
+        lua.pushcclosure(vec3_index_handler,1);
+        lua.rawset(metatable);
+    }
+
+    {
+        lua.pushstring("__newindex");
+        lua.pushvalue(metatable);
+        lua.pushcclosure(vec3_newindex_handler,1);
+        lua.rawset(metatable);
+    }
+
     lua.pop(1);
+
 }
 
 fn push_vec3(lua: &mut lua::ExternState, v : &vec::Vec3) -> i32 {
