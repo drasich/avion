@@ -664,7 +664,7 @@ lua_extern! {
             Some(s) => {
                 println!("ihihihih argument 2 is string : {}", s);
                 if s == "position" {
-                    return push_vec3(lua, &ob.position);
+                    return push_data(lua, &mut ob.position, "vec3");
                 }
                 else {
                     let f = match s {
@@ -694,10 +694,15 @@ lua_extern! {
     }
 
     unsafe fn vec3_index_handler(lua: &mut lua::ExternState) -> i32 {
-        println!("index handler...........");
+        println!("vec3 index handler...........");
         let ptr = lua.checkudata(1,"vec3");
-        let vp : *mut Pointer<vec::Vec3> = unsafe { mem::transmute(ptr) };
-        let v = &*(*vp).pointer;
+        let ld : *mut LuaData<vec::Vec3> = unsafe { mem::transmute(ptr) };
+        let v = match *ld {
+            LuaData::Pointer(p) => &*p,
+            LuaData::Value(ref v) => v
+        };
+        println!("vec3 ::::::::::: {:?}", v);
+        //let v = &*(*vp).pointer;
         match lua.checkstring(2) {
             Some(s) => {
                 println!("vec3 {}", s);
@@ -719,8 +724,12 @@ lua_extern! {
     unsafe fn vec3_newindex_handler(lua: &mut lua::ExternState) -> i32 {
         println!("new index handler...........");
         let ptr = lua.checkudata(1,"vec3");
-        let vp : *mut Pointer<vec::Vec3> = unsafe { mem::transmute(ptr) };
-        let v = &mut *(*vp).pointer;
+        let ld : *mut LuaData<vec::Vec3> = unsafe { mem::transmute(ptr) };
+        let v = match *ld {
+            LuaData::Pointer(p) => &mut *p,
+            LuaData::Value(ref mut  v) => v
+        };
+        //let v = &mut *(*vp).pointer;
         match lua.checkstring(2) {
             Some(s) => {
                 println!("vec3 {}", s);
@@ -739,6 +748,7 @@ lua_extern! {
     }
 
 
+    /*
 
     unsafe fn getx(lua: &mut lua::ExternState) -> i32 {
         //let ptr = lua.touserdata(1);
@@ -764,31 +774,40 @@ lua_extern! {
         lua.pushnumber(v.z);
         1
     }
+    */
 
 }
 
+enum LuaData<T>
+{
+    Pointer(*mut T),
+    Value(T)
+}
+
+/*
 struct Pointer<T>
 {
     pointer : *mut T
 }
+*/
 
-impl<T> Pointer<T> {
-    fn new(p : *mut T) -> Pointer<T> {
-        Pointer {
-            pointer : p
-        }
+impl<T> LuaData<T> {
+    fn new(p : *mut T) -> LuaData<T> {
+        LuaData::Pointer(p)
     }
 
+    /*
     fn to_void(&mut self) -> *mut c_void {
         unsafe { mem::transmute(self.pointer) }
     }
+    */
 }
 
 fn set_pointer<T>(p : *mut c_void, data : *mut T)
 {
-    let pointer : *mut Pointer<T> = unsafe { mem::transmute(p) };
+    let ld : *mut LuaData<T> = unsafe { mem::transmute(p) };
     unsafe {
-        (*pointer).pointer = data; 
+        *ld = LuaData::Pointer(data);
     }
 }
 
@@ -837,21 +856,17 @@ fn create_vec3_metatable(lua : &mut lua::State)
 
 }
 
-fn push_vec3(lua: &mut lua::ExternState, v : &vec::Vec3) -> i32 {
+fn push_data<T>(lua: &mut lua::ExternState, v : &mut T, table : &str) -> i32 {
 
-    println!("pushing vec3");
-    let ptr : *mut c_void = unsafe { mem::transmute(v) };
-
-    let yo = 
+    let data = 
         unsafe {
-        lua.newuserdata(mem::size_of::<Pointer<vec::Vec3>>())
+            lua.newuserdata(mem::size_of::<LuaData<T>>())
         };
 
-    set_pointer(yo, ptr);
+    set_pointer(data, v);
 
     unsafe {
-        //lua.pushlightuserdata(ptr);
-        lua.getmetatable_reg("vec3");
+        lua.getmetatable_reg(table);
         lua.setmetatable(-2);
     }
 
