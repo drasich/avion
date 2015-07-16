@@ -639,13 +639,23 @@ lua_extern! {
         println!("new index called on {}", ob.name);
         match lua.checkstring(2) {
             Some(s) => {
-                println!("argument 2 is string : {}", s);
-                let f = lua.checknumber(3);
-                match s {
-                    "x" => ob.position.x = f,
-                    "y" => ob.position.y = f,
-                    "z" => ob.position.z = f,
-                    _ => println!("not supported")
+                if s == "position" {
+                    let ud = lua.checkudata(3, "vec3");
+                    let v : *mut LuaData<vec::Vec3> = unsafe { mem::transmute(ud) };
+                    ob.position = match *v {
+                        LuaData::Pointer(p) => *p,
+                        LuaData::Value(v) => v,
+                    };
+                }
+                else {
+                    println!("argument 2 is string : {}", s);
+                    let f = lua.checknumber(3);
+                    match s {
+                        "x" => ob.position.x = f,
+                        "y" => ob.position.y = f,
+                        "z" => ob.position.z = f,
+                        _ => println!("not supported")
+                    }
                 }
             },
             None => println!("argument 2 is not a string")
@@ -664,7 +674,7 @@ lua_extern! {
             Some(s) => {
                 println!("ihihihih argument 2 is string : {}", s);
                 if s == "position" {
-                    return push_data(lua, &mut ob.position, "vec3");
+                    return push_pointer(lua, &mut ob.position, "vec3");
                 }
                 else {
                     let f = match s {
@@ -718,7 +728,15 @@ lua_extern! {
             None => println!("vec3 argument 2 is not a string")
         };
 
-        0
+        lua.pushvalue(2);
+        // upvalueindex(2) gets the methods table 
+        lua.rawget(lua::upvalueindex(2));
+        if lua.isnil(-1) {
+            println!("vec3 : cannot get member : {}", lua.tostring(2).unwrap());
+            return 0;
+        }
+
+        1
     }
 
     unsafe fn vec3_newindex_handler(lua: &mut lua::ExternState) -> i32 {
@@ -746,6 +764,25 @@ lua_extern! {
 
         0
     }
+
+    unsafe fn vec3_add(lua: &mut lua::ExternState) -> i32 {
+        let ptr1 = lua.checkudata(1,"vec3");
+        let ptr2 = lua.checkudata(2,"vec3");
+        let ld1 : *mut LuaData<vec::Vec3> = unsafe { mem::transmute(ptr1) };
+        let ld2 : *mut LuaData<vec::Vec3> = unsafe { mem::transmute(ptr2) };
+        let v1 = match *ld1 {
+            LuaData::Pointer(p) => *p,
+            LuaData::Value(v) => v
+        };
+
+        let v2 = match *ld2 {
+            LuaData::Pointer(p) => *p,
+            LuaData::Value(v) => v
+        };
+
+        push_data(lua, v1 + v2, "vec3")
+    }
+
 
 
     /*
@@ -776,6 +813,35 @@ lua_extern! {
     }
     */
 
+    unsafe fn vec3_zero(lua: &mut lua::ExternState) -> i32 {
+        push_data(lua, vec::Vec3::zero(), "vec3")
+    }
+
+    unsafe fn vec3_new(lua: &mut lua::ExternState) -> i32 {
+        let x = lua.checknumber(1);
+        let y = lua.checknumber(2);
+        let z = lua.checknumber(3);
+        push_data(lua, vec::Vec3::new(x,y,z), "vec3")
+    }
+
+    unsafe fn vec3_dot(lua: &mut lua::ExternState) -> i32 {
+        let d1 = lua.checkudata(1, "vec3");
+        let vv1 : *mut LuaData<vec::Vec3> = unsafe { mem::transmute(d1) };
+        let vv1r : &mut LuaData<vec::Vec3> = unsafe { mem::transmute(vv1) };
+        //let vv1r : &mut LuaData<vec::Vec3> = LuaData::from_lua(lua, 1, "vec3");
+
+        let d2 = lua.checkudata(2, "vec3");
+        //let vv2 : *const LuaData<vec::Vec3> = unsafe { mem::transmute(d2) };
+        let vv2 = LuaData::from_pointer(d2);
+        let vv2r : &LuaData<vec::Vec3> = &*vv2 ;
+
+        let v1 = vv1r.get_ref();
+        let v2 = vv2r.get_ref();
+        lua.pushnumber(v1.dot(v2));
+        1
+
+    }
+
 }
 
 enum LuaData<T>
@@ -796,11 +862,41 @@ impl<T> LuaData<T> {
         LuaData::Pointer(p)
     }
 
-    /*
-    fn to_void(&mut self) -> *mut c_void {
-        unsafe { mem::transmute(self.pointer) }
+    fn from_pointer(ptr : *mut c_void) -> *mut LuaData<T> {
+        let p : *mut LuaData<T> = unsafe { mem::transmute(ptr) };
+        p
     }
-    */
+
+    fn from_lua<'a>(lua: &'a mut lua::ExternState, narg : i32, kind : &str) -> &'a mut LuaData<T> {
+        let d1 = unsafe {lua.checkudata(narg, kind) };
+        let vv1 : *mut LuaData<T> = unsafe { mem::transmute(d1) };
+        let p : &'a mut LuaData<T> = unsafe { mem::transmute(vv1) };
+        p
+    }
+
+    fn get_value(&self) -> T where T: Copy
+    {
+        match *self {
+            LuaData::Pointer(p) => unsafe { *p },
+            LuaData::Value(v) => v
+        }
+    }
+
+    fn get_ref(&self) -> &T
+    {
+        match *self {
+            LuaData::Pointer(p) => unsafe { &*p },
+            LuaData::Value(ref v) => v
+        }
+    }
+
+    fn set_value(&mut self, value: T)
+    {
+        match *self {
+            LuaData::Pointer(p) => unsafe {*p = value},
+            LuaData::Value(ref mut v) => *v = value
+        }
+    }
 }
 
 fn set_pointer<T>(p : *mut c_void, data : *mut T)
@@ -811,15 +907,27 @@ fn set_pointer<T>(p : *mut c_void, data : *mut T)
     }
 }
 
+fn set_data<T>(p : *mut c_void, data : T)
+{
+    let ld : *mut LuaData<T> = unsafe { mem::transmute(p) };
+    unsafe {
+        *ld = LuaData::Value(data);
+    }
+}
+
+
 fn create_vec3_metatable(lua : &mut lua::State)
 {
-    /*
-    let meta = &[
-        ("x", getx as lua::CFunction),
-        ("y", gety as lua::CFunction),
-        ("z", getz as lua::CFunction),
+
+    let fns = &[
+        ("new", vec3_new as lua::CFunction),
+        ("zero", vec3_zero as lua::CFunction),
+        ("dot", vec3_dot as lua::CFunction),
     ];
-    */
+
+    lua.registerlib(Some("vec3"), fns);
+    let methods = lua.gettop();
+
 
     if lua.newmetatable("vec3") {
         //lua.registerlib(None, meta);
@@ -830,18 +938,18 @@ fn create_vec3_metatable(lua : &mut lua::State)
 
     let metatable = lua.gettop();
 
-    /*
+    //hide metatable
     {
-        lua.pushstring("__index");
-        lua.pushvalue(metatable);
+        lua.pushstring("__metatable");
+        lua.pushvalue(methods);
         lua.rawset(metatable);
     }
-    */
 
     {
         lua.pushstring("__index");
         lua.pushvalue(metatable);
-        lua.pushcclosure(vec3_index_handler,1);
+        lua.pushvalue(methods);
+        lua.pushcclosure(vec3_index_handler,2);
         lua.rawset(metatable);
     }
 
@@ -852,11 +960,18 @@ fn create_vec3_metatable(lua : &mut lua::State)
         lua.rawset(metatable);
     }
 
+    {
+        lua.pushstring("__add");
+        lua.pushcclosure(vec3_add,0);
+        lua.rawset(metatable);
+    }
+
+
     lua.pop(1);
 
 }
 
-fn push_data<T>(lua: &mut lua::ExternState, v : &mut T, table : &str) -> i32 {
+fn push_pointer<T>(lua: &mut lua::ExternState, v : &mut T, table : &str) -> i32 {
 
     let data = 
         unsafe {
@@ -872,6 +987,24 @@ fn push_data<T>(lua: &mut lua::ExternState, v : &mut T, table : &str) -> i32 {
 
     1
 }
+
+fn push_data<T>(lua: &mut lua::ExternState, v : T, table : &str) -> i32 {
+
+    let data = 
+        unsafe {
+            lua.newuserdata(mem::size_of::<LuaData<T>>())
+        };
+
+    set_data(data, v);
+
+    unsafe {
+        lua.getmetatable_reg(table);
+        lua.setmetatable(-2);
+    }
+
+    1
+}
+
 
 fn debug_lua(lua : &mut lua::State)
 {
