@@ -254,7 +254,7 @@ impl Object
         lua.registerlib(Some("object"),yop);
         let methods = lua.gettop();
 
-        if lua.newmetatable("yoman.object") {
+        if lua.newmetatable("object") {
             lua.registerlib(None, meta);
         }
         let metatable = lua.gettop();
@@ -323,12 +323,12 @@ impl Object
         lua.newtable(); // We will pass a table
         lua.pushstring("ob");
         {
-        let ptr : &*mut c_void = unsafe { mem::transmute(&self) };
-        lua.pushlightuserdata(*ptr);
-        {
-        lua.getmetatable_reg("yoman.object");
-        lua.setmetatable(-2);
-        }
+            let ptr : &*mut c_void = unsafe { mem::transmute(&self) };
+            lua.pushlightuserdata(*ptr);
+            {
+                lua.getmetatable_reg("object");
+                lua.setmetatable(-2);
+            }
         }
         lua.rawset(-3);       // Stores the pair in the table
 
@@ -597,7 +597,7 @@ lua_extern! {
     }
 
     unsafe fn object_string(lua: &mut lua::ExternState) -> i32 {
-        //let ptr = lua.checkudata(1, "yoman.object");
+        //let ptr = lua.checkudata(1, "object");
         println!("object string.............");
         //*
         let ptr = lua.touserdata(1);
@@ -611,7 +611,7 @@ lua_extern! {
     }
 
     unsafe fn tostring(lua: &mut lua::ExternState) -> i32 {
-        //let ptr = lua.checkudata(1, "yoman.object");
+        //let ptr = lua.checkudata(1, "object");
         println!("tttttttooootostring.............");
         //*
         let ptr = lua.touserdata(1);
