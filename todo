@@ -5,6 +5,11 @@ DONE
 - id system
 
 TODO
+- add remove compdata, components
+
+- when we changed property of a compdata, we have to reinit his components...
+  for exemple in ui/property.rs "changed_set" function, 
+  we are changing object/comp_data/MeshRender but it is not good
 - separate texture and img
 - transform property update_changed in propertyshow.update_widget
 

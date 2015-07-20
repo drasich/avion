@@ -267,7 +267,7 @@ impl Property
         unsafe {
             property_list_group_add(
                 self.jk_property_list,
-                CString::new("tools".as_bytes()).unwrap().as_ptr());
+                CString::new("tools").unwrap().as_ptr());
         }
     }
 
@@ -1143,7 +1143,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
             property.add_node(self, field);
         }
 
-        if (depth > 0) {
+        if depth > 0 {
             for i in self.iter() {
                 i.create_widget(property, field, depth -1);
             }

@@ -22,7 +22,9 @@ use operation;
 pub struct JkCommand;
 
 pub type CommandCallback = extern fn(
-    data : *const c_void);
+    //fn_data : *const c_void,
+    data : *const c_void,
+    );
 
 #[link(name = "joker")]
 extern {
@@ -32,6 +34,8 @@ extern {
         name : *const c_char,
         data : *const c_void,
         button_callback : CommandCallback);
+    fn command_clean(
+        command : *const JkCommand);
     fn command_show(
         command : *const JkCommand);
 }
@@ -110,6 +114,13 @@ impl Command
                 CString::new(name.as_bytes()).unwrap().as_ptr(),
                 data,
                 cb);
+        }
+    }
+
+    pub fn clean(&self)
+    {
+        unsafe {
+            command_clean(self.jk_command);
         }
     }
 }
@@ -215,4 +226,28 @@ pub extern fn set_camera2(data : *const c_void)
 
     v.handle_control_change(&change);
 }
+
+extern fn add_comp(data : *const c_void)
+{
+    println!("TODO");
+}
+
+pub extern fn add_component(data : *const c_void)
+{
+    let v : &Box<ui::View> = unsafe {mem::transmute(data)};
+    println!("TODO add component");
+
+    if let Some(ref cmd) = v.command {
+
+        /*
+        cmd.borrow().add_ptr("MeshRender", ui::command::add_comp, yo);
+        cmd.borrow().add_ptr("Armature", ui::command::add_comp, yo);
+        cmd.borrow().add_ptr("Player", ui::command::add_comp, yo);
+        */
+
+        cmd.borrow().show();
+    }
+
+}
+
 
