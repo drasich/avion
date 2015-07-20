@@ -283,6 +283,18 @@ impl Mesh
             }
         };
 
+        match file.metadata() {
+            Ok(mt) => {
+                if mt.is_dir() {
+                    return;
+                }
+            },
+            Err(e) => {
+                println!("cannot get metadata");
+                return;
+            }
+        }
+
        {
            let typelen = file.read_u16::<LittleEndian>().unwrap();
            println!("number : {} ", typelen);

@@ -195,14 +195,16 @@ pub struct Property
     pub pv : HashMap<String, *const PropertyValue>,
     control : Rc<RefCell<Control>>,
     expand_state : HashMap<String, bool>,
-    visible : bool
+    visible : bool,
+    pub resource : Rc<resource::ResourceGroup>,
 }
 
 impl Property
 {
     pub fn new(
         window : *const Window,
-        control : Rc<RefCell<Control>>
+        control : Rc<RefCell<Control>>,
+        resource : Rc<resource::ResourceGroup>
         ) -> Box<Property>
     {
         let mut p = box Property {
@@ -211,7 +213,8 @@ impl Property
             pv : HashMap::new(),
             control : control,
             expand_state : HashMap::new(),
-            visible: true
+            visible: true,
+            resource : resource
         };
 
         p.set_visible(false);
@@ -434,7 +437,7 @@ pub extern fn changed_set_string(
             return;
         }
     };
-    //println!("the string is {}", ss);
+    println!("the string is {}", ss);
     changed_set(property, name, None, &ss, 0);
 }
 
@@ -464,7 +467,7 @@ pub extern fn register_change_string(
         }
     };
 
-    //println!("the string is {}", ss);
+    println!("register change string,,, the string is {}", ss);
     if action == 1 && old != ptr::null() {
         let oldchar = old as *const i8;
         let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
@@ -606,6 +609,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
     //let vs = vs.tail().to_vec();
 
     let p : & Property = unsafe {mem::transmute(property)};
+    let resource = &p.resource;
 
     let mut control = match p.control.borrow_state() {
         BorrowState::Unused => p.control.borrow_mut(),
@@ -632,7 +636,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
         return;
     };
 
-    let ob = obw.write().unwrap();
+    let mut ob = obw.write().unwrap();
 
 
     /*
@@ -664,8 +668,8 @@ fn changed_set<T : Any+Clone+PartialEq>(
                 println!("please update mesh");
                 let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
                 if let Some(ref mr) = omr {
-                    //ob.mesh_render = 
-                    //    Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&*resource));
+                    ob.mesh_render = 
+                        Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,resource));
                 }
 
             }

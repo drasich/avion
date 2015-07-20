@@ -153,7 +153,9 @@ impl View
 
         let p = Rc::new(RefCell::new(ui::Property::new(
                     w,
-                    control.clone())));
+                    control.clone(),
+                    self.resource.clone()
+                    )));
 
         let t = Rc::new(RefCell::new(ui::Tree::new(
                     w,

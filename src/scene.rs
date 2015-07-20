@@ -136,7 +136,7 @@ impl Scene
             let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
             if let Some(ref mr) = omr {
                 ob.mesh_render = 
-                    Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&*resource));
+                    Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,resource));
             }
         }
     }
