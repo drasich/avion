@@ -384,6 +384,18 @@ impl Object
         //let (tx, rx) = channel();
     }
 
+    pub fn get_comp_data_value<T:Any+Clone>(&self) -> Option<T>
+    {
+        for c in self.comp_data.iter()
+        {
+             if let Some(s) = c.get_comp::<T>() {
+                 return Some((*s).clone());
+             }
+        }
+        None
+    }
+
+
     pub fn get_comp_data<T:Any>(&self) -> Option<&T>
     {
         for c in self.comp_data.iter()

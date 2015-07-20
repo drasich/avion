@@ -625,12 +625,25 @@ fn changed_set<T : Any+Clone+PartialEq>(
         }
     };
 
+    let obw = if let Some(o) = control.get_selected_object(){
+        o 
+    }
+    else { 
+        return;
+    };
+
+    let ob = obw.write().unwrap();
+
+
+    /*
     let id = if let Some(o) = control.get_selected_object(){
         o.read().unwrap().id.clone()
     }
     else { 
         return;
     };
+    */
+    let id = ob.id.clone();
 
     match change {
         operation::Change::DirectChange(s) |
@@ -646,6 +659,15 @@ fn changed_set<T : Any+Clone+PartialEq>(
                         },
                         None => {}
                 };
+            }
+            else if s.starts_with("object/comp_data/MeshRender") {
+                println!("please update mesh");
+                let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
+                if let Some(ref mr) = omr {
+                    //ob.mesh_render = 
+                    //    Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&*resource));
+                }
+
             }
         },
         _ => {}

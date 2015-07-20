@@ -126,6 +126,26 @@ impl MeshRenderer{
         }
     }
 
+    pub fn with_names(mesh : &str, material : &str, resource : &resource::ResourceGroup) -> MeshRenderer
+    {
+        MeshRenderer {
+            mesh : resource.mesh_manager.borrow_mut().request_use_no_proc(mesh),
+            material : resource.material_manager.borrow_mut().request_use_no_proc(material),
+            mesh_instance : None,
+            material_instance : None,
+        }
+    }
+
+    pub fn with_mesh_render(mesh_render : &MeshRender, resource : &resource::ResourceGroup) -> MeshRenderer
+    {
+        MeshRenderer {
+            mesh : resource.mesh_manager.borrow_mut().request_use_no_proc(mesh_render.mesh.as_ref()),
+            material : resource.material_manager.borrow_mut().request_use_no_proc(mesh_render.material.as_ref()),
+            mesh_instance : None,
+            material_instance : None,
+        }
+    }
+
     pub fn new_with_mesh(
         mesh : Arc<RwLock<mesh::Mesh>>,
         material : &str,
@@ -199,25 +219,21 @@ impl MeshRenderer{
             */
         }
 
-    pub fn get_mat_instance(&mut self) -> 
-        Option<&mut material::Material>
-        //Option<&'a mesh::Mesh>
-        {
-            match self.material_instance {
-                Some(ref mut m) => Some(&mut *m),
-                None => return None
-            }
+    pub fn get_mat_instance(&mut self) -> Option<&mut material::Material>
+    {
+        match self.material_instance {
+            Some(ref mut m) => Some(&mut *m),
+            None => return None
         }
+    }
 
-    pub fn get_mesh_instance(&mut self) -> 
-        Option<&mut mesh::Mesh>
-        //Option<&'a mesh::Mesh>
-        {
-            match self.mesh_instance {
-                Some(ref mut m) => Some(&mut *m),
-                None => return None
-            }
+    pub fn get_mesh_instance(&mut self) -> Option<&mut mesh::Mesh>
+    {
+        match self.mesh_instance {
+            Some(ref mut m) => Some(&mut *m),
+            None => return None
         }
+    }
 
 }
 

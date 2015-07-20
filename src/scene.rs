@@ -132,12 +132,11 @@ impl Scene
             if let Some(mrd) = ob.get_comp_data::<armature::ArmaturePath>(){
                 println!("there is armature path");
             }
-            if let Some(mrd) = ob.get_comp_data::<component::mesh_render::MeshRender>(){
-                b = true;
-            }
-            if b {
+
+            let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
+            if let Some(ref mr) = omr {
                 ob.mesh_render = 
-                    Some(component::mesh_render::MeshRenderer::new(&*ob,&*resource));
+                    Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&*resource));
             }
         }
     }
