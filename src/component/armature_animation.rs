@@ -127,7 +127,7 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Components>
         }
     };
 
-    let armature = resource.armature_manager.borrow_mut().request_use_no_proc(arm.as_ref());
+    let armature = resource.armature_manager.borrow_mut().request_use_no_proc(arm.name.as_ref());
     let instance = armature.read().unwrap().create_instance();
 
     let arm_anim = ArmatureAnimation {

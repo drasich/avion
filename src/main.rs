@@ -48,12 +48,15 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process;
 
+#[macro_use]
+mod property;
+
 mod resource;
 mod shader;
 mod material;
 mod armature;
 mod mesh;
-mod mesh_render;
+//mod mesh_render;
 mod render;
 mod object;
 mod uniform;
@@ -64,7 +67,6 @@ mod scene;
 mod texture;
 mod ui;
 mod dragger;
-mod property;
 mod geometry;
 mod intersection;
 mod fbo;

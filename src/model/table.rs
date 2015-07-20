@@ -1,7 +1,7 @@
 use factory;
 use object;
 use mesh;
-use mesh_render;
+//use mesh_render;
 use resource;
 use std::sync::{Arc,RwLock};
 
@@ -29,6 +29,7 @@ pub fn create_table_mesh(table : Table) -> mesh::Mesh
     m
 }
 
+/*
 pub fn create_mesh_render(mesh : mesh::Mesh) -> mesh_render::MeshRender
 {
     let m = Arc::new(RwLock::new(mesh));
@@ -40,6 +41,7 @@ pub fn create_mesh_render(mesh : mesh::Mesh) -> mesh_render::MeshRender
 
     mesh_render
 }
+*/
 
 fn create_table(m : &mut mesh::Mesh)
 {

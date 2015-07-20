@@ -20,7 +20,6 @@ use property::PropertyWrite;
 use resource;
 use property::PropertyGet;
 use factory;
-use mesh_render;
 
 pub enum State
 {

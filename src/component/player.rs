@@ -9,6 +9,9 @@ use transform;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use resource;
 
+use property::{PropertyRead, PropertyGet, PropertyWrite, WriteValue};
+use std::any::Any;
+
 #[derive(Clone, RustcEncodable, RustcDecodable)]
 pub struct Player
 {
@@ -83,12 +86,12 @@ impl Component for PlayerBehavior
 
 #[derive(Clone, RustcEncodable, RustcDecodable)]
 pub struct Enemy {
-    name : String
+    pub name : String
 }
 
 #[derive(Clone, RustcEncodable, RustcDecodable)]
 pub struct Collider {
-    name : String
+    pub name : String
 }
 
 
@@ -101,4 +104,12 @@ impl Encode for Player
   }
 
 }
+
+property_set_impl!(Player,[speed]);
+property_set_impl!(Enemy,[name]);
+property_set_impl!(Collider,[name]);
+
+property_get_impl!(Player,[speed]);
+property_get_impl!(Enemy,[name]);
+property_get_impl!(Collider,[name]);
 

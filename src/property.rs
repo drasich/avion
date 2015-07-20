@@ -3,7 +3,8 @@ use vec;
 use std::any::{Any};//, AnyRefExt};
 use std::f64::consts;
 use transform;
-use mesh_render;
+use component;
+use component::mesh_render;
 use resource;
 use mesh;
 use material;
@@ -42,15 +43,15 @@ pub trait PropertyRead
   //fn get_some() -> Option<Self>;
 }
 
-/*
 impl<T:Any+Clone> PropertyRead for T
 {
-  fn get_property(&self) -> Box<Any>
+  fn get_property(&self) -> Option<Box<Any>>
   {
-      box self.clone()
+      Some(box self.clone())
   }
 }
-*/
+
+/*
 impl<T:Any> PropertyRead for resource::ResTT<T>
 {
   fn get_property(&self) -> Option<Box<Any>>
@@ -70,14 +71,17 @@ macro_rules! property_read_impl(
             }
         }
 ));
+*/
 
 
+/*
 property_read_impl!(f64);
 property_read_impl!(String);
 property_read_impl!(vec::Vec3);
 property_read_impl!(vec::Quat);
 property_read_impl!(transform::Orientation);
-property_read_impl!(mesh_render::MeshRender);
+*/
+//property_read_impl!(mesh_render::MeshRender);
 
 
 pub trait PropertyGet
@@ -92,6 +96,7 @@ pub trait PropertyGet
 impl PropertyGet for f64{}
 impl PropertyGet for String{}
 
+/*
 impl<T:Any+Clone> PropertyRead for Option<T>
 {
   fn get_property(&self) -> Option<Box<Any>>
@@ -108,6 +113,7 @@ impl<T:Any+Clone> PropertyRead for Option<T>
       }
   }
 }
+*/
 
 pub enum WriteValue
 {
@@ -142,9 +148,48 @@ pub trait PropertyWrite
           _ => {}
       }
   }
-
-
 }
+
+
+impl<T:PropertyWrite> PropertyWrite for Vec<T> {
+
+  fn test_set_property_hier(&mut self, name : &str, value: &Any)
+  {
+      //TODO if there are multiple same components, it will set
+      // for all...
+      // TODO uselessly loop through all components... solution: it should
+      // stop when found the property
+      for i in self.iter_mut() {
+          i.test_set_property_hier(name, value);
+      }
+  }
+}
+
+impl<T:PropertyGet> PropertyGet for Vec<T> {
+
+  fn get_property_hier(&self, name : &str) -> Option<Box<Any>>
+  {
+      for i in self.iter() {
+          let r = i.get_property_hier(name);
+          if r.is_some() {
+              return r;
+          }
+      }
+
+      None
+  }
+}
+
+impl<T:PropertyGet> PropertyGet for Box<T>
+{
+  fn get_property_hier(&self, name : &str) -> Option<Box<Any>>
+  {
+      (**self).get_property_hier(name)
+  }
+}
+
+
+
 
 impl PropertyWrite for f64
 {
@@ -435,7 +480,7 @@ fn join_string(path : &Vec<String>) -> String
 }
 */
 
-macro_rules! property_test_impl(
+macro_rules! property_set_impl(
     ($my_type:ty, [ $($member:ident),+ ]) => ( 
         impl PropertyWrite for $my_type
         {
@@ -510,11 +555,12 @@ macro_rules! property_test_impl(
 )
 );
 
-property_test_impl!(vec::Vec3,[x,y,z]);
-property_test_impl!(vec::Quat,[x,y,z,w]);
-property_test_impl!(mesh_render::MeshRender,[mesh,material]);
-//property_test_impl!(object::Object,[name,position,orientation,scale,mesh_render]);
-property_test_impl!(object::Object,[name,position,orientation,scale]);
+property_set_impl!(vec::Vec3,[x,y,z]);
+property_set_impl!(vec::Quat,[x,y,z,w]);
+//property_set_impl!(mesh_render::MeshRender,[mesh,material]);
+//property_set_impl!(armature::MeshRender,[mesh,material]);
+property_set_impl!(object::Object,[name,position,orientation,scale,comp_data]);
+//property_set_impl!(object::Object,[name,position,orientation,scale]);
 
 macro_rules! property_get_impl(
     ($my_type:ty, [ $($member:ident),+ ]) => ( 
@@ -563,7 +609,7 @@ property_get_impl!(vec::Vec3,[x,y,z]);
 property_get_impl!(vec::Quat,[x,y,z,w]);
 property_get_impl!(resource::ResTT<mesh::Mesh>,[name]);
 property_get_impl!(resource::ResTT<material::Material>,[name]);
-property_get_impl!(mesh_render::MeshRender,[mesh,material]);
-//property_get_impl!(object::Object,[name,position,orientation,scale,mesh_render]);
-property_get_impl!(object::Object,[name,position,orientation,scale]);
+//property_get_impl!(mesh_render::MeshRender,[mesh,material]);
+//property_get_impl!(object::Object,[name,position,orientation,scale]);
+property_get_impl!(object::Object,[name,position,orientation,scale,comp_data]);
 

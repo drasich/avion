@@ -20,7 +20,6 @@ use factory;
 use context;
 use resource;
 use resource::Create;
-use mesh_render;
 use vec;
 use geometry;
 use material;

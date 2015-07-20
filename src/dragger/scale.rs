@@ -10,7 +10,6 @@ use resource::Create;
 use shader;
 use material;
 use transform;
-use mesh_render;
 use geometry;
 use intersection;
 use matrix;

@@ -963,6 +963,17 @@ fn create_vec3_metatable(lua : &mut lua::State)
         lua.rawset(metatable);
     }
 
+    //TODO
+    /*
+     *
+    __unm - Unary minus. When writing "-myTable", if the metatable has a __unm key pointing to a function, that function is invoked (passing the table), and the return value used as the value of "-myTable".
+    __mul - Multiplication. Similar to addition, using the '*' operator.
+    __div - Division. Similar to addition, using the '/' operator.
+    __mod - Modulo. Similar to addition, using the '%' operator.
+    __pow - Involution. Similar to addition, using the '^' operator.
+    __concat - Concatenation. Similar to addition, using the '..' operator. 
+     */
+
 
     lua.pop(1);
 

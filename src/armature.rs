@@ -13,6 +13,10 @@ use resource;
 use geometry;
 use vec;
 
+use property::{PropertyRead, PropertyGet, PropertyWrite, WriteValue};
+use std::any::Any;
+
+
 fn read_string(file : &mut File) -> String
 {
     /*
@@ -328,7 +332,10 @@ impl Action {
     }
 }
 
-pub type ArmaturePath = String;
+#[derive(Clone, RustcEncodable, RustcDecodable)]
+pub struct ArmaturePath {
+   pub name : String
+}
 
 
 //TODO clone : only have one instance of the base armature
@@ -608,3 +615,7 @@ impl ArmatureInstance
         }
     }
 }
+
+property_set_impl!(ArmaturePath,[name]);
+property_get_impl!(ArmaturePath,[name]);
+

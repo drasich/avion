@@ -14,6 +14,8 @@ use component::armature_animation::ArmatureAnimation;
 use component::player::PlayerBehavior;
 use resource;
 
+use property::{PropertyGet, PropertyWrite, WriteValue};
+
 pub trait Component : Any
 {
     //fn new(&self) -> Rc<RefCell<Box<Component>>>;
@@ -189,7 +191,119 @@ impl CompData
         }
     }
 
+    pub fn get_kind_string(&self) -> String
+    {
+        match *self {
+            CompData::Player(_) => {
+                String::from("Player")
+            },
+            CompData::Armature(_) => {
+                String::from("Armature")
+            },
+            CompData::MeshRender(_) => {
+                String::from("MeshRender")
+            },
+            _ => {
+                String::from("NotImplemented")
+            }
+        }
+
+    }
+
 }
+
+impl PropertyWrite for CompData {
+  fn test_set_property_hier(&mut self, name : &str, value: &Any)
+  {
+      let v : Vec<&str> = name.split('/').collect();
+
+      match v.len() {
+          0 => {},
+          1 => {},
+          _ => {
+              let yep : String = v.tail().connect("/");
+              if v[0] == self.get_kind_string() {
+                  match *self {
+                      CompData::Player(ref mut p) => {
+                          p.test_set_property_hier(yep.as_ref(), value);
+                      },
+                      CompData::Armature(ref mut p) => {
+                          p.test_set_property_hier(yep.as_ref(), value);
+                      },
+                      CompData::MeshRender(ref mut p) => {
+                          p.test_set_property_hier(yep.as_ref(), value);
+                      },
+                      _ => {println!("not yet implemented");}
+                  }
+              }
+          }
+      }
+  }
+
+  fn set_property_hier(&mut self, name : &str, value: WriteValue)
+  {
+      let v : Vec<&str> = name.split('/').collect();
+
+      match v.len() {
+          0 => {},
+          1 => {},
+          _ => {
+              let yep : String = v.tail().connect("/");
+              if v[0] == self.get_kind_string() {
+                  match *self {
+                      CompData::Player(ref mut p) => {
+                          p.set_property_hier(yep.as_ref(), value);
+                      },
+                      CompData::Armature(ref mut p) => {
+                          p.set_property_hier(yep.as_ref(), value);
+                      },
+                      CompData::MeshRender(ref mut p) => {
+                          p.set_property_hier(yep.as_ref(), value);
+                      },
+                      _ => {println!("not yet implemented");}
+                  }
+              }
+          }
+      }
+  }
+}
+
+impl PropertyGet for CompData
+{
+  fn get_property_hier(&self, name : &str) -> Option<Box<Any>>
+  {
+      let v : Vec<&str> = name.split('/').collect();
+
+      match v.len() {
+          0 => None,
+          1 => None,
+          _ => {
+              let yep : String = v.tail().connect("/");
+              if v[0] == self.get_kind_string() {
+                  match *self {
+                      CompData::Player(ref p) => {
+                          p.get_property_hier(yep.as_ref())
+                      },
+                      CompData::Armature(ref p) => {
+                          p.get_property_hier(yep.as_ref())
+                      },
+                      CompData::MeshRender(ref p) => {
+                          p.get_property_hier(yep.as_ref())
+                      },
+                      _ => {
+                          println!("not yet implemented");
+                          None
+                      }
+                  }
+              }
+              else {
+                  None
+              }
+          }
+      }
+  }
+}
+
 
 //type ComponentCreationFn = fn() -> Box<Component>;
 type ComponentCreationFn = fn(&Object, &resource::ResourceGroup) -> Box<Components>;

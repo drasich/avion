@@ -27,9 +27,11 @@ use vec;
 use transform;
 use resource;
 use mesh;
-use mesh_render;
 use material;
 use property::PropertyGet;
+use component;
+use component::CompData;
+use armature;
 
 #[repr(C)]
 pub struct Elm_Object_Item;
@@ -326,6 +328,7 @@ impl Property
     }
 
     pub fn add_node(&mut self, ps : &PropertyShow, name : &str) {
+        println!("____added node : {}", name);
         let f = CString::new(name.as_bytes()).unwrap();
         let pv = unsafe {
             property_list_node_add(
@@ -957,6 +960,7 @@ impl PropertyShow for String {
 
     fn create_widget(&self, property : &mut Property, field : &str, depth : i32)
     {
+        println!("adding string field : {}", field);
         let f = CString::new(field.as_bytes()).unwrap();
         let v = CString::new(self.as_bytes()).unwrap();
 
@@ -1094,6 +1098,173 @@ impl<T> PropertyShow for resource::ResTT<T>
     }
 }
 
+impl<T:PropertyShow> PropertyShow for Vec<T>
+{
+    fn create_widget(
+        &self,
+        property : &mut Property,
+        field : &str,
+        depth : i32)
+    {
+        println!("___ add vec ::: field::::: {}, {}", field, depth);
+
+        if depth < 0 {
+            return;
+        }
+
+        if depth == 0 && field != ""
+        {
+            property.add_node(self, field);
+        }
+
+        if (depth > 0) {
+            for i in self.iter() {
+                i.create_widget(property, field, depth -1);
+            }
+        }
+    }
+
+    fn get_property(&self, field : &str) -> Option<&PropertyShow>
+    {
+        for i in self.iter() {
+            let r = i.get_property(field);
+            if r.is_some() {
+                println!("$$$$$$$$$$$$$$$ Vec return some : {}", field);
+                return r;
+            }
+        }
+
+        println!("$$$$$$$$$$$$$$$ Vec return none for field {}", field);
+        None
+    }
+
+    fn update_widget(&self, pv : *const PropertyValue) {
+        for i in self.iter() {
+            i.update_widget(pv);
+        }
+    }
+}
+
+impl PropertyShow for CompData
+{
+    fn create_widget(
+        &self,
+        property : &mut Property,
+        field : &str,
+        depth : i32)
+    {
+        let kind : String = self.get_kind_string();
+        let kindr : &str = kind.as_ref();
+        let ss = field.to_string() + "/" + kindr;
+        let s : &str = ss.as_ref();
+
+        /*
+        let mut v : Vec<&str> = field.split('/').collect();
+
+        if v.len() >= 1 {
+            v.pop();
+        }
+
+        v.push(kindr);
+
+        //println!("--before compdata property show for : {}, {}, {}", field, depth, kind);
+
+        let yo : String = v.connect("/");
+        let field = yo.as_ref();
+        */
+
+    
+
+        if depth < 0 {
+            return;
+        } 
+
+        if depth == 0 && field != ""
+        {
+            println!("--> compdata property show for : {}, {}, {}", s, depth, kind );
+            property.add_node(self, s);
+        }
+
+        if depth > 0
+        {
+            println!("--> compdata property show for : {}, {}, {}", field, depth, kind );
+
+        match *self {
+            CompData::Player(ref p) => {
+                p.create_widget(property, field, depth);
+            },
+            CompData::Armature(ref p) => {
+                p.create_widget(property, field, depth);
+            },
+            CompData::MeshRender(ref p) => {
+                p.create_widget(property, field, depth);
+            },
+            _ => {println!("not yet implemented");}
+        }
+    }
+    }
+
+    fn update_widget(&self, pv : *const PropertyValue) {
+        match *self {
+            CompData::Player(ref p) => {
+                p.update_widget(pv);
+            },
+            CompData::Armature(ref p) => {
+                p.update_widget(pv);
+            },
+            CompData::MeshRender(ref p) => {
+                p.update_widget(pv);
+            },
+            _ => {println!("not yet implemented");}
+        }
+    }
+
+    fn get_property(&self, field : &str) -> Option<&PropertyShow>
+    {
+        /*
+        let kind : String = self.get_kind_string();
+        let kindr : &str = kind.as_ref();
+
+        let mut v : Vec<&str> = field.split('/').collect();
+
+        if v.len() >= 1 {
+            v.pop();
+        }
+
+        v.push(kindr);
+
+        let yo : String = v.connect("/");
+        let field = yo.as_ref();
+        */
+
+        /*
+        match *self {
+            CompData::Player(ref p) => {
+                p.get_property(field)
+            },
+            CompData::Armature(ref p) => {
+                p.get_property(field)
+            },
+            CompData::MeshRender(ref p) => {
+                p.get_property(field)
+            },
+            _ => {
+                println!("not yet implemented"); 
+                None
+            }
+        }
+        */
+
+        if field == self.get_kind_string() {
+            return Some(self);
+        }
+
+        None
+    }
+}
+
+
+
 macro_rules! property_show_impl(
     ($my_type:ty, [ $($member:ident),+ ]) => ( 
 
@@ -1157,10 +1328,16 @@ macro_rules! property_show_impl(
 property_show_impl!(vec::Vec3,[x,y,z]);
 property_show_impl!(vec::Quat,[x,y,z,w]);
 property_show_impl!(transform::Transform,[position,orientation]);
-property_show_impl!(mesh_render::MeshRender,[mesh,material]);
+//property_show_impl!(mesh_render::MeshRender,[mesh,material]);
 property_show_impl!(object::Object,
-                     [name,position,orientation,scale]);
-                     //[name,position,orientation,scale,mesh_render]);
+                     //[name,position,orientation,scale]);
+                     [name,position,orientation,scale,comp_data]);
+
+property_show_impl!(component::mesh_render::MeshRender,[mesh,material]);
+property_show_impl!(component::player::Player,[speed]);
+property_show_impl!(component::player::Enemy,[name]);
+property_show_impl!(component::player::Collider,[name]);
+property_show_impl!(armature::ArmaturePath,[name]);
 
 fn join_string(path : &Vec<String>) -> String
 {

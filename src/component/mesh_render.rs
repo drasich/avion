@@ -13,6 +13,9 @@ use mesh;
 use resource;
 use material;
 
+use property::{PropertyRead, PropertyGet, PropertyWrite, WriteValue};
+use std::any::Any;
+
 #[derive(RustcDecodable, RustcEncodable, Clone)]
 pub struct MeshRender
 {
@@ -222,4 +225,7 @@ pub fn new(ob : &Object, resource : &resource::ResourceGroup) -> Box<Component>
 {
     box MeshRenderer::new(ob, resource)
 }
+
+property_set_impl!(MeshRender,[mesh,material]);
+property_get_impl!(MeshRender,[mesh,material]);
 
