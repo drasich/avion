@@ -9,6 +9,8 @@ use std::rc::Weak;
 use std::rc::Rc;
 use uuid::Uuid;
 use std::ffi::CString;
+use std::ffi::CStr;
+use std::str;
 
 use scene;
 use object;
@@ -24,6 +26,7 @@ pub struct JkCommand;
 pub type CommandCallback = extern fn(
     //fn_data : *const c_void,
     data : *const c_void,
+    name : *const c_char,
     );
 
 #[link(name = "joker")]
@@ -125,7 +128,7 @@ impl Command
     }
 }
 
-pub extern fn add_empty(data : *const c_void)
+pub extern fn add_empty(data : *const c_void, name : *const c_char)
 {
     println!("command ::: add empty");
 
@@ -156,7 +159,7 @@ pub extern fn add_empty(data : *const c_void)
     }
 }
 
-pub extern fn remove_selected(data : *const c_void)
+pub extern fn remove_selected(data : *const c_void, name : *const c_char)
 {
     let cd : &CommandData = unsafe {mem::transmute(data)};
 
@@ -190,13 +193,13 @@ pub extern fn remove_selected(data : *const c_void)
 }
 
 
-pub extern fn set_scene_camera(data : *const c_void)
+pub extern fn set_scene_camera(data : *const c_void, name : *const c_char)
 {
     println!("command ::: set scene camera");
 }
 
 
-pub extern fn remove_selected2(data : *const c_void)
+pub extern fn remove_selected2(data : *const c_void, name : *const c_char)
 {
     let v : &Box<ui::View> = unsafe {mem::transmute(data)};
 
@@ -211,7 +214,7 @@ pub extern fn remove_selected2(data : *const c_void)
     v.handle_control_change(&change);
 }
 
-pub extern fn set_camera2(data : *const c_void)
+pub extern fn set_camera2(data : *const c_void, name : *const c_char)
 {
     let v : &Box<ui::View> = unsafe {mem::transmute(data)};
 
@@ -227,15 +230,18 @@ pub extern fn set_camera2(data : *const c_void)
     v.handle_control_change(&change);
 }
 
-extern fn add_comp(data : *const c_void)
+extern fn add_comp(data : *const c_void, name : *const c_char)
 {
     println!("TODO");
 }
 
-pub extern fn add_component(data : *const c_void)
+pub extern fn add_component(data : *const c_void, name : *const c_char)
 {
     let v : &Box<ui::View> = unsafe {mem::transmute(data)};
-    println!("TODO add component");
+    let s = unsafe {CStr::from_ptr(name).to_bytes()};
+    let s = str::from_utf8(s).unwrap();
+
+    println!("TODO add component {}", s);
 
     if let Some(ref cmd) = v.command {
 

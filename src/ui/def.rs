@@ -203,7 +203,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 
     }
 
-    let scene_actions : &[(&str, extern fn(*const c_void))]
+    let scene_actions : &[(&str, extern fn(*const c_void, *const c_char))]
             = &[
         ("remove selected22", ui::command::remove_selected2),
         ("set camera2", ui::command::set_camera2),
