@@ -822,7 +822,11 @@ impl Control
             );
 
         //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
+    }
 
+    pub fn add_component(&mut self, component_name : &str) -> operation::Change
+    {
+        operation::Change::None
     }
 
     pub fn set_scene_camera(&mut self) -> operation::Change

@@ -33,7 +33,8 @@ pub enum OperationData
     SetSceneCamera(
         Rc<RefCell<scene::Scene>>,
         Option<Arc<RwLock<object::Object>>>,
-        Option<Arc<RwLock<object::Object>>>)
+        Option<Arc<RwLock<object::Object>>>),
+    AddComponent(uuid::Uuid, uuid::Uuid) //object id, component id?
 }
 
 pub struct Operation

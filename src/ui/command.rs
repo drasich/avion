@@ -235,6 +235,22 @@ extern fn add_comp(data : *const c_void, name : *const c_char)
     let s = unsafe {CStr::from_ptr(name).to_bytes()};
     let s = str::from_utf8(s).unwrap();
     println!("TODO add component : {}", s);
+
+    let v : &Box<ui::View> = unsafe {mem::transmute(data)};
+
+    if v.control.borrow_state() != BorrowState::Unused {
+        println!("control already borrowed ");
+        return;
+    }
+
+    let mut control = v.control.borrow_mut();
+    //let change = control.set_scene_camera();
+    //v.handle_control_change(&change);
+
+
+    if s == "MeshRender" {
+
+    }
 }
 
 pub extern fn add_component(data : *const c_void, name : *const c_char)
