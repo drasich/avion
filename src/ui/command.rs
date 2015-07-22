@@ -232,7 +232,9 @@ pub extern fn set_camera2(data : *const c_void, name : *const c_char)
 
 extern fn add_comp(data : *const c_void, name : *const c_char)
 {
-    println!("TODO");
+    let s = unsafe {CStr::from_ptr(name).to_bytes()};
+    let s = str::from_utf8(s).unwrap();
+    println!("TODO add component : {}", s);
 }
 
 pub extern fn add_component(data : *const c_void, name : *const c_char)
@@ -241,17 +243,16 @@ pub extern fn add_component(data : *const c_void, name : *const c_char)
     let s = unsafe {CStr::from_ptr(name).to_bytes()};
     let s = str::from_utf8(s).unwrap();
 
-    println!("TODO add component {}", s);
+    if let Some(ref c) = v.command {
 
-    if let Some(ref cmd) = v.command {
+        let cmd = c.borrow();
+        cmd.clean();
 
-        /*
-        cmd.borrow().add_ptr("MeshRender", ui::command::add_comp, yo);
-        cmd.borrow().add_ptr("Armature", ui::command::add_comp, yo);
-        cmd.borrow().add_ptr("Player", ui::command::add_comp, yo);
-        */
+        cmd.add_ptr("MeshRender", ui::command::add_comp, data);
+        cmd.add_ptr("Armature", ui::command::add_comp, data);
+        cmd.add_ptr("Player", ui::command::add_comp, data);
 
-        cmd.borrow().show();
+        cmd.show();
     }
 
 }

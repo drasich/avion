@@ -196,17 +196,6 @@ impl View
             ui::action::play_scene,
             ad.clone());
 
-        let cd = ui::command::CommandData::new(
-            t.clone(),
-            p.clone(),
-            control.clone(),
-            self.holder.clone()
-        );
-
-        command.borrow().add("add empty", ui::command::add_empty, cd.clone());
-        command.borrow().add("remove selected", ui::command::remove_selected, cd.clone());
-        command.borrow().add("set scene camera", ui::command::set_scene_camera, cd.clone());
-
         {
             let tree = t.borrow();
             unsafe {
@@ -652,9 +641,48 @@ pub extern fn key_down(
 
         match key_str.as_ref() {
             "Return" => {
-                if let Some(ref cmd) = view.command {
+                if let Some(ref c) = view.command {
                     println!("pressed return show popup");
-                    cmd.borrow().show();
+                    let cmd = c.borrow();
+
+                    cmd.clean();
+
+                    let t = if let Some(ref t) = view.tree {
+                        t.clone()
+                    }else {
+                        return;
+                    };
+                    let p = if let Some(ref p) = view.property {
+                        p.clone()
+                    }
+                    else {
+                        return;
+                    };
+
+                    let cd = ui::command::CommandData::new(
+                        t.clone(),
+                        p.clone(),
+                        control_rc.clone(),
+                        view.holder.clone()
+                        );
+
+                    cmd.add("add empty", ui::command::add_empty, cd.clone());
+                    cmd.add("remove selected", ui::command::remove_selected, cd.clone());
+                    cmd.add("set scene camera", ui::command::set_scene_camera, cd.clone());
+
+                    let scene_actions : &[(&str, extern fn(*const c_void, *const c_char))]
+                    = &[
+                    ("remove selected22", ui::command::remove_selected2),
+                    ("set camera2", ui::command::set_camera2),
+                    ("add component", ui::command::add_component)
+                    ];
+
+                    for a in scene_actions.iter() {
+                        let (ref name, f) = *a;
+                        cmd.add_ptr(name, f, data);
+                    }
+
+                    cmd.show();
                 }
                 return;
             },
