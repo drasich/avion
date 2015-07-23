@@ -20,6 +20,7 @@ use property::PropertyWrite;
 use resource;
 use property::PropertyGet;
 use factory;
+use component;
 
 pub enum State
 {
@@ -826,6 +827,29 @@ impl Control
 
     pub fn add_component(&mut self, component_name : &str) -> operation::Change
     {
+
+        let list = self.get_selected_objects();
+        let o = if list.len() == 1 {
+            list.front().unwrap()
+        }
+        else 
+        {
+            return operation::Change::None;
+        };
+
+        let cp = if component_name == "MeshRender" {
+            box component::CompData::MeshRender(component::mesh_render::MeshRender::new("cacamesh", "cacamat"))
+        }
+        else {
+            return operation::Change::None;
+        };
+
+        let vs = Vec::new();
+        return self.request_operation(
+            vs,
+            operation::OperationData::AddComponent(o.clone(), cp)
+            );
+
         operation::Change::None
     }
 

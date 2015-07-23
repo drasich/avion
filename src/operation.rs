@@ -277,6 +277,11 @@ impl OperationTrait for Operation
                     }
                 }
             },
+            OperationData::AddComponent(ref o, ref compo)  => {
+                let mut ob = o.write().unwrap();
+                ob.remove_comp_data(compo.clone());
+                return Change::ComponentChanged(ob.id.clone(), compo.get_kind_string());
+            },
             _ => {}
         }
 

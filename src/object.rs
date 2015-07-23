@@ -384,6 +384,13 @@ impl Object
         //let (tx, rx) = channel();
     }
 
+    pub fn remove_comp_data(&mut self, c : Box<CompData>)
+    {
+        println!("removing compdata !!!");
+        self.comp_data.retain(|cd| cd.get_kind_string() != c.get_kind_string());
+        //let (tx, rx) = channel();
+    }
+
     pub fn get_comp_data_value<T:Any+Clone>(&self) -> Option<T>
     {
         for c in self.comp_data.iter()

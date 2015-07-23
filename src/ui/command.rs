@@ -247,10 +247,8 @@ extern fn add_comp(data : *const c_void, name : *const c_char)
     //let change = control.set_scene_camera();
     //v.handle_control_change(&change);
 
-
-    if s == "MeshRender" {
-
-    }
+    let change = control.add_component(s);
+    v.handle_control_change(&change);
 }
 
 pub extern fn add_component(data : *const c_void, name : *const c_char)
