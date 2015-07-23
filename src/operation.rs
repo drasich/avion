@@ -13,6 +13,7 @@ use ui;
 use control::WidgetUpdate;
 use vec;
 use scene;
+use component::CompData;
 
 pub trait OperationTrait
 {
@@ -34,7 +35,8 @@ pub enum OperationData
         Rc<RefCell<scene::Scene>>,
         Option<Arc<RwLock<object::Object>>>,
         Option<Arc<RwLock<object::Object>>>),
-    AddComponent(uuid::Uuid, uuid::Uuid) //object id, component id?
+    //AddComponent(uuid::Uuid, uuid::Uuid) //object id, component id?
+    AddComponent(Arc<RwLock<object::Object>>, Box<CompData>)
 }
 
 pub struct Operation
@@ -60,6 +62,7 @@ pub enum Change
     SceneAdd(uuid::Uuid, Vec<uuid::Uuid>),
     SceneRemove(uuid::Uuid, Vec<uuid::Uuid>),
     Scene(uuid::Uuid),
+    ComponentChanged(uuid::Uuid, String),
     All
 }
 
@@ -188,6 +191,11 @@ impl OperationTrait for Operation
                 else {
                     println!("dame 00");
                 }
+            },
+            OperationData::AddComponent(ref o, ref compo)  => {
+                let mut ob = o.write().unwrap();
+                ob.add_comp_data(compo.clone());
+                return Change::ComponentChanged(ob.id.clone(), compo.get_kind_string());
             },
             _ => {}
         }
