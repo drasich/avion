@@ -196,7 +196,7 @@ pub struct Property
     control : Rc<RefCell<Control>>,
     expand_state : HashMap<String, bool>,
     visible : bool,
-    pub resource : Rc<resource::ResourceGroup>,
+    pub resource : Rc<resource::ResourceGroup>
 }
 
 impl Property
@@ -629,6 +629,9 @@ fn changed_set<T : Any+Clone+PartialEq>(
         }
     };
 
+    //TODO instead of all this, use the code at view.handle_control_change
+    println!("TODO instead of all this, use the code at view.handle_control_change");
+
     let obw = if let Some(o) = control.get_selected_object(){
         o 
     }
@@ -637,16 +640,6 @@ fn changed_set<T : Any+Clone+PartialEq>(
     };
 
     let mut ob = obw.write().unwrap();
-
-
-    /*
-    let id = if let Some(o) = control.get_selected_object(){
-        o.read().unwrap().id.clone()
-    }
-    else { 
-        return;
-    };
-    */
     let id = ob.id.clone();
 
     match change {
@@ -1247,45 +1240,25 @@ impl PropertyShow for CompData
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
-        /*
-        let kind : String = self.get_kind_string();
-        let kindr : &str = kind.as_ref();
-
-        let mut v : Vec<&str> = field.split('/').collect();
-
-        if v.len() >= 1 {
-            v.pop();
+        if field != self.get_kind_string() {
+            return None;
         }
 
-        v.push(kindr);
-
-        let yo : String = v.connect("/");
-        let field = yo.as_ref();
-        */
-
-        /*
         match *self {
             CompData::Player(ref p) => {
-                p.get_property(field)
+                Some(p)
             },
             CompData::Armature(ref p) => {
-                p.get_property(field)
+                Some(p)
             },
             CompData::MeshRender(ref p) => {
-                p.get_property(field)
+                Some(p)
             },
             _ => {
-                println!("not yet implemented"); 
+                println!("not yet implemented");
                 None
             }
         }
-        */
-
-        if field == self.get_kind_string() {
-            return Some(self);
-        }
-
-        None
     }
 }
 

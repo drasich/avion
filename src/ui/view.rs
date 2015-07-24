@@ -34,6 +34,8 @@ use control::WidgetUpdate;
 
 use scene;
 
+use component;
+
 /*
 #[link(name = "cypher")]
 extern {
@@ -336,21 +338,31 @@ impl View
 
         match *change {
             operation::Change::Objects(ref name, ref id_list) => {
-
                 for id in id_list.iter() {
                     if let Some(ref o) = sel {
-                        if *id == o.read().unwrap().id  {
+                        let mut ob = o.write().unwrap();
+
+                        if *id == ob.id  {
                             match self.property.clone() {
                                 Some(ref p) =>
                                     match p.borrow_state() {
                                         BorrowState::Unused => {
-                                            p.borrow_mut().update_object(&*o.read().unwrap(), "");
+                                            p.borrow_mut().update_object(&*ob, "");
 
                                         },
                                         _=> {}
                                     },
                                     None => {}
-                            };
+                            } 
+                        }
+
+                        if name.starts_with("object/comp_data/MeshRender") {
+                            println!("please update mesh");
+                            let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
+                            if let Some(ref mr) = omr {
+                                ob.mesh_render = 
+                                    Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
+                            }
                         }
                     }
 

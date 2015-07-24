@@ -172,10 +172,10 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         if let Some(w) = v.window {
             unsafe {
                 {
-                let yo : *const c_void = mem::transmute(v);
+                let view : *const c_void = mem::transmute(v);
                 ui::window_callback_set(
                     w,
-                    yo, 
+                    view, 
                     //mem::transmute(v),
                     ui::view::mouse_down,
                     ui::view::mouse_up,
