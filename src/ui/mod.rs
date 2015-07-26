@@ -4,6 +4,8 @@ pub use self::def::{
     WidgetCbData,
     AppCbData,
     Widget,
+    Event,
+
     init_cb,
     exit_cb,
     init_callback_set,

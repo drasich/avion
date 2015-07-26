@@ -79,10 +79,10 @@ pub struct View
     pub command : Option<Rc<RefCell<Box<ui::Command>>>>,
 
     //pub dragger : Arc<RwLock<object::Object>>,
-    pub dragger : Rc<RefCell<dragger::DraggerManager>>,
+    dragger : Rc<RefCell<dragger::DraggerManager>>,
 
-    pub camera : Rc<RefCell<camera::Camera>>,
-    pub holder : Rc<RefCell<Holder>>,
+    camera : Rc<RefCell<camera::Camera>>,
+    holder : Rc<RefCell<Holder>>,
     pub resource : Rc<resource::ResourceGroup>,
 }
 

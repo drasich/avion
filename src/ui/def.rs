@@ -250,6 +250,15 @@ pub struct WidgetContainer
     pub tree : Option<Box<Tree>>
 }
 
+/*
+pub struct ControlContainer
+{
+    pub control : Box<Control>,
+    pub context : Box<Context>
+}
+*/
+
+
 impl WidgetContainer
 {
     pub fn new() -> WidgetContainer
@@ -260,7 +269,12 @@ impl WidgetContainer
         }
     }
 
-    pub fn handle(&self, change : operation::Change, widget_origin: uuid::Uuid)
+    pub fn refresh(&self, change : operation::Change, widget_origin: uuid::Uuid)
+    {
+
+    }
+
+    pub fn handle_event(&self, action : ui::Event, widget_origin: uuid::Uuid)
     {
 
     }
@@ -287,9 +301,17 @@ impl WidgetCbData {
     }
 }
 
+
 pub struct AppCbData
 {
     pub master : *const c_void,
     pub container : *const c_void
 }
 
+//TODO choose how deep is the event, like between those 3 things
+pub enum Event
+{
+    KeyPressed(String),
+    ViewKeyPressed(String),
+    ShowTree(String),
+}

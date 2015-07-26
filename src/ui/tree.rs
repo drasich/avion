@@ -347,7 +347,7 @@ pub extern fn selected(
         mem::transmute(data)
     };
 
-    println!("TODO");
+    println!("TODO do the following in widget container 'handle'");
     /*
     match tsd.control.borrow_state() {
         BorrowState::Unused => {
