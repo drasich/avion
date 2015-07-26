@@ -90,7 +90,9 @@ impl View
 {
     pub fn new(
         factory: &factory::Factory,
-        resource : Rc<resource::ResourceGroup>) -> View
+        resource : Rc<resource::ResourceGroup>,
+        master : &mut Box<ui::WidgetContainer>
+        ) -> View
     //pub fn new(factory: Rc<RefCell<factory::Factory>>) -> View
     {
         //let factory = factory.borrow_mut();
@@ -147,7 +149,7 @@ impl View
         return v;
     }
 
-    pub fn init(&mut self) -> () {
+    pub fn init(&mut self, container : &mut Box<ui::WidgetContainer>) -> () {
         let w = unsafe {ui::window_new()};
         self.window = Some(w);
 
@@ -159,9 +161,14 @@ impl View
                     self.resource.clone()
                     )));
 
+        /*
         let t = Rc::new(RefCell::new(ui::Tree::new(
                     w,
                     control.clone())));
+                    */
+        let mut t = box ui::Tree::new(
+                    w,
+                    control.clone());
 
         let a = Rc::new(RefCell::new(ui::Action::new(
                     w)));
@@ -169,6 +176,7 @@ impl View
         let command = Rc::new(RefCell::new(ui::Command::new(
                     w)));
 
+        /*
         match control.borrow_state() {
             BorrowState::Unused => {
                 let mut c = control.borrow_mut();
@@ -177,15 +185,21 @@ impl View
             },
             _ => {}
         };
+        */
 
         println!("TODO must free this in c");
+        /*
         let tsd = ui::tree::TreeSelectData {
             tree : t.clone(),
             property : p.clone(),
             control : control.clone()
         };
+        */
+
+        let tsd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute( &t)});
+
         let ad = ui::action::ActionData::new(
-            t.clone(),
+            //t.clone(),
             p.clone(),
             control.clone(),
             self.holder.clone(),
@@ -199,10 +213,10 @@ impl View
             ad.clone());
 
         {
-            let tree = t.borrow();
+            //let tree = t.borrow();
             unsafe {
                 ui::tree::tree_register_cb(
-                    tree.jk_tree,
+                    t.jk_tree,
                     mem::transmute(box tsd),
                     ui::tree::name_get,
                     ui::tree::item_selected,
@@ -216,12 +230,16 @@ impl View
 
         match self.context.borrow().scene {
             Some(ref s) => {
-                t.borrow_mut().set_scene(&*s.borrow());
+                //t.borrow_mut().set_scene(&*s.borrow());
+                t.set_scene(&*s.borrow());
             },
             None => {}
         };
 
-        self.tree = Some(t);
+
+
+        //self.tree = Some(t);
+        container.tree = Some(t);
         self.property = Some(p);
         self.action = Some(a);
         self.command = Some(command);
@@ -532,7 +550,9 @@ pub extern fn mouse_down(
     timestamp : c_int
     )
 {
-    let view : &Box<View> = unsafe {mem::transmute(data)};
+    //let view : &Box<View> = unsafe {mem::transmute(data)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let view : &Box<View> = unsafe {mem::transmute(wcb.widget)};
 
     let op_list = {
         let control_rc = view.control.clone();
@@ -557,7 +577,9 @@ pub extern fn mouse_up(
     timestamp : c_int
     )
 {
-    let view : &Box<View> = unsafe {mem::transmute(data)};
+    //let view : &Box<View> = unsafe {mem::transmute(data)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let view : &Box<View> = unsafe {mem::transmute(wcb.widget)};
 
     let change = {
         let control_rc = view.control.clone();
@@ -580,7 +602,9 @@ pub extern fn mouse_move(
     timestamp : c_int
     )
 {
-    let view : &Box<View> = unsafe {mem::transmute(data)};
+    //let view : &Box<View> = unsafe {mem::transmute(data)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let view : &Box<View> = unsafe {mem::transmute(wcb.widget)};
     let control_rc = view.control.clone();
 
     let change_list = {
@@ -605,7 +629,9 @@ pub extern fn mouse_wheel(
     timestamp : c_int
     )
 {
-    let view : &Box<View> = unsafe {mem::transmute(data)};
+    //let view : &Box<View> = unsafe {mem::transmute(data)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let view : &Box<View> = unsafe {mem::transmute(wcb.widget)};
     let control_rc = view.control.clone();
 
     //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
@@ -621,7 +647,10 @@ pub extern fn key_down(
     timestamp : c_int
     )
 {
-    let view : &Box<View> = unsafe {mem::transmute(data)};
+    //let view : &Box<View> = unsafe {mem::transmute(data)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let view : &Box<View> = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let change = {
         let control_rc = view.control.clone();
@@ -702,6 +731,16 @@ pub extern fn key_down(
                 if let Some(ref t) = view.tree {
                     let b = t.borrow().visible();
                     t.borrow_mut().set_visible(!b);
+                }
+                else {
+                    println!("does not have a tree");
+                }
+                if let Some(ref mut t) = container.tree {
+                    let b = t.visible();
+                    t.set_visible(!b);
+                }
+                else {
+                    println!("container does not have a tree");
                 }
                 return;
             },

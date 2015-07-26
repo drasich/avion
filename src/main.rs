@@ -314,12 +314,19 @@ name = "image/base_skeleton_col.png"
 
     //let m = box ui::Master::new();
     //let m = Rc::new(RefCell::new(ui::Master::new()));
-    let m = ui::Master::new();
+    let mut c = box ui::WidgetContainer::new();
+    let m = ui::Master::new(&mut c);
+
 
     unsafe {
+        let appdata = ui::AppCbData{
+            master : mem::transmute(box m.clone()),
+            container : mem::transmute(&c)  };
+
         ui::init_callback_set(
             ui::init_cb,
-            mem::transmute(box m.clone()));
+            //mem::transmute(box m.clone()));
+            mem::transmute(box appdata));
 
         ui::exit_callback_set(
             ui::exit_cb,

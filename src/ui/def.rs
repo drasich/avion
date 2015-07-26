@@ -24,6 +24,7 @@ use property;
 use control;
 use control::Control;
 use control::WidgetUpdate;
+use uuid;
 
 #[repr(C)]
 pub struct Window;
@@ -135,7 +136,7 @@ pub struct Master
 
 impl Master
 {
-    fn _new() -> Master
+    fn _new(container : &mut Box<WidgetContainer>) -> Master
     {
         let factory = factory::Factory::new();
         let resource = Rc::new(resource::ResourceGroup::new());
@@ -146,36 +147,43 @@ impl Master
             views : LinkedList::new(),
         };
 
-        let v = box View::new(&m.factory, m.resource.clone());
+        let v = box View::new(&m.factory, m.resource.clone(), container);
         m.views.push_back(v);
 
         m
     }
 
-    pub fn new() -> Rc<RefCell<Master>>
+    pub fn new(container : &mut Box<WidgetContainer>) -> Rc<RefCell<Master>>
     {
-        let m = Master::_new();
+        let m = Master::_new(container);
         let mrc = Rc::new(RefCell::new(m));
 
         mrc
     }
+
 }
 
 pub extern fn init_cb(data: *mut c_void) -> () {
-    let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
+    let app_data : &AppCbData = unsafe {mem::transmute(data)};
+    //let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
+    let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(app_data.master)};
+    let container : &mut Box<WidgetContainer> = unsafe {mem::transmute(app_data.container)};
     let mut master = master_rc.borrow_mut();
 
     for v in master.views.iter_mut()
     {
-        v.init();
+        v.init(container);
 
         if let Some(w) = v.window {
             unsafe {
                 {
                 let view : *const c_void = mem::transmute(v);
+                let wcb = ui::WidgetCbData::with_ptr(container, view);
+
                 ui::window_callback_set(
                     w,
-                    view, 
+                    mem::transmute(box wcb),
+                    //view
                     //mem::transmute(v),
                     ui::view::mouse_down,
                     ui::view::mouse_up,
@@ -221,5 +229,67 @@ pub extern fn exit_cb(data: *mut c_void) -> () {
             None => {}
         }
     }
+}
+
+pub trait Widget
+{
+    fn update(&self, change : operation::Change)
+    {
+        println!("please implement me");
+    }
+
+    fn set_visible(&self, b : bool)
+    {
+        println!("please implement me");
+    }
+}
+
+pub struct WidgetContainer
+{
+    pub widgets : Vec<Box<Widget>>,
+    pub tree : Option<Box<Tree>>
+}
+
+impl WidgetContainer
+{
+    pub fn new() -> WidgetContainer
+    {
+        WidgetContainer {
+            widgets : Vec::new(),
+            tree : None
+        }
+    }
+
+    pub fn handle(&self, change : operation::Change, widget_origin: uuid::Uuid)
+    {
+
+    }
+}
+
+//Send to c with mem::transmute(box data)  and free in c
+pub struct WidgetCbData
+{
+    pub container : *const WidgetContainer,
+    //widget : *const Widget
+    pub widget : *const c_void
+}
+
+impl WidgetCbData {
+    //pub fn new(c : &Box<WidgetContainer>, widget : &Box<Widget>)
+    pub fn with_ptr(c : &Box<WidgetContainer>, widget : *const c_void) -> WidgetCbData
+    {
+        println!("TODO free me in c");
+        WidgetCbData {
+            container : unsafe {mem::transmute(c)},
+            widget : widget
+        }
+
+    }
+}
+
+pub struct AppCbData
+{
+    pub master : *const c_void,
+    pub container : *const c_void
 }
 

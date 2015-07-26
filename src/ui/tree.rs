@@ -33,7 +33,8 @@ extern {
         selected : extern fn(data : *const c_void) -> (),
         can_expand : extern fn(data : *const c_void) -> bool,
         expand : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
-        sel : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        //sel : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        sel : extern fn(tree: *const ui::WidgetCbData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         unsel : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         );
 
@@ -78,9 +79,10 @@ impl Tree
 {
     pub fn new(
         window : *const Window,
-        control : Rc<RefCell<Control>>) -> Box<Tree>
+        control : Rc<RefCell<Control>>) -> Tree // Box<Tree>
     {
-        let mut t = box Tree {
+        //let mut t = box Tree {
+        let mut t = Tree {
             name : String::from("tree_name"),
             objects : HashMap::new(),
             jk_tree : unsafe {window_tree_new(window)},
@@ -326,21 +328,27 @@ pub extern fn expand(
 }
 
 pub extern fn selected(
-    tsd: *const TreeSelectData,
+    //tsd: *const TreeSelectData,
+    tsd: *const ui::WidgetCbData,
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(tsd)};
+    let tree : &Box<Tree> = unsafe {mem::transmute(wcb.widget)};
+    //let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
 
-    let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
-
+    /*
     if tsd.tree.borrow_state() == BorrowState::Writing {
         return;
     }
+    */
 
     let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
 
+    println!("TODO");
+    /*
     match tsd.control.borrow_state() {
         BorrowState::Unused => {
             let mut l = Vec::new();
@@ -356,6 +364,7 @@ pub extern fn selected(
         },
         _ => { println!("property already borrowed : tree sel ->add_ob"); return;}
     };
+    */
 
 }
 
@@ -402,3 +411,6 @@ pub extern fn unselected(
     };
 }
 
+impl ui::Widget for Tree
+{
+}

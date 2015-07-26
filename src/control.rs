@@ -40,7 +40,7 @@ pub struct Control
     dragger : Rc<RefCell<dragger::DraggerManager>>,
     mouse_start : Option<vec::Vec2>,
 
-    pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO remove
+    //pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO remove
 }
 
 impl Control
@@ -55,7 +55,7 @@ impl Control
             op_mgr : operation::OperationManager::new(),
             factory : Rc::new(RefCell::new(factory::Factory::new())),
             camera : camera,
-            tree : None,
+            //tree : None,
             state : State::Idle,
             context : context,
             dragger : dragger,

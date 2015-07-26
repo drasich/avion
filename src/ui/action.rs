@@ -48,7 +48,7 @@ pub struct Action
 #[derive(Clone)]
 pub struct ActionData
 {
-    tree : Rc<RefCell<Box<ui::Tree>>>,
+    //tree : Rc<RefCell<Box<ui::Tree>>>,
     property : Rc<RefCell<Box<ui::Property>>>,
     control : Rc<RefCell<Control>>,
     holder : Rc<RefCell<ui::view::Holder>>,
@@ -58,7 +58,7 @@ pub struct ActionData
 impl ActionData
 {
     pub fn new(
-    tree : Rc<RefCell<Box<ui::Tree>>>,
+    //tree : Rc<RefCell<Box<ui::Tree>>>,
     property : Rc<RefCell<Box<ui::Property>>>,
     control : Rc<RefCell<Control>>,
     holder : Rc<RefCell<ui::view::Holder>>,
@@ -66,7 +66,7 @@ impl ActionData
     ) -> ActionData
     {
         ActionData {
-            tree : tree,
+     //       tree : tree,
             property : property,
             control : control,
             holder : holder,
@@ -153,6 +153,8 @@ pub extern fn add_empty(data : *const c_void)
         _ => {println!("cannot borrow property");}
     };
 
+    println!("TODO FIX FIX FIX add_empty");
+    /*
     match ad.tree.borrow_state() {
         BorrowState::Unused => {
             let mut t = ad.tree.borrow_mut();
@@ -161,6 +163,7 @@ pub extern fn add_empty(data : *const c_void)
         }
         _ => {}
     }
+    */
 }
 
 pub extern fn play_scene(data : *const c_void)

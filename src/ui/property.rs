@@ -645,6 +645,8 @@ fn changed_set<T : Any+Clone+PartialEq>(
     match change {
         operation::Change::DirectChange(s) |
         operation::Change::Objects(s, _) => {
+            println!("FIX FIX FIX, put in comment cause reworking");
+            /*
             if s == "object/name" {
                 match control.tree {
                     Some(ref t) =>
@@ -657,7 +659,9 @@ fn changed_set<T : Any+Clone+PartialEq>(
                         None => {}
                 };
             }
-            else if s.starts_with("object/comp_data/MeshRender") {
+            else 
+            */
+            if s.starts_with("object/comp_data/MeshRender") {
                 println!("please update mesh");
                 let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
                 if let Some(ref mr) = omr {

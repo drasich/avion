@@ -1,5 +1,9 @@
 pub use self::def::{
     Master,
+    WidgetContainer,
+    WidgetCbData,
+    AppCbData,
+    Widget,
     init_cb,
     exit_cb,
     init_callback_set,
