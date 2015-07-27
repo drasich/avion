@@ -4,7 +4,7 @@ use std::sync::{RwLock, Arc};
 use std::collections::{LinkedList};
 use std::ptr;
 use std::rc::Rc;
-use std::cell::RefCell;
+use std::cell::{RefCell, BorrowState};
 use std::collections::HashMap;
 use std::any::{Any};//, AnyRefExt};
 
@@ -149,6 +149,7 @@ impl Master
 
         let v = box View::new(&m.factory, m.resource.clone(), container);
         m.views.push_back(v);
+        //container.views.push(v);
 
         m
     }
@@ -177,7 +178,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         if let Some(w) = v.window {
             unsafe {
                 {
-                let view : *const c_void = mem::transmute(v);
+                let view : *const c_void = mem::transmute(&**v);
                 let wcb = ui::WidgetCbData::with_ptr(container, view);
 
                 ui::window_callback_set(
@@ -208,6 +209,10 @@ pub extern fn init_cb(data: *mut c_void) -> () {
                     ui::view::resize_cb);
             }
         }
+    }
+
+    while let Some(p) = master.views.pop_front() {
+        container.views.push(p);
     }
 }
 
@@ -247,7 +252,8 @@ pub trait Widget
 pub struct WidgetContainer
 {
     pub widgets : Vec<Box<Widget>>,
-    pub tree : Option<Box<Tree>>
+    pub tree : Option<Box<Tree>>,
+    views : Vec<Box<View>>,
 }
 
 /*
@@ -265,7 +271,8 @@ impl WidgetContainer
     {
         WidgetContainer {
             widgets : Vec::new(),
-            tree : None
+            tree : None,
+            views : Vec::new()
         }
     }
 
@@ -274,8 +281,52 @@ impl WidgetContainer
 
     }
 
-    pub fn handle_event(&self, action : ui::Event, widget_origin: uuid::Uuid)
+    pub fn handle_event(&self, event : ui::Event, widget_origin: uuid::Uuid)
     {
+        match event {
+            Event::SelectObject(ob) => {
+                println!("selected : {}", ob.read().unwrap().name);
+
+                for v in self.views.iter() {
+                    match v.control.borrow_state() {
+                        BorrowState::Unused => {
+                            let mut l = Vec::new();
+                            l.push(ob.read().unwrap().id.clone());
+                            v.control.borrow_mut().select_by_id(&mut l);
+                        },
+                        _ => { println!("control already borrowed : tree sel ->add_ob"); return;}
+                    };
+                }
+
+             
+
+
+            },
+            Event::UnselectObject(ob) => {
+                println!("unselected : {}", ob.read().unwrap().name);
+                
+
+                for v in self.views.iter() {
+                    let o = match v.control.borrow_state() {
+                        BorrowState::Unused => {
+                            {
+                                let mut l = LinkedList::new();
+                                l.push_back(ob.read().unwrap().id.clone());
+                                v.control.borrow_mut().unselect(&l);
+                            }
+                            v.control.borrow().get_selected_object()
+                        },
+                        _ => { 
+                            println!("already borrowed : mouse_up add_ob ->sel ->add_ob");
+                        return;
+                        }
+                    };
+                }
+
+
+            },
+            _ => {}
+        }
 
     }
 }
@@ -314,4 +365,8 @@ pub enum Event
     KeyPressed(String),
     ViewKeyPressed(String),
     ShowTree(String),
+    //SelectObject(Vec<Arc<RwLock<object::Object>>>)
+    SelectObject(Arc<RwLock<object::Object>>),
+    UnselectObject(Arc<RwLock<object::Object>>),
+    Empty
 }

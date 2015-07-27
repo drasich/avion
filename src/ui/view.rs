@@ -196,7 +196,7 @@ impl View
         };
         */
 
-        let tsd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute( &t)});
+        let tsd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*t)});
 
         let ad = ui::action::ActionData::new(
             //t.clone(),
@@ -552,7 +552,7 @@ pub extern fn mouse_down(
 {
     //let view : &Box<View> = unsafe {mem::transmute(data)};
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
-    let view : &Box<View> = unsafe {mem::transmute(wcb.widget)};
+    let view : &View = unsafe {mem::transmute(wcb.widget)};
 
     let op_list = {
         let control_rc = view.control.clone();
@@ -579,7 +579,7 @@ pub extern fn mouse_up(
 {
     //let view : &Box<View> = unsafe {mem::transmute(data)};
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
-    let view : &Box<View> = unsafe {mem::transmute(wcb.widget)};
+    let view : &View = unsafe {mem::transmute(wcb.widget)};
 
     let change = {
         let control_rc = view.control.clone();
@@ -604,7 +604,7 @@ pub extern fn mouse_move(
 {
     //let view : &Box<View> = unsafe {mem::transmute(data)};
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
-    let view : &Box<View> = unsafe {mem::transmute(wcb.widget)};
+    let view : &View = unsafe {mem::transmute(wcb.widget)};
     let control_rc = view.control.clone();
 
     let change_list = {
@@ -631,7 +631,7 @@ pub extern fn mouse_wheel(
 {
     //let view : &Box<View> = unsafe {mem::transmute(data)};
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
-    let view : &Box<View> = unsafe {mem::transmute(wcb.widget)};
+    let view : &View = unsafe {mem::transmute(wcb.widget)};
     let control_rc = view.control.clone();
 
     //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
@@ -649,7 +649,7 @@ pub extern fn key_down(
 {
     //let view : &Box<View> = unsafe {mem::transmute(data)};
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
-    let view : &Box<View> = unsafe {mem::transmute(wcb.widget)};
+    let view : &View = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let change = {

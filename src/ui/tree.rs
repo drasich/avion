@@ -34,8 +34,9 @@ extern {
         can_expand : extern fn(data : *const c_void) -> bool,
         expand : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         //sel : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        //unsel : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         sel : extern fn(tree: *const ui::WidgetCbData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
-        unsel : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        unsel : extern fn(tree: *const ui::WidgetCbData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         );
 
     fn tree_object_add(
@@ -72,7 +73,8 @@ pub struct Tree
     pub jk_tree : *const JkTree,
     control : Rc<RefCell<Control>>,
     dont_forward_signal : bool,
-    visible : bool
+    visible : bool,
+    uuid : Uuid
 }
 
 impl Tree
@@ -88,7 +90,8 @@ impl Tree
             jk_tree : unsafe {window_tree_new(window)},
             control : control,
             dont_forward_signal : false,
-            visible : true
+            visible : true,
+            uuid : Uuid::new_v4()
         };
 
         t.set_visible(false);
@@ -334,7 +337,8 @@ pub extern fn selected(
     parent : *const Elm_Object_Item) -> ()
 {
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(tsd)};
-    let tree : &Box<Tree> = unsafe {mem::transmute(wcb.widget)};
+    let tree : &Tree = unsafe {mem::transmute(wcb.widget)};
+    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
     //let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
 
     /*
@@ -347,7 +351,9 @@ pub extern fn selected(
         mem::transmute(data)
     };
 
-    println!("TODO do the following in widget container 'handle'");
+    println!("TODO do the following in widget container 'handle' ");
+    container.handle_event(ui::Event::SelectObject(o.clone()), tree.uuid);
+
     /*
     match tsd.control.borrow_state() {
         BorrowState::Unused => {
@@ -369,20 +375,29 @@ pub extern fn selected(
 }
 
 pub extern fn unselected(
-    tsd: *const TreeSelectData,
+    tsd: *const ui::WidgetCbData,
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
-    let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(tsd)};
+    let tree : &Tree = unsafe {mem::transmute(wcb.widget)};
+    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    //let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
 
+    /*
     if tsd.tree.borrow_state() == BorrowState::Writing {
         return;
     }
+    */
 
     let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
 
+    println!("TODO,unselect do the following in widget container 'handle'");
+    container.handle_event(ui::Event::UnselectObject(o.clone()), tree.uuid);
+
+    /*
     let o = match tsd.control.borrow_state() {
         BorrowState::Unused => {
             {
@@ -409,6 +424,7 @@ pub extern fn unselected(
         },
         _ => { println!("property already borrowed : tree unsel ->add_ob"); return;}
     };
+    */
 }
 
 impl ui::Widget for Tree
