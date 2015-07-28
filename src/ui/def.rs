@@ -171,6 +171,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     let container : &mut Box<WidgetContainer> = unsafe {mem::transmute(app_data.container)};
     let mut master = master_rc.borrow_mut();
 
+    /*
     for v in master.views.iter_mut()
     {
         v.init(container);
@@ -196,7 +197,9 @@ pub extern fn init_cb(data: *mut c_void) -> () {
             }
         }
     }
+    */
 
+    /*
     for v in master.views.iter()
     {
         if let Some(w) = v.window {
@@ -210,9 +213,43 @@ pub extern fn init_cb(data: *mut c_void) -> () {
             }
         }
     }
+    */
 
-    while let Some(p) = master.views.pop_front() {
-        container.views.push(p);
+    while let Some(mut v) = master.views.pop_front() {
+
+        v.init(container);
+
+        if let Some(w) = v.window {
+            unsafe {
+                {
+                let view : *const c_void = mem::transmute(&*v);
+                let wcb = ui::WidgetCbData::with_ptr(container, view);
+
+                ui::window_callback_set(
+                    w,
+                    mem::transmute(box wcb),
+                    //view
+                    //mem::transmute(v),
+                    ui::view::mouse_down,
+                    ui::view::mouse_up,
+                    ui::view::mouse_move,
+                    ui::view::mouse_wheel,
+                    ui::view::key_down
+                    );
+
+                let wcb = ui::WidgetCbData::with_ptr(container, view);
+
+                tmp_func(
+                    w,
+                    //view, //mem::transmute(&*v),
+                    mem::transmute(box wcb),
+                    ui::view::init_cb,
+                    ui::view::draw_cb,
+                    ui::view::resize_cb);
+                }
+            }
+        }
+        container.views.push(v);
     }
 }
 
@@ -276,9 +313,31 @@ impl WidgetContainer
         }
     }
 
-    pub fn refresh(&self, change : operation::Change, widget_origin: uuid::Uuid)
+    pub fn handle_change(&self, change : &operation::Change, widget_origin: uuid::Uuid)
     {
+        match *change {
+            operation::Change::DirectChange(ref name) => {
+                let o = match self.get_selected_object() {
+                    Some(ob) => ob,
+                    None => {
+                        println!("direct change, no objetcs selected");
+                        return;
+                    }
+                };
 
+                if name == "object/name" {
+                    match self.tree {
+                        Some(ref t) => {
+                            t.update_object(&o.read().unwrap().id);
+                            },
+                            None => {}
+                    };
+                }
+            },
+            operation::Change::SelectedChange => {
+            },
+            _ => {}
+        }
     }
 
     pub fn handle_event(&self, event : ui::Event, widget_origin: uuid::Uuid)
@@ -328,6 +387,19 @@ impl WidgetContainer
             _ => {}
         }
 
+    }
+
+    fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
+    {
+        //TODO
+        for v in self.views.iter() {
+            if let Some(ob) = v.get_selected_object()
+            {
+                return Some(ob);
+            }
+        }
+
+        None
     }
 }
 

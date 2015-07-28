@@ -630,7 +630,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
     };
 
     //TODO instead of all this, use the code at view.handle_control_change
-    println!("TODO instead of all this, use the code at view.handle_control_change");
+    println!("TODO instead of all this, use the code at container.refresh");
 
     let obw = if let Some(o) = control.get_selected_object(){
         o 

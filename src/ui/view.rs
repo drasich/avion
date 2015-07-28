@@ -8,6 +8,7 @@ use std::ffi::CStr;
 use std::ffi::CString;
 use std::str;
 use std::ptr;
+use uuid;
 use object;
 use mesh;
 use shader;
@@ -84,6 +85,7 @@ pub struct View
     camera : Rc<RefCell<camera::Camera>>,
     holder : Rc<RefCell<Holder>>,
     pub resource : Rc<resource::ResourceGroup>,
+    pub uuid : uuid::Uuid
 }
 
 impl View
@@ -143,7 +145,8 @@ impl View
 
             camera : camera,
             holder : Rc::new(RefCell::new(Holder { gameview : None })),
-            resource : resource
+            resource : resource,
+            uuid : uuid::Uuid::new_v4()
         };
 
         return v;
@@ -290,7 +293,7 @@ impl View
         self.render.resize(w, h);
     }
 
-    fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
+    pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
     {
         let c = match self.context.borrow_state(){
             BorrowState::Writing => { println!("cannot borrow context"); return None; }
@@ -317,7 +320,9 @@ impl View
         };
 
         println!("we have a direct change: {}", s);
+        println!("TODO remove this function, tree and property update should be in widgetcontainer handle change/event");
 
+        /* To be removed
         if s == "object/name" {
             match self.tree {
                 Some(ref t) =>
@@ -330,7 +335,9 @@ impl View
                     None => {}
             };
         }
+        */
             
+        //To be removed
         match self.property {
             Some(ref p) =>
                 match p.borrow_state() {
@@ -384,6 +391,7 @@ impl View
                         }
                     }
 
+                    /*
                     if name == "object/name" {
                         match self.tree.clone() {
                             Some(ref mut t) =>
@@ -396,6 +404,7 @@ impl View
                                 None => {}
                         };
                     }
+                    */
                 }
             },
             operation::Change::DirectChange(ref name) => {
@@ -553,6 +562,7 @@ pub extern fn mouse_down(
     //let view : &Box<View> = unsafe {mem::transmute(data)};
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     let view : &View = unsafe {mem::transmute(wcb.widget)};
+    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let op_list = {
         let control_rc = view.control.clone();
@@ -565,7 +575,9 @@ pub extern fn mouse_down(
 
     for op in op_list.iter() {
         view.handle_control_change(op);
+        container.handle_change(op, view.uuid);
     }
+
 }
 
 pub extern fn mouse_up(
@@ -792,20 +804,35 @@ fn create_repere(m : &mut mesh::Mesh, len : f64)
 
 
 pub extern fn init_cb(v : *mut View) -> () {
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(v)};
+    let view : &mut View = unsafe {mem::transmute(wcb.widget)};
+    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
     unsafe {
-        return (*v).init_render();
+        return view.init_render();
+        //return (*v).init_render();
     }
 }
 
 pub extern fn draw_cb(v : *mut View) -> () {
+
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(v)};
+    let view : &mut View = unsafe {mem::transmute(wcb.widget)};
+    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
     unsafe {
-        return (*v).draw();
+        return view.draw();
+        //return (*v).draw();
     }
 }
 
 pub extern fn resize_cb(v : *mut View, w : c_int, h : c_int) -> () {
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(v)};
+    let view : &mut View = unsafe {mem::transmute(wcb.widget)};
+    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
     unsafe {
-        return (*v).resize(w, h);
+        //return (*v).resize(w, h);
+        return view.resize(w, h);
     }
 }
 
