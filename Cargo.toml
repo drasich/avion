@@ -32,10 +32,11 @@ git = "https://github.com/rust-lang/uuid.git"
 git = "https://github.com/indefini/rustc-serialize.git"
 
 #[dependencies.hlua]
-#git = "https://github.com/indefini/hlua"
+#git = "https://github.com/indefini/hlua.git"
 
 [dependencies.lua]
-git = "https://github.com/kballard/rust-lua.git"
+#git = "https://github.com/kballard/rust-lua.git"
+git = "https://github.com/indefini/rust-lua.git"
 
 [dependencies]
 #rustc-serialize = "0.3.14"
