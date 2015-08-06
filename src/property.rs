@@ -61,7 +61,7 @@ impl<T:Any> PropertyRead for resource::ResTT<T>
 }
 
 macro_rules! property_read_impl(
-    ($my_type:ty) => ( 
+    ($my_type:ty) => (
 
         impl PropertyRead for $my_type
         {
@@ -325,7 +325,7 @@ impl<T:PropertyGet> PropertyGet for Option<T>
   {
       match *self{
           Some(ref v) => v.get_property_hier(name),
-          None => None 
+          None => None
       }
   }
 }
@@ -440,7 +440,7 @@ impl PropertyWrite for transform::Transform
           _ => {
               let yep = join_string(&vs.tail().to_vec());
               match vs[0].as_ref() {
-                  "position" => 
+                  "position" =>
                       self.position.test_set_property_hier(yep.as_ref(), value),
                   "orientation" =>
                       self.orientation.test_set_property_hier(yep.as_ref(), value),
@@ -481,7 +481,7 @@ fn join_string(path : &Vec<String>) -> String
 */
 
 macro_rules! property_set_impl(
-    ($my_type:ty, [ $($member:ident),+ ]) => ( 
+    ($my_type:ty, [ $($member:ident),+ ]) => (
         impl PropertyWrite for $my_type
         {
             fn test_set_property(&mut self, value: &Any)
@@ -511,7 +511,7 @@ macro_rules! property_set_impl(
                         }
                     },
                     _ => {
-                        let yep : String = v.tail().connect("/");
+                        let yep : String = v.tail().join("/");
                         match v[0] {
                             $(
                                 stringify!($member) => self.$member.test_set_property_hier(yep.as_ref(),value),
@@ -541,7 +541,7 @@ macro_rules! property_set_impl(
                         }
                     },
                     _ => {
-                        let yep : String = v.tail().connect("/");
+                        let yep : String = v.tail().join("/");
                         match v[0] {
                             $(
                                 stringify!($member) => self.$member.set_property_hier(yep.as_ref(),value),
@@ -563,7 +563,7 @@ property_set_impl!(object::Object,[name,position,orientation,scale,comp_data]);
 //property_set_impl!(object::Object,[name,position,orientation,scale]);
 
 macro_rules! property_get_impl(
-    ($my_type:ty, [ $($member:ident),+ ]) => ( 
+    ($my_type:ty, [ $($member:ident),+ ]) => (
         impl PropertyGet for $my_type
         {
             fn get_property_hier(&self, name : &str) -> Option<Box<Any>>
@@ -588,7 +588,7 @@ macro_rules! property_get_impl(
                         }
                     },
                     _ => {
-                        let yep : String = v.tail().connect("/");
+                        let yep : String = v.tail().join("/");
                         match v[0] {
                             $(
                                 stringify!($member) => self.$member.get_property_hier(yep.as_ref()),
