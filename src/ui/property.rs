@@ -233,7 +233,7 @@ impl Property
                 register_change_option,
                 expand,
                 contract
-                ); 
+                );
         }
 
         p
@@ -260,7 +260,7 @@ impl Property
     {
         //add component
         // add as prefab
-        // if linked to prefab : 
+        // if linked to prefab :
         // State : linked, inherit
         // operation : change state : if linked, remove link(set independant)
         //TODO
@@ -339,7 +339,7 @@ impl Property
                 f.as_ptr()
                 )
         };
-        
+
         let es = match self.expand_state.get(&name.to_string()) {
             Some(b) => *b,
             None => return,
@@ -633,9 +633,9 @@ fn changed_set<T : Any+Clone+PartialEq>(
     println!("TODO instead of all this, use the code at container.refresh");
 
     let obw = if let Some(o) = control.get_selected_object(){
-        o 
+        o
     }
-    else { 
+    else {
         return;
     };
 
@@ -665,7 +665,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
                 println!("please update mesh");
                 let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
                 if let Some(ref mr) = omr {
-                    ob.mesh_render = 
+                    ob.mesh_render =
                         Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,resource));
                 }
 
@@ -673,7 +673,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
         },
         _ => {}
     }
-            
+
 }
 
 fn changed_option(
@@ -716,7 +716,7 @@ fn changed_option(
         let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path);
         (o.read().unwrap().id.clone(),p)
     }
-    else { 
+    else {
         return;
     };
     */
@@ -759,7 +759,7 @@ fn changed_option(
         _ => {}
     }
     */
-            
+
 }
 
 
@@ -1192,15 +1192,15 @@ impl PropertyShow for CompData
 
         //println!("--before compdata property show for : {}, {}, {}", field, depth, kind);
 
-        let yo : String = v.connect("/");
+        let yo : String = v.join("/");
         let field = yo.as_ref();
         */
 
-    
+
 
         if depth < 0 {
             return;
-        } 
+        }
 
         if depth == 0 && field != ""
         {
@@ -1269,7 +1269,7 @@ impl PropertyShow for CompData
 
 
 macro_rules! property_show_impl(
-    ($my_type:ty, [ $($member:ident),+ ]) => ( 
+    ($my_type:ty, [ $($member:ident),+ ]) => (
 
         impl PropertyShow for $my_type
         {
@@ -1370,7 +1370,7 @@ fn make_vec_from_string(s : &String) -> Vec<String>
     vs
 }
 
-pub fn find_property_show(p : &PropertyShow, path : Vec<String>) -> 
+pub fn find_property_show(p : &PropertyShow, path : Vec<String>) ->
 Option<&PropertyShow>
 {
     //let vs = make_vec_from_string(&field.to_string());
@@ -1378,7 +1378,7 @@ Option<&PropertyShow>
     match path.len() {
         0 =>  None,
         1 => p.get_property(path[0].as_ref()),
-        _ => { 
+        _ => {
              match p.get_property(path[0].as_ref()) {
                  Some(ppp) => {
                      find_property_show(ppp, path.tail().to_vec())
