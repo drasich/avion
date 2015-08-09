@@ -74,7 +74,7 @@ pub struct View
 
     pub window : Option<*const ui::Window>,
     //pub tree : Option<Box<Tree>>,
-    pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>,
+    //pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>,
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
     pub action : Option<Rc<RefCell<Box<ui::Action>>>>,
     pub command : Option<Rc<RefCell<Box<ui::Command>>>>,
@@ -134,9 +134,9 @@ impl View
             render : render,
             control : control,
             context : context,
-            
+
             window : None,
-            tree : None,
+            //tree : None,
             property: None,
             action : None,
             command : None,
@@ -336,7 +336,7 @@ impl View
             };
         }
         */
-            
+
         //To be removed
         match self.property {
             Some(ref p) =>
@@ -378,14 +378,14 @@ impl View
                                         _=> {}
                                     },
                                     None => {}
-                            } 
+                            }
                         }
 
                         if name.starts_with("object/comp_data/MeshRender") {
                             println!("please update mesh");
                             let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
                             if let Some(ref mr) = omr {
-                                ob.mesh_render = 
+                                ob.mesh_render =
                                     Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
                             }
                         }
@@ -470,6 +470,7 @@ impl View
                     }
                 }
 
+                /*
                 match self.tree {
                     Some(ref t) => {
                         match t.borrow_state() {
@@ -486,6 +487,7 @@ impl View
                         println!("control no tree");
                     }
                 }
+                */
             },
             operation::Change::SceneRemove(ref id, ref obs) => {
                 {
@@ -493,6 +495,7 @@ impl View
                     let mut c = self.context.borrow_mut();
                     c.remove_objects_by_id(obs.clone());
 
+                    /*
                     match self.tree {
                         Some(ref t) => {
                             match t.borrow_state() {
@@ -509,6 +512,7 @@ impl View
                             println!("control no tree");
                         }
                     }
+                    */
                 }
                 self.handle_control_change(&operation::Change::SelectedChange);
             },
@@ -522,6 +526,7 @@ impl View
                 let objects = scene.borrow().find_objects_by_id(&mut obs.clone());
 
                 // todo
+                /*
                 match self.tree {
                     Some(ref t) => {
                         match t.borrow_state() {
@@ -535,6 +540,7 @@ impl View
                         println!("control no tree");
                     }
                 }
+                */
             },
             _ => {}
         }
@@ -554,7 +560,7 @@ pub extern fn mouse_down(
     data : *const c_void,
     modifier : c_int,
     button : c_int,
-    x : c_int, 
+    x : c_int,
     y : c_int,
     timestamp : c_int
     )
@@ -584,7 +590,7 @@ pub extern fn mouse_up(
     data : *const c_void,
     modifier : c_int,
     button : c_int,
-    x : c_int, 
+    x : c_int,
     y : c_int,
     timestamp : c_int
     )
@@ -607,9 +613,9 @@ pub extern fn mouse_move(
     //modifier : *const c_char,
     modifiers_flag : c_int,
     button : c_int,
-    curx : c_int, 
+    curx : c_int,
     cury : c_int,
-    prevx : c_int, 
+    prevx : c_int,
     prevy : c_int,
     timestamp : c_int
     )
@@ -628,15 +634,15 @@ pub extern fn mouse_move(
     for change in change_list.iter() {
         view.handle_control_change(change);
     }
-    
+
 }
 
 pub extern fn mouse_wheel(
     data : *const c_void,
     modifiers_flag: c_int,
     direction : c_int,
-    z : c_int, 
-    x : c_int, 
+    z : c_int,
+    x : c_int,
     y : c_int,
     timestamp : c_int
     )
@@ -700,6 +706,7 @@ pub extern fn key_down(
 
                     cmd.clean();
 
+                    /*
                     let t = if let Some(ref t) = view.tree {
                         t.clone()
                     }else {
@@ -722,6 +729,7 @@ pub extern fn key_down(
                     cmd.add("add empty", ui::command::add_empty, cd.clone());
                     cmd.add("remove selected", ui::command::remove_selected, cd.clone());
                     cmd.add("set scene camera", ui::command::set_scene_camera, cd.clone());
+                    */
 
                     let scene_actions : &[(&str, extern fn(*const c_void, *const c_char))]
                     = &[
@@ -740,6 +748,7 @@ pub extern fn key_down(
                 return;
             },
             "t" => {
+                /*
                 if let Some(ref t) = view.tree {
                     let b = t.borrow().visible();
                     t.borrow_mut().set_visible(!b);
@@ -747,6 +756,7 @@ pub extern fn key_down(
                 else {
                     println!("does not have a tree");
                 }
+                */
                 if let Some(ref mut t) = container.tree {
                     let b = t.visible();
                     t.set_visible(!b);
@@ -863,7 +873,7 @@ impl GameView {
         }
         */
 
-        let win = unsafe { 
+        let win = unsafe {
             ui::jk_window_new(gv_close_cb, ptr::null())
         };
 
@@ -879,7 +889,7 @@ impl GameView {
         };
 
         let glview = unsafe { ui::jk_glview_new(
-                win, 
+                win,
                 //mem::transmute(&*v.render),
                 mem::transmute(&*v),
                 gv_init_cb,
