@@ -73,8 +73,6 @@ pub struct View
     pub context : Rc<RefCell<context::Context>>,
 
     pub window : Option<*const ui::Window>,
-    //pub tree : Option<Box<Tree>>,
-    //pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>,
     pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
     pub action : Option<Rc<RefCell<Box<ui::Action>>>>,
     pub command : Option<Rc<RefCell<Box<ui::Command>>>>,
@@ -136,7 +134,6 @@ impl View
             context : context,
 
             window : None,
-            //tree : None,
             property: None,
             action : None,
             command : None,
@@ -164,11 +161,6 @@ impl View
                     self.resource.clone()
                     )));
 
-        /*
-        let t = Rc::new(RefCell::new(ui::Tree::new(
-                    w,
-                    control.clone())));
-                    */
         let mut t = box ui::Tree::new(
                     w,
                     control.clone());
@@ -216,7 +208,6 @@ impl View
             ad.clone());
 
         {
-            //let tree = t.borrow();
             unsafe {
                 ui::tree::tree_register_cb(
                     t.jk_tree,
@@ -241,7 +232,6 @@ impl View
 
 
 
-        //self.tree = Some(t);
         container.tree = Some(t);
         self.property = Some(p);
         self.action = Some(a);
@@ -322,21 +312,6 @@ impl View
         println!("we have a direct change: {}", s);
         println!("TODO remove this function, tree and property update should be in widgetcontainer handle change/event");
 
-        /* To be removed
-        if s == "object/name" {
-            match self.tree {
-                Some(ref t) =>
-                    match t.borrow_state() {
-                        BorrowState::Writing => {},
-                        _ => {
-                            t.borrow().update_object(&o.read().unwrap().id);
-                        },
-                    },
-                    None => {}
-            };
-        }
-        */
-
         //To be removed
         match self.property {
             Some(ref p) =>
@@ -390,21 +365,6 @@ impl View
                             }
                         }
                     }
-
-                    /*
-                    if name == "object/name" {
-                        match self.tree.clone() {
-                            Some(ref mut t) =>
-                                match t.borrow_state() {
-                                    BorrowState::Unused => {
-                                        t.borrow_mut().update_object(id);
-                                    },
-                                    _ => {}
-                                },
-                                None => {}
-                        };
-                    }
-                    */
                 }
             },
             operation::Change::DirectChange(ref name) => {
@@ -469,50 +429,12 @@ impl View
                         _ => {},
                     }
                 }
-
-                /*
-                match self.tree {
-                    Some(ref t) => {
-                        match t.borrow_state() {
-                            BorrowState::Unused => {
-                                println!("view, select objects");
-                                t.borrow_mut().select_objects(c.get_vec_selected_ids());
-                            }
-                            _ => {
-                                println!("view, selectchange!!!!!!!!, tree already borrowed");
-                            }
-                        }
-                    },
-                    None => {
-                        println!("control no tree");
-                    }
-                }
-                */
             },
             operation::Change::SceneRemove(ref id, ref obs) => {
                 {
                     println!("view, sceneremove!!!!!!!!");
                     let mut c = self.context.borrow_mut();
                     c.remove_objects_by_id(obs.clone());
-
-                    /*
-                    match self.tree {
-                        Some(ref t) => {
-                            match t.borrow_state() {
-                                BorrowState::Unused => {
-                                    println!("view, sceneremove!!!!!!!! tree remove");
-                                    t.borrow_mut().remove_objects_by_id(obs.clone());
-                                }
-                                _ => {
-                                    println!("view, sceneremove!!!!!!!!, tree already borrowed");
-                                }
-                            }
-                        },
-                        None => {
-                            println!("control no tree");
-                        }
-                    }
-                    */
                 }
                 self.handle_control_change(&operation::Change::SelectedChange);
             },
@@ -671,9 +593,9 @@ pub extern fn key_down(
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let change = {
-        let control_rc = view.control.clone();
+        //let control_rc = view.control.clone();
         //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
-        let mut c = control_rc.borrow_mut();
+        //let mut c = control_rc.borrow_mut();
 
         let key_str = {
             let s = unsafe {CStr::from_ptr(key).to_bytes()};
@@ -703,6 +625,9 @@ pub extern fn key_down(
                 if let Some(ref c) = view.command {
                     println!("pressed return show popup");
                     let cmd = c.borrow();
+                    {
+                        //println!("control borrow state : {:?}", cmd.control.borrow_state());
+                    }
 
                     cmd.clean();
 
@@ -785,7 +710,11 @@ pub extern fn key_down(
             }
         }
 
-        c.key_down(modifier, keyname_str.as_ref(), key_str.as_ref(), timestamp)
+        {
+            let control_rc = view.control.clone();
+            let mut c = control_rc.borrow_mut();
+            c.key_down(modifier, keyname_str.as_ref(), key_str.as_ref(), timestamp)
+        }
     };
 
     view.handle_control_change(&change);

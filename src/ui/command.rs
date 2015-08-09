@@ -204,7 +204,7 @@ pub extern fn remove_selected2(data : *const c_void, name : *const c_char)
     let v : &Box<ui::View> = unsafe {mem::transmute(data)};
 
     if v.control.borrow_state() != BorrowState::Unused {
-        println!("control already borrowed ");
+        println!("control already borrowed, remove selected2 ");
         return;
     }
 
