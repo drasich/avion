@@ -37,9 +37,9 @@ pub trait Component : Any
         return Vec::new()
     }
     */
-    //fn new(ob : &Object) -> Self where Self : Sized; 
+    //fn new(ob : &Object) -> Self where Self : Sized;
     /*
-    fn new(ob : &Object) -> Box<Component> 
+    fn new(ob : &Object) -> Box<Component>
     {
         let comp_mgr = COMP_MGR.lock().unwrap();
         let comp = comp_mgr.create_component("remove").unwrap();
@@ -221,7 +221,7 @@ impl PropertyWrite for CompData {
           0 => {},
           1 => {},
           _ => {
-              let yep : String = v.tail().connect("/");
+              let yep : String = v.tail().join("/");
               if v[0] == self.get_kind_string() {
                   match *self {
                       CompData::Player(ref mut p) => {
@@ -248,7 +248,7 @@ impl PropertyWrite for CompData {
           0 => {},
           1 => {},
           _ => {
-              let yep : String = v.tail().connect("/");
+              let yep : String = v.tail().join("/");
               if v[0] == self.get_kind_string() {
                   match *self {
                       CompData::Player(ref mut p) => {
@@ -278,7 +278,7 @@ impl PropertyGet for CompData
           0 => None,
           1 => None,
           _ => {
-              let yep : String = v.tail().connect("/");
+              let yep : String = v.tail().join("/");
               if v[0] == self.get_kind_string() {
                   match *self {
                       CompData::Player(ref p) => {
@@ -321,7 +321,7 @@ impl Manager {
             components: HashMap::new()
         }
     }
-    pub fn register_component(&mut self, name : &str, 
+    pub fn register_component(&mut self, name : &str,
                               f : ComponentCreationFn)
                               //f : fn() -> Box<Component>)
                               //f : fn() -> Component)

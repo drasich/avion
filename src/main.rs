@@ -2,8 +2,7 @@
 //#![feature(trace_macros)]
 //#![feature(slicing_syntax)]
 #![feature(box_syntax)]
-//#![feature(core,collections,libc)]
-#![feature(core,libc)]
+#![feature(core)]
 #![feature(convert)]
 #![feature(step_by)]
 #![feature(zero_one)]
@@ -326,7 +325,7 @@ name = "image/base_skeleton_col.png"
             mem::transmute(box m.clone()));
     }
 
-    unsafe { 
+    unsafe {
         ui::elm_simple_window_main();
     };
 }
