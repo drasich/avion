@@ -132,16 +132,21 @@ pub extern fn add_empty(data : *const c_void, name : *const c_char)
 {
     println!("command ::: add empty");
 
-    let cd : &CommandData = unsafe {mem::transmute(data)};
+    //let cd : &CommandData = unsafe {mem::transmute(data)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let v : &ui::View = unsafe {mem::transmute(wcb.widget)};
+    //let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    if cd.control.borrow_state() != BorrowState::Unused {
+    if v.control.borrow_state() != BorrowState::Unused {
         println!("control already borrowed ");
         return;
     }
 
-    let mut control = cd.control.borrow_mut();
+    let mut control = v.control.borrow_mut();
     let o = control.add_empty("new object");
 
+    println!("TODO TODO TODO!!!!!!!!!!!!!");
+    /*
     match cd.property.borrow_state() {
         BorrowState::Unused => {
             cd.property.borrow_mut().set_object(&*o.read().unwrap());
@@ -157,6 +162,7 @@ pub extern fn add_empty(data : *const c_void, name : *const c_char)
         }
         _ => {}
     }
+    */
 }
 
 pub extern fn remove_selected(data : *const c_void, name : *const c_char)
@@ -201,7 +207,9 @@ pub extern fn set_scene_camera(data : *const c_void, name : *const c_char)
 
 pub extern fn remove_selected2(data : *const c_void, name : *const c_char)
 {
-    let v : &Box<ui::View> = unsafe {mem::transmute(data)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let v : &ui::View = unsafe {mem::transmute(wcb.widget)};
+    //let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     if v.control.borrow_state() != BorrowState::Unused {
         println!("control already borrowed, remove selected2 ");
@@ -216,7 +224,9 @@ pub extern fn remove_selected2(data : *const c_void, name : *const c_char)
 
 pub extern fn set_camera2(data : *const c_void, name : *const c_char)
 {
-    let v : &Box<ui::View> = unsafe {mem::transmute(data)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let v : &ui::View = unsafe {mem::transmute(wcb.widget)};
+    //let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     if v.control.borrow_state() != BorrowState::Unused {
         println!("control already borrowed ");
@@ -253,7 +263,11 @@ extern fn add_comp(data : *const c_void, name : *const c_char)
 
 pub extern fn add_component(data : *const c_void, name : *const c_char)
 {
-    let v : &Box<ui::View> = unsafe {mem::transmute(data)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let v : &ui::View = unsafe {mem::transmute(wcb.widget)};
+    //let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+
     let s = unsafe {CStr::from_ptr(name).to_bytes()};
     let s = str::from_utf8(s).unwrap();
 

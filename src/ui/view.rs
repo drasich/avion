@@ -658,6 +658,7 @@ pub extern fn key_down(
 
                     let scene_actions : &[(&str, extern fn(*const c_void, *const c_char))]
                     = &[
+                    ("add empty", ui::command::add_empty),
                     ("remove selected22", ui::command::remove_selected2),
                     ("set camera2", ui::command::set_camera2),
                     ("add component", ui::command::add_component)

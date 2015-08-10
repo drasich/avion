@@ -74,7 +74,7 @@ extern {
             data : *const c_void,
             modifier : c_int,
             button : c_int,
-            x : c_int, 
+            x : c_int,
             y : c_int,
             timestamp : c_int
             ),
@@ -82,7 +82,7 @@ extern {
             data : *const c_void,
             modifier : c_int,
             button : c_int,
-            x : c_int, 
+            x : c_int,
             y : c_int,
             timestamp : c_int
             ),
@@ -90,9 +90,9 @@ extern {
             data : *const c_void,
             modifier : c_int,
             button : c_int,
-            curx : c_int, 
+            curx : c_int,
             cury : c_int,
-            prevx : c_int, 
+            prevx : c_int,
             prevy : c_int,
             timestamp : c_int
             ),
@@ -100,8 +100,8 @@ extern {
             data : *const c_void,
             modifier : c_int,
             direction : c_int,
-            z : c_int, 
-            x : c_int, 
+            z : c_int,
+            x : c_int,
             y : c_int,
             timestamp : c_int
             ),
@@ -357,13 +357,13 @@ impl WidgetContainer
                     };
                 }
 
-             
+
 
 
             },
             Event::UnselectObject(ob) => {
                 println!("unselected : {}", ob.read().unwrap().name);
-                
+
 
                 for v in self.views.iter() {
                     let o = match v.control.borrow_state() {
@@ -375,7 +375,7 @@ impl WidgetContainer
                             }
                             v.control.borrow().get_selected_object()
                         },
-                        _ => { 
+                        _ => {
                             println!("already borrowed : mouse_up add_ob ->sel ->add_ob");
                         return;
                         }
