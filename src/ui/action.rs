@@ -49,7 +49,7 @@ pub struct Action
 pub struct ActionData
 {
     //tree : Rc<RefCell<Box<ui::Tree>>>,
-    property : Rc<RefCell<Box<ui::Property>>>,
+    //property : Rc<RefCell<Box<ui::Property>>>,
     control : Rc<RefCell<Control>>,
     holder : Rc<RefCell<ui::view::Holder>>,
     resource : Rc<resource::ResourceGroup>
@@ -59,7 +59,7 @@ impl ActionData
 {
     pub fn new(
     //tree : Rc<RefCell<Box<ui::Tree>>>,
-    property : Rc<RefCell<Box<ui::Property>>>,
+    //property : Rc<RefCell<Box<ui::Property>>>,
     control : Rc<RefCell<Control>>,
     holder : Rc<RefCell<ui::view::Holder>>,
     resource : Rc<resource::ResourceGroup>
@@ -67,7 +67,7 @@ impl ActionData
     {
         ActionData {
      //       tree : tree,
-            property : property,
+     //       property : property,
             control : control,
             holder : holder,
             resource: resource
@@ -146,14 +146,16 @@ pub extern fn add_empty(data : *const c_void)
     let mut control = ad.control.borrow_mut();
     let o = control.add_empty("new object");
 
+    println!("TODO FIX FIX FIX add_empty");
+    /*
     match ad.property.borrow_state() {
         BorrowState::Unused => {
             ad.property.borrow_mut().set_object(&*o.read().unwrap());
         },
         _ => {println!("cannot borrow property");}
     };
+    */
 
-    println!("TODO FIX FIX FIX add_empty");
     /*
     match ad.tree.borrow_state() {
         BorrowState::Unused => {
@@ -189,7 +191,7 @@ pub extern fn play_scene(data : *const c_void)
         return;
     };
     //let factory = control.factory.clone();
-    
+
     let camera = if let Some(ref c) = scene.borrow().camera {
         c.clone()
     }

@@ -155,11 +155,18 @@ impl View
 
         let control = &self.control;
 
+        /*
         let p = Rc::new(RefCell::new(ui::Property::new(
                     w,
                     control.clone(),
                     self.resource.clone()
                     )));
+                    */
+        let mut p = box ui::Property::new(
+                    w,
+                    control.clone(),
+                    self.resource.clone()
+                    );
 
         let mut t = box ui::Tree::new(
                     w,
@@ -192,10 +199,11 @@ impl View
         */
 
         let tsd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*t)});
+        let pd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*p)});
 
         let ad = ui::action::ActionData::new(
             //t.clone(),
-            p.clone(),
+            //p.clone(),
             control.clone(),
             self.holder.clone(),
             self.resource.clone()
@@ -220,6 +228,23 @@ impl View
                     ui::tree::unselected
                     );
             }
+
+            unsafe {
+             ui::property::jk_property_list_register_cb(
+                 p.jk_property_list,
+                 //&*p, //ptr::null(),
+                 mem::transmute(box pd),
+                 ui::property::changed_set_float,
+                 ui::property::changed_set_string,
+                 ui::property::changed_set_enum,
+                 ui::property::register_change_string,
+                 ui::property::register_change_float,
+                 ui::property::register_change_enum,
+                 ui::property::register_change_option,
+                 ui::property::expand,
+                 ui::property::contract
+                 );
+            }
         }
 
         match self.context.borrow().scene {
@@ -233,7 +258,8 @@ impl View
 
 
         container.tree = Some(t);
-        self.property = Some(p);
+        container.property = Some(p);
+        //self.property = Some(p);
         self.action = Some(a);
         self.command = Some(command);
 

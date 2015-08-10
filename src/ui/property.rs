@@ -115,7 +115,7 @@ extern {
 
     fn property_list_clear(pl : *const JkPropertyList);
 
-    fn jk_property_list_register_cb(
+    pub fn jk_property_list_register_cb(
         property : *const JkPropertyList,
         data : *const Property,
         changed_float : ChangedFunc,
@@ -205,9 +205,10 @@ impl Property
         window : *const Window,
         control : Rc<RefCell<Control>>,
         resource : Rc<resource::ResourceGroup>
-        ) -> Box<Property>
+        //) -> Box<Property>
+        ) -> Property
     {
-        let mut p = box Property {
+        let mut p = Property {
             name : String::from("property_name"),
             jk_property_list : unsafe {jk_property_list_new(window)},
             pv : HashMap::new(),
@@ -218,23 +219,6 @@ impl Property
         };
 
         p.set_visible(false);
-
-        unsafe {
-            jk_property_list_register_cb(
-                p.jk_property_list,
-                //mem::transmute(box p.control.clone()),
-                &*p, //ptr::null(),
-                changed_set_float,
-                changed_set_string,
-                changed_set_enum,
-                register_change_string,
-                register_change_float,
-                register_change_enum,
-                register_change_option,
-                expand,
-                contract
-                );
-        }
 
         p
     }
@@ -581,7 +565,7 @@ pub extern fn register_change_option(
 
 //fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
 fn changed_set<T : Any+Clone+PartialEq>(
-    property : *const c_void,
+    widget_data : *const c_void,
     name : *const c_char,
     old : Option<&T>,
     new : &T,
@@ -608,7 +592,10 @@ fn changed_set<T : Any+Clone+PartialEq>(
 
     //let vs = vs.tail().to_vec();
 
-    let p : & Property = unsafe {mem::transmute(property)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
+    let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
+    //let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    //let p : & Property = unsafe {mem::transmute(property)};
     let resource = &p.resource;
 
     let mut control = match p.control.borrow_state() {
@@ -659,7 +646,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
                         None => {}
                 };
             }
-            else 
+            else
             */
             if s.starts_with("object/comp_data/MeshRender") {
                 println!("please update mesh");
@@ -764,7 +751,7 @@ fn changed_option(
 
 
 
-extern fn expand(
+pub extern fn expand(
     property: *const Property,
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
@@ -818,7 +805,7 @@ extern fn expand(
     };
 }
 
-extern fn contract(
+pub extern fn contract(
     property: *const Property,
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()

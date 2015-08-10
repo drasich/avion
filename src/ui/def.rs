@@ -290,6 +290,7 @@ pub struct WidgetContainer
 {
     pub widgets : Vec<Box<Widget>>,
     pub tree : Option<Box<Tree>>,
+    pub property : Option<Box<Property>>,
     views : Vec<Box<View>>,
 }
 
@@ -309,6 +310,7 @@ impl WidgetContainer
         WidgetContainer {
             widgets : Vec::new(),
             tree : None,
+            property : None,
             views : Vec::new()
         }
     }
