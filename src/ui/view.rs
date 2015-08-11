@@ -2,6 +2,7 @@ use std::rc::Rc;
 use std::cell::{RefCell, BorrowState};
 use std::sync::{RwLock, Arc};
 use libc::{c_char, c_void, c_int, c_float};
+use std::collections::{LinkedList};
 use std::mem;
 use std::ffi;
 use std::ffi::CStr;
@@ -325,6 +326,27 @@ impl View
         };
     }
 
+    pub fn get_selected_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
+    {
+        let c = match self.context.borrow_state(){
+            BorrowState::Writing => { println!("cannot borrow context"); return LinkedList::new(); }
+            _ => self.context.borrow(),
+        };
+
+        c.selected.clone()
+    }
+
+    pub fn get_scene(&self) -> Option<Rc<RefCell<scene::Scene>>>
+    {
+        let c = match self.context.borrow_state(){
+            BorrowState::Writing => { println!("cannot borrow context"); return None; }
+            _ => self.context.borrow(),
+        };
+
+        c.scene.clone()
+    }
+
+
     fn handle_direct_change(&self, s: &str)
     {
         let o = match self.get_selected_object() {
@@ -516,7 +538,7 @@ pub extern fn mouse_down(
     //let view : &Box<View> = unsafe {mem::transmute(data)};
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     let view : &View = unsafe {mem::transmute(wcb.widget)};
-    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let op_list = {
         let control_rc = view.control.clone();
@@ -546,6 +568,7 @@ pub extern fn mouse_up(
     //let view : &Box<View> = unsafe {mem::transmute(data)};
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     let view : &View = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let change = {
         let control_rc = view.control.clone();
@@ -554,6 +577,7 @@ pub extern fn mouse_up(
     };
 
     view.handle_control_change(&change);
+    container.handle_change(&change, view.uuid);
 }
 
 pub extern fn mouse_move(

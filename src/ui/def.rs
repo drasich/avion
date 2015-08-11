@@ -14,6 +14,7 @@ use intersection;
 use resource;
 use geometry;
 use vec;
+use scene;
 use object;
 use ui::{Tree,Property,View};
 use ui;
@@ -315,8 +316,12 @@ impl WidgetContainer
         }
     }
 
-    pub fn handle_change(&self, change : &operation::Change, widget_origin: uuid::Uuid)
+    pub fn handle_change(&mut self, change : &operation::Change, widget_origin: uuid::Uuid)
     {
+        if *change == operation::Change::None {
+            return;
+        }
+
         match *change {
             operation::Change::DirectChange(ref name) => {
                 let o = match self.get_selected_object() {
@@ -337,6 +342,94 @@ impl WidgetContainer
                 }
             },
             operation::Change::SelectedChange => {
+            },
+            _ => {}
+        }
+
+
+        match *change {
+            operation::Change::Objects(ref name, ref id_list) => {
+                let sel = self.get_selected_object();
+                for id in id_list.iter() {
+                    if let Some(ref o) = sel {
+                        let mut ob = o.write().unwrap();
+
+                        if *id == ob.id  {
+                            match self.property {
+                                Some(ref mut p) =>
+                                    {
+                                        p.update_object(&*ob, "");
+
+                                    },
+                                    None => {}
+                            }
+                        }
+
+                        /*
+                        if name.starts_with("object/comp_data/MeshRender") {
+                            println!("please update mesh");
+                            let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
+                            if let Some(ref mr) = omr {
+                                ob.mesh_render =
+                                    Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
+                            }
+                        }
+                        */
+                    }
+                }
+            },
+            operation::Change::SelectedChange => {
+
+                let sel = self.get_selected_objects();
+                println!("container, object seclected : {}",  sel.len());
+
+                if sel.len() != 1 {
+                    match self.property {
+                        Some(ref mut p) => {
+                                    p.set_nothing();
+                        },
+                        None => {
+                            println!("container no property");
+                        }
+                    }
+                }
+                else {
+                    match sel.front() {
+                        Some(o) => {
+                            match self.property {
+                                Some(ref mut p) => {
+                                            p.set_object(&*o.read().unwrap());
+                                },
+                                None => {
+                                    println!("container no property");
+                                }
+                            }
+                        },
+                        _ => {},
+                    }
+                }
+            },
+            operation::Change::SceneRemove(ref id, ref obs) => {
+                //TODO
+                self.handle_change(&operation::Change::SelectedChange, widget_origin);
+            },
+            operation::Change::SceneAdd(ref id, ref obs) => {
+                let scene = match self.get_scene() {
+                    Some(ref s) => s.clone(),
+                    None => return
+                };
+
+                let objects = scene.borrow().find_objects_by_id(&mut obs.clone());
+
+                // todo
+                match self.tree {
+                    Some(ref mut t) => {
+                                t.add_objects(objects);
+                    },
+                    None => {
+                        println!("control no tree");
+                    }
+                }
             },
             _ => {}
         }
@@ -402,6 +495,29 @@ impl WidgetContainer
         }
 
         None
+    }
+
+    fn get_scene(&self) -> Option<Rc<RefCell<scene::Scene>>>
+    {
+        //TODO
+        for v in self.views.iter() {
+            if let Some(s) = v.get_scene()
+            {
+                return Some(s);
+            }
+        }
+
+        None
+    }
+
+    fn get_selected_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
+    {
+        //TODO
+        for v in self.views.iter() {
+            return v.get_selected_objects();
+        }
+
+        LinkedList::new()
     }
 }
 
