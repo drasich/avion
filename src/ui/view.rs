@@ -594,6 +594,7 @@ pub extern fn mouse_move(
 {
     //let view : &Box<View> = unsafe {mem::transmute(data)};
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
     let view : &View = unsafe {mem::transmute(wcb.widget)};
     let control_rc = view.control.clone();
 
@@ -605,6 +606,7 @@ pub extern fn mouse_move(
 
     for change in change_list.iter() {
         view.handle_control_change(change);
+        container.handle_change(change, view.uuid);
     }
 
 }
@@ -779,6 +781,7 @@ pub extern fn key_down(
     };
 
     view.handle_control_change(&change);
+    container.handle_change(&change, view.uuid);
 }
 
 
