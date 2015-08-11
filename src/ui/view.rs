@@ -719,9 +719,19 @@ pub extern fn key_down(
                 return;
             },
             "p" => {
+                /*
                 if let Some(ref p) = view.property {
                     let b = p.borrow().visible();
                     p.borrow_mut().set_visible(!b);
+                }
+                */
+
+                if let Some(ref mut p) = container.property {
+                    let b = p.visible();
+                    p.set_visible(!b);
+                }
+                else {
+                    println!("container does not have a property");
                 }
                 return;
             },
