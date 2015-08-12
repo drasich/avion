@@ -347,35 +347,6 @@ impl View
     }
 
 
-    fn handle_direct_change(&self, s: &str)
-    {
-        let o = match self.get_selected_object() {
-            Some(ob) => ob,
-            None => {
-                println!("direct change, no objetcs selected");
-                return;
-            }
-        };
-
-        println!("we have a direct change: {}", s);
-        println!("TODO remove this function, tree and property update should be in widgetcontainer handle change/event");
-
-        //To be removed
-        match self.property {
-            Some(ref p) =>
-                match p.borrow_state() {
-                    BorrowState::Writing => {},
-                    _ => {
-                        println!("direct change : {}", s);
-                        //p.update_object(&*o.read().unwrap(), s);
-                        p.borrow().update_object_property(&*o.read().unwrap(), s);
-                    },
-                },
-                None => {}
-        };
-    }
-
-
     pub fn handle_control_change(&self, change : &operation::Change)
     {
         if *change == operation::Change::None {
@@ -416,7 +387,6 @@ impl View
                 }
             },
             operation::Change::DirectChange(ref name) => {
-                self.handle_direct_change(name.as_ref());
             },
             operation::Change::RectVisibleSet(b) => {
                 if let Some(w) = self.window {

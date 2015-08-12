@@ -340,6 +340,15 @@ impl WidgetContainer
                             None => {}
                     };
                 }
+
+                match self.property {
+                    Some(ref p) => {
+                        println!("direct change : {}", name);
+                         //p.update_object(&*o.read().unwrap(), s);
+                         p.update_object_property(&*o.read().unwrap(), name);
+                     },
+                    None => {}
+                };
             },
             operation::Change::SelectedChange => {
             },
