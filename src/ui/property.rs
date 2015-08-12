@@ -758,12 +758,10 @@ pub extern fn expand(
 {
     let datachar = data as *const i8;
     let s = unsafe {CStr::from_ptr(datachar).to_bytes()};
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(property)};
     //let mut p : &mut Property = unsafe {mem::transmute(property)};
     let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
     let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
-
-    println!("expanding ! property name {} ", p.name);
 
     let path = match str::from_utf8(s) {
         Ok(pp) => pp,
