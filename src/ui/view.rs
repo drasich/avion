@@ -74,7 +74,6 @@ pub struct View
     pub context : Rc<RefCell<context::Context>>,
 
     pub window : Option<*const ui::Window>,
-    pub property : Option<Rc<RefCell<Box<ui::Property>>>>,
     pub action : Option<Rc<RefCell<Box<ui::Action>>>>,
     pub command : Option<Rc<RefCell<Box<ui::Command>>>>,
 
@@ -135,7 +134,6 @@ impl View
             context : context,
 
             window : None,
-            property: None,
             action : None,
             command : None,
 
@@ -156,13 +154,6 @@ impl View
 
         let control = &self.control;
 
-        /*
-        let p = Rc::new(RefCell::new(ui::Property::new(
-                    w,
-                    control.clone(),
-                    self.resource.clone()
-                    )));
-                    */
         let mut p = box ui::Property::new(
                     w,
                     control.clone(),
@@ -178,17 +169,6 @@ impl View
 
         let command = Rc::new(RefCell::new(ui::Command::new(
                     w)));
-
-        /*
-        match control.borrow_state() {
-            BorrowState::Unused => {
-                let mut c = control.borrow_mut();
-                //c.property = Some(p.clone());
-                c.tree = Some(t.clone());
-            },
-            _ => {}
-        };
-        */
 
         println!("TODO must free this in c");
         /*
@@ -233,7 +213,6 @@ impl View
             unsafe {
              ui::property::jk_property_list_register_cb(
                  p.jk_property_list,
-                 //&*p, //ptr::null(),
                  mem::transmute(box pd),
                  ui::property::changed_set_float,
                  ui::property::changed_set_string,
@@ -260,7 +239,6 @@ impl View
 
         container.tree = Some(t);
         container.property = Some(p);
-        //self.property = Some(p);
         self.action = Some(a);
         self.command = Some(command);
 
@@ -361,20 +339,6 @@ impl View
                     if let Some(ref o) = sel {
                         let mut ob = o.write().unwrap();
 
-                        if *id == ob.id  {
-                            match self.property.clone() {
-                                Some(ref p) =>
-                                    match p.borrow_state() {
-                                        BorrowState::Unused => {
-                                            p.borrow_mut().update_object(&*ob, "");
-
-                                        },
-                                        _=> {}
-                                    },
-                                    None => {}
-                            }
-                        }
-
                         if name.starts_with("object/comp_data/MeshRender") {
                             println!("please update mesh");
                             let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
@@ -403,50 +367,6 @@ impl View
                 }
             },
             operation::Change::SelectedChange => {
-
-                let c = match self.context.borrow_state(){
-                    BorrowState::Writing => { println!("cannot borrow context"); return; }
-                    _ => self.context.borrow(),
-                };
-
-                println!("object seclected : {}",  c.selected.len());
-
-                if c.selected.len() != 1 {
-                    match self.property {
-                        Some(ref p) => {
-                            match p.borrow_state() {
-                                BorrowState::Unused => {
-                                    p.borrow_mut().set_nothing();
-                                },
-                                _ => {println!("cannot borrow property");}
-                            };
-                        },
-                        None => {
-                            println!("control no property");
-                        }
-                    }
-
-                }
-                else {
-                    match c.selected.front() {
-                        Some(o) => {
-                            match self.property {
-                                Some(ref p) => {
-                                    match p.borrow_state() {
-                                        BorrowState::Unused => {
-                                            p.borrow_mut().set_object(&*o.read().unwrap());
-                                        },
-                                        _ => {println!("cannot borrow property");}
-                                    };
-                                },
-                                None => {
-                                    println!("control no property");
-                                }
-                            }
-                        },
-                        _ => {},
-                    }
-                }
             },
             operation::Change::SceneRemove(ref id, ref obs) => {
                 {
@@ -696,15 +616,6 @@ pub extern fn key_down(
                 return;
             },
             "t" => {
-                /*
-                if let Some(ref t) = view.tree {
-                    let b = t.borrow().visible();
-                    t.borrow_mut().set_visible(!b);
-                }
-                else {
-                    println!("does not have a tree");
-                }
-                */
                 if let Some(ref mut t) = container.tree {
                     let b = t.visible();
                     t.set_visible(!b);
@@ -715,13 +626,6 @@ pub extern fn key_down(
                 return;
             },
             "p" => {
-                /*
-                if let Some(ref p) = view.property {
-                    let b = p.borrow().visible();
-                    p.borrow_mut().set_visible(!b);
-                }
-                */
-
                 if let Some(ref mut p) = container.property {
                     let b = p.visible();
                     p.set_visible(!b);
