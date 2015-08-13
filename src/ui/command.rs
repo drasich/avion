@@ -80,9 +80,11 @@ impl Command
 {
     pub fn new(
         window : *const Window)
-        -> Box<Command>
+        //-> Box<Command>
+        -> Command
     {
-        let c = box Command {
+        //let c = box Command {
+        let c = Command {
             name : String::from("command_name"),
             jk_command : unsafe {window_command_new(window)},
         };
@@ -265,15 +267,14 @@ pub extern fn add_component(data : *const c_void, name : *const c_char)
 {
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     let v : &ui::View = unsafe {mem::transmute(wcb.widget)};
-    //let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
 
     let s = unsafe {CStr::from_ptr(name).to_bytes()};
     let s = str::from_utf8(s).unwrap();
 
-    if let Some(ref c) = v.command {
+    if let Some(ref cmd) = container.command {
 
-        let cmd = c.borrow();
         cmd.clean();
 
         cmd.add_ptr("MeshRender", ui::command::add_comp, data);

@@ -16,7 +16,7 @@ use geometry;
 use vec;
 use scene;
 use object;
-use ui::{Tree,Property,View};
+use ui::{Tree,Property,View,Command};
 use ui;
 use factory;
 use operation;
@@ -292,6 +292,7 @@ pub struct WidgetContainer
     pub widgets : Vec<Box<Widget>>,
     pub tree : Option<Box<Tree>>,
     pub property : Option<Box<Property>>,
+    pub command : Option<Box<Command>>,
     views : Vec<Box<View>>,
 }
 
@@ -312,6 +313,7 @@ impl WidgetContainer
             widgets : Vec::new(),
             tree : None,
             property : None,
+            command : None,
             views : Vec::new()
         }
     }

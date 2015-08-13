@@ -75,7 +75,6 @@ pub struct View
 
     pub window : Option<*const ui::Window>,
     pub action : Option<Rc<RefCell<Box<ui::Action>>>>,
-    pub command : Option<Rc<RefCell<Box<ui::Command>>>>,
 
     //pub dragger : Arc<RwLock<object::Object>>,
     dragger : Rc<RefCell<dragger::DraggerManager>>,
@@ -135,7 +134,6 @@ impl View
 
             window : None,
             action : None,
-            command : None,
 
             dragger : dragger,
 
@@ -167,8 +165,7 @@ impl View
         let a = Rc::new(RefCell::new(ui::Action::new(
                     w)));
 
-        let command = Rc::new(RefCell::new(ui::Command::new(
-                    w)));
+        let command = box ui::Command::new(w);
 
         println!("TODO must free this in c");
         /*
@@ -240,7 +237,7 @@ impl View
         container.tree = Some(t);
         container.property = Some(p);
         self.action = Some(a);
-        self.command = Some(command);
+        container.command = Some(command);
 
     }
 
@@ -564,12 +561,8 @@ pub extern fn key_down(
 
         match key_str.as_ref() {
             "Return" => {
-                if let Some(ref c) = view.command {
+                if let Some(ref mut cmd) = container.command {
                     println!("pressed return show popup");
-                    let cmd = c.borrow();
-                    {
-                        //println!("control borrow state : {:?}", cmd.control.borrow_state());
-                    }
 
                     cmd.clean();
 
