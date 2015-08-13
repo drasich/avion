@@ -74,7 +74,6 @@ pub struct View
     pub context : Rc<RefCell<context::Context>>,
 
     pub window : Option<*const ui::Window>,
-    pub action : Option<Rc<RefCell<Box<ui::Action>>>>,
 
     //pub dragger : Arc<RwLock<object::Object>>,
     dragger : Rc<RefCell<dragger::DraggerManager>>,
@@ -133,7 +132,6 @@ impl View
             context : context,
 
             window : None,
-            action : None,
 
             dragger : dragger,
 
@@ -162,8 +160,7 @@ impl View
                     w,
                     control.clone());
 
-        let a = Rc::new(RefCell::new(ui::Action::new(
-                    w)));
+        let a = box ui::Action::new(w);
 
         let command = box ui::Command::new(w);
 
@@ -187,8 +184,8 @@ impl View
             self.resource.clone()
         );
 
-        a.borrow().add_button("christest", ui::action::add_empty, ad.clone());
-        a.borrow().add_button(
+        a.add_button("christest", ui::action::add_empty, ad.clone());
+        a.add_button(
             "play_scene",
             ui::action::play_scene,
             ad.clone());
@@ -236,7 +233,7 @@ impl View
 
         container.tree = Some(t);
         container.property = Some(p);
-        self.action = Some(a);
+        container.action = Some(a);
         container.command = Some(command);
 
     }
@@ -629,9 +626,9 @@ pub extern fn key_down(
                 return;
             },
             "a" => {
-                if let Some(ref a) = view.action {
-                    let b = a.borrow().visible();
-                    a.borrow_mut().set_visible(!b);
+                if let Some(ref mut a) = container.action {
+                    let b = a.visible();
+                    a.set_visible(!b);
                 }
                 return;
             },

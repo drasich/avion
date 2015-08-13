@@ -79,9 +79,9 @@ impl Action
 {
     pub fn new(
         window : *const Window)
-        -> Box<Action>
+        -> Action
     {
-        let mut a = box Action {
+        let mut a = Action {
             name : String::from("action_name"),
             jk_action : unsafe {window_action_new(window)},
             visible : true
