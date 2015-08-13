@@ -761,7 +761,7 @@ pub extern fn expand(
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(property)};
     //let mut p : &mut Property = unsafe {mem::transmute(property)};
     let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
-    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    //let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let path = match str::from_utf8(s) {
         Ok(pp) => pp,
@@ -811,7 +811,10 @@ pub extern fn contract(
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
-    let mut p : &mut Property = unsafe {mem::transmute(property)};
+    //let mut p : &mut Property = unsafe {mem::transmute(property)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(property)};
+    let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
+    //let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     unsafe {
         property_list_nodes_remove(
