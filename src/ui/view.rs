@@ -150,7 +150,7 @@ impl View
 
         let control = &self.control;
 
-        let mut p = box ui::Property::new(
+        let p = box ui::Property::new(
                     w,
                     control.clone(),
                     self.resource.clone()
@@ -675,10 +675,7 @@ pub extern fn init_cb(v : *mut View) -> () {
     let view : &mut View = unsafe {mem::transmute(wcb.widget)};
     let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    unsafe {
-        return view.init_render();
-        //return (*v).init_render();
-    }
+    return view.init_render();
 }
 
 pub extern fn draw_cb(v : *mut View) -> () {
@@ -687,20 +684,15 @@ pub extern fn draw_cb(v : *mut View) -> () {
     let view : &mut View = unsafe {mem::transmute(wcb.widget)};
     let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    unsafe {
-        return view.draw();
-        //return (*v).draw();
-    }
+    return view.draw();
 }
 
 pub extern fn resize_cb(v : *mut View, w : c_int, h : c_int) -> () {
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(v)};
     let view : &mut View = unsafe {mem::transmute(wcb.widget)};
     let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
-    unsafe {
-        //return (*v).resize(w, h);
-        return view.resize(w, h);
-    }
+
+    return view.resize(w, h);
 }
 
 pub struct GameView

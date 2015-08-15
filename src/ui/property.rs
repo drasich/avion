@@ -277,7 +277,7 @@ impl Property
             };
 
             if starts_with_prop {
-                let yep = make_vec_from_string(f).tail().to_vec();
+                let yep = make_vec_from_string(f)[1..].to_vec();
                 match find_property_show(object, yep.clone()) {
                     Some(ppp) => {
                         ppp.update_widget(*pv);
@@ -301,7 +301,7 @@ impl Property
                 println!("buuuuuuuuuuuuuuuuuuuuuuuuuut: {} ", f);
                 continue;
             }
-            let yep = make_vec_from_string(f).tail().to_vec();
+            let yep = make_vec_from_string(f)[1..].to_vec();
             match find_property_show(object, yep.clone()) {
                 Some(ppp) => {
                     println!("I find the property : {:?}", yep);
@@ -590,7 +590,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
         vs.push(i.to_string());
     }
 
-    //let vs = vs.tail().to_vec();
+    //let vs = vs[1..].to_vec();
 
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
     let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
@@ -689,7 +689,7 @@ fn changed_option(
         vs.push(i.to_string());
     }
 
-    //let vs = vs.tail().to_vec();
+    //let vs = vs[1..].to_vec();
 
     let p : & Property = unsafe {mem::transmute(property)};
 
@@ -774,7 +774,7 @@ pub extern fn expand(
 
     let vs = make_vec_from_string(&path.to_string());
 
-    let yep = vs.tail().to_vec();
+    let yep = vs[1..].to_vec();
     println!("expand : {:?}", vs);
 
     let o = match p.control.clone().borrow_state() {
@@ -839,7 +839,7 @@ pub extern fn contract(
 
     let vs = make_vec_from_string(&path.to_string());
 
-    let yep = vs.tail().to_vec();
+    let yep = vs[1..].to_vec();
     println!("contract : {:?}", vs);
 
     let clone = p.pv.clone();
@@ -1372,7 +1372,7 @@ Option<&PropertyShow>
         _ => {
              match p.get_property(path[0].as_ref()) {
                  Some(ppp) => {
-                     find_property_show(ppp, path.tail().to_vec())
+                     find_property_show(ppp, path[1..].to_vec())
                  },
                  None => {
                      None

@@ -135,12 +135,12 @@ pub fn ray_triangle(r : &geometry::Ray, t : &geometry::Triangle, min : f64) -> I
     let tt = tt/dot;
     let p = r.start + (r.direction * tt);
 
-    let mut a0;
-    let mut a1;
-    let mut a2;
-    let mut b0;
-    let mut b1;
-    let mut b2;
+    let a0;
+    let a1;
+    let a2;
+    let b0;
+    let b1;
+    let b2;
 
     if n.x.abs() > n.y.abs() {
         if n.x.abs() > n.z.abs() {

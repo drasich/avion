@@ -199,7 +199,7 @@ impl Shader
 
     pub fn cgl_init(&mut self)
     {
-        let mut vertc;
+        let vertc;
         match self.vert {
             None => return,
             Some(ref v) => {
@@ -207,7 +207,7 @@ impl Shader
             }
         }
 
-        let mut fragc;
+        let fragc;
         match self.frag {
             None => return,
             Some(ref f) => {

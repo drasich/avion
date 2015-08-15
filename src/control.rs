@@ -443,7 +443,7 @@ impl Control
             }
         };
 
-        let vs = name.tail().to_vec();
+        let vs = name[1..].to_vec();
 
         //o.write().set_property_hier(vs, new);
         o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
@@ -845,12 +845,11 @@ impl Control
         };
 
         let vs = Vec::new();
-        return self.request_operation(
+
+        self.request_operation(
             vs,
             operation::OperationData::AddComponent(o.clone(), cp)
-            );
-
-        operation::Change::None
+            )
     }
 
     pub fn set_scene_camera(&mut self) -> operation::Change

@@ -128,7 +128,7 @@ impl Scene
             */
 
             let mut ob =  o.write().unwrap();
-            let mut b =false;
+            let b =false;
             if let Some(mrd) = ob.get_comp_data::<armature::ArmaturePath>(){
                 println!("there is armature path");
             }

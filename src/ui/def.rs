@@ -365,7 +365,7 @@ impl WidgetContainer
                 let sel = self.get_selected_object();
                 for id in id_list.iter() {
                     if let Some(ref o) = sel {
-                        let mut ob = o.write().unwrap();
+                        let ob = o.read().unwrap();
 
                         if *id == ob.id  {
                             match self.property {

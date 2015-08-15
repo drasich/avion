@@ -438,7 +438,7 @@ impl PropertyWrite for transform::Transform
               }
           },
           _ => {
-              let yep = join_string(&vs.tail().to_vec());
+              let yep = join_string(&vs[1..].to_vec());
               match vs[0].as_ref() {
                   "position" =>
                       self.position.test_set_property_hier(yep.as_ref(), value),
@@ -497,7 +497,7 @@ macro_rules! property_set_impl(
                 let mut v : Vec<&str> = name.split('/').collect();
                 //TODO remove this?
                 if v[0] == "object" {
-                    v = v.tail().to_vec();
+                    v = v[1..].to_vec();
                 }
 
                 match v.len() {
@@ -511,7 +511,7 @@ macro_rules! property_set_impl(
                         }
                     },
                     _ => {
-                        let yep : String = v.tail().join("/");
+                        let yep : String = v[1..].join("/");
                         match v[0] {
                             $(
                                 stringify!($member) => self.$member.test_set_property_hier(yep.as_ref(),value),
@@ -527,7 +527,7 @@ macro_rules! property_set_impl(
                 let mut v : Vec<&str> = name.split('/').collect();
                 //TODO remove this?
                 if v[0] == "object" {
-                    v = v.tail().to_vec();
+                    v = v[1..].to_vec();
                 }
 
                 match v.len() {
@@ -541,7 +541,7 @@ macro_rules! property_set_impl(
                         }
                     },
                     _ => {
-                        let yep : String = v.tail().join("/");
+                        let yep : String = v[1..].join("/");
                         match v[0] {
                             $(
                                 stringify!($member) => self.$member.set_property_hier(yep.as_ref(),value),
@@ -571,7 +571,7 @@ macro_rules! property_get_impl(
                 let mut v : Vec<&str> = name.split('/').collect();
                 //TODO remove this?
                 if v[0] == "object" {
-                    v = v.tail().to_vec();
+                    v = v[1..].to_vec();
                 }
 
                 match v.len() {
@@ -588,7 +588,7 @@ macro_rules! property_get_impl(
                         }
                     },
                     _ => {
-                        let yep : String = v.tail().join("/");
+                        let yep : String = v[1..].join("/");
                         match v[0] {
                             $(
                                 stringify!($member) => self.$member.get_property_hier(yep.as_ref()),

@@ -221,7 +221,7 @@ impl PropertyWrite for CompData {
           0 => {},
           1 => {},
           _ => {
-              let yep : String = v.tail().join("/");
+              let yep : String = v[1..].join("/");
               if v[0] == self.get_kind_string() {
                   match *self {
                       CompData::Player(ref mut p) => {
@@ -248,7 +248,7 @@ impl PropertyWrite for CompData {
           0 => {},
           1 => {},
           _ => {
-              let yep : String = v.tail().join("/");
+              let yep : String = v[1..].join("/");
               if v[0] == self.get_kind_string() {
                   match *self {
                       CompData::Player(ref mut p) => {
@@ -278,7 +278,7 @@ impl PropertyGet for CompData
           0 => None,
           1 => None,
           _ => {
-              let yep : String = v.tail().join("/");
+              let yep : String = v[1..].join("/");
               if v[0] == self.get_kind_string() {
                   match *self {
                       CompData::Player(ref p) => {
