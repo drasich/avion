@@ -89,7 +89,7 @@ impl View
     pub fn new(
         factory: &factory::Factory,
         resource : Rc<resource::ResourceGroup>,
-        master : &mut Box<ui::WidgetContainer>
+        //master : &mut Box<ui::WidgetContainer>
         ) -> View
     //pub fn new(factory: Rc<RefCell<factory::Factory>>) -> View
     {
@@ -160,7 +160,7 @@ impl View
                     w,
                     control.clone());
 
-        let a = box ui::Action::new(w);
+        let a = box ui::Action::new(w, self.resource.clone());
 
         let command = box ui::Command::new(w);
 
@@ -175,7 +175,9 @@ impl View
 
         let tsd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*t)});
         let pd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*p)});
+        let ad = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*a)});
 
+        /*
         let ad = ui::action::ActionData::new(
             //t.clone(),
             //p.clone(),
@@ -183,6 +185,7 @@ impl View
             self.holder.clone(),
             self.resource.clone()
         );
+        */
 
         a.add_button("christest", ui::action::add_empty, ad.clone());
         a.add_button(

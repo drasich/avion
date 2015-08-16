@@ -42,7 +42,8 @@ pub struct Action
 {
     name : String,
     jk_action : *const JkAction,
-    visible : bool
+    visible : bool,
+    resource : Rc<resource::ResourceGroup>
 }
 
 #[derive(Clone)]
@@ -78,13 +79,15 @@ impl ActionData
 impl Action
 {
     pub fn new(
-        window : *const Window)
+        window : *const Window,
+        resource : Rc<resource::ResourceGroup>)
         -> Action
     {
         let mut a = Action {
             name : String::from("action_name"),
             jk_action : unsafe {window_action_new(window)},
-            visible : true
+            visible : true,
+            resource : resource.clone()
         };
 
         a.set_visible(false);
@@ -94,7 +97,8 @@ impl Action
         a
     }
 
-    pub fn add_button(&self, name : &str, cb : ButtonCallback, data : ActionData)
+    //pub fn add_button(&self, name : &str, cb : ButtonCallback, data : ActionData)
+    pub fn add_button(&self, name : &str, cb : ButtonCallback, data : ui::WidgetCbData)
     {
         unsafe {
             action_button_new(
@@ -136,8 +140,13 @@ impl Action
 
 pub extern fn add_empty(data : *const c_void)
 {
-    let ad : &ActionData = unsafe {mem::transmute(data)};
+    //let ad : &ActionData = unsafe {mem::transmute(data)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let action : &Action = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    println!("TODO FIX FIX FIX add_empty");
 
+    /*
     if ad.control.borrow_state() != BorrowState::Unused {
         println!("control already borrowed ");
         return;
@@ -145,8 +154,8 @@ pub extern fn add_empty(data : *const c_void)
 
     let mut control = ad.control.borrow_mut();
     let o = control.add_empty("new object");
+    */
 
-    println!("TODO FIX FIX FIX add_empty");
     /*
     match ad.property.borrow_state() {
         BorrowState::Unused => {
@@ -170,6 +179,12 @@ pub extern fn add_empty(data : *const c_void)
 
 pub extern fn play_scene(data : *const c_void)
 {
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let action : &Action = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    println!("TODO FIX FIX FIX play_scene");
+
+    /*
     let ad : &ActionData = unsafe {mem::transmute(data)};
 
     if ad.control.borrow_state() == BorrowState::Writing {
@@ -206,6 +221,7 @@ pub extern fn play_scene(data : *const c_void)
         //let win = ui::jk_window_new();
         //let gl = ui::jk_glview_new(win, ptr::null(),);
     //}
+    */
 }
 
 

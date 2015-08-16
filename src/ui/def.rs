@@ -148,7 +148,7 @@ impl Master
             views : LinkedList::new(),
         };
 
-        let v = box View::new(&m.factory, m.resource.clone(), container);
+        let v = box View::new(&m.factory, m.resource.clone());//, container);
         m.views.push_back(v);
         //container.views.push(v);
 
@@ -535,6 +535,7 @@ impl WidgetContainer
 }
 
 //Send to c with mem::transmute(box data)  and free in c
+#[derive(Clone)]
 pub struct WidgetCbData
 {
     pub container : *const WidgetContainer,
