@@ -324,11 +324,12 @@ name = "image/base_skeleton_col.png"
         ui::init_callback_set(
             ui::init_cb,
             //mem::transmute(box m.clone()));
-            mem::transmute(box appdata));
+            mem::transmute(box appdata.clone()));
 
         ui::exit_callback_set(
             ui::exit_cb,
-            mem::transmute(box m.clone()));
+            //mem::transmute(box m.clone()));
+            mem::transmute(box appdata));
     }
 
     unsafe {

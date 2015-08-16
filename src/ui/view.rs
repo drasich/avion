@@ -71,7 +71,6 @@ pub struct View
 {
     render : Box<Render>,
     pub control : Rc<RefCell<Control>>,
-    pub context : Rc<RefCell<context::Context>>,
 
     pub window : Option<*const ui::Window>,
 
@@ -89,7 +88,7 @@ impl View
     pub fn new(
         factory: &factory::Factory,
         resource : Rc<resource::ResourceGroup>,
-        //master : &mut Box<ui::WidgetContainer>
+        container : &mut Box<ui::WidgetContainer>
         ) -> View
     //pub fn new(factory: Rc<RefCell<factory::Factory>>) -> View
     {
@@ -113,7 +112,7 @@ impl View
             cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
         }
 
-        let context = Rc::new(RefCell::new(context::Context::new()));
+        let context = container.context.clone();
         context.borrow_mut().scene = Some(scene.clone());
         let dragger = Rc::new(RefCell::new(dragger::DraggerManager::new(factory, &*resource)));
 
@@ -129,7 +128,6 @@ impl View
         let v = View {
             render : render,
             control : control,
-            context : context,
 
             window : None,
 
@@ -224,7 +222,7 @@ impl View
             }
         }
 
-        match self.context.borrow().scene {
+        match container.context.borrow().scene {
             Some(ref s) => {
                 //t.borrow_mut().set_scene(&*s.borrow());
                 t.set_scene(&*s.borrow());
@@ -246,10 +244,8 @@ impl View
         self.render.init();
     }
 
-    fn draw(&mut self)
+    fn draw(&mut self, context : &context::Context)
     {
-        let context = self.context.borrow();
-
         let scene = match context.scene {
             Some(ref s) => s.borrow(),
             None => return
@@ -285,68 +281,13 @@ impl View
         self.render.resize(w, h);
     }
 
-    pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
-    {
-        let c = match self.context.borrow_state(){
-            BorrowState::Writing => { println!("cannot borrow context"); return None; }
-            _ => self.context.borrow(),
-        };
-
-        match c.selected.front() {
-            Some(o) => return Some(o.clone()),
-            None => {
-                println!("view get selected objects, no objects selected");
-                return None;
-            }
-        };
-    }
-
-    pub fn get_selected_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
-    {
-        let c = match self.context.borrow_state(){
-            BorrowState::Writing => { println!("cannot borrow context"); return LinkedList::new(); }
-            _ => self.context.borrow(),
-        };
-
-        c.selected.clone()
-    }
-
-    pub fn get_scene(&self) -> Option<Rc<RefCell<scene::Scene>>>
-    {
-        let c = match self.context.borrow_state(){
-            BorrowState::Writing => { println!("cannot borrow context"); return None; }
-            _ => self.context.borrow(),
-        };
-
-        c.scene.clone()
-    }
-
-
     pub fn handle_control_change(&self, change : &operation::Change)
     {
         if *change == operation::Change::None {
             return;
         }
 
-        let sel = self.get_selected_object();
-
         match *change {
-            operation::Change::Objects(ref name, ref id_list) => {
-                for id in id_list.iter() {
-                    if let Some(ref o) = sel {
-                        let mut ob = o.write().unwrap();
-
-                        if name.starts_with("object/comp_data/MeshRender") {
-                            println!("please update mesh");
-                            let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
-                            if let Some(ref mr) = omr {
-                                ob.mesh_render =
-                                    Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
-                            }
-                        }
-                    }
-                }
-            },
             operation::Change::DirectChange(ref name) => {
             },
             operation::Change::RectVisibleSet(b) => {
@@ -364,40 +305,6 @@ impl View
                 }
             },
             operation::Change::SelectedChange => {
-            },
-            operation::Change::SceneRemove(ref id, ref obs) => {
-                {
-                    println!("view, sceneremove!!!!!!!!");
-                    let mut c = self.context.borrow_mut();
-                    c.remove_objects_by_id(obs.clone());
-                }
-                self.handle_control_change(&operation::Change::SelectedChange);
-            },
-            operation::Change::SceneAdd(ref id, ref obs) => {
-                let c = self.context.borrow();
-                let scene = match c.scene {
-                    Some(ref s) => s.clone(),
-                    None => return
-                };
-
-                let objects = scene.borrow().find_objects_by_id(&mut obs.clone());
-
-                // todo
-                /*
-                match self.tree {
-                    Some(ref t) => {
-                        match t.borrow_state() {
-                            BorrowState::Unused => {
-                                t.borrow_mut().add_objects(objects);
-                            }
-                            _ => {}
-                        }
-                    },
-                    None => {
-                        println!("control no tree");
-                    }
-                }
-                */
             },
             _ => {}
         }
@@ -687,7 +594,8 @@ pub extern fn draw_cb(v : *mut View) -> () {
     let view : &mut View = unsafe {mem::transmute(wcb.widget)};
     let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    return view.draw();
+    let context = container.context.borrow();
+    return view.draw(&*context);
 }
 
 pub extern fn resize_cb(v : *mut View, w : c_int, h : c_int) -> () {

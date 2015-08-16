@@ -22,10 +22,12 @@ use factory;
 use operation;
 use camera;
 use property;
+use context;
 use control;
 use control::Control;
 use control::WidgetUpdate;
 use uuid;
+use component;
 
 #[repr(C)]
 pub struct Window;
@@ -140,7 +142,7 @@ impl Master
     fn _new(container : &mut Box<WidgetContainer>) -> Master
     {
         let factory = factory::Factory::new();
-        let resource = Rc::new(resource::ResourceGroup::new());
+        let resource = container.resource.clone();
 
         let mut m = Master {
             factory : factory,
@@ -148,7 +150,7 @@ impl Master
             views : LinkedList::new(),
         };
 
-        let v = box View::new(&m.factory, m.resource.clone());//, container);
+        let v = box View::new(&m.factory, m.resource.clone(), container);
         m.views.push_back(v);
         //container.views.push(v);
 
@@ -255,22 +257,24 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 }
 
 pub extern fn exit_cb(data: *mut c_void) -> () {
-    let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
-    let master = master_rc.borrow();
+    //let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
+    //let master = master_rc.borrow();
 
-    for v in master.views.iter()
-    {
-        match v.context.borrow().scene {
-            Some(ref s) => {
-                s.borrow().save();
+    let app_data : &AppCbData = unsafe {mem::transmute(data)};
+    let container : &mut Box<WidgetContainer> = unsafe {mem::transmute(app_data.container)};
+    //let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(app_data.master)};
+    //let master = master_rc.borrow();
 
-                //old
-                //s.read().unwrap().save();
-                //s.read().unwrap().savetoml();
-                //s.borrow().savetoml();
-            },
-            None => {}
-        }
+
+    match container.context.borrow().scene {
+        Some(ref s) => {
+            s.borrow().save();
+            //old
+            //s.read().unwrap().save();
+            //s.read().unwrap().savetoml();
+            //s.borrow().savetoml();
+        },
+        None => {}
     }
 }
 
@@ -295,6 +299,8 @@ pub struct WidgetContainer
     pub command : Option<Box<Command>>,
     pub action : Option<Box<Action>>,
     views : Vec<Box<View>>,
+    pub context : Rc<RefCell<context::Context>>,
+    pub resource : Rc<resource::ResourceGroup>,
 }
 
 /*
@@ -316,7 +322,9 @@ impl WidgetContainer
             property : None,
             command : None,
             action : None,
-            views : Vec::new()
+            views : Vec::new(),
+            context : Rc::new(RefCell::new(context::Context::new())),
+            resource : Rc::new(resource::ResourceGroup::new())
         }
     }
 
@@ -365,7 +373,7 @@ impl WidgetContainer
                 let sel = self.get_selected_object();
                 for id in id_list.iter() {
                     if let Some(ref o) = sel {
-                        let ob = o.read().unwrap();
+                        let mut ob = o.write().unwrap();
 
                         if *id == ob.id  {
                             match self.property {
@@ -378,7 +386,6 @@ impl WidgetContainer
                             }
                         }
 
-                        /*
                         if name.starts_with("object/comp_data/MeshRender") {
                             println!("please update mesh");
                             let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
@@ -387,7 +394,6 @@ impl WidgetContainer
                                     Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
                             }
                         }
-                        */
                     }
                 }
             },
@@ -423,7 +429,11 @@ impl WidgetContainer
                 }
             },
             operation::Change::SceneRemove(ref id, ref obs) => {
-                //TODO
+                {
+                    println!("view, sceneremove!!!!!!!!");
+                    let mut c = self.context.borrow_mut();
+                    c.remove_objects_by_id(obs.clone());
+                }
                 self.handle_change(&operation::Change::SelectedChange, widget_origin);
             },
             operation::Change::SceneAdd(ref id, ref obs) => {
@@ -499,38 +509,38 @@ impl WidgetContainer
 
     fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
     {
-        //TODO
-        for v in self.views.iter() {
-            if let Some(ob) = v.get_selected_object()
-            {
-                return Some(ob);
-            }
-        }
+        let c = match self.context.borrow_state(){
+            BorrowState::Writing => { println!("cannot borrow context"); return None; }
+            _ => self.context.borrow(),
+        };
 
-        None
+        match c.selected.front() {
+            Some(o) => return Some(o.clone()),
+            None => {
+                println!("view get selected objects, no objects selected");
+                return None;
+            }
+        };
     }
 
     fn get_scene(&self) -> Option<Rc<RefCell<scene::Scene>>>
     {
-        //TODO
-        for v in self.views.iter() {
-            if let Some(s) = v.get_scene()
-            {
-                return Some(s);
-            }
-        }
+        let c = match self.context.borrow_state(){
+            BorrowState::Writing => { println!("cannot borrow context"); return None; }
+            _ => self.context.borrow(),
+        };
 
-        None
+        c.scene.clone()
     }
 
     fn get_selected_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
     {
-        //TODO
-        for v in self.views.iter() {
-            return v.get_selected_objects();
-        }
+        let c = match self.context.borrow_state(){
+            BorrowState::Writing => { println!("cannot borrow context"); return LinkedList::new(); }
+            _ => self.context.borrow(),
+        };
 
-        LinkedList::new()
+        c.selected.clone()
     }
 }
 
@@ -557,6 +567,7 @@ impl WidgetCbData {
 }
 
 
+#[derive(Clone)]
 pub struct AppCbData
 {
     pub master : *const c_void,
