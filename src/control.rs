@@ -250,7 +250,7 @@ impl Control
         return operation::Change::SelectedChange;
     }
 
-    pub fn select(&mut self, objects : LinkedList<Arc<RwLock<object::Object>>>)
+    fn select(&mut self, objects : LinkedList<Arc<RwLock<object::Object>>>)
     {
         let mut c = match self.context.borrow_state(){
             BorrowState::Unused => self.context.borrow_mut(),

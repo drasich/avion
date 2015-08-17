@@ -301,6 +301,7 @@ pub struct WidgetContainer
     views : Vec<Box<View>>,
     pub context : Rc<RefCell<context::Context>>,
     pub resource : Rc<resource::ResourceGroup>,
+    //control : Rc<RefCell<control::Control>>
 }
 
 /*
