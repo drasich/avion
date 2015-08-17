@@ -132,7 +132,6 @@ extern {
 
 pub struct Master
 {
-    pub factory : factory::Factory,
     pub resource : Rc<resource::ResourceGroup>,
     views : LinkedList<Box<View>>,
 }
@@ -141,16 +140,14 @@ impl Master
 {
     fn _new(container : &mut Box<WidgetContainer>) -> Master
     {
-        let factory = factory::Factory::new();
         let resource = container.resource.clone();
 
         let mut m = Master {
-            factory : factory,
             resource : resource,
             views : LinkedList::new(),
         };
 
-        let v = box View::new(&m.factory, m.resource.clone(), container);
+        let v = box View::new(m.resource.clone(), container);
         m.views.push_back(v);
         //container.views.push(v);
 
@@ -302,6 +299,7 @@ pub struct WidgetContainer
     pub context : Rc<RefCell<context::Context>>,
     pub resource : Rc<resource::ResourceGroup>,
     //control : Rc<RefCell<control::Control>>
+    pub factory : factory::Factory,
 }
 
 /*
@@ -325,13 +323,16 @@ impl WidgetContainer
             action : None,
             views : Vec::new(),
             context : Rc::new(RefCell::new(context::Context::new())),
-            resource : Rc::new(resource::ResourceGroup::new())
+            resource : Rc::new(resource::ResourceGroup::new()),
+            factory : factory::Factory::new()
+
         }
     }
 
     pub fn handle_change(&mut self, change : &operation::Change, widget_origin: uuid::Uuid)
     {
-        if *change == operation::Change::None {
+        //if *change == operation::Change::None {
+        if let operation::Change::None = *change {
             return;
         }
 
@@ -362,8 +363,6 @@ impl WidgetContainer
                      },
                     None => {}
                 };
-            },
-            operation::Change::SelectedChange => {
             },
             _ => {}
         }
@@ -398,8 +397,11 @@ impl WidgetContainer
                     }
                 }
             },
+            operation::Change::ChangeSelected(ref list) => {
+                self.context.borrow_mut().selected = list.clone();
+                self.handle_change(&operation::Change::SelectedChange, widget_origin);
+            },
             operation::Change::SelectedChange => {
-
                 let sel = self.get_selected_objects();
                 println!("container, object seclected : {}",  sel.len());
 
@@ -431,10 +433,12 @@ impl WidgetContainer
             },
             operation::Change::SceneRemove(ref id, ref obs) => {
                 {
-                    println!("view, sceneremove!!!!!!!!");
+                    println!("container, sceneremove!!!!!!!!");
                     let mut c = self.context.borrow_mut();
                     c.remove_objects_by_id(obs.clone());
                 }
+                //TODO
+                println!("do something for the other widget");
                 self.handle_change(&operation::Change::SelectedChange, widget_origin);
             },
             operation::Change::SceneAdd(ref id, ref obs) => {

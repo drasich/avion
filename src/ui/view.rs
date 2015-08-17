@@ -86,13 +86,11 @@ pub struct View
 impl View
 {
     pub fn new(
-        factory: &factory::Factory,
         resource : Rc<resource::ResourceGroup>,
         container : &mut Box<ui::WidgetContainer>
         ) -> View
-    //pub fn new(factory: Rc<RefCell<factory::Factory>>) -> View
     {
-        //let factory = factory.borrow_mut();
+        let factory = &container.factory;
 
         let scene_path = "scene/simple.scene";
         let mut ss = scene::Scene::new_from_file(scene_path, &*resource);
@@ -283,10 +281,6 @@ impl View
 
     pub fn handle_control_change(&self, change : &operation::Change)
     {
-        if *change == operation::Change::None {
-            return;
-        }
-
         match *change {
             operation::Change::DirectChange(ref name) => {
             },
@@ -309,6 +303,15 @@ impl View
             _ => {}
         }
     }
+
+    pub fn get_camera_transform(&self) -> (vec::Vec3, vec::Quat)
+    {
+        let c = self.camera.borrow();
+        let c = c.object.read().unwrap();
+        (c.position, c.orientation.as_quat())
+    }
+
+
 
 }
 
@@ -340,10 +343,16 @@ pub extern fn mouse_down(
         //println!("rust mouse down button {}, pos: {}, {}", button, x, y);
         //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
         let mut c = control_rc.borrow_mut();
-        c.mouse_down(modifier, button,x,y,timestamp)
+        c.mouse_down(&*container.context.borrow(), modifier, button,x,y,timestamp)
     };
 
     for op in op_list.iter() {
+        if let operation::Change::DraggerClicked = *op {
+            let mut c = container.context.borrow_mut();
+            c.save_positions();
+            c.save_scales();
+            c.save_oris();
+        }
         view.handle_control_change(op);
         container.handle_change(op, view.uuid);
     }
@@ -367,7 +376,7 @@ pub extern fn mouse_up(
     let change = {
         let control_rc = view.control.clone();
         let mut c = control_rc.borrow_mut();
-        c.mouse_up(button,x,y,timestamp)
+        c.mouse_up(&*container.context.borrow(),button,x,y,timestamp)
     };
 
     view.handle_control_change(&change);

@@ -19,6 +19,7 @@ use ui::Master;
 use ui;
 use control::Control;
 use operation;
+use vec;
 
 #[repr(C)]
 pub struct JkCommand;
@@ -137,7 +138,7 @@ pub extern fn add_empty(data : *const c_void, name : *const c_char)
     //let cd : &CommandData = unsafe {mem::transmute(data)};
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     let v : &ui::View = unsafe {mem::transmute(wcb.widget)};
-    //let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     if v.control.borrow_state() != BorrowState::Unused {
         println!("control already borrowed ");
@@ -145,7 +146,41 @@ pub extern fn add_empty(data : *const c_void, name : *const c_char)
     }
 
     let mut control = v.control.borrow_mut();
-    let o = control.add_empty("new object");
+
+    //TODO let o = control.add_empty("new object");
+    let mut o = container.factory.create_object("new object");
+    let (p,q) = v.get_camera_transform();
+    o.position = p + q.rotate_vec3(&vec::Vec3::new(0f64,0f64,-100f64));
+
+    let ao =  Arc::new(RwLock::new(o));
+
+    let mut list = LinkedList::new();
+    list.push_back(ao.clone());
+
+    let s = if let Some(ref s) = container.context.borrow().scene {
+        s.clone()
+    }
+    else {
+        return;
+    };
+
+    let mut vec = Vec::new();
+    vec.push(ao.clone());
+
+    let mut ops = Vec::new();
+    let vs = Vec::new();
+    let addob = control.request_operation(
+            vs,
+            operation::OperationData::SceneAddObjects(s.clone(),vec)
+            );
+
+    ops.push(addob);
+    ops.push(operation::Change::ChangeSelected(list));
+
+    for op in ops.iter() {
+        container.handle_change(op, v.uuid);
+    }
+
 
     println!("TODO TODO TODO!!!!!!!!!!!!!");
     /*

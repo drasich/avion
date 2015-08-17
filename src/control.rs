@@ -65,10 +65,11 @@ impl Control
     }
 
     pub fn mouse_down(
-            &mut self, 
+            &mut self,
+            context : &context::Context,
             modifier : i32,
             button : i32,
-            x : i32, 
+            x : i32,
             y : i32,
             timestamp : i32) -> LinkedList<operation::Change>
     {
@@ -86,15 +87,18 @@ impl Control
             return list;
         }
 
-        let objs = self.context.borrow().selected.clone();
+        let objs = context.selected.clone();
         if objs.len() > 0 {
             let click = self.dragger.borrow_mut().mouse_down(
                 &*self.camera.borrow(),button, x, y);
             if click {
                 self.state = State::Dragger;
+                list.push_back(operation::Change::DraggerClicked);
+                /*
                 self.context.borrow_mut().save_positions();
                 self.context.borrow_mut().save_scales();
                 self.context.borrow_mut().save_oris();
+                */
             }
         }
 
@@ -102,9 +106,10 @@ impl Control
     }
 
     pub fn mouse_up(
-            &mut self, 
+            &mut self,
+            context : &context::Context,
             button : i32,
-            x : i32, 
+            x : i32,
             y : i32,
             timestamp : i32) -> operation::Change
     {
@@ -127,7 +132,7 @@ impl Control
                     match op {
                         dragger::Operation::Translation(v) => {
                             let prop = vec!["object".to_string(),"position".to_string()];
-                            let cxpos = self.context.borrow().saved_positions.clone();
+                            let cxpos = context.saved_positions.clone();
                             let mut saved_positions = Vec::with_capacity(cxpos.len());
                             for p in cxpos.iter() {
                                 saved_positions.push((box *p ) as Box<Any>);
@@ -145,7 +150,7 @@ impl Control
                         },
                         dragger::Operation::Scale(v) => {
                             let prop = vec!["object".to_string(),"scale".to_string()];
-                            let cxsc = self.context.borrow().saved_scales.clone();
+                            let cxsc = context.saved_scales.clone();
                             let mut saved_scales = Vec::with_capacity(cxsc.len());
                             for p in cxsc.iter() {
                                 saved_scales.push((box *p ) as Box<Any>);
@@ -163,7 +168,7 @@ impl Control
                         },
                         dragger::Operation::Rotation(q) => {
                             let prop = vec!["object".to_string(),"orientation".to_string()];
-                            let cxoris = self.context.borrow().saved_oris.clone();
+                            let cxoris = context.saved_oris.clone();
                             let mut saved_oris = Vec::with_capacity(cxoris.len());
                             for p in cxoris.iter() {
                                 saved_oris.push((box *p ) as Box<Any>);
@@ -201,6 +206,7 @@ impl Control
             }
         };
 
+        /*
         let scene = match self.context.borrow_state(){
             BorrowState::Writing => { println!("cannot borrow context"); return operation::Change::None; }
             _ => {
@@ -214,6 +220,14 @@ impl Control
                 };
                 scene
             }
+        };
+        */
+        let scene = match context.scene {
+             Some(ref s) => s.clone(),
+             None => {
+                 println!("no scene ");
+                 return operation::Change::None;
+             }
         };
 
         println!("objects in the scene : {}", scene.borrow().objects.len());
@@ -245,9 +259,7 @@ impl Control
             Some(o) => list.push_back(o)
         }
 
-        self.select(list);
-
-        return operation::Change::SelectedChange;
+        return operation::Change::ChangeSelected(list);
     }
 
     fn select(&mut self, objects : LinkedList<Arc<RwLock<object::Object>>>)
@@ -323,7 +335,7 @@ impl Control
         c.selected = newlist;
 
 
-        /* TODO notify property 
+        /* TODO notify property
         match self.property {
             Some(ref mut pp) =>
                 match pp.try_borrow_mut() {
@@ -339,7 +351,7 @@ impl Control
 
 
     pub fn request_operation_old_new<T : Any+PartialEq>(
-        &mut self,  
+        &mut self,
         name : Vec<String>,
         old : Box<T>,
         new : Box<T>) -> operation::Change
@@ -355,7 +367,7 @@ impl Control
     }
 
     pub fn request_operation_option_to_none(
-        &mut self,  
+        &mut self,
         path : &str)
         -> operation::Change
     {
@@ -375,7 +387,7 @@ impl Control
                 None => return operation::Change::None
             }
         }
-        else { 
+        else {
             return operation::Change::None;
         };
 
@@ -386,7 +398,7 @@ impl Control
     }
 
     pub fn request_operation_option_to_some(
-        &mut self,  
+        &mut self,
         name : Vec<String>) -> operation::Change
     {
         /*
@@ -410,7 +422,7 @@ impl Control
     }
 
     pub fn request_operation(
-        &mut self,  
+        &mut self,
         name : Vec<String>,
         change : operation::OperationData
         ) -> operation::Change
@@ -419,7 +431,7 @@ impl Control
             self.get_selected_objects(),
             name.clone(),
             change
-            ); 
+            );
 
         let change = self.op_mgr.add(op);
         change
@@ -430,7 +442,7 @@ impl Control
 
 
     pub fn request_direct_change(
-        &mut self,  
+        &mut self,
         name : Vec<String>,
         new : &Any) -> operation::Change
     {
@@ -453,7 +465,7 @@ impl Control
     }
 
     pub fn request_translation(
-        &mut self,  
+        &mut self,
         translation : vec::Vec3) -> operation::Change
     {
         let sp = self.context.borrow().saved_positions.clone();
@@ -470,7 +482,7 @@ impl Control
     }
 
     pub fn request_scale(
-        &mut self,  
+        &mut self,
         scale : vec::Vec3) -> operation::Change
     {
         let sp = self.context.borrow().saved_scales.clone();
@@ -487,7 +499,7 @@ impl Control
     }
 
     pub fn request_rotation(
-        &mut self,  
+        &mut self,
         rotation : vec::Quat) -> operation::Change
     {
         let so = self.context.borrow().saved_oris.clone();
@@ -582,12 +594,12 @@ impl Control
     }
 
     pub fn mouse_move(
-        &mut self, 
+        &mut self,
         mod_flag : i32,
         button : i32,
-        curx : i32, 
+        curx : i32,
         cury : i32,
-        prevx : i32, 
+        prevx : i32,
         prevy : i32,
         timestamp : i32) -> LinkedList<operation::Change>
     {
@@ -600,7 +612,7 @@ impl Control
 
                 let r = match self.camera.borrow_state(){
                     BorrowState::Writing => {
-                        println!("cannot borrow camera"); 
+                        println!("cannot borrow camera");
                         return list;
                     },
                     _ => {
@@ -609,7 +621,7 @@ impl Control
                 };
 
                 self.dragger.borrow_mut().check_collision(r, button);
-                
+
                 if button == 1 {
 
                     self.dragger.borrow_mut().set_state(dragger::State::Idle);
@@ -634,7 +646,7 @@ impl Control
             {
                 let camera_clone = self.camera.clone();
                 let camera = match camera_clone.borrow_state(){
-                    BorrowState::Writing => { 
+                    BorrowState::Writing => {
                         println!("cannot borrow camera");
                         return list;
                     },
@@ -669,9 +681,9 @@ impl Control
                     list.push_back(operation::Change::RectSet(startx, starty, endx, endy));
 
                     let planes = self.camera.borrow().get_frustum_planes_rect(
-                        startx as f64, 
-                        starty as f64, 
-                        endx as f64, 
+                        startx as f64,
+                        starty as f64,
+                        endx as f64,
                         endy as f64);
 
                     let mut c = match self.context.borrow_state(){
@@ -679,21 +691,20 @@ impl Control
                         _ => { println!("cannot borrow context, because being used"); return list; }
                     };
 
-                    c.selected.clear();
-
                     let s = match c.scene {
                         Some(ref s) => s.clone(),
                         None => return list
                     };
 
+                    let mut oblist = LinkedList::new();
                     for o in s.borrow().objects.iter() {
                         let b = intersection::is_object_in_planes(planes.as_ref(), &*o.read().unwrap());
                         if b {
-                            c.selected.push_back(o.clone());
+                            oblist.push_back(o.clone());
                         }
                     }
 
-                    list.push_back(operation::Change::SelectedChange);
+                    list.push_back(operation::Change::ChangeSelected(oblist));
 
                 }
             }
@@ -706,8 +717,8 @@ impl Control
         &self,
         modifier : i32,
         direction : i32,
-        z : i32, 
-        x : i32, 
+        z : i32,
+        x : i32,
         y : i32,
         timestamp : i32
         )
@@ -832,7 +843,7 @@ impl Control
         let o = if list.len() == 1 {
             list.front().unwrap()
         }
-        else 
+        else
         {
             return operation::Change::None;
         };

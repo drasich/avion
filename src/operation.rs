@@ -48,7 +48,7 @@ pub struct Operation
     //pub new : Box<Any>,
 }
 
-#[derive(PartialEq)]
+//#[derive(PartialEq)]
 pub enum Change
 {
     None,
@@ -56,13 +56,17 @@ pub enum Change
     Tree,
     Objects(String, LinkedList<uuid::Uuid>),
     DirectChange(String),
-    RectVisibleSet(bool),
-    RectSet(f32, f32, f32, f32),
+    ChangeSelected(LinkedList<Arc<RwLock<object::Object>>>),
     SelectedChange,
     SceneAdd(uuid::Uuid, Vec<uuid::Uuid>),
     SceneRemove(uuid::Uuid, Vec<uuid::Uuid>),
     Scene(uuid::Uuid),
     ComponentChanged(uuid::Uuid, String),
+
+    RectVisibleSet(bool),
+    RectSet(f32, f32, f32, f32),
+    DraggerClicked,
+
     All
 }
 
@@ -72,7 +76,7 @@ impl Operation
         objects : LinkedList<Arc<RwLock<object::Object>>>,
         name : Vec<String>,
         //old : Box<Any>,
-        //new : Box<Any>) 
+        //new : Box<Any>)
         change : OperationData
             )
         -> Operation
