@@ -33,14 +33,11 @@ pub enum State
 pub struct Control
 {
     op_mgr : operation::OperationManager,
-    pub factory : Rc<RefCell<factory::Factory>>,
     pub camera : Rc<RefCell<camera::Camera>>,
     state : State,
     pub context : Rc<RefCell<context::Context>>,
     dragger : Rc<RefCell<dragger::DraggerManager>>,
     mouse_start : Option<vec::Vec2>,
-
-    //pub tree : Option<Rc<RefCell<Box<ui::Tree>>>>, //TODO remove
 }
 
 impl Control
@@ -53,7 +50,7 @@ impl Control
     {
         Control {
             op_mgr : operation::OperationManager::new(),
-            factory : Rc::new(RefCell::new(factory::Factory::new())),
+            //factory : Rc::new(RefCell::new(factory::Factory::new())),
             camera : camera,
             //tree : None,
             state : State::Idle,
@@ -129,62 +126,7 @@ impl Control
                     y);
 
                 if let Some(op) = o {
-                    match op {
-                        dragger::Operation::Translation(v) => {
-                            let prop = vec!["object".to_string(),"position".to_string()];
-                            let cxpos = context.saved_positions.clone();
-                            let mut saved_positions = Vec::with_capacity(cxpos.len());
-                            for p in cxpos.iter() {
-                                saved_positions.push((box *p ) as Box<Any>);
-                            }
-                            let mut new_pos = Vec::with_capacity(cxpos.len());
-                            for p in cxpos.iter() {
-                                let np = *p + v;
-                                new_pos.push((box np) as Box<Any>);
-                            }
-                            let change = operation::OperationData::Vector(
-                                saved_positions,
-                                new_pos);
-
-                            self.request_operation(prop, change);
-                        },
-                        dragger::Operation::Scale(v) => {
-                            let prop = vec!["object".to_string(),"scale".to_string()];
-                            let cxsc = context.saved_scales.clone();
-                            let mut saved_scales = Vec::with_capacity(cxsc.len());
-                            for p in cxsc.iter() {
-                                saved_scales.push((box *p ) as Box<Any>);
-                            }
-                            let mut new_sc = Vec::with_capacity(cxsc.len());
-                            for s in cxsc.iter() {
-                                let ns = *s * v;
-                                new_sc.push((box ns) as Box<Any>);
-                            }
-                            let change = operation::OperationData::Vector(
-                                saved_scales,
-                                new_sc);
-
-                            self.request_operation(prop, change);
-                        },
-                        dragger::Operation::Rotation(q) => {
-                            let prop = vec!["object".to_string(),"orientation".to_string()];
-                            let cxoris = context.saved_oris.clone();
-                            let mut saved_oris = Vec::with_capacity(cxoris.len());
-                            for p in cxoris.iter() {
-                                saved_oris.push((box *p ) as Box<Any>);
-                            }
-                            let mut new_ori = Vec::with_capacity(cxoris.len());
-                            for p in cxoris.iter() {
-                                let no = *p * q;
-                                new_ori.push((box no) as Box<Any>);
-                            }
-                            let change = operation::OperationData::Vector(
-                                saved_oris,
-                                new_ori);
-
-                            self.request_operation(prop, change);
-                        },
-                    }
+                    return operation::Change::DraggerOperation(op);
                 }
                 return operation::Change::None;
             },
@@ -349,23 +291,6 @@ impl Control
         */
     }
 
-
-    pub fn request_operation_old_new<T : Any+PartialEq>(
-        &mut self,
-        name : Vec<String>,
-        old : Box<T>,
-        new : Box<T>) -> operation::Change
-    {
-        if *old == *new {
-            return operation::Change::None;
-        }
-
-        self.request_operation(
-            name,
-            operation::OperationData::OldNew(old,new)
-            )
-    }
-
     pub fn request_operation_option_to_none(
         &mut self,
         path : &str)
@@ -421,7 +346,7 @@ impl Control
             )
     }
 
-    pub fn request_operation(
+    fn request_operation(
         &mut self,
         name : Vec<String>,
         change : operation::OperationData
@@ -440,29 +365,6 @@ impl Control
         //return operation::Change::Objects(s,self.context.borrow().get_selected_ids());
     }
 
-
-    pub fn request_direct_change(
-        &mut self,
-        name : Vec<String>,
-        new : &Any) -> operation::Change
-    {
-        println!("request direct change {:?}", name);
-        let o = match self.get_selected_object() {
-            Some(ob) => ob,
-            None => {
-                println!("direct change, no objects selected");
-                return operation::Change::None;
-            }
-        };
-
-        let vs = name[1..].to_vec();
-
-        //o.write().set_property_hier(vs, new);
-        o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
-
-        let s = join_string(&name);
-        return operation::Change::DirectChange(s);
-    }
 
     pub fn request_translation(
         &mut self,
@@ -539,12 +441,12 @@ impl Control
         }
     }
 
-    pub fn undo(&mut self) -> operation::Change
+    fn undo(&mut self) -> operation::Change
     {
         self.op_mgr.undo()
     }
 
-    pub fn redo(&mut self) -> operation::Change
+    fn redo(&mut self) -> operation::Change
     {
         self.op_mgr.redo()
     }
@@ -767,6 +669,7 @@ impl Control
         return operation::Change::None;
     }
 
+    /*
     pub fn add_empty(&mut self, name : &str) -> Arc<RwLock<object::Object>>
     {
         let mut o = self.factory.borrow_mut().create_object(name);
@@ -804,7 +707,7 @@ impl Control
 
         ao
 
-    }
+    }o*/
 
     pub fn remove_selected_objects(&mut self) -> operation::Change
     {

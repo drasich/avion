@@ -14,6 +14,7 @@ use std::ffi::CString;
 use std::ffi;
 use std::ffi::CStr;
 use core::marker;
+use uuid;
 
 use scene;
 use object;
@@ -196,7 +197,8 @@ pub struct Property
     control : Rc<RefCell<Control>>,
     expand_state : HashMap<String, bool>,
     visible : bool,
-    pub resource : Rc<resource::ResourceGroup>
+    pub resource : Rc<resource::ResourceGroup>,
+    id : uuid::Uuid
 }
 
 impl Property
@@ -215,7 +217,8 @@ impl Property
             control : control,
             expand_state : HashMap::new(),
             visible: true,
-            resource : resource
+            resource : resource,
+            id : uuid::Uuid::new_v4()
         };
 
         p.set_visible(false);
@@ -594,7 +597,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
 
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
     let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
-    //let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
     //let p : & Property = unsafe {mem::transmute(property)};
     let resource = &p.resource;
 
@@ -606,61 +609,17 @@ fn changed_set<T : Any+Clone+PartialEq>(
     let change = match (old, action) {
         (Some(oldd), 1) => {
             println!(".....adding operation!!");
-            control.request_operation_old_new(
+            container.request_operation_old_new(
                 vs,
                 box oldd.clone(),
                 box new.clone())
         },
         _ => {
-            control.request_direct_change(vs, new)
+            container.request_direct_change(vs, new)
         }
     };
 
-    //TODO instead of all this, use the code at view.handle_control_change
-    println!("TODO instead of all this, use the code at container.refresh");
-
-    let obw = if let Some(o) = control.get_selected_object(){
-        o
-    }
-    else {
-        return;
-    };
-
-    let mut ob = obw.write().unwrap();
-    let id = ob.id.clone();
-
-    match change {
-        operation::Change::DirectChange(s) |
-        operation::Change::Objects(s, _) => {
-            println!("FIX FIX FIX, put in comment cause reworking");
-            /*
-            if s == "object/name" {
-                match control.tree {
-                    Some(ref t) =>
-                        match t.borrow_state() {
-                            BorrowState::Writing => {}
-                            _ => {
-                                t.borrow().update_object(&id);
-                            },
-                        },
-                        None => {}
-                };
-            }
-            else
-            */
-            if s.starts_with("object/comp_data/MeshRender") {
-                println!("please update mesh");
-                let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
-                if let Some(ref mr) = omr {
-                    ob.mesh_render =
-                        Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,resource));
-                }
-
-            }
-        },
-        _ => {}
-    }
-
+    container.handle_change(&change, p.id);
 }
 
 fn changed_option(
@@ -1332,21 +1291,6 @@ property_show_impl!(component::player::Player,[speed]);
 property_show_impl!(component::player::Enemy,[name]);
 property_show_impl!(component::player::Collider,[name]);
 property_show_impl!(armature::ArmaturePath,[name]);
-
-fn join_string(path : &Vec<String>) -> String
-{
-    let mut s = String::new();
-    let mut first = true;
-    for v in path.iter() {
-        if !first {
-            s.push('/');
-        }
-        s.push_str(v.as_ref());
-        first = false;
-    }
-
-    s
-}
 
 fn make_vec_from_string(s : &String) -> Vec<String>
 {

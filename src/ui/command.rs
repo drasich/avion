@@ -140,14 +140,6 @@ pub extern fn add_empty(data : *const c_void, name : *const c_char)
     let v : &ui::View = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    if v.control.borrow_state() != BorrowState::Unused {
-        println!("control already borrowed ");
-        return;
-    }
-
-    let mut control = v.control.borrow_mut();
-
-    //TODO let o = control.add_empty("new object");
     let mut o = container.factory.create_object("new object");
     let (p,q) = v.get_camera_transform();
     o.position = p + q.rotate_vec3(&vec::Vec3::new(0f64,0f64,-100f64));
@@ -169,7 +161,7 @@ pub extern fn add_empty(data : *const c_void, name : *const c_char)
 
     let mut ops = Vec::new();
     let vs = Vec::new();
-    let addob = control.request_operation(
+    let addob = container.request_operation(
             vs,
             operation::OperationData::SceneAddObjects(s.clone(),vec)
             );

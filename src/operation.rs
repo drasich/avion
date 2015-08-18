@@ -15,6 +15,8 @@ use vec;
 use scene;
 use component::CompData;
 
+use dragger;
+
 pub trait OperationTrait
 {
     fn apply(&self) -> Change;
@@ -66,6 +68,8 @@ pub enum Change
     RectVisibleSet(bool),
     RectSet(f32, f32, f32, f32),
     DraggerClicked,
+
+    DraggerOperation(dragger::Operation),
 
     All
 }
