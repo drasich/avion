@@ -529,7 +529,7 @@ pub extern fn register_change_enum(
 }
 
 pub extern fn register_change_option(
-    property : *const c_void,
+    widget_cb_data : *const c_void,
     name : *const c_char,
     old : *const c_void,
     new : *const c_void,
@@ -562,7 +562,7 @@ pub extern fn register_change_option(
         }
     };
 
-    changed_option(property, name, &sso, &ss);
+    changed_option(widget_cb_data, name, &sso, &ss);
 }
 
 
@@ -624,7 +624,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
 
 fn changed_option(
 //fn changed_option<T : Any+Clone+PartialEq>(
-    property : *const c_void,
+    widget_cb_data : *const c_void,
     name : *const c_char,
     old : &str,
     new : &str
@@ -650,12 +650,17 @@ fn changed_option(
 
     //let vs = vs[1..].to_vec();
 
-    let p : & Property = unsafe {mem::transmute(property)};
+    //let p : & Property = unsafe {mem::transmute(property)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
+    let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
+    /*
     let mut control = match p.control.borrow_state() {
         BorrowState::Unused => p.control.borrow_mut(),
         _ => { println!("cannot borrow control"); return; }
     };
+    */
 
     /*
     let (id, prop) = if let Some(o) = control.get_selected_object(){
@@ -668,10 +673,10 @@ fn changed_option(
     */
 
     let change = if new == "Some" {
-        control.request_operation_option_to_some(vs)
+        container.request_operation_option_to_some(vs)
     }
     else {
-        control.request_operation_option_to_none(path)
+        container.request_operation_option_to_none(path)
         /*
         if let Some(propget) = prop {
                 let test = *propget;

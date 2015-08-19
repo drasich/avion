@@ -70,6 +70,8 @@ pub enum Change
     DraggerClicked,
 
     DraggerOperation(dragger::Operation),
+    Undo,
+    Redo,
 
     All
 }

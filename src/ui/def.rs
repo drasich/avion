@@ -29,7 +29,7 @@ use control::WidgetUpdate;
 use uuid;
 use component;
 use dragger;
-use property::PropertyWrite;
+use property::{PropertyWrite,PropertyGet};
 
 #[repr(C)]
 pub struct Window;
@@ -525,6 +525,12 @@ impl WidgetContainer
                 };
                 self.request_operation(prop, operation);
             },
+            operation::Change::Undo => {
+                self.undo();
+            },
+            operation::Change::Redo => {
+                self.redo();
+            },
             _ => {}
         }
     }
@@ -682,6 +688,149 @@ impl WidgetContainer
         return operation::Change::DirectChange(s);
     }
 
+    pub fn request_operation_option_to_none(
+        &mut self,
+        path : &str)
+        -> operation::Change
+    {
+        let v: Vec<&str> = path.split('/').collect();
+
+        let mut vs = Vec::new();
+        for i in v.iter()
+        {
+            vs.push(i.to_string());
+        }
+
+
+        let  prop = if let Some(o) = self.get_selected_object(){
+            let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path);
+            match p {
+                Some(pp) => pp,
+                None => return operation::Change::None
+            }
+        }
+        else {
+            return operation::Change::None;
+        };
+
+        self.request_operation(
+            vs,
+            operation::OperationData::ToNone(prop)
+            )
+    }
+
+    pub fn request_operation_option_to_some(
+        &mut self,
+        name : Vec<String>) -> operation::Change
+    {
+        /*
+        let n = if new == "None" {
+            None
+        }
+        else {
+            //let r : T = resource::Create::create("yep");
+            //Some(r)
+            None
+        };
+        */
+
+
+        //todo chris
+        //return operation::Change::None;
+        self.request_operation(
+            name,
+            operation::OperationData::ToSome
+            )
+    }
+
+    pub fn remove_selected_objects(&mut self) -> operation::Change
+    {
+        println!("control remove sel");
+
+        let s = if let Some(ref s) = self.context.borrow_mut().scene {
+            s.clone()
+            //let mut s = s.write().unwrap();
+            //s.objects.push_back(ao.clone());
+        }
+        else {
+            println!("control remove sel, cannot borrow");
+            return operation::Change::None;
+        };
+
+
+        let list = self.get_selected_objects();
+        let mut vec = Vec::new();
+        for o in list.iter() {
+            vec.push(o.clone());
+        }
+
+        let vs = Vec::new();
+        return self.request_operation(
+            vs,
+            operation::OperationData::SceneRemoveObjects(s.clone(),vec.clone())
+            );
+
+        //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
+    }
+
+    pub fn add_component(&mut self, component_name : &str) -> operation::Change
+    {
+
+        let list = self.get_selected_objects();
+        let o = if list.len() == 1 {
+            list.front().unwrap()
+        }
+        else
+        {
+            return operation::Change::None;
+        };
+
+        let cp = if component_name == "MeshRender" {
+            box component::CompData::MeshRender(component::mesh_render::MeshRender::new("cacamesh", "cacamat"))
+        }
+        else {
+            return operation::Change::None;
+        };
+
+        let vs = Vec::new();
+
+        self.request_operation(
+            vs,
+            operation::OperationData::AddComponent(o.clone(), cp)
+            )
+    }
+
+    pub fn set_scene_camera(&mut self) -> operation::Change
+    {
+        println!("control remove sel");
+
+        let s = if let Some(ref s) = self.context.borrow_mut().scene {
+            s.clone()
+            //let mut s = s.write().unwrap();
+            //s.objects.push_back(ao.clone());
+        }
+        else {
+            println!("control remove sel, cannot borrow");
+            return operation::Change::None;
+        };
+
+        let current = match s.borrow().camera {
+            None => None,
+            Some(ref c) => Some(c.borrow().object.clone())
+        };
+
+        let o = self.get_selected_object();
+        println!("control set camera");
+
+        let vs = Vec::new();
+        return self.request_operation(
+            vs,
+            operation::OperationData::SetSceneCamera(s.clone(),current, o.clone())
+            );
+
+        //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
+
+    }
 
 }
 
