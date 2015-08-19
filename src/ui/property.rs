@@ -725,7 +725,7 @@ pub extern fn expand(
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(property)};
     //let mut p : &mut Property = unsafe {mem::transmute(property)};
     let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
-    //let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let path = match str::from_utf8(s) {
         Ok(pp) => pp,
@@ -741,22 +741,15 @@ pub extern fn expand(
     let yep = vs[1..].to_vec();
     println!("expand : {:?}", vs);
 
-    let o = match p.control.clone().borrow_state() {
-        BorrowState::Writing => {
+    let o = match container.get_selected_object() {
+        Some(ob) => ob,
+        None => {
+            println!("no selected objectttttttttttttt");
             return;
-        },
-        _ => {
-            match p.control.borrow().get_selected_object() {
-                Some(ob) => ob,
-                None => {
-                    println!("no selected objectttttttttttttt");
-                    return;
-                }
-            }
         }
     };
 
-    let or  = o.read().unwrap();
+    let or = o.read().unwrap();
     match find_property_show(&*or, yep.clone()) {
         Some(ppp) => {
             //p.create_entries(&*ppp, vs.clone());

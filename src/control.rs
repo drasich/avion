@@ -34,7 +34,6 @@ pub struct Control
 {
     pub camera : Rc<RefCell<camera::Camera>>,
     state : State,
-    context : Rc<RefCell<context::Context>>,
     dragger : Rc<RefCell<dragger::DraggerManager>>,
     mouse_start : Option<vec::Vec2>,
 }
@@ -43,7 +42,6 @@ impl Control
 {
     pub fn new(
         camera : Rc<RefCell<camera::Camera>>,
-        context : Rc<RefCell<context::Context>>,
         dragger : Rc<RefCell<dragger::DraggerManager>>,
         ) -> Control
     {
@@ -52,7 +50,6 @@ impl Control
             camera : camera,
             //tree : None,
             state : State::Idle,
-            context : context,
             dragger : dragger,
 
             mouse_start : None
@@ -89,11 +86,6 @@ impl Control
             if click {
                 self.state = State::Dragger;
                 list.push_back(operation::Change::DraggerClicked);
-                /*
-                self.context.borrow_mut().save_positions();
-                self.context.borrow_mut().save_scales();
-                self.context.borrow_mut().save_oris();
-                */
             }
         }
 
@@ -202,157 +194,7 @@ impl Control
         return operation::Change::ChangeSelected(list);
     }
 
-    //pub fn select(&mut self, ids : &LinkedList<Uuid>)
-    pub fn select_by_id(&mut self, ids : &mut Vec<Uuid>)
-    {
-        //TODO same as the code at the end of mouse_up, so factorize
-        println!("TODO check: is this find by id ok? : control will try to find object by id, .................select is called ");
-        let mut c = match self.context.borrow_state(){
-            BorrowState::Unused => self.context.borrow_mut(),
-            _ => { println!("cannot borrow context"); return; }
-        };
-
-        //c.selected.clear();
-
-        let scene = match c.scene {
-            Some(ref s) => s.clone(),
-            None => return
-        };
-
-        let mut obs = scene.borrow().find_objects_by_id(ids);
-        c.selected.append(&mut obs);
-
-        //for id in ids.iter() {
-            //match scene.read().unwrap().find_object_by_id(id) {
-                //Some(o) =>
-                    //c.selected.push_back(o.clone()),
-                //None => {}
-            //};
-        //}
-
-    }
-
-    pub fn unselect(&mut self, ids : &LinkedList<Uuid>)
-    {
-        let mut c = match self.context.borrow_state(){
-            BorrowState::Unused => self.context.borrow_mut(),
-            _ => { println!("cannot borrow context"); return; }
-        };
-
-        let scene = match c.scene {
-            Some(ref s) => s.clone(),
-            None => return
-        };
-
-        let mut newlist = LinkedList::new();
-
-        for o in c.selected.iter() {
-            let mut should_remove = false;
-            for id_to_rm in ids.iter() {
-                if o.read().unwrap().id == *id_to_rm {
-                    should_remove = true;
-                    break;
-                }
-            }
-
-            if !should_remove {
-                newlist.push_back(o.clone());
-            }
-        }
-
-        c.selected = newlist;
-
-
-        /* TODO notify property
-        match self.property {
-            Some(ref mut pp) =>
-                match pp.try_borrow_mut() {
-                    Some(ref mut p) => {
-                        p.set_object(&*o.read().unwrap());
-                    },
-                    None=> {}
-                },
-                None => {}
-        }
-        */
-    }
-
-    pub fn request_translation(
-        &mut self,
-        translation : vec::Vec3) -> operation::Change
-    {
-        let sp = self.context.borrow().saved_positions.clone();
-        let mut obs = self.get_selected_objects();
-
-        let mut i = 0;
-        for o in obs.iter_mut() {
-            //o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
-            o.write().unwrap().position = sp[i] + translation;
-            i = i+1;
-        }
-
-        return operation::Change::DirectChange("object/position".to_string());
-    }
-
-    pub fn request_scale(
-        &mut self,
-        scale : vec::Vec3) -> operation::Change
-    {
-        let sp = self.context.borrow().saved_scales.clone();
-        let mut obs = self.get_selected_objects();
-
-        let mut i = 0;
-        for o in obs.iter_mut() {
-            //o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
-            o.write().unwrap().scale = sp[i] * scale;
-            i = i+1;
-        }
-
-        return operation::Change::DirectChange("object/scale".to_string());
-    }
-
-    pub fn request_rotation(
-        &mut self,
-        rotation : vec::Quat) -> operation::Change
-    {
-        let so = self.context.borrow().saved_oris.clone();
-        let mut obs = self.get_selected_objects();
-
-        let mut i = 0;
-        for o in obs.iter_mut() {
-            o.write().unwrap().orientation = so[i] * transform::Orientation::new_with_quat(&rotation);
-            i = i+1;
-        }
-
-        return operation::Change::DirectChange("object/orientation".to_string());
-    }
-
-
-    pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
-    {
-        let c = match self.context.borrow_state(){
-            BorrowState::Writing => { println!("cannot borrow context"); return None; }
-            _ => self.context.borrow(),
-        };
-
-        match c.selected.front() {
-            Some(o) => return Some(o.clone()),
-            None => {
-                println!("get_selected_objects : no objetcs selected");
-                return None;
-            }
-        };
-    }
-
-    pub fn get_selected_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
-    {
-        match self.context.borrow_state(){
-            BorrowState::Writing => LinkedList::new(),
-            _ => self.context.borrow().selected.clone(),
-        }
-    }
-
-    fn rotate_camera(&mut self, x : f64, y : f64)
+    fn rotate_camera(&mut self, context : &context::Context, x : f64, y : f64)
     {
         self.state = State::CameraRotation;
 
@@ -381,8 +223,7 @@ impl Control
                 )
         };
 
-        let context = self.context.borrow();
-        if self.context.borrow().selected.len() > 0 {
+        if context.selected.len() > 0 {
             let center = objects_center(&context.selected);
             camera.set_center(&center);
         }
@@ -397,6 +238,7 @@ impl Control
 
     pub fn mouse_move(
         &mut self,
+        context : &context::Context,
         mod_flag : i32,
         button : i32,
         curx : i32,
@@ -437,7 +279,7 @@ impl Control
                         camera.pan(&t);
                     }
                     else {
-                        self.rotate_camera(x, y);
+                        self.rotate_camera(context, x, y);
                         let camera = self.camera.borrow();
                         println!("remove from update and move here");
                         //self.dragger.borrow_mut().set_orienation(&*camera);
@@ -461,13 +303,16 @@ impl Control
                 if let Some(op) = opsome {
                     match op {
                         dragger::Operation::Translation(v) => {
-                            list.push_back(self.request_translation(v));
+                            //list.push_back(self.request_translation(v));
+                            list.push_back(operation::Change::DraggerTranslation(v));
                         },
                         dragger::Operation::Scale(v) => {
-                            list.push_back(self.request_scale(v));
+                            //list.push_back(self.request_scale(v));
+                            list.push_back(operation::Change::DraggerScale(v));
                         },
                         dragger::Operation::Rotation(q) => {
-                            list.push_back(self.request_rotation(q));
+                            //list.push_back(self.request_rotation(q));
+                            list.push_back(operation::Change::DraggerRotation(q));
                         }
                     }
                 }
@@ -488,12 +333,7 @@ impl Control
                         endx as f64,
                         endy as f64);
 
-                    let mut c = match self.context.borrow_state(){
-                        BorrowState::Unused => self.context.borrow_mut(),
-                        _ => { println!("cannot borrow context, because being used"); return list; }
-                    };
-
-                    let s = match c.scene {
+                    let s = match context.scene {
                         Some(ref s) => s.clone(),
                         None => return list
                     };

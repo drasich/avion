@@ -117,7 +117,7 @@ impl View
         let control = Rc::new(RefCell::new(
                 Control::new(
                     camera.clone(),
-                    context.clone(),
+                    //context.clone(),
                     dragger.clone()
                     )));
 
@@ -404,7 +404,15 @@ pub extern fn mouse_move(
     let change_list = {
         //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
         let mut c = control_rc.borrow_mut();
-        c.mouse_move(modifiers_flag, button, curx, cury, prevx, prevy, timestamp)
+        c.mouse_move(
+            &*container.context.borrow(),
+            modifiers_flag,
+            button,
+            curx,
+            cury,
+            prevx,
+            prevy,
+            timestamp)
     };
 
     for change in change_list.iter() {
