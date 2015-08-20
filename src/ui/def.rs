@@ -266,7 +266,7 @@ pub extern fn exit_cb(data: *mut c_void) -> () {
     //let master = master_rc.borrow();
 
 
-    match container.context.borrow().scene {
+    match container.context.scene {
         Some(ref s) => {
             s.borrow().save();
             //old
@@ -299,7 +299,8 @@ pub struct WidgetContainer
     pub command : Option<Box<Command>>,
     pub action : Option<Box<Action>>,
     views : Vec<Box<View>>,
-    pub context : Rc<RefCell<context::Context>>,
+    //pub context : Rc<RefCell<context::Context>>,
+    pub context : Box<context::Context>,
     pub resource : Rc<resource::ResourceGroup>,
     //control : Rc<RefCell<control::Control>>
     pub factory : factory::Factory,
@@ -326,7 +327,8 @@ impl WidgetContainer
             command : None,
             action : None,
             views : Vec::new(),
-            context : Rc::new(RefCell::new(context::Context::new())),
+            //context : Rc::new(RefCell::new(context::Context::new())),
+            context : box context::Context::new(),
             resource : Rc::new(resource::ResourceGroup::new()),
             factory : factory::Factory::new(),
             op_mgr : operation::OperationManager::new(),
@@ -403,7 +405,7 @@ impl WidgetContainer
                 }
             },
             operation::Change::ChangeSelected(ref list) => {
-                self.context.borrow_mut().selected = list.clone();
+                self.context.selected = list.clone();
                 self.handle_change(&operation::Change::SelectedChange, widget_origin);
             },
             operation::Change::SelectedChange => {
@@ -439,8 +441,7 @@ impl WidgetContainer
             operation::Change::SceneRemove(ref id, ref obs) => {
                 {
                     println!("container, sceneremove!!!!!!!!");
-                    let mut c = self.context.borrow_mut();
-                    c.remove_objects_by_id(obs.clone());
+                    self.context.remove_objects_by_id(obs.clone());
                 }
                 //TODO
                 println!("do something for the other widget");
@@ -448,7 +449,7 @@ impl WidgetContainer
             },
             operation::Change::SceneAdd(ref id, ref obs) => {
                 let scene = match self.get_scene() {
-                    Some(ref s) => s.clone(),
+                    Some(s) => s,
                     None => return
                 };
 
@@ -466,7 +467,7 @@ impl WidgetContainer
             },
             operation::Change::DraggerOperation(ref op) => {
                 let (prop, operation) = {
-                    let context = self.context.borrow();
+                    let context = &self.context;;
                     match *op {
                         dragger::Operation::Translation(v) => {
                             let prop = vec!["object".to_string(),"position".to_string()];
@@ -545,7 +546,7 @@ impl WidgetContainer
         }
     }
 
-    pub fn handle_event(&self, event : ui::Event, widget_origin: uuid::Uuid)
+    pub fn handle_event(&mut self, event : ui::Event, widget_origin: uuid::Uuid)
     {
         match event {
             Event::SelectObject(ob) => {
@@ -567,12 +568,7 @@ impl WidgetContainer
 
     pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
     {
-        let c = match self.context.borrow_state(){
-            BorrowState::Writing => { println!("cannot borrow context"); return None; }
-            _ => self.context.borrow(),
-        };
-
-        match c.selected.front() {
+        match self.context.selected.front() {
             Some(o) => return Some(o.clone()),
             None => {
                 println!("view get selected objects, no objects selected");
@@ -583,22 +579,15 @@ impl WidgetContainer
 
     fn get_scene(&self) -> Option<Rc<RefCell<scene::Scene>>>
     {
-        let c = match self.context.borrow_state(){
-            BorrowState::Writing => { println!("cannot borrow context"); return None; }
-            _ => self.context.borrow(),
-        };
-
-        c.scene.clone()
+        match self.context.scene {
+            Some(ref s) => Some(s.clone()),
+            None => None
+        }
     }
 
     fn get_selected_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
     {
-        let c = match self.context.borrow_state(){
-            BorrowState::Writing => { println!("cannot borrow context"); return LinkedList::new(); }
-            _ => self.context.borrow(),
-        };
-
-        c.selected.clone()
+        self.context.selected.clone()
     }
 
     pub fn request_operation(
@@ -728,14 +717,9 @@ impl WidgetContainer
     {
         println!("control remove sel");
 
-        let s = if let Some(ref s) = self.context.borrow_mut().scene {
-            s.clone()
-            //let mut s = s.write().unwrap();
-            //s.objects.push_back(ao.clone());
-        }
-        else {
-            println!("control remove sel, cannot borrow");
-            return operation::Change::None;
+        let s = match self.get_scene() {
+            Some(s) => s,
+            None => return operation::Change::None
         };
 
 
@@ -785,14 +769,9 @@ impl WidgetContainer
     {
         println!("control remove sel");
 
-        let s = if let Some(ref s) = self.context.borrow_mut().scene {
-            s.clone()
-            //let mut s = s.write().unwrap();
-            //s.objects.push_back(ao.clone());
-        }
-        else {
-            println!("control remove sel, cannot borrow");
-            return operation::Change::None;
+        let s = match self.get_scene() {
+            Some(s) => s,
+            None => return operation::Change::None
         };
 
         let current = match s.borrow().camera {
@@ -813,14 +792,11 @@ impl WidgetContainer
 
     }
 
-    fn select_by_id(&self, ids : &mut Vec<Uuid>)
+    fn select_by_id(&mut self, ids : &mut Vec<Uuid>)
     {
         //TODO same as the code at the end of mouse_up, so factorize
         println!("TODO check: is this find by id ok? : control will try to find object by id, .................select is called ");
-        let mut c = match self.context.borrow_state(){
-            BorrowState::Unused => self.context.borrow_mut(),
-            _ => { println!("cannot borrow context"); return; }
-        };
+        let c = &mut self.context;
 
         //c.selected.clear();
 
@@ -842,12 +818,9 @@ impl WidgetContainer
 
     }
 
-    fn unselect(&self, ids : &LinkedList<Uuid>)
+    fn unselect(&mut self, ids : &LinkedList<Uuid>)
     {
-        let mut c = match self.context.borrow_state(){
-            BorrowState::Unused => self.context.borrow_mut(),
-            _ => { println!("cannot borrow context"); return; }
-        };
+        let c = &mut self.context;
 
         let scene = match c.scene {
             Some(ref s) => s.clone(),
@@ -891,7 +864,7 @@ impl WidgetContainer
         &mut self,
         translation : vec::Vec3) -> operation::Change
     {
-        let sp = self.context.borrow().saved_positions.clone();
+        let sp = self.context.saved_positions.clone();
         let mut obs = self.get_selected_objects();
 
         let mut i = 0;
@@ -908,7 +881,7 @@ impl WidgetContainer
         &mut self,
         scale : vec::Vec3) -> operation::Change
     {
-        let sp = self.context.borrow().saved_scales.clone();
+        let sp = self.context.saved_scales.clone();
         let mut obs = self.get_selected_objects();
 
         let mut i = 0;
@@ -925,7 +898,7 @@ impl WidgetContainer
         &mut self,
         rotation : vec::Quat) -> operation::Change
     {
-        let so = self.context.borrow().saved_oris.clone();
+        let so = self.context.saved_oris.clone();
         let mut obs = self.get_selected_objects();
 
         let mut i = 0;

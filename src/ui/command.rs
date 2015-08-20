@@ -149,7 +149,7 @@ pub extern fn add_empty(data : *const c_void, name : *const c_char)
     let mut list = LinkedList::new();
     list.push_back(ao.clone());
 
-    let s = if let Some(ref s) = container.context.borrow().scene {
+    let s = if let Some(ref s) = container.context.scene {
         s.clone()
     }
     else {

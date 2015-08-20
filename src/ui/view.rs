@@ -90,12 +90,10 @@ impl View
         container : &mut Box<ui::WidgetContainer>
         ) -> View
     {
-        let factory = &container.factory;
-
         let scene_path = "scene/simple.scene";
         let mut ss = scene::Scene::new_from_file(scene_path, &*resource);
         if let None = ss.camera {
-            let mut cam = factory.create_camera();
+            let mut cam = container.factory.create_camera();
             cam.pan(&vec::Vec3::new(-100f64,20f64,100f64));
             cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
             ss.camera = Some(Rc::new(RefCell::new(cam)));
@@ -103,25 +101,23 @@ impl View
         let scene = Rc::new(RefCell::new(ss));
 
 
-        let camera = Rc::new(RefCell::new(factory.create_camera()));
+        let camera = Rc::new(RefCell::new(container.factory.create_camera()));
         {
             let mut cam = camera.borrow_mut();
             cam.pan(&vec::Vec3::new(100f64,20f64,100f64));
             cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
         }
 
-        let context = container.context.clone();
-        context.borrow_mut().scene = Some(scene.clone());
-        let dragger = Rc::new(RefCell::new(dragger::DraggerManager::new(factory, &*resource)));
+        container.context.scene = Some(scene.clone());
+        let dragger = Rc::new(RefCell::new(dragger::DraggerManager::new(&container.factory, &*resource)));
 
         let control = Rc::new(RefCell::new(
                 Control::new(
                     camera.clone(),
-                    //context.clone(),
                     dragger.clone()
                     )));
 
-        let render = box Render::new(factory, resource.clone(), camera.clone());
+        let render = box Render::new(&container.factory, resource.clone(), camera.clone());
 
         let v = View {
             render : render,
@@ -220,7 +216,7 @@ impl View
             }
         }
 
-        match container.context.borrow().scene {
+        match container.context.scene {
             Some(ref s) => {
                 //t.borrow_mut().set_scene(&*s.borrow());
                 t.set_scene(&*s.borrow());
@@ -343,12 +339,12 @@ pub extern fn mouse_down(
         //println!("rust mouse down button {}, pos: {}, {}", button, x, y);
         //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
         let mut c = control_rc.borrow_mut();
-        c.mouse_down(&*container.context.borrow(), modifier, button,x,y,timestamp)
+        c.mouse_down(&*container.context, modifier, button,x,y,timestamp)
     };
 
     for op in op_list.iter() {
         if let operation::Change::DraggerClicked = *op {
-            let mut c = container.context.borrow_mut();
+            let c = &mut container.context;;
             c.save_positions();
             c.save_scales();
             c.save_oris();
@@ -376,7 +372,7 @@ pub extern fn mouse_up(
     let change = {
         let control_rc = view.control.clone();
         let mut c = control_rc.borrow_mut();
-        c.mouse_up(&*container.context.borrow(),button,x,y,timestamp)
+        c.mouse_up(&*container.context,button,x,y,timestamp)
     };
 
     view.handle_control_change(&change);
@@ -405,7 +401,7 @@ pub extern fn mouse_move(
         //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
         let mut c = control_rc.borrow_mut();
         c.mouse_move(
-            &*container.context.borrow(),
+            &*container.context,
             modifiers_flag,
             button,
             curx,
@@ -611,8 +607,7 @@ pub extern fn draw_cb(v : *mut View) -> () {
     let view : &mut View = unsafe {mem::transmute(wcb.widget)};
     let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    let context = container.context.borrow();
-    return view.draw(&*context);
+    return view.draw(&*container.context);
 }
 
 pub extern fn resize_cb(v : *mut View, w : c_int, h : c_int) -> () {

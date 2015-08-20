@@ -338,7 +338,7 @@ pub extern fn selected(
 {
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(tsd)};
     let tree : &Tree = unsafe {mem::transmute(wcb.widget)};
-    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
     //let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
 
     /*
@@ -381,7 +381,7 @@ pub extern fn unselected(
 {
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(tsd)};
     let tree : &Tree = unsafe {mem::transmute(wcb.widget)};
-    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
     //let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
 
     /*
@@ -407,7 +407,7 @@ pub extern fn unselected(
             }
             tsd.control.borrow().get_selected_object()
         },
-        _ => { 
+        _ => {
             println!("already borrowed : mouse_up add_ob ->sel ->add_ob");
             return;
         }
@@ -416,7 +416,7 @@ pub extern fn unselected(
     match tsd.property.borrow_state() {
         BorrowState::Unused => {
             match o {
-                Some(ref o) => 
+                Some(ref o) =>
                     tsd.property.borrow_mut().set_object(&*o.read().unwrap()),
                 None =>
                     tsd.property.borrow_mut().set_nothing()
