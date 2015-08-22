@@ -356,9 +356,11 @@ impl WidgetContainer
                 if name == "object/name" {
                     match self.tree {
                         Some(ref t) => {
-                            t.update_object(&o.read().unwrap().id);
-                            },
-                            None => {}
+                            if widget_origin != t.id {
+                                t.update_object(&o.read().unwrap().id);
+                            }
+                        },
+                        None => {}
                     };
                 }
 
@@ -366,7 +368,9 @@ impl WidgetContainer
                     Some(ref p) => {
                         println!("direct change : {}", name);
                          //p.update_object(&*o.read().unwrap(), s);
-                         p.update_object_property(&*o.read().unwrap(), name);
+                        if widget_origin != p.id {
+                            p.update_object_property(&*o.read().unwrap(), name);
+                        }
                      },
                     None => {}
                 };
@@ -380,20 +384,24 @@ impl WidgetContainer
                 let sel = self.get_selected_object();
                 for id in id_list.iter() {
                     if let Some(ref o) = sel {
-                        let mut ob = o.write().unwrap();
+                        {
+                        let mut ob = o.read().unwrap();
 
                         if *id == ob.id  {
                             match self.property {
                                 Some(ref mut p) =>
                                     {
-                                        p.update_object(&*ob, "");
-
+                                        if widget_origin != p.id {
+                                            p.update_object(&*ob, "");
+                                        }
                                     },
                                     None => {}
                             }
                         }
+                        }
 
                         if name.starts_with("object/comp_data/MeshRender") {
+                            let mut ob = o.write().unwrap();
                             println!("please update mesh");
                             let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
                             if let Some(ref mr) = omr {
@@ -415,7 +423,9 @@ impl WidgetContainer
                 if sel.len() != 1 {
                     match self.property {
                         Some(ref mut p) => {
+                            if widget_origin != p.id {
                                     p.set_nothing();
+                            }
                         },
                         None => {
                             println!("container no property");
@@ -427,7 +437,9 @@ impl WidgetContainer
                         Some(o) => {
                             match self.property {
                                 Some(ref mut p) => {
-                                            p.set_object(&*o.read().unwrap());
+                                    if widget_origin != p.id {
+                                        p.set_object(&*o.read().unwrap());
+                                    }
                                 },
                                 None => {
                                     println!("container no property");
@@ -458,7 +470,9 @@ impl WidgetContainer
                 // todo
                 match self.tree {
                     Some(ref mut t) => {
-                                t.add_objects(objects);
+                        if widget_origin != t.id {
+                            t.add_objects(objects);
+                        }
                     },
                     None => {
                         println!("control no tree");
@@ -528,19 +542,24 @@ impl WidgetContainer
                 self.request_operation(prop, operation);
             },
             operation::Change::Undo => {
-                self.undo();
+                let change = self.undo();
+                self.handle_change(&change, widget_origin);
             },
             operation::Change::Redo => {
-                self.redo();
+                let change = self.redo();
+                self.handle_change(&change, widget_origin);
             },
             operation::Change::DraggerTranslation(t) => {
-                self.request_translation(t);
+                let change = self.request_translation(t);
+                self.handle_change(&change, widget_origin);
             },
             operation::Change::DraggerScale(s) => {
-                self.request_scale(s);
+                let change = self.request_scale(s);
+                self.handle_change(&change, widget_origin);
             },
             operation::Change::DraggerRotation(r) => {
-                self.request_rotation(r);
+                let change = self.request_rotation(r);
+                self.handle_change(&change, widget_origin);
             },
             _ => {}
         }
@@ -554,12 +573,14 @@ impl WidgetContainer
                 let mut l = Vec::new();
                 l.push(ob.read().unwrap().id.clone());
                 self.select_by_id(&mut l);
+                self.handle_change(&operation::Change::SelectedChange, widget_origin);
             },
             Event::UnselectObject(ob) => {
                 println!("unselected : {}", ob.read().unwrap().name);
                 let mut l = LinkedList::new();
                 l.push_back(ob.read().unwrap().id.clone());
                 self.unselect(&l);
+                self.handle_change(&operation::Change::SelectedChange, widget_origin);
             },
             _ => {}
         }

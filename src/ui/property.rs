@@ -198,7 +198,7 @@ pub struct Property
     expand_state : HashMap<String, bool>,
     visible : bool,
     pub resource : Rc<resource::ResourceGroup>,
-    id : uuid::Uuid
+    pub id : uuid::Uuid
 }
 
 impl Property
@@ -454,7 +454,7 @@ pub extern fn register_change_string(
         }
     };
 
-    println!("register change string,,, the string is {}", ss);
+    println!("register change string,,, the string is {}, action {}", ss, action);
     if action == 1 && old != ptr::null() {
         let oldchar = old as *const i8;
         let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};

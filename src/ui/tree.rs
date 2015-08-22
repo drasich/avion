@@ -28,11 +28,11 @@ extern {
     fn tree_widget_new() -> *const JkTree;
     pub fn tree_register_cb(
         tree : *const JkTree,
-        data : *const TreeSelectData,
+        data : *const c_void,
         name_get : extern fn(data : *const c_void) -> *const c_char,
         selected : extern fn(data : *const c_void) -> (),
         can_expand : extern fn(data : *const c_void) -> bool,
-        expand : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        expand : extern fn(tree: *const c_void, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         //sel : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         //unsel : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         sel : extern fn(tree: *const ui::WidgetCbData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
@@ -74,7 +74,7 @@ pub struct Tree
     control : Rc<RefCell<Control>>,
     dont_forward_signal : bool,
     visible : bool,
-    uuid : Uuid
+    pub id : Uuid
 }
 
 impl Tree
@@ -91,7 +91,7 @@ impl Tree
             control : control,
             dont_forward_signal : false,
             visible : true,
-            uuid : Uuid::new_v4()
+            id : Uuid::new_v4()
         };
 
         t.set_visible(false);
@@ -307,7 +307,7 @@ pub extern fn can_expand(data : *const c_void) -> bool
 }
 
 pub extern fn expand(
-    tsd: *const TreeSelectData,
+    widget_cb_data: *const c_void,
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
@@ -315,8 +315,13 @@ pub extern fn expand(
         mem::transmute(data)
     };
 
-    let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
-    let t : &mut Tree = &mut **tsd.tree.borrow_mut();
+    //let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
+    //let t : &mut Tree = &mut **tsd.tree.borrow_mut();
+
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
+    let t : &mut Tree = unsafe {mem::transmute(wcb.widget)};
+    //let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
 
     println!("expanding ! {} ", o.read().unwrap().name);
     println!("expanding ! tree name {} ", t.name);
@@ -352,7 +357,7 @@ pub extern fn selected(
     };
 
     println!("TODO do the following in widget container 'handle' ");
-    container.handle_event(ui::Event::SelectObject(o.clone()), tree.uuid);
+    container.handle_event(ui::Event::SelectObject(o.clone()), tree.id);
 
     /*
     match tsd.control.borrow_state() {
@@ -395,7 +400,7 @@ pub extern fn unselected(
     };
 
     println!("TODO,unselect do the following in widget container 'handle'");
-    container.handle_event(ui::Event::UnselectObject(o.clone()), tree.uuid);
+    container.handle_event(ui::Event::UnselectObject(o.clone()), tree.id);
 
     /*
     let o = match tsd.control.borrow_state() {
