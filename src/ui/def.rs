@@ -363,6 +363,15 @@ impl WidgetContainer
                         None => {}
                     };
                 }
+                else if name.starts_with("object/comp_data/MeshRender") {
+                    let mut ob = o.write().unwrap();
+                    println!("please update mesh");
+                    let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
+                    if let Some(ref mr) = omr {
+                        ob.mesh_render =
+                            Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
+                    }
+                }
 
                 match self.property {
                     Some(ref p) => {
