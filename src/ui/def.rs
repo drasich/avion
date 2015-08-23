@@ -412,6 +412,46 @@ impl WidgetContainer
                     }
                 }
             },
+            operation::Change::ComponentChanged(uuid, ref comp_name) => {
+                println!("comp changed : {} ", comp_name);
+                let sel = self.get_selected_object();
+                if let Some(ref o) = sel {
+                    {
+                    let mut ob = o.read().unwrap();
+                    if uuid == ob.id  {
+                        match self.property {
+                            Some(ref mut p) =>
+                                {
+                                    if widget_origin != p.id {
+                                        p.update_object(&*ob, "");
+                                    }
+                                },
+                            None => {}
+                        }
+                    }
+                    }
+                }
+
+                if comp_name.starts_with("MeshRender") {
+                    let scene = self.get_scene();
+                    let oob = if let Some(ref sc) = scene {
+                        let s = sc.borrow();
+                        s.find_object_by_id(&uuid)
+                    } else {
+                        None
+                    };
+
+                    if let Some(o) = oob {
+                            let mut ob = o.write().unwrap();
+                            println!("please update mesh");
+                            let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
+                            if let Some(ref mr) = omr {
+                                ob.mesh_render =
+                                    Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
+                            }
+                    }
+                }
+            },
             operation::Change::ChangeSelected(ref list) => {
                 self.context.selected = list.clone();
                 self.handle_change(&operation::Change::SelectedChange, widget_origin);
@@ -772,7 +812,7 @@ impl WidgetContainer
         };
 
         let cp = if component_name == "MeshRender" {
-            box component::CompData::MeshRender(component::mesh_render::MeshRender::new("cacamesh", "cacamat"))
+            box component::CompData::MeshRender(component::mesh_render::MeshRender::new("model/skeletonmesh.mesh", "material/simple.mat"))
         }
         else {
             return operation::Change::None;
