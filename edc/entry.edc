@@ -1,20 +1,53 @@
 collections {
    group { name: "main";
       parts {
-         part { name: "bg";
-            type: RECT;
-            description { state: "default" 0.0;
-               rel1.relative: 0.0 0.0;
-               rel2.relative: 1 1;
-               color: 0 136 170 255;
-            }
-         }
          part { name: "content";
             type: SWALLOW;
             description { state: "default" 0.0;
                rel1.relative: 0.0 0.0;
                rel2.relative: 1 1;
             }
+         }
+         part { name: "bg";
+            type: RECT;
+            description { state: "default" 0.0;
+               rel1.relative: 0.0 0.0;
+               rel2.relative: 1 1;
+               color: 0 136 170 100;
+            }
+            description { state: "clicked" 0.0;
+				inherit : "default";
+               color: 0 136 170 50;
+			   visible : 0;
+            }
+         }
+      }
+      programs {
+		  /*
+         program { name: "mouse_down";
+            signal: "mouse,down,1";
+            source: "bg";
+            action: STATE_SET "clicked" 0.0;
+            target: "bg";
+         }
+         program { name: "mouse_up";
+            signal: "mouse,up,1";
+            source: "bg";
+            action: STATE_SET "default" 0.0;
+            target: "bg";
+         }
+		 */
+         program { name: "set_visible";
+            signal: "visible,1";
+            source: "bg";
+            action: STATE_SET "default" 0.0;
+            target: "bg";
+         }
+         program { name: "set_unvisible";
+            signal: "visible,0";
+            source: "bg";
+            action: STATE_SET "clicked" 0.0;
+            target: "bg";
          }
       }
    }

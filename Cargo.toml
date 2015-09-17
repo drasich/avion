@@ -19,7 +19,7 @@ git = "https://github.com/servo/rust-png.git"
 
 [dependencies.joker-sys]
 git = "https://github.com/drasich/joker.git"
-branch = "panel"
+#branch = "panel"
 #path = "/home/chris/code/joker/"
 
 #[dependencies.cypher]
