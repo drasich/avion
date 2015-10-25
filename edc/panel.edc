@@ -1,30 +1,29 @@
+#define RED 255 39 14 205
+#define WHITE 255 255 255  110 //205
+#define BAR_WIDTH 5
+
 collections {
    images {
-      image: "close.png" COMP;
+      image: "reduce.png" COMP;
+   }
+   fonts {
+     font: "Exo_2/Exo2-Bold.ttf" "Sans";
    }
    group { name: "main";
       parts {
-         part { name: "close";
-            type: IMAGE;
-            description { state: "default" 0.0;
-               /*rel1.relative: 0.5 0.0;
-               rel2.relative: 1 1;*/
-               image.normal: "close.png";
-               aspect: 1 1;
-               aspect_preference: BOTH;
-               /*fixed : 1 1;*/
-               max : 32 32;
-               align: 1 0;
-            }
-         }
          part { name: "bar";
             type: RECT;
             description { state: "default" 0.0;
                rel1.relative: 0.0 0.0;
-               rel2.relative: 0 1;
-               rel2.to: "close";
-               color: 0 236 170 255;
+               rel2.relative: 1 1;
+               //rel2.to: "close";
+               //color: 166 66 66 205;
+               //color: 166 66 66 205;
+               //color: 255 39 14 205;
+               color: RED;
                max : -1 32;
+               align: 0 0;
+               //min : 0 32;
             }
             description { state: "clicked" 0.0;
                rel1.relative: 0 0;
@@ -34,35 +33,73 @@ collections {
                max : -1 32;
             }
          }
+         part { name: "close";
+            type: IMAGE;
+            description { state: "default" 0.0;
+               /*rel1.relative: 0.5 0.0;
+               rel2.relative: 1 1;*/
+               rel2.to : "bar";
+               rel2.relative: 1.0 1.0;
+               rel2.offset : -8 0;
+               image.normal: "reduce.png";
+               aspect: 1 1;
+               aspect_preference: BOTH;
+               /*fixed : 1 1;*/
+               max : 16 32;
+               align: 1 0.5;
+               fill.smooth: 0;
+            }
+         }
          part { name: "text";
             type: TEXT;
             scale: 1;
-            effect: FAR_SOFT_SHADOW;
+            //effect: FAR_SOFT_SHADOW;
             mouse_events: 0;
             description { state: "default" 0.0;
                rel1.relative: 0.0 0.0;
-               rel2.relative: 1.0 1.0;               
+               rel2.relative: 1.0 1.0;
                rel1.to: "bar";
                rel2.to: "bar";
-               color: 0 136 170 255;
-               color2: 0 136 170 50;
-               color3: 0 136 170 25;
+               rel1.offset: 10 0;
+               color: 240 240 240 255;
+               //color: 0 136 170 255;
+               //color2: 0 136 170 50;
+               //color3: 0 136 170 25;
                text {
-                  size: 10;
+                  size: 12;
                   font: "Sans";
-                  text: "title";
-                  align: 0.5 0.5;
+                  //font: "Exo_2/Exo2-Bold.ttf";
+                  text: "Properties";
+                  align: 0.0 0.5;
                }
             }
          }
-         part { name: "content";
-            type: SWALLOW;
+         part { name : "content_bg";
+            type: RECT;
             description { state: "default" 0.0;
   						rel1.to: "bar";
                rel1.relative: 1.0 0.0;
                rel2.relative: 0.0 0.0;
                rel2.to:"resizebottomright";
                rel1.to: "resizexleft";
+               color: 255 255 255 255;
+               //color: 150 150 170 255;
+               //color: WHITE;
+               //color: WHITE;
+               visible : 0;
+            }
+         }
+         part { name: "content";
+            type: SWALLOW;
+            mouse_events: 1;
+            description { state: "default" 0.0;
+  						rel1.to: "bar";
+               rel1.relative: 1.0 0.0;
+               rel2.relative: 0.0 0.0;
+               rel1.to: "resizexleft";
+               rel2.to:"resizebottomright";
+               rel1.offset : 4 4;
+               rel2.offset : -1 -4;
             }
          }
          part {
@@ -73,11 +110,12 @@ collections {
                /*rel1.relative: 1.0 1.0;
                rel2.relative: 1 1;
                */
-               color: 0 236 170 255;
-               max : 16 16;
+               //color: 0 236 170 255;
+               color: WHITE;
+               max : BAR_WIDTH BAR_WIDTH;
                align : 1 1;
             }
-         } 
+         }
          part {
             name: "resizebottomleft";
             type: RECT;
@@ -85,8 +123,10 @@ collections {
                state: "default" 0.0;
                /*rel1.relative: 1.0 1.0;
                rel2.relative: 1 1;
-               */               color: 0 236 170 255;
-               max : 16 16;
+               */
+               //color: 0 236 170 255;
+               color: WHITE;
+               max : BAR_WIDTH BAR_WIDTH;
                align : 0 1;
             }
          }
@@ -96,12 +136,14 @@ collections {
             description {
                state: "default" 0.0;
                align: 1 0;
-               rel1.to_y: "close"; 
+               //rel1.to_y: "close";
+               rel1.to_y: "bar";
                rel1.relative: 0.0 1.0;
                rel2.relative: 1 0;
                rel2.to: "resizebottomright";
-               color: 0 236 170 255;
-               max : 16 -1;
+               //color: 0 236 170 255;
+               color: WHITE;
+               max : BAR_WIDTH -1;
                align : 1 0;
             }
          }
@@ -115,8 +157,10 @@ collections {
                rel1.relative: 0.0 1.0;
                rel2.to_y: "resizebottomleft";
                rel2.relative: 1 0;
-               color: 0 236 170 255;
-               max : 16 -1;
+               //color: 0 236 170 255;
+               //color: 240 240 240 255;
+               color: WHITE;
+               max : BAR_WIDTH -1;
                align : 0 0;
             }
          }
@@ -129,7 +173,9 @@ collections {
                rel2.relative: 0.0 1.0;
                rel1.to: "resizebottomleft";
                rel1.relative: 1 0;
-               color: 0 236 170 255;
+               //color: 0 236 170 255;
+               //color: 240 240 240 255;
+               color: WHITE;
             }
          }
       }

@@ -228,7 +228,7 @@ impl Property
             id : uuid::Uuid::new_v4()
         };
 
-        p.set_visible(false);
+        //p.set_visible(false);
 
         p
     }

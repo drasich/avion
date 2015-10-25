@@ -5,8 +5,10 @@ DONE
 - id system
 
 TODO
-- focus when writing data in entries
+- save window pos/size, widget pos/size
 - spinner entry undo/redo problem
+- make tree a widget like property
+- focus when writing data in entries
 - center camera on current object
 - add remove compdata, components
 

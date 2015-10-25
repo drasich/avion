@@ -80,7 +80,10 @@ pub struct View
     camera : Rc<RefCell<camera::Camera>>,
     holder : Rc<RefCell<Holder>>,
     pub resource : Rc<resource::ResourceGroup>,
-    pub uuid : uuid::Uuid
+    pub uuid : uuid::Uuid,
+
+    pub width : i32,
+    pub height : i32
 }
 
 impl View
@@ -130,7 +133,10 @@ impl View
             camera : camera,
             holder : Rc::new(RefCell::new(Holder { gameview : None })),
             resource : resource,
-            uuid : uuid::Uuid::new_v4()
+            uuid : uuid::Uuid::new_v4(),
+
+            width : 0,
+            height : 0
         };
 
         return v;
@@ -272,6 +278,8 @@ impl View
 
     fn resize(&mut self, w : c_int, h : c_int)
     {
+        self.width = w;
+        self.height = h;
         self.render.resize(w, h);
     }
 

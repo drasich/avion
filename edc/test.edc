@@ -10,19 +10,6 @@ collections {
 
       parts {
          part {
-            name: "part_one";
-            type: RECT;
-            scale: 1;
-            description {
-               min: 50 50;
-               max: 50 50;
-               state: "default" 0.0;
-               color: 0 0 255 255; /* blue */
-               rel1.relative: 0.0 0.0;
-               rel2.relative: 1.0 1.0;
-            }
-         }
-         part {
             name: "part_glview";
             type: SWALLOW;
             description {
@@ -39,13 +26,13 @@ collections {
             description {
                state: "default" 0.0;
                min: 50 0;
-               //color: 255 0 255 0; /* blue */
+               //color: 255 0 255 0;
                rel1.relative: 0.0 0.0;
                rel2.relative: 0.5 1.0;
                //min: 500 500;
             }
          }
-
+            /*
          part {
             name: "part_property_test";
             type: SWALLOW;
@@ -53,7 +40,7 @@ collections {
                state: "default" 0.0;
                min: 180 150;
                max: 180 -1;
-               //color: 255 0 255 0; /* blue */
+               //color: 255 0 255 0;
                //rel1.relative: 0.7 0.0;
                //rel2.relative: 1.0 1.0;
                //min: 500 500;
@@ -67,15 +54,13 @@ collections {
             name: "part_property";
             type: SWALLOW;
             //effect: GLOW LEFT;
-            /*
-            dragable {
-              confine: "part_glview";
-              //threshold: "another part";
-              //events:  "another dragable part";
-              x: -1 1 0;
-              y: 1 1 0;
-            }
-              */
+            //dragable {
+              //confine: "part_glview";
+              ////threshold: "another part";
+              ////events:  "another dragable part";
+              //x: -1 1 0;
+              //y: 1 1 0;
+            //}
 
             description {
                min: 225 500;
@@ -83,22 +68,12 @@ collections {
                fixed: 1 1;
                align: 1.0 0.0;
                state: "default" 0.0;
-               color: 0 255 0 255; /* green */
+               //color: 0 255 0 255;
                //rel1.relative: 0.5 0.0;
                //rel2.relative: 1.0 1.0;
             }
          }
-
-         part {
-            name: "part_two";
-            type: RECT;
-            description {
-               state: "default" 0.0;
-               color: 0 255 0 255; /* green */
-               rel1.relative: -1.0 -1.0;
-               rel2.relative: 0.0 0.0;
-            }
-         }
+              */
       }
 
    }

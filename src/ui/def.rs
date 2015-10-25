@@ -7,6 +7,10 @@ use std::rc::Rc;
 use std::cell::{RefCell, BorrowState};
 use std::collections::HashMap;
 use std::any::{Any};//, AnyRefExt};
+use std::path::Path;
+use std::fs::File;
+use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
+use std::io::{Read,Write};
 
 use uuid::Uuid;
 
@@ -131,6 +135,30 @@ extern {
         master: *const c_void
         ) -> ();
 
+    fn evas_object_geometry_get(
+        obj : *const Evas_Object,
+        x : *mut c_int,
+        y : *mut c_int,
+        w : *mut c_int,
+        h : *mut c_int);
+
+    //fn window_object_get(
+    //    obj : *const Window) -> *const Evas_Object;
+
+}
+
+fn object_geometry_get(obj : *const Evas_Object) -> (i32, i32, i32, i32)
+{
+    let (mut x, mut y, mut w, mut h) : (c_int, c_int, c_int, c_int) = (5,6,7,8);
+    //let (mut x, mut y, mut w, mut h) = (5,6,7,8);
+
+    println!("starrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr : {:?}", obj);
+
+    unsafe { evas_object_geometry_get(obj, mem::transmute(&mut x), &mut y, &mut w, &mut h); }
+
+    println!("caca : {:?}, {}, {}, {}, {}", obj, x, y, w, h);
+
+    (x, y, w, h)
 }
 
 pub struct Master
@@ -256,6 +284,89 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     }
 }
 
+#[derive(RustcDecodable, RustcEncodable, Clone)]
+pub struct WidgetConfig
+{
+    visible : bool,
+    x : i32,
+    y : i32,
+    w : i32,
+    h : i32,
+}
+
+impl WidgetConfig
+{
+    fn new(obj : *const Evas_Object) -> WidgetConfig
+    {
+        let (x, y, w, h) = object_geometry_get(obj);
+        
+        WidgetConfig {
+            x : x,
+            y : y,
+            w : w,
+            h : h,
+            visible : true
+        }
+    }
+
+}
+
+#[derive(RustcDecodable, RustcEncodable, Clone)]
+pub struct ViewConfig
+{
+    //property : WidgetConfig
+    window : WidgetConfig
+}
+
+#[derive(RustcDecodable, RustcEncodable, Clone)]
+pub struct WindowConfig
+{
+    views: Vec<ViewConfig>
+}
+
+impl WindowConfig {
+
+    fn new(c : &WidgetContainer) ->  WindowConfig
+    {
+        let mut wc = WindowConfig {
+            views : Vec::new()
+        };
+
+        //chris
+        for v in c.views.iter() {
+            let vc = ViewConfig {
+                //window : WidgetConfig::new( unsafe { window_object_get(win) })
+                window : WidgetConfig{
+                    x : 0,
+                    y : 0,
+                    w : v.width,
+                    h : v.height,
+                    visible : true
+                }
+            };
+            wc.views.push(vc);
+        }
+
+        wc
+    }
+
+    fn save(&self)
+    {
+        println!("save scene todo serialize");
+        //let path : &Path = self.name.as_ref();
+        let path : &Path = Path::new("windowconf");
+        let mut file = File::create(path).ok().unwrap();
+        let mut s = String::new();
+        {
+            let mut encoder = json::Encoder::new_pretty(&mut s);
+            let _ = self.encode(&mut encoder);
+        }
+
+        //let result = file.write(s.as_ref().as_bytes());
+        let result = file.write(s.as_bytes());
+    }
+}
+
 pub extern fn exit_cb(data: *mut c_void) -> () {
     //let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(data)};
     //let master = master_rc.borrow();
@@ -276,6 +387,13 @@ pub extern fn exit_cb(data: *mut c_void) -> () {
         },
         None => {}
     }
+
+    //TODO save window pos/size widgets pos/size
+    //save views
+    //save proerty
+
+    let wc = WindowConfig::new(&*container);
+    wc.save();
 }
 
 pub trait Widget
