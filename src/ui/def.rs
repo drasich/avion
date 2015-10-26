@@ -60,7 +60,7 @@ pub type ResizeFuncTmp = extern fn(data : *mut View, w : c_int, h : c_int);
 #[link(name = "joker")]
 extern {
     pub fn elm_simple_window_main();
-    pub fn window_new() -> *const Window;
+    pub fn window_new(w : c_int, h : c_int) -> *const Window;
     pub fn jk_window_new(cb : RustCb, cb_data : *const c_void) -> *const Evas_Object;
     pub fn jk_glview_new(
         win : *const Evas_Object,
@@ -178,10 +178,6 @@ impl Master
             views : LinkedList::new(),
         };
 
-        let v = box View::new(m.resource.clone(), container);
-        m.views.push_back(v);
-        //container.views.push(v);
-
         m
     }
 
@@ -246,6 +242,14 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     }
     */
 
+    let wc = WindowConfig::load();
+
+    for v in wc.views.iter() {
+        let wc = &v.window;
+        let v = box View::new(master.resource.clone(), container,wc.w,wc.h);
+        master.views.push_back(v);
+    }
+
     while let Some(mut v) = master.views.pop_front() {
 
         v.init(container);
@@ -299,7 +303,7 @@ impl WidgetConfig
     fn new(obj : *const Evas_Object) -> WidgetConfig
     {
         let (x, y, w, h) = object_geometry_get(obj);
-        
+
         WidgetConfig {
             x : x,
             y : y,
@@ -350,6 +354,29 @@ impl WindowConfig {
         wc
     }
 
+    fn default() ->  WindowConfig
+    {
+        let mut wc = WindowConfig {
+            views : Vec::new()
+        };
+
+        let vc = ViewConfig {
+            //window : WidgetConfig::new( unsafe { window_object_get(win) })
+            window : WidgetConfig{
+                x : 0,
+                y : 0,
+                w : 800,
+                h : 500,
+                visible : true
+            }
+        };
+
+        wc.views.push(vc);
+
+        wc
+    }
+
+
     fn save(&self)
     {
         println!("save scene todo serialize");
@@ -365,6 +392,23 @@ impl WindowConfig {
         //let result = file.write(s.as_ref().as_bytes());
         let result = file.write(s.as_bytes());
     }
+
+    fn load() -> WindowConfig
+    {
+        let mut file = String::new();
+        let wc : WindowConfig = match File::open(&Path::new("windowconf")){
+            Ok(ref mut f) => {
+                f.read_to_string(&mut file);
+                json::decode(file.as_ref()).unwrap()
+            },
+            _ => {
+                WindowConfig::default()
+            }
+        };
+
+        wc
+    }
+
 }
 
 pub extern fn exit_cb(data: *mut c_void) -> () {

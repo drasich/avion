@@ -90,7 +90,9 @@ impl View
 {
     pub fn new(
         resource : Rc<resource::ResourceGroup>,
-        container : &mut Box<ui::WidgetContainer>
+        container : &mut Box<ui::WidgetContainer>,
+        w : i32,
+        h : i32
         ) -> View
     {
         let scene_path = "scene/simple.scene";
@@ -135,15 +137,15 @@ impl View
             resource : resource,
             uuid : uuid::Uuid::new_v4(),
 
-            width : 0,
-            height : 0
+            width : w,
+            height : h
         };
 
         return v;
     }
 
     pub fn init(&mut self, container : &mut Box<ui::WidgetContainer>) -> () {
-        let w = unsafe {ui::window_new()};
+        let w = unsafe {ui::window_new(self.width,self.height)};
         self.window = Some(w);
 
         let control = &self.control;
