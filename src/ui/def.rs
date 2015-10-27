@@ -353,6 +353,7 @@ impl WindowConfig {
                     w : 100,
                     h : 400,
                     visible : true
+                }
             };
             wc.views.push(vc);
         }
@@ -373,6 +374,13 @@ impl WindowConfig {
                 y : 0,
                 w : 800,
                 h : 500,
+                visible : true
+            },
+            property : WidgetConfig{
+                x : 0,
+                y : 0,
+                w : 100,
+                h : 400,
                 visible : true
             }
         };
