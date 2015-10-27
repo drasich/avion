@@ -318,7 +318,7 @@ impl WidgetConfig
 #[derive(RustcDecodable, RustcEncodable, Clone)]
 pub struct ViewConfig
 {
-    //property : WidgetConfig
+    property : WidgetConfig,
     window : WidgetConfig
 }
 
@@ -346,7 +346,13 @@ impl WindowConfig {
                     w : v.width,
                     h : v.height,
                     visible : true
-                }
+                },
+                property : WidgetConfig{
+                    x : 0,
+                    y : 0,
+                    w : 100,
+                    h : 400,
+                    visible : true
             };
             wc.views.push(vc);
         }
