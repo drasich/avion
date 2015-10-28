@@ -219,7 +219,8 @@ impl View
                  ui::property::register_change_enum,
                  ui::property::register_change_option,
                  ui::property::expand,
-                 ui::property::contract
+                 ui::property::contract,
+                 ui::property::panel_move,
                  );
             }
         }

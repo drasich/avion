@@ -1,5 +1,5 @@
 use std::sync::{RwLock, Arc};
-use std::collections::HashMap;
+use std::collections::{HashMap,HashSet};
 use libc::{c_char, c_void, c_int, c_float};
 use std::str;
 use std::mem;
@@ -51,9 +51,17 @@ pub type RegisterChangeFunc = extern fn(
     );
 
 pub type PropertyTreeFunc = extern fn(
-    property : *const Property,
+    property : *const c_void,
     object : *const c_void,
     parent : *const Elm_Object_Item);
+
+pub type PanelGeomFunc = extern fn(
+    object : *const c_void,
+    x : c_int,
+    y : c_int,
+    w : c_int,
+    h : c_int);
+
 
 #[repr(C)]
 pub struct JkProperty;
@@ -134,7 +142,8 @@ extern {
         register_change_enum : RegisterChangeFunc,
         register_change_option : RegisterChangeFunc,
         expand : PropertyTreeFunc,
-        contract : PropertyTreeFunc
+        contract : PropertyTreeFunc,
+        panel_move : PanelGeomFunc
         );
 
     fn property_list_group_add(
@@ -196,6 +205,30 @@ extern {
 
 }
 
+#[derive(RustcDecodable, RustcEncodable, Clone)]
+pub struct PropertyConfig
+{
+    x : i32,
+    y : i32,
+    w : i32,
+    h : i32,
+    expand : HashSet<String>
+}
+
+impl PropertyConfig
+{
+    fn new() -> PropertyConfig
+    {
+        PropertyConfig {
+            x: 10,
+            y: 10,
+            w: 100,
+            h : 400,
+            expand : HashSet::new()
+        }
+    }
+}
+
 pub struct Property
 {
     pub name : String,
@@ -205,7 +238,8 @@ pub struct Property
     expand_state : HashMap<String, bool>,
     visible : bool,
     pub resource : Rc<resource::ResourceGroup>,
-    pub id : uuid::Uuid
+    pub id : uuid::Uuid,
+    pub config : PropertyConfig
 }
 
 impl Property
@@ -225,7 +259,8 @@ impl Property
             expand_state : HashMap::new(),
             visible: true,
             resource : resource,
-            id : uuid::Uuid::new_v4()
+            id : uuid::Uuid::new_v4(),
+            config : PropertyConfig::new()
         };
 
         //p.set_visible(false);
@@ -723,13 +758,13 @@ fn changed_option(
 
 
 pub extern fn expand(
-    property: *const Property,
+    widget_cb_data: *const c_void,
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
     let datachar = data as *const i8;
     let s = unsafe {CStr::from_ptr(datachar).to_bytes()};
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(property)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
     //let mut p : &mut Property = unsafe {mem::transmute(property)};
     let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
     let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
@@ -771,12 +806,12 @@ pub extern fn expand(
 }
 
 pub extern fn contract(
-    property: *const Property,
+    widget_cb_data: *const c_void,
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
     //let mut p : &mut Property = unsafe {mem::transmute(property)};
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(property)};
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
     let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
     //let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
@@ -1329,4 +1364,18 @@ Option<&PropertyShow>
              }
         }
     }
+}
+
+pub extern fn panel_move(
+    widget_cb_data : *const c_void,
+    x : c_int, y : c_int, w : c_int, h : c_int)
+{
+    println!("panel geom !!!!!!!!! {}, {}, {}, {}", x, y, w, h);
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
+    let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
+
+    p.config.x = x;
+    p.config.y = y;
+    p.config.w = w;
+    p.config.h = h;
 }

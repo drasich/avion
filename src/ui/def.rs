@@ -20,7 +20,7 @@ use geometry;
 use vec;
 use scene;
 use object;
-use ui::{Tree,Property,View,Command,Action};
+use ui::{Tree,Property,PropertyConfig,View,Command,Action};
 use ui;
 use factory;
 use operation;
@@ -318,14 +318,14 @@ impl WidgetConfig
 #[derive(RustcDecodable, RustcEncodable, Clone)]
 pub struct ViewConfig
 {
-    property : WidgetConfig,
     window : WidgetConfig
 }
 
 #[derive(RustcDecodable, RustcEncodable, Clone)]
 pub struct WindowConfig
 {
-    views: Vec<ViewConfig>
+    views: Vec<ViewConfig>,
+    property : Option<PropertyConfig>
 }
 
 impl WindowConfig {
@@ -333,7 +333,11 @@ impl WindowConfig {
     fn new(c : &WidgetContainer) ->  WindowConfig
     {
         let mut wc = WindowConfig {
-            views : Vec::new()
+            views : Vec::new(),
+            property : match c.property {
+                None => None,
+                Some(ref p) => Some(p.config.clone())
+            }
         };
 
         //chris
@@ -347,13 +351,6 @@ impl WindowConfig {
                     h : v.height,
                     visible : true
                 },
-                property : WidgetConfig{
-                    x : 0,
-                    y : 0,
-                    w : 100,
-                    h : 400,
-                    visible : true
-                }
             };
             wc.views.push(vc);
         }
@@ -364,7 +361,8 @@ impl WindowConfig {
     fn default() ->  WindowConfig
     {
         let mut wc = WindowConfig {
-            views : Vec::new()
+            views : Vec::new(),
+            property : None
         };
 
         let vc = ViewConfig {
@@ -376,6 +374,7 @@ impl WindowConfig {
                 h : 500,
                 visible : true
             },
+            /*
             property : WidgetConfig{
                 x : 0,
                 y : 0,
@@ -383,6 +382,7 @@ impl WindowConfig {
                 h : 400,
                 visible : true
             }
+            */
         };
 
         wc.views.push(vc);
