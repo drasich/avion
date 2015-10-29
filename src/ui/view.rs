@@ -144,7 +144,10 @@ impl View
         return v;
     }
 
-    pub fn init(&mut self, container : &mut Box<ui::WidgetContainer>) -> () {
+    pub fn init(
+        &mut self,
+        container : &mut Box<ui::WidgetContainer>,
+        property_config : &ui::PropertyConfig) -> () {
         let w = unsafe {ui::window_new(self.width,self.height)};
         self.window = Some(w);
 
@@ -153,7 +156,8 @@ impl View
         let p = box ui::Property::new(
                     w,
                     control.clone(),
-                    self.resource.clone()
+                    self.resource.clone(),
+                    property_config
                     );
 
         let mut t = box ui::Tree::new(

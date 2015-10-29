@@ -252,7 +252,13 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 
     while let Some(mut v) = master.views.pop_front() {
 
-        v.init(container);
+        let pc = if let Some(ref p) = wc.property {
+            p.clone()
+        }
+        else {
+            ui::PropertyConfig::new()
+        };
+        v.init(container, &pc);
 
         if let Some(w) = v.window {
             unsafe {

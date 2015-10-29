@@ -127,7 +127,13 @@ extern {
         ps : *const JkPropertySet);
         */
 
-    fn jk_property_list_new(window : *const Window) -> *const JkPropertyList;
+    fn jk_property_list_new(
+        window : *const Window,
+        x : c_int,
+        y : c_int,
+        w : c_int,
+        h : c_int
+        ) -> *const JkPropertyList;
 
     fn property_list_clear(pl : *const JkPropertyList);
 
@@ -217,7 +223,7 @@ pub struct PropertyConfig
 
 impl PropertyConfig
 {
-    fn new() -> PropertyConfig
+    pub fn new() -> PropertyConfig
     {
         PropertyConfig {
             x: 10,
@@ -247,20 +253,23 @@ impl Property
     pub fn new(
         window : *const Window,
         control : Rc<RefCell<Control>>,
-        resource : Rc<resource::ResourceGroup>
+        resource : Rc<resource::ResourceGroup>,
+        pc : &PropertyConfig
         //) -> Box<Property>
         ) -> Property
     {
         let mut p = Property {
             name : String::from("property_name"),
-            jk_property_list : unsafe {jk_property_list_new(window)},
+            jk_property_list : unsafe {jk_property_list_new(
+                    window,
+                    pc.x, pc.y, pc.w, pc.h)},
             pv : HashMap::new(),
             control : control,
             expand_state : HashMap::new(),
             visible: true,
             resource : resource,
             id : uuid::Uuid::new_v4(),
-            config : PropertyConfig::new()
+            config : pc.clone()
         };
 
         //p.set_visible(false);
