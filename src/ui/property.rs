@@ -55,14 +55,6 @@ pub type PropertyTreeFunc = extern fn(
     object : *const c_void,
     parent : *const Elm_Object_Item);
 
-pub type PanelGeomFunc = extern fn(
-    object : *const c_void,
-    x : c_int,
-    y : c_int,
-    w : c_int,
-    h : c_int);
-
-
 #[repr(C)]
 pub struct JkProperty;
 #[repr(C)]
@@ -149,7 +141,7 @@ extern {
         register_change_option : RegisterChangeFunc,
         expand : PropertyTreeFunc,
         contract : PropertyTreeFunc,
-        panel_move : PanelGeomFunc
+        panel_move : ui::PanelGeomFunc
         );
 
     fn property_list_group_add(
@@ -1388,3 +1380,4 @@ pub extern fn panel_move(
     p.config.w = w;
     p.config.h = h;
 }
+

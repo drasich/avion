@@ -50,6 +50,13 @@ pub type ResizeFunc = extern fn(data : *const c_void, w : c_int, h : c_int);
 pub type RenderFuncTmp = extern fn(data : *mut View);
 pub type ResizeFuncTmp = extern fn(data : *mut View, w : c_int, h : c_int);
 
+pub type PanelGeomFunc = extern fn(
+    object : *const c_void,
+    x : c_int,
+    y : c_int,
+    w : c_int,
+    h : c_int);
+
 /*
         init_cb: extern fn(*mut View),// -> (),
         draw_cb: extern fn(*mut View), // -> (),
@@ -258,7 +265,13 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         else {
             ui::PropertyConfig::new()
         };
-        v.init(container, &pc);
+        let tc = if let Some(ref t) = wc.tree {
+            t.clone()
+        }
+        else {
+            ui::WidgetConfig::new()
+        };
+        v.init(container, &pc, &tc);
 
         if let Some(w) = v.window {
             unsafe {
@@ -297,16 +310,16 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 #[derive(RustcDecodable, RustcEncodable, Clone)]
 pub struct WidgetConfig
 {
-    visible : bool,
-    x : i32,
-    y : i32,
-    w : i32,
-    h : i32,
+    pub visible : bool,
+    pub x : i32,
+    pub y : i32,
+    pub w : i32,
+    pub h : i32,
 }
 
 impl WidgetConfig
 {
-    fn new(obj : *const Evas_Object) -> WidgetConfig
+    fn new_from_obj(obj : *const Evas_Object) -> WidgetConfig
     {
         let (x, y, w, h) = object_geometry_get(obj);
 
@@ -315,6 +328,17 @@ impl WidgetConfig
             y : y,
             w : w,
             h : h,
+            visible : true
+        }
+    }
+
+    fn new() -> WidgetConfig
+    {
+        WidgetConfig {
+            x : 10,
+            y : 10,
+            w : 300,
+            h : 400,
             visible : true
         }
     }
@@ -331,7 +355,8 @@ pub struct ViewConfig
 pub struct WindowConfig
 {
     views: Vec<ViewConfig>,
-    property : Option<PropertyConfig>
+    property : Option<PropertyConfig>,
+    tree : Option<WidgetConfig>
 }
 
 impl WindowConfig {
@@ -343,6 +368,10 @@ impl WindowConfig {
             property : match c.property {
                 None => None,
                 Some(ref p) => Some(p.config.clone())
+            },
+            tree : match c.tree {
+                None => None,
+                Some(ref t) => Some(t.get_config())
             }
         };
 
@@ -368,7 +397,8 @@ impl WindowConfig {
     {
         let mut wc = WindowConfig {
             views : Vec::new(),
-            property : None
+            property : None,
+            tree : None
         };
 
         let vc = ViewConfig {

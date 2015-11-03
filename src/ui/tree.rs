@@ -24,7 +24,13 @@ pub struct JkTree;
 
 #[link(name = "joker")]
 extern {
-    fn window_tree_new(window : *const Window) -> *const JkTree;
+    fn window_tree_new(
+        window : *const Window,
+        x : c_int,
+        y : c_int,
+        w : c_int,
+        h : c_int
+        ) -> *const JkTree;
     fn tree_widget_new() -> *const JkTree;
     pub fn tree_register_cb(
         tree : *const JkTree,
@@ -37,6 +43,7 @@ extern {
         //unsel : extern fn(tree: *const TreeSelectData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         sel : extern fn(tree: *const ui::WidgetCbData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
         unsel : extern fn(tree: *const ui::WidgetCbData, data : *const c_void, parent: *const Elm_Object_Item) -> (),
+        panel_move : ui::PanelGeomFunc
         );
 
     fn tree_object_add(
@@ -74,24 +81,29 @@ pub struct Tree
     control : Rc<RefCell<Control>>,
     dont_forward_signal : bool,
     visible : bool,
-    pub id : Uuid
+    pub id : Uuid,
+    pub config : ui::WidgetConfig
 }
 
 impl Tree
 {
     pub fn new(
         window : *const Window,
-        control : Rc<RefCell<Control>>) -> Tree // Box<Tree>
+        control : Rc<RefCell<Control>>,
+        config : &ui::WidgetConfig
+        ) -> Tree // Box<Tree>
     {
         //let mut t = box Tree {
         let mut t = Tree {
             name : String::from("tree_name"),
             objects : HashMap::new(),
-            jk_tree : unsafe {window_tree_new(window)},
+            jk_tree : unsafe {window_tree_new(
+                    window, config.x, config.y, config.w, config.h)},
             control : control,
             dont_forward_signal : false,
             visible : true,
-            id : Uuid::new_v4()
+            id : Uuid::new_v4(),
+            config : config.clone()
         };
 
         t.set_visible(false);
@@ -275,6 +287,20 @@ impl Tree
     {
         self.visible
     }
+
+    pub fn get_config(&self) -> ui::WidgetConfig
+    {
+        self.config.clone()
+            /*
+        ui::WidgetConfig {
+            visible : self.visible,
+            x: 400,
+            y : 10,
+            w : 300,
+            h : 400
+        }
+        */
+    }
 }
 
 pub extern fn name_get(data : *const c_void) -> *const c_char
@@ -435,3 +461,18 @@ pub extern fn unselected(
 impl ui::Widget for Tree
 {
 }
+
+pub extern fn panel_move(
+    widget_cb_data : *const c_void,
+    x : c_int, y : c_int, w : c_int, h : c_int)
+{
+    println!("panel geom !!!!!!!!! {}, {}, {}, {}", x, y, w, h);
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
+    let mut t : &mut Tree = unsafe {mem::transmute(wcb.widget)};
+
+    t.config.x = x;
+    t.config.y = y;
+    t.config.w = w;
+    t.config.h = h;
+}
+

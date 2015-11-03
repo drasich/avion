@@ -5,6 +5,9 @@ pub use self::def::{
     AppCbData,
     Widget,
     Event,
+    WidgetConfig,
+    
+    PanelGeomFunc,
 
     init_cb,
     exit_cb,

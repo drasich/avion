@@ -147,7 +147,9 @@ impl View
     pub fn init(
         &mut self,
         container : &mut Box<ui::WidgetContainer>,
-        property_config : &ui::PropertyConfig) -> () {
+        property_config : &ui::PropertyConfig,
+        tree_config : &ui::WidgetConfig,
+        ) -> () {
         let w = unsafe {ui::window_new(self.width,self.height)};
         self.window = Some(w);
 
@@ -162,7 +164,9 @@ impl View
 
         let mut t = box ui::Tree::new(
                     w,
-                    control.clone());
+                    control.clone(),
+                    tree_config
+                    );
 
         let a = box ui::Action::new(w, self.resource.clone());
 
@@ -207,7 +211,8 @@ impl View
                     ui::tree::can_expand,
                     ui::tree::expand,
                     ui::tree::selected,
-                    ui::tree::unselected
+                    ui::tree::unselected,
+                    ui::tree::panel_move,
                     );
             }
 
