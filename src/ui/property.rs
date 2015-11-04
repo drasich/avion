@@ -233,7 +233,6 @@ pub struct Property
     pub jk_property_list : *const JkPropertyList,
     pub pv : HashMap<String, *const PropertyValue>,
     control : Rc<RefCell<Control>>,
-    expand_state : HashMap<String, bool>,
     visible : bool,
     pub resource : Rc<resource::ResourceGroup>,
     pub id : uuid::Uuid,
@@ -257,7 +256,6 @@ impl Property
                     pc.x, pc.y, pc.w, pc.h)},
             pv : HashMap::new(),
             control : control,
-            expand_state : HashMap::new(),
             visible: true,
             resource : resource,
             id : uuid::Uuid::new_v4(),
@@ -370,12 +368,7 @@ impl Property
                 )
         };
 
-        let es = match self.expand_state.get(&name.to_string()) {
-            Some(b) => *b,
-            None => return,
-        };
-
-        if es {
+        if self.config.expand.contains(name) {
             unsafe {
                 property_expand(pv);
             }
@@ -407,12 +400,7 @@ impl Property
             self.pv.insert(path.to_string(), pv);
         }
 
-        let es = match self.expand_state.get(&path.to_string()) {
-            Some(b) => *b,
-            None => return,
-        };
-
-        if es {
+        if self.config.expand.contains(path) {
             unsafe {
                 property_expand(pv);
             }
@@ -798,7 +786,7 @@ pub extern fn expand(
             //p.create_entries(&*ppp, vs.clone());
             println!("I found and create {:?} ", vs);
             ppp.create_widget(p, path , 1);
-            p.expand_state.insert(path.to_string(), true);
+            p.config.expand.insert(path.to_string());
         },
         None => {
             println!("could not find property {:?} ", vs);
@@ -835,7 +823,7 @@ pub extern fn contract(
 
     println!("I contract the path {} ", path);
 
-    p.expand_state.insert(path.to_string(), false);
+    p.config.expand.remove(path);
 
     let vs = make_vec_from_string(&path.to_string());
 

@@ -80,7 +80,6 @@ pub struct Tree
     pub jk_tree : *const JkTree,
     control : Rc<RefCell<Control>>,
     dont_forward_signal : bool,
-    visible : bool,
     pub id : Uuid,
     pub config : ui::WidgetConfig
 }
@@ -101,12 +100,11 @@ impl Tree
                     window, config.x, config.y, config.w, config.h)},
             control : control,
             dont_forward_signal : false,
-            visible : true,
             id : Uuid::new_v4(),
             config : config.clone()
         };
 
-        t.set_visible(false);
+        t.set_visible(config.visible);
 
         t
     }
@@ -277,7 +275,7 @@ impl Tree
 
     pub fn set_visible(&mut self, b : bool)
     {
-        self.visible = b;
+        self.config.visible = b;
         unsafe {
             tree_show(self.jk_tree, b);
         }
@@ -285,21 +283,12 @@ impl Tree
 
     pub fn visible(&self) -> bool
     {
-        self.visible
+        self.config.visible
     }
 
     pub fn get_config(&self) -> ui::WidgetConfig
     {
         self.config.clone()
-            /*
-        ui::WidgetConfig {
-            visible : self.visible,
-            x: 400,
-            y : 10,
-            w : 300,
-            h : 400
-        }
-        */
     }
 }
 
