@@ -469,16 +469,6 @@ pub fn child_add(parent : Arc<RwLock<Object>>, child : Arc<RwLock<Object>>)
 }
 
 
-/*
-impl PropertyShow for Object
-{
-    fn create_widget(window : &Window)
-    {
-        let c = unsafe { window_property_new(window) };
-    }
-}
-*/
-
 impl Decodable for Object {
   fn decode<D : Decoder>(decoder: &mut D) -> Result<Object, D::Error> {
     decoder.read_struct("root", 0, |decoder| {
