@@ -566,18 +566,14 @@ impl WidgetContainer
                 };
 
                 if name == "object/name" {
-                    match self.tree {
-                        Some(ref t) => {
-                            if widget_origin != t.id {
-                                t.update_object(&o.read().unwrap().id);
-                            }
-                        },
-                        None => {}
+                    if let Some(ref t) = self.tree {
+                        if widget_origin != t.id {
+                            t.update_object(&o.read().unwrap().id);
+                        }
                     };
                 }
                 else if name.starts_with("object/comp_data/MeshRender") {
                     let mut ob = o.write().unwrap();
-                    println!("please update mesh");
                     let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
                     if let Some(ref mr) = omr {
                         ob.mesh_render =
@@ -587,7 +583,6 @@ impl WidgetContainer
 
                 match self.property {
                     Some(ref p) => {
-                        println!("direct change : {}", name);
                          //p.update_object(&*o.read().unwrap(), s);
                         if widget_origin != p.id {
                             p.update_object_property(&*o.read().unwrap(), name);
@@ -604,30 +599,42 @@ impl WidgetContainer
             operation::Change::Objects(ref name, ref id_list) => {
                 let sel = self.get_selected_object();
                 for id in id_list.iter() {
-                    if let Some(ref o) = sel {
-                        {
-                        let mut ob = o.read().unwrap();
 
-                        if *id == ob.id  {
-                            match self.property {
-                                Some(ref mut p) =>
-                                    {
-                                        if widget_origin != p.id {
-                                            p.update_object(&*ob, "");
-                                        }
-                                    },
-                                    None => {}
+                    if name == "object/name" {
+                        if let Some(ref t) = self.tree {
+                            if widget_origin != t.id {
+                                t.update_object(id);
                             }
-                        }
-                        }
+                        };
+                    }
+                    else if name.starts_with("object/comp_data/MeshRender") {
+                        let scene = self.get_scene();
+                        let oob = if let Some(ref sc) = scene {
+                            let s = sc.borrow();
+                            s.find_object_by_id(&id)
+                        } else {
+                            None
+                        };
 
-                        if name.starts_with("object/comp_data/MeshRender") {
+                        if let Some(o) = oob {
                             let mut ob = o.write().unwrap();
                             println!("please update mesh");
                             let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
                             if let Some(ref mr) = omr {
                                 ob.mesh_render =
                                     Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
+                            }
+                        }
+                    }
+
+                    if let Some(ref o) = sel {
+                        let mut ob = o.read().unwrap();
+
+                        if *id == ob.id  {
+                            if let Some(ref mut p) = self.property {
+                                if widget_origin != p.id {
+                                    p.update_object(&*ob, "");
+                                }
                             }
                         }
                     }
@@ -864,6 +871,16 @@ impl WidgetContainer
         match self.context.scene {
             Some(ref s) => Some(s.clone()),
             None => None
+        }
+    }
+
+    fn find_object(&self, uuid : &Uuid) -> Option<Arc<RwLock<object::Object>>>
+    {
+        if let Some(ref s) = self.get_scene() {
+            s.borrow().find_object_by_id(uuid)
+        }
+        else {
+            None
         }
     }
 
