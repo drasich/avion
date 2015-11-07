@@ -375,7 +375,6 @@ impl WindowConfig {
             }
         };
 
-        //chris
         for v in c.views.iter() {
             let vc = ViewConfig {
                 //window : WidgetConfig::new( unsafe { window_object_get(win) })
@@ -687,6 +686,13 @@ impl WidgetContainer
             operation::Change::SelectedChange => {
                 let sel = self.get_selected_objects();
                 println!("container, object seclected : {}",  sel.len());
+
+                if let Some(ref mut t) = self.tree {
+                    if widget_origin != t.id {
+                        let ids = self.context.get_vec_selected_ids();
+                        t.select_objects(ids);
+                    }
+                }
 
                 if sel.len() != 1 {
                     match self.property {

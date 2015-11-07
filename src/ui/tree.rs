@@ -79,7 +79,6 @@ pub struct Tree
     objects : HashMap<Uuid, *const Elm_Object_Item>,
     pub jk_tree : *const JkTree,
     control : Rc<RefCell<Control>>,
-    dont_forward_signal : bool,
     pub id : Uuid,
     pub config : ui::WidgetConfig
 }
@@ -99,7 +98,6 @@ impl Tree
             jk_tree : unsafe {window_tree_new(
                     window, config.x, config.y, config.w, config.h)},
             control : control,
-            dont_forward_signal : false,
             id : Uuid::new_v4(),
             config : config.clone()
         };
@@ -224,10 +222,9 @@ impl Tree
         }
     }
 
-    pub fn _select(&mut self, id: &Uuid)
+    fn _select(&mut self, id: &Uuid)
     {
         println!("select from tree");
-        self.dont_forward_signal = true;
         match self.objects.get(id) {
             Some(item) => {
                 unsafe {tree_item_select(*item);}
@@ -235,7 +232,6 @@ impl Tree
             _ => {}
         }
 
-        self.dont_forward_signal = false;
         println!("select from tree end");
     }
 
@@ -244,7 +240,6 @@ impl Tree
     {
         unsafe { tree_deselect_all(self.jk_tree); }
 
-        self.dont_forward_signal = true;
         for id in ids.iter() {
             match self.objects.get(id) {
                 Some(item) => {
@@ -254,7 +249,6 @@ impl Tree
             }
         }
 
-        self.dont_forward_signal = false;
         println!("select from tree end");
     }
 
