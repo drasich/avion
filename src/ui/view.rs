@@ -195,9 +195,9 @@ impl View
         );
         */
 
-        a.add_button("christest", ui::action::add_empty, ad.clone());
+        a.add_button("add empty", ui::action::add_empty, ad.clone());
         a.add_button(
-            "play_scene",
+            "play",
             ui::action::play_scene,
             ad.clone());
 
