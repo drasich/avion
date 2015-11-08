@@ -182,30 +182,15 @@ pub extern fn play_scene(data : *const c_void)
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     let action : &Action = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
-    println!("TODO FIX FIX FIX play_scene");
 
-    /*
-    let ad : &ActionData = unsafe {mem::transmute(data)};
-
-    if ad.control.borrow_state() == BorrowState::Writing {
-        println!("control already borrowed ");
-        return;
-    }
-
-    let controlc = ad.control.clone();
-    let control = controlc.borrow();
-    //let camera = control.camera.clone();
-    let contextc = control.context.clone();
-    let context = contextc.borrow();
-    let scene = if let Some(ref s) = context.scene {
+    let scene = if let Some(ref s) = container.context.scene {
         let scene = s.clone();
-        scene.borrow_mut().init_components(&ad.resource);
+        scene.borrow_mut().init_components(&container.resource);
         scene
     }
     else {
         return;
     };
-    //let factory = control.factory.clone();
 
     let camera = if let Some(ref c) = scene.borrow().camera {
         c.clone()
@@ -214,14 +199,8 @@ pub extern fn play_scene(data : *const c_void)
         return;
     };
 
-    println!("play scene");
-    let gv = ui::view::GameView::new(camera, scene, ad.resource.clone());
-    ad.holder.borrow_mut().gameview = Some(gv);
-    //unsafe {
-        //let win = ui::jk_window_new();
-        //let gl = ui::jk_glview_new(win, ptr::null(),);
-    //}
-    */
+    let gv = ui::view::GameView::new(camera, scene, container.resource.clone());
+    container.holder.borrow_mut().gameview = Some(gv);
 }
 
 

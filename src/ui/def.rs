@@ -20,7 +20,7 @@ use geometry;
 use vec;
 use scene;
 use object;
-use ui::{Tree,Property,PropertyConfig,View,Command,Action};
+use ui::{Tree,Property,PropertyConfig,Holder,View,Command,Action};
 use ui;
 use factory;
 use operation;
@@ -516,6 +516,7 @@ pub struct WidgetContainer
     //control : Rc<RefCell<control::Control>>
     pub factory : factory::Factory,
     pub op_mgr : operation::OperationManager,
+    pub holder : Rc<RefCell<Holder>>,
 }
 
 /*
@@ -543,6 +544,7 @@ impl WidgetContainer
             resource : Rc::new(resource::ResourceGroup::new()),
             factory : factory::Factory::new(),
             op_mgr : operation::OperationManager::new(),
+            holder : Rc::new(RefCell::new(Holder { gameview : None })),
 
         }
     }
