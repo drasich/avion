@@ -156,7 +156,7 @@ pub extern fn add_empty(data : *const c_void)
     let o = control.add_empty("new object");
     */
 
-    let o = container.control
+    //let o = container.control
 
     /*
     match ad.property.borrow_state() {
