@@ -90,7 +90,7 @@ impl Action
             resource : resource.clone()
         };
 
-        a.set_visible(false);
+        //a.set_visible(false);
 
         //a.add_button("Add empty", add_empty);
 
