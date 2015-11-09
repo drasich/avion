@@ -19,7 +19,9 @@ pub use self::def::{
     Evas_Object,
     jk_window_new,
     jk_glview_new,
-    window_callback_set
+    window_callback_set,
+
+    add_empty
 };
 
 pub use self::tree::{Tree};

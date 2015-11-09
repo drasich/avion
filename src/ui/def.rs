@@ -1218,9 +1218,16 @@ impl WidgetContainer
     }
 
 
-
-
-
+    pub fn find_view(&self, id : Uuid) -> Option<&View>
+    {
+        for v in self.views.iter()
+        {
+            if v.uuid == id {
+                return Some(v)
+            }
+        }
+        None
+    }
 }
 
 //Send to c with mem::transmute(box data)  and free in c
@@ -1280,4 +1287,50 @@ fn join_string(path : &Vec<String>) -> String
     s
 }
 
+pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)
+{
+    println!("add empty");
+
+    let mut o = container.factory.create_object("new object");
+
+    let position = if let Some(v) = container.find_view(view_id) {
+        let (p,q) = v.get_camera_transform();
+        p + q.rotate_vec3(&vec::Vec3::new(0f64,0f64,-100f64))
+    }
+    else {
+        vec::Vec3::zero()
+    };
+
+    o.position = position;
+
+
+    let ao =  Arc::new(RwLock::new(o));
+
+    let mut list = LinkedList::new();
+    list.push_back(ao.clone());
+
+    let s = if let Some(ref s) = container.context.scene {
+        s.clone()
+    }
+    else {
+        return;
+    };
+
+    let mut vec = Vec::new();
+    vec.push(ao.clone());
+
+    let mut ops = Vec::new();
+    let vs = Vec::new();
+    let addob = container.request_operation(
+            vs,
+            operation::OperationData::SceneAddObjects(s.clone(),vec)
+            );
+
+    ops.push(addob);
+    ops.push(operation::Change::ChangeSelected(list));
+
+    for op in ops.iter() {
+        container.handle_change(op, view_id);
+    }
+}
 

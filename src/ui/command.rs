@@ -19,7 +19,6 @@ use ui::Master;
 use ui;
 use control::Control;
 use operation;
-use vec;
 
 #[repr(C)]
 pub struct JkCommand;
@@ -140,58 +139,7 @@ pub extern fn add_empty(data : *const c_void, name : *const c_char)
     let v : &ui::View = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    let mut o = container.factory.create_object("new object");
-    let (p,q) = v.get_camera_transform();
-    o.position = p + q.rotate_vec3(&vec::Vec3::new(0f64,0f64,-100f64));
-
-    let ao =  Arc::new(RwLock::new(o));
-
-    let mut list = LinkedList::new();
-    list.push_back(ao.clone());
-
-    let s = if let Some(ref s) = container.context.scene {
-        s.clone()
-    }
-    else {
-        return;
-    };
-
-    let mut vec = Vec::new();
-    vec.push(ao.clone());
-
-    let mut ops = Vec::new();
-    let vs = Vec::new();
-    let addob = container.request_operation(
-            vs,
-            operation::OperationData::SceneAddObjects(s.clone(),vec)
-            );
-
-    ops.push(addob);
-    ops.push(operation::Change::ChangeSelected(list));
-
-    for op in ops.iter() {
-        container.handle_change(op, v.uuid);
-    }
-
-
-    println!("TODO TODO TODO!!!!!!!!!!!!!");
-    /*
-    match cd.property.borrow_state() {
-        BorrowState::Unused => {
-            cd.property.borrow_mut().set_object(&*o.read().unwrap());
-        },
-        _ => {println!("cannot borrow property");}
-    };
-
-    match cd.tree.borrow_state() {
-        BorrowState::Unused => {
-            let mut t = cd.tree.borrow_mut();
-            t.add_object(o.clone());
-            t.select(&o.read().unwrap().id);
-        }
-        _ => {}
-    }
-    */
+    ui::add_empty(container, v.uuid);
 }
 
 /*

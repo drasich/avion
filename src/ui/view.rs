@@ -168,7 +168,7 @@ impl View
                     tree_config
                     );
 
-        let a = box ui::Action::new(w, self.resource.clone());
+        let a = box ui::Action::new(w, self.resource.clone(), self.uuid);
 
         let command = box ui::Command::new(w);
 

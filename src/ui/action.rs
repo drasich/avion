@@ -17,6 +17,7 @@ use ui::Master;
 use ui;
 use control::Control;
 use resource;
+use uuid;
 
 #[repr(C)]
 pub struct JkAction;
@@ -43,9 +44,11 @@ pub struct Action
     name : String,
     jk_action : *const JkAction,
     visible : bool,
-    resource : Rc<resource::ResourceGroup>
+    resource : Rc<resource::ResourceGroup>,
+    view_id : uuid::Uuid
 }
 
+/*
 #[derive(Clone)]
 pub struct ActionData
 {
@@ -75,19 +78,22 @@ impl ActionData
         }
     }
 }
+*/
 
 impl Action
 {
     pub fn new(
         window : *const Window,
-        resource : Rc<resource::ResourceGroup>)
+        resource : Rc<resource::ResourceGroup>,
+        view_id : uuid::Uuid)
         -> Action
     {
         let mut a = Action {
             name : String::from("action_name"),
             jk_action : unsafe {window_action_new(window)},
             visible : true,
-            resource : resource.clone()
+            resource : resource.clone(),
+            view_id : view_id
         };
 
         //a.set_visible(false);
@@ -145,6 +151,17 @@ pub extern fn add_empty(data : *const c_void)
     let action : &Action = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
     println!("TODO FIX FIX FIX add_empty");
+
+    /*
+    let view = if let Some(v) = container.find_view(action.view_id) {
+        v
+    }
+    else {
+        return;
+    };
+    */
+
+    ui::add_empty(container, action.view_id);
 
     /*
     if ad.control.borrow_state() != BorrowState::Unused {
