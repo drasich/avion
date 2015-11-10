@@ -731,6 +731,11 @@ impl WidgetContainer
                     println!("container, sceneremove!!!!!!!!");
                     self.context.remove_objects_by_id(obs.clone());
                 }
+                if let Some(ref mut t) = self.tree {
+                    if widget_origin != t.id {
+                        t.remove_objects_by_id(obs.clone());
+                    }
+                }
                 //TODO
                 println!("do something for the other widget");
                 self.handle_change(&operation::Change::SelectedChange, widget_origin);
