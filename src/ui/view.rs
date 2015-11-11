@@ -197,6 +197,10 @@ impl View
 
         a.add_button("add empty", ui::action::add_empty, ad.clone());
         a.add_button(
+            "pause",
+            ui::action::pause_scene,
+            ad.clone());
+        a.add_button(
             "play",
             ui::action::play_scene,
             ad.clone());
@@ -643,7 +647,8 @@ pub struct GameView
     window : *const ui::Evas_Object,
     render : Box<GameRender>,
     scene : Rc<RefCell<scene::Scene>>,
-    name : String
+    name : String,
+    pub state : i32
 }
 
 
@@ -651,6 +656,7 @@ pub struct GameView
 impl GameView {
     pub fn new(
         //factory: &mut factory::Factory,
+        win : *const ui::Evas_Object,
         camera : Rc<RefCell<camera::Camera>>,
         scene : Rc<RefCell<scene::Scene>>,
         resource : Rc<resource::ResourceGroup>
@@ -665,9 +671,11 @@ impl GameView {
         }
         */
 
+        /*
         let win = unsafe {
             ui::jk_window_new(gv_close_cb, ptr::null())
         };
+        */
 
         //let render = box GameRender::new(factory, camera);
         let render = box GameRender::new(camera, resource);
@@ -676,7 +684,8 @@ impl GameView {
             render : render,
             window : win,
             scene : scene,
-            name : "cacayop".to_string()
+            name : "cacayop".to_string(),
+            state : 0
             //camera : camera todo
         };
 
@@ -693,7 +702,9 @@ impl GameView {
     }
 
     fn draw(&mut self) {
-        self.scene.borrow_mut().update(0.01f64);
+        if self.state == 0 {
+            self.scene.borrow_mut().update(0.01f64);
+        }
 
         self.render.draw(&self.scene.borrow().objects);
     }
@@ -733,7 +744,9 @@ pub extern fn gv_resize_cb(v : *const c_void, w : c_int, h : c_int) {
     }
 }
 
-pub extern fn gv_close_cb(v : *mut c_void) {
-    println!("close cb");
+pub extern fn gv_close_cb(data : *mut c_void) {
+    println!("close cb............................................");
+    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(data)};
+    container.holder.borrow_mut().gameview = None;
 }
 

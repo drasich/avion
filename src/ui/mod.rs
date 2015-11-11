@@ -31,7 +31,7 @@ pub use self::property::{Property,PropertyConfig,ChangedFunc};
 pub use self::property::{PropertyShow};
 pub use self::property::{JkPropertyList, PropertyValue};
 
-pub use self::view::{View, GameView, Holder};
+pub use self::view::{View, GameView, Holder, gv_close_cb};
 
 mod tree;
 mod action;
