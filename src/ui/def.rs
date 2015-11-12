@@ -1050,6 +1050,30 @@ impl WidgetContainer
         //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
     }
 
+    pub fn copy_selected_objects(&mut self) -> operation::Change
+    {
+        let s = match self.get_scene() {
+            Some(s) => s,
+            None => return operation::Change::None
+        };
+
+        let list = self.get_selected_objects();
+        let mut vec = Vec::new();
+        for o in list.iter() {
+            //vec.push(o.clone());
+            vec.push(Arc::new(RwLock::new(self.factory.copy_object(&*o.read().unwrap()))));
+        }
+
+        let vs = Vec::new();
+        return self.request_operation(
+            vs,
+            operation::OperationData::SceneAddObjects(s.clone(),vec.clone())
+            );
+
+        //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
+    }
+
+
     pub fn add_component(&mut self, component_name : &str) -> operation::Change
     {
 

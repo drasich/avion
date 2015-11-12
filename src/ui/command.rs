@@ -200,6 +200,25 @@ pub extern fn remove_selected2(data : *const c_void, name : *const c_char)
     container.handle_change(&change, v.uuid);
 }
 
+pub extern fn copy_selected(data : *const c_void, name : *const c_char)
+{
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let v : &ui::View = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    if v.control.borrow_state() != BorrowState::Unused {
+        println!("control already borrowed, copy selected ");
+        return;
+    }
+
+    //let mut control = v.control.borrow_mut();
+    let change = container.copy_selected_objects();
+
+    v.handle_control_change(&change);
+    container.handle_change(&change, v.uuid);
+}
+
+
 pub extern fn set_camera2(data : *const c_void, name : *const c_char)
 {
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};

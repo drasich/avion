@@ -540,7 +540,8 @@ pub extern fn key_down(
                     ("add empty", ui::command::add_empty),
                     ("remove selected22", ui::command::remove_selected2),
                     ("set camera2", ui::command::set_camera2),
-                    ("add component", ui::command::add_component)
+                    ("add component", ui::command::add_component),
+                    ("copy selected", ui::command::copy_selected),
                     ];
 
                     for a in scene_actions.iter() {

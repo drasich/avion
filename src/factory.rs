@@ -82,5 +82,27 @@ impl Factory {
             camera : Some(Rc::new(RefCell::new(self.create_camera())))
         }
     }
+
+    pub fn copy_object(&self, o : &object::Object) -> object::Object
+    {
+        //TODO clone children, components, comp_data, comp_string...
+        object::Object {
+            name : o.name.clone(),
+            id : self.create_id(),
+            mesh_render : o.mesh_render.clone(),
+            position : o.position,
+            //orientation : vec::Quat::identity(),
+            orientation : o.orientation.clone(),
+            //angles : vec::Vec3::zero(),
+            scale : o.scale.clone(),
+            children : LinkedList::new(), //TODO clone children
+            parent : o.parent.clone(),
+            //transform : box transform::Transform::new()
+            components : Vec::new(),
+            comp_data : Vec::new(),
+            comp_string : Vec::new(),
+        }
+    }
+    
 }
 

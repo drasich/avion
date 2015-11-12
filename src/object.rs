@@ -459,7 +459,6 @@ impl Object
         None
     }
 
-
 }
 
 pub fn child_add(parent : Arc<RwLock<Object>>, child : Arc<RwLock<Object>>)
