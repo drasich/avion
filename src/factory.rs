@@ -85,6 +85,11 @@ impl Factory {
 
     pub fn copy_object(&self, o : &object::Object) -> object::Object
     {
+        let mut children_copy = LinkedList::new();
+        for c in o.children.iter() {
+            children_copy.push_back(Arc::new(RwLock::new(self.copy_object(&*c.read().unwrap()))));
+        }
+
         //TODO clone children, components, comp_data, comp_string...
         object::Object {
             name : o.name.clone(),
@@ -95,12 +100,12 @@ impl Factory {
             orientation : o.orientation.clone(),
             //angles : vec::Vec3::zero(),
             scale : o.scale.clone(),
-            children : LinkedList::new(), //TODO clone children
+            children : children_copy, //LinkedList::new(), //TODO clone children
             parent : o.parent.clone(),
             //transform : box transform::Transform::new()
-            components : Vec::new(),
-            comp_data : Vec::new(),
-            comp_string : Vec::new(),
+            components : o.components.clone(), //Vec::new(),
+            comp_data : o.comp_data.clone(),// Vec::new(),
+            comp_string : o.comp_string.clone(),
         }
     }
     
