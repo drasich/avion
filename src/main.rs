@@ -8,7 +8,6 @@
 #![feature(zero_one)]
 
 #![feature(vec_push_all)]
-#![feature(rc_weak)]
 #![feature(borrow_state)]
 
 //TODO remove

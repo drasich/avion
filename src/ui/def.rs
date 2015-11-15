@@ -180,7 +180,7 @@ impl Master
     {
         let resource = container.resource.clone();
 
-        let mut m = Master {
+        let m = Master {
             resource : resource,
             views : LinkedList::new(),
         };
@@ -631,7 +631,7 @@ impl WidgetContainer
                     }
 
                     if let Some(ref o) = sel {
-                        let mut ob = o.read().unwrap();
+                        let ob = o.read().unwrap();
 
                         if *id == ob.id  {
                             if let Some(ref mut p) = self.property {
@@ -648,7 +648,7 @@ impl WidgetContainer
                 let sel = self.get_selected_object();
                 if let Some(ref o) = sel {
                     {
-                    let mut ob = o.read().unwrap();
+                    let ob = o.read().unwrap();
                     if uuid == ob.id  {
                         match self.property {
                             Some(ref mut p) =>

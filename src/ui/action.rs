@@ -54,18 +54,12 @@ impl Action
         view_id : uuid::Uuid)
         -> Action
     {
-        let mut a = Action {
+        Action {
             name : String::from("action_name"),
             jk_action : unsafe {window_action_new(window)},
             visible : true,
             view_id : view_id
-        };
-
-        //a.set_visible(false);
-
-        //a.add_button("Add empty", add_empty);
-
-        a
+        }
     }
 
     //pub fn add_button(&self, name : &str, cb : ButtonCallback, data : ActionData)
