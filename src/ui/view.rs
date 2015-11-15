@@ -153,47 +153,15 @@ impl View
         let w = unsafe {ui::window_new(self.width,self.height)};
         self.window = Some(w);
 
-        let control = &self.control;
+        let p = box ui::Property::new(w, property_config);
+        let mut t = box ui::Tree::new(w, tree_config);
 
-        let p = box ui::Property::new(
-                    w,
-                    control.clone(),
-                    self.resource.clone(),
-                    property_config
-                    );
-
-        let mut t = box ui::Tree::new(
-                    w,
-                    control.clone(),
-                    tree_config
-                    );
-
-        let a = box ui::Action::new(w, self.resource.clone(), self.uuid);
-
+        let a = box ui::Action::new(w, self.uuid);
         let command = box ui::Command::new(w);
-
-        println!("TODO must free this in c");
-        /*
-        let tsd = ui::tree::TreeSelectData {
-            tree : t.clone(),
-            property : p.clone(),
-            control : control.clone()
-        };
-        */
 
         let tsd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*t)});
         let pd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*p)});
         let ad = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*a)});
-
-        /*
-        let ad = ui::action::ActionData::new(
-            //t.clone(),
-            //p.clone(),
-            control.clone(),
-            self.holder.clone(),
-            self.resource.clone()
-        );
-        */
 
         a.add_button("add empty", ui::action::add_empty, ad.clone());
         a.add_button(

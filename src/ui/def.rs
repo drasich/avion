@@ -517,6 +517,7 @@ pub struct WidgetContainer
     pub factory : factory::Factory,
     pub op_mgr : operation::OperationManager,
     pub holder : Rc<RefCell<Holder>>,
+    pub menu : Option<Box<Action>>,
 }
 
 /*
@@ -538,6 +539,7 @@ impl WidgetContainer
             property : None,
             command : None,
             action : None,
+            menu : None,
             views : Vec::new(),
             //context : Rc::new(RefCell::new(context::Context::new())),
             context : box context::Context::new(),

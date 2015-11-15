@@ -22,7 +22,6 @@ use ui::Window;
 use ui;
 use property;
 use operation;
-use control::Control;
 use control::WidgetUpdate;
 use vec;
 use transform;
@@ -233,9 +232,7 @@ pub struct Property
     pub name : String,
     pub jk_property_list : *const JkPropertyList,
     pub pv : HashMap<String, *const PropertyValue>,
-    control : Rc<RefCell<Control>>,
     visible : bool,
-    pub resource : Rc<resource::ResourceGroup>,
     pub id : uuid::Uuid,
     pub config : PropertyConfig
 }
@@ -244,8 +241,6 @@ impl Property
 {
     pub fn new(
         window : *const Window,
-        control : Rc<RefCell<Control>>,
-        resource : Rc<resource::ResourceGroup>,
         pc : &PropertyConfig
         //) -> Box<Property>
         ) -> Property
@@ -256,9 +251,7 @@ impl Property
                     window,
                     pc.x, pc.y, pc.w, pc.h)},
             pv : HashMap::new(),
-            control : control,
             visible: true,
-            resource : resource,
             id : uuid::Uuid::new_v4(),
             config : pc.clone()
         };
@@ -631,12 +624,6 @@ fn changed_set<T : Any+Clone+PartialEq>(
     let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
     //let p : & Property = unsafe {mem::transmute(property)};
-    let resource = &p.resource;
-
-    let mut control = match p.control.borrow_state() {
-        BorrowState::Unused => p.control.borrow_mut(),
-        _ => { println!("cannot borrow control"); return; }
-    };
 
     let change = match (old, action) {
         (Some(oldd), 1) => {

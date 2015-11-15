@@ -15,7 +15,6 @@ use object;
 use ui::Window;
 use ui::Master;
 use ui;
-use control::Control;
 
 #[repr(C)]
 pub struct Elm_Object_Item;
@@ -31,7 +30,6 @@ extern {
         w : c_int,
         h : c_int
         ) -> *const JkTree;
-    fn tree_widget_new() -> *const JkTree;
     pub fn tree_register_cb(
         tree : *const JkTree,
         data : *const c_void,
@@ -63,13 +61,6 @@ extern {
     fn tree_show(obj : *const JkTree, b : bool);
 }
 
-pub struct TreeSelectData
-{
-    pub tree : Rc<RefCell<Box<ui::Tree>>>,
-    pub property : Rc<RefCell<Box<ui::Property>>>,
-    pub control : Rc<RefCell<Control>>,
-}
-
 pub struct Tree
 {
     pub name : String,
@@ -78,7 +69,6 @@ pub struct Tree
     //objects : HashMap<String, *const Elm_Object_Item>,
     objects : HashMap<Uuid, *const Elm_Object_Item>,
     pub jk_tree : *const JkTree,
-    control : Rc<RefCell<Control>>,
     pub id : Uuid,
     pub config : ui::WidgetConfig
 }
@@ -87,7 +77,6 @@ impl Tree
 {
     pub fn new(
         window : *const Window,
-        control : Rc<RefCell<Control>>,
         config : &ui::WidgetConfig
         ) -> Tree // Box<Tree>
     {
@@ -97,7 +86,6 @@ impl Tree
             objects : HashMap::new(),
             jk_tree : unsafe {window_tree_new(
                     window, config.x, config.y, config.w, config.h)},
-            control : control,
             id : Uuid::new_v4(),
             config : config.clone()
         };
