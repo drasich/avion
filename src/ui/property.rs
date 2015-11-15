@@ -242,23 +242,18 @@ impl Property
     pub fn new(
         window : *const Window,
         pc : &PropertyConfig
-        //) -> Box<Property>
         ) -> Property
     {
-        let mut p = Property {
+        Property {
             name : String::from("property_name"),
             jk_property_list : unsafe {jk_property_list_new(
                     window,
                     pc.x, pc.y, pc.w, pc.h)},
-            pv : HashMap::new(),
-            visible: true,
-            id : uuid::Uuid::new_v4(),
-            config : pc.clone()
-        };
-
-        //p.set_visible(false);
-
-        p
+                    pv : HashMap::new(),
+                    visible: true,
+                    id : uuid::Uuid::new_v4(),
+                    config : pc.clone()
+        }
     }
 
     pub fn set_object(&mut self, o : &object::Object)

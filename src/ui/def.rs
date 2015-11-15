@@ -1262,12 +1262,20 @@ impl WidgetContainer
 }
 
 //Send to c with mem::transmute(box data)  and free in c
-#[derive(Clone)]
 pub struct WidgetCbData
 {
     pub container : *const WidgetContainer,
-    //widget : *const Widget
     pub widget : *const c_void
+}
+
+impl Clone for WidgetCbData {
+    fn clone(&self) -> WidgetCbData 
+    {
+        WidgetCbData {
+            container : self.container,
+            widget : self.widget
+        }
+    }
 }
 
 impl WidgetCbData {
@@ -1279,17 +1287,25 @@ impl WidgetCbData {
             container : unsafe {mem::transmute(c)},
             widget : widget
         }
-
     }
 }
 
-
-#[derive(Clone)]
 pub struct AppCbData
 {
     pub master : *const c_void,
     pub container : *const c_void
 }
+
+impl Clone for AppCbData {
+    fn clone(&self) -> AppCbData 
+    {
+        AppCbData {
+            master : self.master,
+            container : self.container
+        }
+    }
+}
+
 
 //TODO choose how deep is the event, like between those 3 things
 pub enum Event

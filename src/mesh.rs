@@ -60,7 +60,6 @@ enum BufferState
 }
 */
 
-#[derive(Clone)]
 pub struct Buffer<T>
 {
     pub name: String,
@@ -68,6 +67,19 @@ pub struct Buffer<T>
     cgl_buffer: Option<*const CglBuffer>,
     buffer_type : BufferType,
     //state : BufferState
+}
+
+impl<T:Clone> Clone for Buffer<T>
+{
+    fn clone(&self) -> Buffer<T>
+    {
+        Buffer {
+            name : self.name.clone(),
+            data : self.data.clone(),
+            cgl_buffer : self.cgl_buffer,
+            buffer_type : self.buffer_type
+        }
+    }
 }
 
 unsafe impl Send for Mesh {}
