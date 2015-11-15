@@ -21,7 +21,8 @@ pub use self::def::{
     jk_glview_new,
     window_callback_set,
 
-    add_empty
+    add_empty,
+    scene_new
 };
 
 pub use self::tree::{Tree};

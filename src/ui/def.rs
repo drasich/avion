@@ -1381,3 +1381,14 @@ pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)
     }
 }
 
+pub fn scene_new(container : &mut WidgetContainer, view_id : Uuid)
+{
+    let mut s = container.factory.create_scene("new scene");
+
+    //if let Some(v) = container.find_view(view_id) {
+    //}
+
+    let rs =  Rc::new(RefCell::new(s));
+
+    container.context.scene = Some(rs);
+}

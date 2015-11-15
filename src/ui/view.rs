@@ -163,6 +163,7 @@ impl View
         let pd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*p)});
         let ad = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*a)});
 
+        a.add_button("new scene", ui::action::scene_new, ad.clone());
         a.add_button("add empty", ui::action::add_empty, ad.clone());
         a.add_button(
             "pause",

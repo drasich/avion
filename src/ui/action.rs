@@ -112,6 +112,16 @@ pub extern fn add_empty(data : *const c_void)
     ui::add_empty(container, action.view_id);
 }
 
+pub extern fn scene_new(data : *const c_void)
+{
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let action : &Action = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    ui::scene_new(container, action.view_id);
+}
+
+
 pub extern fn play_scene(data : *const c_void)
 {
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
