@@ -58,7 +58,7 @@ impl Factory {
             comp_string : Vec::new(),
         }
     }
-    
+
     pub fn create_camera(&self) -> camera::Camera
     {
         let c = camera::Camera {
@@ -108,6 +108,6 @@ impl Factory {
             comp_string : o.comp_string.clone(),
         }
     }
-    
+
 }
 

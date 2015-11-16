@@ -594,11 +594,6 @@ impl WidgetContainer
                     None => {}
                 };
             },
-            _ => {}
-        }
-
-
-        match *change {
             operation::Change::Objects(ref name, ref id_list) => {
                 let sel = self.get_selected_object();
                 for id in id_list.iter() {
@@ -1391,4 +1386,6 @@ pub fn scene_new(container : &mut WidgetContainer, view_id : Uuid)
     let rs =  Rc::new(RefCell::new(s));
 
     container.context.scene = Some(rs);
+    //container.handle_change(op, view_id);
 }
+
