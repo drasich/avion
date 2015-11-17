@@ -26,7 +26,7 @@ pub use self::def::{
 };
 
 pub use self::tree::{Tree};
-pub use self::action::{Action};
+pub use self::action::{Action,Position};
 pub use self::command::{Command};
 pub use self::property::{Property,PropertyConfig,ChangedFunc};
 pub use self::property::{PropertyShow};

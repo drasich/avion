@@ -28,6 +28,7 @@ pub type ButtonCallback = extern fn(
 #[link(name = "joker")]
 extern {
     fn window_action_new(window : *const Window) -> *const JkAction;
+    fn window_action_new_up(window : *const Window) -> *const JkAction;
     fn action_button_new(
         action : *const JkAction,
         name : *const c_char,
@@ -47,16 +48,26 @@ pub struct Action
     view_id : uuid::Uuid
 }
 
+pub enum Position
+{
+    Top,
+    Bottom
+}
+
 impl Action
 {
     pub fn new(
         window : *const Window,
+        pos : Position,
         view_id : uuid::Uuid)
         -> Action
     {
         Action {
             name : String::from("action_name"),
-            jk_action : unsafe {window_action_new(window)},
+            jk_action : match pos {
+                Position::Bottom => unsafe {window_action_new(window)},
+                Position::Top => unsafe {window_action_new_up(window)}
+            },
             visible : true,
             view_id : view_id
         }

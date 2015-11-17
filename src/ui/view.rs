@@ -156,7 +156,7 @@ impl View
         let p = box ui::Property::new(w, property_config);
         let mut t = box ui::Tree::new(w, tree_config);
 
-        let a = box ui::Action::new(w, self.uuid);
+        let a = box ui::Action::new(w, ui::action::Position::Bottom, self.uuid);
         let command = box ui::Command::new(w);
 
         let tsd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*t)});
