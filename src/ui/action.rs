@@ -21,6 +21,7 @@ use uuid;
 
 #[repr(C)]
 pub struct JkAction;
+pub struct JkLabel;
 
 pub type ButtonCallback = extern fn(
     data : *const c_void);
@@ -34,6 +35,13 @@ extern {
         name : *const c_char,
         data : *const c_void,
         button_callback : ButtonCallback);
+    fn action_label_new(
+        action : *const JkAction,
+        name : *const c_char) -> *const JkLabel;
+
+    fn jk_label_set(
+        label : *const JkLabel,
+        name : *const c_char);
 
     fn action_show(
         action : *const JkAction,
@@ -98,6 +106,16 @@ impl Action
                 cb);
         }
     }
+
+    pub fn add_label(&self, name : &str)
+    {
+        unsafe {
+            action_label_new(
+                self.jk_action,
+                CString::new(name.as_bytes()).unwrap().as_ptr());
+        }
+    }
+
 
     pub fn set_visible(&mut self, b : bool)
     {

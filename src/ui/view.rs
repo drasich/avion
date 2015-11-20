@@ -212,7 +212,9 @@ impl View
         match container.context.scene {
             Some(ref s) => {
                 //t.borrow_mut().set_scene(&*s.borrow());
-                t.set_scene(&*s.borrow());
+                let sb = &*s.borrow();
+                menu.add_label(&sb.name);
+                t.set_scene(sb);
             },
             None => {}
         };
