@@ -156,6 +156,8 @@ impl View
         let p = box ui::Property::new(w, property_config);
         let mut t = box ui::Tree::new(w, tree_config);
 
+        let menu = box ui::Action::new(w, ui::action::Position::Top, self.uuid);
+
         let a = box ui::Action::new(w, ui::action::Position::Bottom, self.uuid);
         let command = box ui::Command::new(w);
 
@@ -221,6 +223,7 @@ impl View
         container.property = Some(p);
         container.action = Some(a);
         container.command = Some(command);
+        container.menu = Some(menu);
 
     }
 
