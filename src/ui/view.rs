@@ -214,12 +214,13 @@ impl View
                 //t.borrow_mut().set_scene(&*s.borrow());
                 let sb = &*s.borrow();
                 menu.add_label(&sb.name);
+                menu.add_entry(&sb.name, ui::action::scene_rename, ad.clone());
                 t.set_scene(sb);
             },
             None => {}
         };
 
-
+        menu.add_button("+", ui::action::scene_new, ad.clone());
 
         container.tree = Some(t);
         container.property = Some(p);

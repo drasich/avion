@@ -8,6 +8,7 @@ use std::cell::{RefCell, BorrowState};
 use std::collections::HashMap;
 use std::any::{Any};//, AnyRefExt};
 use std::path::Path;
+use std::fs;
 use std::fs::File;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::{Read,Write};
@@ -1378,14 +1379,49 @@ pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)
 
 pub fn scene_new(container : &mut WidgetContainer, view_id : Uuid)
 {
-    let mut s = container.factory.create_scene("new scene");
+    let suffix = ".scene";
+    let newname = match container.context.scene {
+        Some(ref sc) => {
+            let s = sc.borrow();
+            let old = if s.name.ends_with(suffix) {
+                let i = s.name.len() - suffix.len();
+                let (yep,_) = s.name.split_at(i);
+                yep
+            }
+            else {
+                s.name.as_ref()
+            };    
+            String::from(old)
+        },
+        None => String::from("scene/new.scene")
+    };
 
-    //if let Some(v) = container.find_view(view_id) {
-    //}
+    let mut i = 0i32;
+    let mut ss = newname.clone();
+    loop {
+        ss.push_str(format!("{:03}",i).as_str());
+        ss.push_str(suffix);
+
+        if let Err(_) = fs::metadata(ss.as_str()) {
+            break;
+        }
+
+        i = i+1;
+        ss = newname.clone();
+    }
+
+    let s = container.factory.create_scene(ss.as_ref());
+
+    //TODO : also clean property
+    if let Some(ref mut t) = container.tree {
+        t.set_scene(&s);
+    }
+
+    if let Some(ref mut p) = container.property {
+        p.set_nothing();
+    }
 
     let rs =  Rc::new(RefCell::new(s));
-
-    container.context.scene = Some(rs);
-    //container.handle_change(op, view_id);
+    container.context.set_scene(rs);
 }
 

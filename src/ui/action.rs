@@ -22,6 +22,7 @@ use uuid;
 #[repr(C)]
 pub struct JkAction;
 pub struct JkLabel;
+pub struct JkEntry;
 
 pub type ButtonCallback = extern fn(
     data : *const c_void);
@@ -38,6 +39,12 @@ extern {
     fn action_label_new(
         action : *const JkAction,
         name : *const c_char) -> *const JkLabel;
+
+    fn action_entry_new(
+        action : *const JkAction,
+        name : *const c_char,
+        data : *const c_void,
+        button_callback : ButtonCallback ) -> *const JkEntry;
 
     fn jk_label_set(
         label : *const JkLabel,
@@ -107,15 +114,26 @@ impl Action
         }
     }
 
-    pub fn add_label(&self, name : &str)
+    pub fn add_label(&self, name : &str) -> *const JkLabel
     {
         unsafe {
             action_label_new(
                 self.jk_action,
-                CString::new(name.as_bytes()).unwrap().as_ptr());
+                CString::new(name.as_bytes()).unwrap().as_ptr())
         }
     }
 
+    pub fn add_entry(&self, name : &str, cb : ButtonCallback, data : ui::WidgetCbData)
+        -> *const JkEntry
+    {
+        unsafe {
+            action_entry_new(
+                self.jk_action,
+                CString::new(name.as_bytes()).unwrap().as_ptr(),
+                mem::transmute(box data),
+                cb)
+        }
+    }
 
     pub fn set_visible(&mut self, b : bool)
     {
@@ -150,6 +168,16 @@ pub extern fn scene_new(data : *const c_void)
     ui::scene_new(container, action.view_id);
 }
 
+pub extern fn scene_rename(data : *const c_void)
+{
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let action : &Action = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    println!("todo");
+    //TODO
+    //ui::scene_new(container, action.view_id);
+}
 
 pub extern fn play_scene(data : *const c_void)
 {

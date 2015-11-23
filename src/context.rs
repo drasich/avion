@@ -31,6 +31,12 @@ impl Context
         }
     }
 
+    pub fn set_scene(&mut self, scene : Rc<RefCell<scene::Scene>>)
+    {
+        self.scene = Some(scene);
+        self.selected.clear();
+    }
+
     pub fn save_positions(&mut self)
     {
         self.saved_positions.clear();

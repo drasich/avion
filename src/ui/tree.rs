@@ -59,6 +59,7 @@ extern {
     fn tree_deselect_all(item : *const JkTree);
     fn tree_update(tree : *const JkTree);
     fn tree_show(obj : *const JkTree, b : bool);
+    fn tree_clear(obj : *const JkTree);
 }
 
 pub struct Tree
@@ -97,7 +98,7 @@ impl Tree
 
     pub fn set_scene(&mut self, scene : &scene::Scene)
     {
-        println!("TODO clear items, first");
+        unsafe {tree_clear(self.jk_tree);}
         for o in scene.objects.iter() {
             self.add_object(o.clone());
         }
