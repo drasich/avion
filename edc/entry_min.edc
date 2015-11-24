@@ -1,0 +1,23 @@
+collections {
+   group { name: "main";
+      parts {
+         part { name: "entry";
+            type: SWALLOW;
+            description { state: "default" 0.0;
+               //rel1.relative: 0.0 0.0;
+               //rel2.relative: 1 1;
+               min : 100  0;
+            }
+            /*
+         part { name: "button";
+            type: SWALLOW;
+            description { state: "default" 0.0;
+               rel1.to : "entry";
+               rel1.relative: 1.0 0.0;
+               //rel2.relative: 1 1;
+            }
+         }
+           */
+      }
+   }
+}
