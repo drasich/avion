@@ -37,6 +37,11 @@ impl Context
         self.selected.clear();
     }
 
+    pub fn get_scene(&self) -> Option<Rc<RefCell<scene::Scene>>>
+    {
+        self.scene.clone()
+    }
+
     pub fn save_positions(&mut self)
     {
         self.saved_positions.clear();

@@ -80,6 +80,8 @@ mod model;
 mod component;
 use component::manager;
 
+mod util;
+
 
 static mut sTest : i32 = 5;
 

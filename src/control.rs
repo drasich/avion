@@ -21,6 +21,7 @@ use resource;
 use property::PropertyGet;
 use factory;
 use component;
+use util;
 
 pub enum State
 {
@@ -224,7 +225,7 @@ impl Control
         };
 
         if context.selected.len() > 0 {
-            let center = objects_center(&context.selected);
+            let center = util::objects_center(&context.selected);
             camera.set_center(&center);
         }
 
@@ -464,19 +465,6 @@ fn join_string(path : &Vec<String>) -> String
     }
 
     s
-}
-
-fn objects_center(objects : &LinkedList<Arc<RwLock<object::Object>>>) -> vec::Vec3
-{
-    let mut v = vec::Vec3::zero();
-    for o in objects.iter()
-    {
-        v = v + o.read().unwrap().position;
-    }
-
-    v = v / objects.len() as f64;
-
-    v
 }
 
 pub trait WidgetUpdate {

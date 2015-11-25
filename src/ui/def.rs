@@ -6,12 +6,14 @@ use std::ptr;
 use std::rc::Rc;
 use std::cell::{RefCell, BorrowState};
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::any::{Any};//, AnyRefExt};
 use std::path::Path;
 use std::fs;
 use std::fs::File;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::{Read,Write};
+use std::ffi::CString;
 
 use uuid::Uuid;
 
@@ -150,6 +152,11 @@ extern {
         w : *mut c_int,
         h : *mut c_int);
 
+    fn elm_object_part_text_set(
+        obj : *const Evas_Object,
+        part : *const c_char,
+        text : *const c_char);
+
     //fn window_object_get(
     //    obj : *const Window) -> *const Evas_Object;
 
@@ -167,6 +174,13 @@ fn object_geometry_get(obj : *const Evas_Object) -> (i32, i32, i32, i32)
     println!("caca : {:?}, {}, {}, {}, {}", obj, x, y, w, h);
 
     (x, y, w, h)
+}
+
+fn elm_object_text_set(
+        obj : *const Evas_Object,
+        text : *const c_char)
+{
+    unsafe { elm_object_part_text_set(obj, ptr::null(), text); }
 }
 
 pub struct Master
@@ -1412,13 +1426,20 @@ pub fn scene_new(container : &mut WidgetContainer, view_id : Uuid)
 
     let s = container.factory.create_scene(ss.as_ref());
 
-    //TODO : also clean property
     if let Some(ref mut t) = container.tree {
         t.set_scene(&s);
     }
 
     if let Some(ref mut p) = container.property {
         p.set_nothing();
+    }
+
+    if let Some(ref mut m) = container.menu {
+        if let Entry::Occupied(en) = m.entries.entry(String::from("scene")) {
+                elm_object_text_set(
+                    unsafe {mem::transmute(*en.get())},
+                    CString::new(ss.as_bytes()).unwrap().as_ptr());
+        }
     }
 
     let rs =  Rc::new(RefCell::new(s));

@@ -29,14 +29,12 @@ use dragger;
 use camera;
 use operation;
 use intersection;
-
 use control;
 use control::Control;
 use control::WidgetUpdate;
-
 use scene;
-
 use component;
+use util;
 
 /*
 #[link(name = "cypher")]
@@ -556,6 +554,13 @@ pub extern fn key_down(
                     let b = a.visible();
                     a.set_visible(!b);
                 }
+                return;
+            },
+            "f" => {
+                let center = util::objects_center(&container.context.selected);
+                let mut cam = view.camera.borrow_mut();
+                let pos = center + cam.object.read().unwrap().orientation.rotate_vec3(&vec::Vec3::new(0f64,0f64,100f64));
+                cam.set_position(pos);
                 return;
             },
             _ => {

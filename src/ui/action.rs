@@ -40,15 +40,15 @@ extern {
         action : *const JkAction,
         name : *const c_char) -> *const JkLabel;
 
+    fn jk_label_set(
+        label : *const JkLabel,
+        name : *const c_char);
+
     fn action_entry_new(
         action : *const JkAction,
         name : *const c_char,
         data : *const c_void,
         button_callback : ButtonCallback ) -> *const JkEntry;
-
-    fn jk_label_set(
-        label : *const JkLabel,
-        name : *const c_char);
 
     fn action_show(
         action : *const JkAction,
@@ -61,7 +61,7 @@ pub struct Action
     jk_action : *const JkAction,
     visible : bool,
     view_id : uuid::Uuid,
-    entries : HashMap<String, *const JkEntry>
+    pub entries : HashMap<String, *const JkEntry>
 }
 
 pub enum Position
