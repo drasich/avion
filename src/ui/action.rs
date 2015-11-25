@@ -60,7 +60,8 @@ pub struct Action
     name : String,
     jk_action : *const JkAction,
     visible : bool,
-    view_id : uuid::Uuid
+    view_id : uuid::Uuid,
+    entries : HashMap<String, *const JkEntry>
 }
 
 pub enum Position
@@ -84,7 +85,8 @@ impl Action
                 Position::Top => unsafe {window_action_new_up(window)}
             },
             visible : true,
-            view_id : view_id
+            view_id : view_id,
+            entries : HashMap::new()
         }
     }
 
@@ -123,16 +125,18 @@ impl Action
         }
     }
 
-    pub fn add_entry(&self, name : &str, cb : ButtonCallback, data : ui::WidgetCbData)
+    pub fn add_entry(&mut self, key : String, name : &str, cb : ButtonCallback, data : ui::WidgetCbData)
         -> *const JkEntry
     {
-        unsafe {
+        let en = unsafe {
             action_entry_new(
                 self.jk_action,
                 CString::new(name.as_bytes()).unwrap().as_ptr(),
                 mem::transmute(box data),
                 cb)
-        }
+        };
+        self.entries.insert(key, en);
+        en
     }
 
     pub fn set_visible(&mut self, b : bool)

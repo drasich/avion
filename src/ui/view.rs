@@ -156,7 +156,7 @@ impl View
         let p = box ui::Property::new(w, property_config);
         let mut t = box ui::Tree::new(w, tree_config);
 
-        let menu = box ui::Action::new(w, ui::action::Position::Top, self.uuid);
+        let mut menu = box ui::Action::new(w, ui::action::Position::Top, self.uuid);
 
         let a = box ui::Action::new(w, ui::action::Position::Bottom, self.uuid);
         let command = box ui::Command::new(w);
@@ -209,17 +209,20 @@ impl View
             }
         }
 
-        match container.context.scene {
+        let name = match container.context.scene {
             Some(ref s) => {
                 //t.borrow_mut().set_scene(&*s.borrow());
                 let sb = &*s.borrow();
-                menu.add_label(&sb.name);
-                menu.add_entry(&sb.name, ui::action::scene_rename, ad.clone());
+                //menu.add_label(&sb.name);
                 t.set_scene(sb);
+                sb.name.clone()
             },
-            None => {}
+            None => {
+                String::from("none")
+            }
         };
 
+        menu.add_entry(String::from("scene"),&name, ui::action::scene_rename, ad.clone());
         menu.add_button("+", ui::action::scene_new, ad.clone());
 
         container.tree = Some(t);
