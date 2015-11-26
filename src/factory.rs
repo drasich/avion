@@ -56,6 +56,7 @@ impl Factory {
             components : Vec::new(),
             comp_data : Vec::new(),
             comp_string : Vec::new(),
+            comp_lua : Vec::new(),
         }
     }
 
@@ -100,12 +101,13 @@ impl Factory {
             orientation : o.orientation.clone(),
             //angles : vec::Vec3::zero(),
             scale : o.scale.clone(),
-            children : children_copy, //LinkedList::new(), //TODO clone children
+            children : children_copy,
             parent : o.parent.clone(),
             //transform : box transform::Transform::new()
-            components : o.components.clone(), //Vec::new(),
-            comp_data : o.comp_data.clone(),// Vec::new(),
+            components : o.components.clone(),
+            comp_data : o.comp_data.clone(),
             comp_string : o.comp_string.clone(),
+            comp_lua : o.comp_string.clone(),
         }
     }
 

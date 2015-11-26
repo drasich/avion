@@ -49,6 +49,7 @@ pub struct Object
     pub components : Vec<Box<Components>>,
     pub comp_data : Vec<Box<CompData>>,
     pub comp_string : Vec<String>,
+    pub comp_lua : Vec<String>,
 }
 
 //Real object that the user use (like object state)
@@ -107,7 +108,8 @@ impl Clone for Object {
             //transform : box transform::Transform::new()
             components : components,
             comp_data : comp_data,
-            comp_string : self.comp_string.clone()
+            comp_string : self.comp_string.clone(),
+            comp_lua : self.comp_lua.clone()
         }
     }
 }
@@ -215,10 +217,8 @@ impl Object
         Some(render.material.clone())
     }
 
-    fn luastuff(&mut self)
+    fn luastuff(&mut self, dt : f64)
     {
-        {
-
         let mut lua = lua::State::new();
         lua.openlibs();
         //lua.registerlib(Some("object"),[("print_ob", print_ob)]);
@@ -304,8 +304,25 @@ impl Object
 
         create_vec3_metatable(&mut lua);
 
-        // Load the file containing the script we are going to run
-        let path = Path::new("chris.lua");
+        let mut i = 0;
+        while i < self.comp_lua.len() {
+            let name = self.comp_lua[i].clone();
+            self.update_lua_script(dt, &mut lua, name.as_str());
+            i += 1;
+        }
+
+        /*
+        let ll = self.comp_lua.clone();
+        for s in &ll {
+            self.update_lua_script(dt, &mut lua, s);
+        }
+        */
+
+    }
+
+    fn update_lua_script(&mut self, dt : f64, lua : &mut lua::State, lua_file : &str)
+    {
+        let path = Path::new(lua_file);
         match lua.loadfile(Some(&path)) {
             Ok(_) => (),
             Err(_) => {
@@ -343,13 +360,12 @@ impl Object
             }
         }
 
-        }
 
     }
 
     pub fn update(&mut self, dt : f64)
     {
-        self.luastuff();
+        self.luastuff(dt);
 
         let len = self.components.len();
 
@@ -488,6 +504,8 @@ impl Decodable for Object {
           //components: try!(decoder.read_struct_field("components", 0, |decoder| Decodable::decode(decoder))),
           comp_data: try!(decoder.read_struct_field("comp_data", 0, |decoder| Decodable::decode(decoder))),
           comp_string: try!(decoder.read_struct_field("components", 0, |decoder| Decodable::decode(decoder))),
+          comp_lua: try!(decoder.read_struct_field("comp_lua", 0, |decoder| Decodable::decode(decoder))),
+          //comp_lua : Vec::new()
         })
     })
   }
@@ -509,6 +527,7 @@ impl Encodable  for Object {
           //try!(encoder.emit_struct_field( "components", 7usize, |encoder| self.components.encode(encoder)));
           try!(encoder.emit_struct_field( "components", 7usize, |encoder| self.comp_string.encode(encoder)));
           try!(encoder.emit_struct_field( "comp_data", 8usize, |encoder| self.comp_data.encode(encoder)));
+          try!(encoder.emit_struct_field( "comp_lua", 9usize, |encoder| self.comp_lua.encode(encoder)));
           Ok(())
       })
   }
