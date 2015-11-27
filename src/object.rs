@@ -304,11 +304,9 @@ impl Object
 
         create_vec3_metatable(&mut lua);
 
-        let mut i = 0;
-        while i < self.comp_lua.len() {
+        for i in 0..self.comp_lua.len() {
             let name = self.comp_lua[i].clone();
             self.update_lua_script(dt, &mut lua, name.as_str());
-            i += 1;
         }
 
         /*

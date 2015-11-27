@@ -1103,8 +1103,11 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         }
 
         if depth > 0 {
-            for i in self.iter() {
-                i.create_widget(property, field, depth -1);
+            for (n,i) in self.iter().enumerate() {
+                let mut nf = String::from(field);
+                nf.push_str("/");
+                nf.push_str(n.to_string().as_str());
+                i.create_widget(property, nf.as_str(), depth -1);
             }
         }
     }
@@ -1296,7 +1299,7 @@ property_show_impl!(transform::Transform,[position,orientation]);
 //property_show_impl!(mesh_render::MeshRender,[mesh,material]);
 property_show_impl!(object::Object,
                      //[name,position,orientation,scale]);
-                     [name,position,orientation,scale,comp_data]);
+                     [name,position,orientation,scale,comp_data,comp_lua]);
 
 property_show_impl!(component::mesh_render::MeshRender,[mesh,material]);
 property_show_impl!(component::player::Player,[speed]);

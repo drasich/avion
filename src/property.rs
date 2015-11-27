@@ -559,7 +559,7 @@ property_set_impl!(vec::Vec3,[x,y,z]);
 property_set_impl!(vec::Quat,[x,y,z,w]);
 //property_set_impl!(mesh_render::MeshRender,[mesh,material]);
 //property_set_impl!(armature::MeshRender,[mesh,material]);
-property_set_impl!(object::Object,[name,position,orientation,scale,comp_data]);
+property_set_impl!(object::Object,[name,position,orientation,scale,comp_data,comp_lua]);
 //property_set_impl!(object::Object,[name,position,orientation,scale]);
 
 macro_rules! property_get_impl(
