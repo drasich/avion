@@ -133,7 +133,12 @@ impl Transform
 
 impl ui::PropertyShow for Orientation {
 
-    fn create_widget(&self, property : &mut ui::Property, field : &str, depth : i32)
+    fn create_widget(
+        &self,
+        property : &mut ui::Property,
+        field : &str,
+        depth : i32,
+        has_container : bool ) -> Option<*const ui::PropertyValue>
     {
         println!("...................DEPTH, field  : {}, {}", depth, field);
         if depth == 0 {
@@ -149,13 +154,15 @@ impl ui::PropertyShow for Orientation {
         if depth == 1 {
             match *self {
                 Orientation::AngleXYZ(ref v) =>  {
-                    v.create_widget(property, field, depth);
+                    return v.create_widget(property, field, depth, has_container);
                 },
                 Orientation::Quat(ref q) => {
-                    q.create_widget(property, field, depth)
+                    return q.create_widget(property, field, depth, has_container)
                 }
             };
         }
+
+        None
     }
 
     fn update_widget(&self, pv : *const ui::property::PropertyValue) {

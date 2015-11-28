@@ -268,7 +268,7 @@ impl Property
         }
         let mut v = Vec::new();
         v.push("object".to_string());
-        o.create_widget(self, "object", 1);
+        o.create_widget(self, "object", 1, false);
 
         self.add_tools();
     }
@@ -768,7 +768,7 @@ pub extern fn expand(
         Some(ppp) => {
             //p.create_entries(&*ppp, vs.clone());
             println!("I found and create {:?} ", vs);
-            ppp.create_widget(p, path , 1);
+            ppp.create_widget(p, path , 1, false);
             p.config.expand.insert(path.to_string());
         },
         None => {
@@ -889,8 +889,8 @@ pub trait PropertyShow
         &self,
         property : &mut Property,
         field : &str,
-        depth : i32
-        );
+        depth : i32,
+        has_container : bool ) -> Option<*const PropertyValue>;
 
     fn update_widget(&self, pv : *const PropertyValue) {
         println!("update_widget not implemented for this type");
@@ -917,7 +917,12 @@ impl PropertyShow for vec::Quat {
 
 impl PropertyShow for f64 {
 
-    fn create_widget(&self, property : &mut Property, field : &str, depth : i32)
+    fn create_widget(
+        &self,
+        property : &mut Property,
+        field : &str,
+        depth : i32,
+        has_container : bool ) -> Option<*const PropertyValue>
     {
         println!("adding field : {}", field);
         let f = CString::new(field.as_bytes()).unwrap();
@@ -929,6 +934,8 @@ impl PropertyShow for f64 {
             if pv != ptr::null() {
                 property.pv.insert(field.to_string(), pv);
             }
+
+            Some(pv)
         }
     }
 
@@ -943,7 +950,12 @@ impl PropertyShow for f64 {
 
 impl PropertyShow for String {
 
-    fn create_widget(&self, property : &mut Property, field : &str, depth : i32)
+    fn create_widget(
+        &self,
+        property : &mut Property,
+        field : &str,
+        depth : i32,
+        has_container : bool ) -> Option<*const PropertyValue>
     {
         println!("adding string field : {}", field);
         let f = CString::new(field.as_bytes()).unwrap();
@@ -957,6 +969,8 @@ impl PropertyShow for String {
             if pv != ptr::null() {
                 property.pv.insert(field.to_string(), pv);
             }
+            
+            Some(pv)
         }
     }
 
@@ -976,9 +990,10 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
         &self,
         property : &mut Property,
         field : &str,
-        depth : i32)
+        depth : i32,
+        has_container : bool ) -> Option<*const PropertyValue>
     {
-        (**self).create_widget(property ,field, depth);
+        (**self).create_widget(property ,field, depth, has_container)
     }
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
@@ -993,7 +1008,8 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
         &self,
         property : &mut Property,
         field : &str,
-        depth : i32)
+        depth : i32,
+        has_container : bool ) -> Option<*const PropertyValue>
     {
         if depth == 0 {
             let f = CString::new(field.as_bytes()).unwrap();
@@ -1015,17 +1031,21 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
                     println!("ADDING : {}", field);
                     property.pv.insert(field.to_string(), pv);
                 }
+
+                return Some(pv);
             }
         }
 
         if depth == 1 {
             match *self {
                 Some(ref s) =>  {
-                    s.create_widget(property, field, depth);
+                    return s.create_widget(property, field, depth, has_container);
                 },
                 None => {}
             };
         }
+
+        None
     }
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
@@ -1057,10 +1077,11 @@ impl<T> PropertyShow for resource::ResTT<T>
         &self,
         property : &mut Property,
         field : &str,
-        depth : i32)
+        depth : i32,
+        has_container : bool ) -> Option<*const PropertyValue>
     {
         if depth < 0 {
-            return;
+            return None;
         }
 
         if depth == 0 && field != ""
@@ -1070,8 +1091,10 @@ impl<T> PropertyShow for resource::ResTT<T>
 
         if depth > 0 {
             let s = field.to_string() + "/name";
-            self.name.create_widget(property, s.as_ref(), depth-1);
+            return self.name.create_widget(property, s.as_ref(), depth-1, has_container);
         }
+
+        None
     }
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
@@ -1089,12 +1112,13 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         &self,
         property : &mut Property,
         field : &str,
-        depth : i32)
+        depth : i32,
+        has_container : bool ) -> Option<*const PropertyValue>
     {
         println!("___ add vec ::: field::::: {}, {}", field, depth);
 
         if depth < 0 {
-            return;
+            return None;
         }
 
         if depth == 0 && field != ""
@@ -1107,9 +1131,11 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                 let mut nf = String::from(field);
                 nf.push_str("/");
                 nf.push_str(n.to_string().as_str());
-                i.create_widget(property, nf.as_str(), depth -1);
+                return i.create_widget(property, nf.as_str(), depth -1, has_container);
             }
         }
+
+        None
     }
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
@@ -1139,7 +1165,8 @@ impl PropertyShow for CompData
         &self,
         property : &mut Property,
         field : &str,
-        depth : i32)
+        depth : i32,
+        has_container : bool ) -> Option<*const PropertyValue>
     {
         let kind : String = self.get_kind_string();
         let kindr : &str = kind.as_ref();
@@ -1164,7 +1191,7 @@ impl PropertyShow for CompData
 
 
         if depth < 0 {
-            return;
+            return None;
         }
 
         if depth == 0 && field != ""
@@ -1177,19 +1204,20 @@ impl PropertyShow for CompData
         {
             println!("--> compdata property show for : {}, {}, {}", field, depth, kind );
 
-        match *self {
-            CompData::Player(ref p) => {
-                p.create_widget(property, field, depth);
-            },
-            CompData::Armature(ref p) => {
-                p.create_widget(property, field, depth);
-            },
-            CompData::MeshRender(ref p) => {
-                p.create_widget(property, field, depth);
-            },
-            _ => {println!("not yet implemented");}
+            match *self {
+                CompData::Player(ref p) => {
+                    return p.create_widget(property, field, depth, has_container);
+                },
+                CompData::Armature(ref p) => {
+                    return p.create_widget(property, field, depth, has_container);
+                },
+                CompData::MeshRender(ref p) => {
+                    return p.create_widget(property, field, depth, has_container);
+                },
+                _ => {println!("not yet implemented"); }
+            }
         }
-    }
+        None
     }
 
     fn update_widget(&self, pv : *const PropertyValue) {
@@ -1242,10 +1270,11 @@ macro_rules! property_show_impl(
                 &self,
                 property : &mut Property,
                 field : &str,
-                depth : i32)
+                depth : i32,
+                has_container : bool ) -> Option<*const PropertyValue>
             {
                 if depth < 0 {
-                    return;
+                    return None;
                 }
 
                 if depth == 0 && field != ""
@@ -1258,9 +1287,11 @@ macro_rules! property_show_impl(
                     let s = field.to_string()
                     + "/"//.to_string()
                     + stringify!($member);//.to_string();
-                    self.$member.create_widget(property, s.as_ref(), depth-1);
+                    self.$member.create_widget(property, s.as_ref(), depth-1, has_container);
                  )+
                 }
+
+                None
             }
 
             /*
