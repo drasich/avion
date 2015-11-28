@@ -155,12 +155,19 @@ impl<T:PropertyWrite> PropertyWrite for Vec<T> {
 
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {
-      //TODO if there are multiple same components, it will set
-      // for all...
-      // TODO uselessly loop through all components... solution: it should
-      // stop when found the property
-      for i in self.iter_mut() {
-          i.test_set_property_hier(name, value);
+      let mut v : Vec<&str> = name.split('/').collect();
+
+      match v.len() {
+          0 => {},
+          1 => {
+              let index = v[0].parse::<usize>().unwrap();
+              self[index].test_set_property(value);
+          },
+          _ => {
+              let yep : String = v[1..].join("/");
+              let index = v[0].parse::<usize>().unwrap();
+              self[index].test_set_property_hier(yep.as_ref(), value);
+          }
       }
   }
 }
@@ -207,7 +214,10 @@ impl PropertyWrite for String
   fn test_set_property(&mut self, value: &Any)
   {
       match value.downcast_ref::<String>() {
-          Some(v) => *self = v.clone(),
+          Some(v) => {
+              println!("!!!!! setting string to : {}", v);
+              *self = v.clone()
+          },
           None => {}
       }
   }
