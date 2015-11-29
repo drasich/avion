@@ -171,6 +171,21 @@ extern {
         value : *const c_char
         ) -> *const PropertyValue;
 
+    fn property_list_single_item_add(
+        ps : *const JkPropertyList,
+        container: *const PropertyValue,
+        name : *const c_char,
+        value : *const c_char,
+        ) -> *const PropertyValue;
+
+    /*
+    fn property_list_vec_item_add(
+        ps : *const JkPropertyList,
+        name : *const c_char,
+        value : *const c_char
+        ) -> *const PropertyValue;
+        */
+
     fn property_list_enum_add(
         ps : *const JkPropertyList,
         name : *const c_char,
@@ -962,10 +977,19 @@ impl PropertyShow for String {
         let v = CString::new(self.as_bytes()).unwrap();
 
         unsafe {
-            let pv = property_list_string_add(
+            let mut pv = property_list_string_add(
                 property.jk_property_list,
                 f.as_ptr(),
                 v.as_ptr());
+
+            if !has_container {
+                pv = property_list_single_item_add(
+                    property.jk_property_list,
+                    pv, 
+                    f.as_ptr(),
+                    v.as_ptr());
+            }
+
             if pv != ptr::null() {
                 property.pv.insert(field.to_string(), pv);
             }
