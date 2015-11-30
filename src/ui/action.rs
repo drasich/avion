@@ -14,6 +14,7 @@ use scene;
 use object;
 use ui::Window;
 use ui::Master;
+use ui::ButtonCallback;
 use ui;
 use control::Control;
 use resource;
@@ -24,8 +25,6 @@ pub struct JkAction;
 pub struct JkLabel;
 pub struct JkEntry;
 
-pub type ButtonCallback = extern fn(
-    data : *const c_void);
 
 #[link(name = "joker")]
 extern {

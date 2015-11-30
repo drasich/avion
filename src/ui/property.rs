@@ -18,7 +18,7 @@ use uuid;
 
 use scene;
 use object;
-use ui::Window;
+use ui::{Window, ButtonCallback};
 use ui;
 use property;
 use operation;
@@ -143,6 +143,11 @@ extern {
         contract : PropertyTreeFunc,
         panel_move : ui::PanelGeomFunc
         );
+
+    pub fn jk_property_list_register_vec_cb(
+        property : *const JkPropertyList,
+        vec_add : ButtonCallback,
+        vec_del : ButtonCallback);
 
     fn property_list_group_add(
         pl : *const JkPropertyList,
@@ -1419,5 +1424,23 @@ pub extern fn panel_move(
     p.config.y = y;
     p.config.w = w;
     p.config.h = h;
+}
+
+
+pub extern fn vec_add(data : *const c_void)
+{
+    println!("TODO vec add");
+    /*
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let action : &Action = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    ui::add_empty(container, action.view_id);
+    */
+}
+
+pub extern fn vec_del(data : *const c_void)
+{
+    println!("TODO vec del");
 }
 

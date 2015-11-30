@@ -204,6 +204,11 @@ impl View
                  ui::property::contract,
                  ui::property::panel_move,
                  );
+
+             ui::property::jk_property_list_register_vec_cb(
+                 p.jk_property_list,
+                 ui::property::vec_add,
+                 ui::property::vec_del);
             }
         }
 

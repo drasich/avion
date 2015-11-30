@@ -60,6 +60,9 @@ pub type PanelGeomFunc = extern fn(
     w : c_int,
     h : c_int);
 
+pub type ButtonCallback = extern fn(
+    data : *const c_void);
+
 /*
         init_cb: extern fn(*mut View),// -> (),
         draw_cb: extern fn(*mut View), // -> (),

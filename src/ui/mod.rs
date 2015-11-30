@@ -8,6 +8,7 @@ pub use self::def::{
     WidgetConfig,
     
     PanelGeomFunc,
+    ButtonCallback,
 
     init_cb,
     exit_cb,
