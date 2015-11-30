@@ -174,8 +174,11 @@ extern {
     fn property_list_single_item_add(
         ps : *const JkPropertyList,
         container: *const PropertyValue,
-        name : *const c_char,
-        value : *const c_char,
+        ) -> *const PropertyValue;
+
+    fn property_list_single_vec_add(
+        ps : *const JkPropertyList,
+        container: *const PropertyValue,
         ) -> *const PropertyValue;
 
     /*
@@ -985,9 +988,7 @@ impl PropertyShow for String {
             if !has_container {
                 pv = property_list_single_item_add(
                     property.jk_property_list,
-                    pv, 
-                    f.as_ptr(),
-                    v.as_ptr());
+                    pv);
             }
 
             if pv != ptr::null() {
@@ -1155,7 +1156,17 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                 let mut nf = String::from(field);
                 nf.push_str("/");
                 nf.push_str(n.to_string().as_str());
-                return i.create_widget(property, nf.as_str(), depth -1, has_container);
+                if let Some(ref mut pv) = i.create_widget(property, nf.as_str(), depth -1, true) {
+                    unsafe {
+                    property_list_single_vec_add(
+                        property.jk_property_list,
+                        *pv);
+                    }
+                }
+
+                //if pv != ptr::null() {
+                    //property.pv.insert(field.to_string(), pv);
+                //}
             }
         }
 
