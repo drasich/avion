@@ -536,7 +536,7 @@ pub extern fn register_change_float(
 }
 
 pub extern fn register_change_enum(
-    property : *const c_void,
+    widget_cb_data : *const c_void,
     name : *const c_char,
     old : *const c_void,
     new : *const c_void,
@@ -564,10 +564,10 @@ pub extern fn register_change_enum(
                 return
             }
         };
-        changed_set(property, name, Some(&sso), &ss, action);
+        changed_set(widget_cb_data, name, Some(&sso), &ss, action);
     }
     else {
-        changed_set(property, name, None, &ss, action);
+        changed_set(widget_cb_data, name, None, &ss, action);
     }
 }
 
@@ -1430,13 +1430,11 @@ pub extern fn panel_move(
 pub extern fn vec_add(data : *const c_void)
 {
     println!("TODO vec add");
-    /*
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
-    let action : &Action = unsafe {mem::transmute(wcb.widget)};
+    let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    ui::add_empty(container, action.view_id);
-    */
+    //ui::add_empty(container, action.view_id);
 }
 
 pub extern fn vec_del(data : *const c_void)
