@@ -148,10 +148,33 @@ pub trait PropertyWrite
           _ => {}
       }
   }
+
+  fn add_item(&mut self, name : &str, index :usize)
+  {
+      let mut v : Vec<&str> = name.split('/').collect();
+
+      match v.len() {
+          0 => {},
+          1 => {
+          },
+          _ => {
+              let yep : String = v[1..].join("/");
+              //TODO
+              //if let Some(ref mut child) = self.get_property_hier(yep) {
+               //   child.add_item(yep.as_ref(), index);
+              //}
+          }
+      }
+  }
+
+  fn del_item(&mut self, name : &str, index :usize)
+  {
+      println!("default del does nothing");
+  }
 }
 
 
-impl<T:PropertyWrite> PropertyWrite for Vec<T> {
+impl<T:PropertyWrite+Default> PropertyWrite for Vec<T> {
 
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {
@@ -167,6 +190,26 @@ impl<T:PropertyWrite> PropertyWrite for Vec<T> {
               let yep : String = v[1..].join("/");
               let index = v[0].parse::<usize>().unwrap();
               self[index].test_set_property_hier(yep.as_ref(), value);
+          }
+      }
+  }
+
+  fn add_item(&mut self, name : &str, index : usize)
+  {
+      let mut v : Vec<&str> = name.split('/').collect();
+      println!("yooooooooo : {}", name);
+
+      match v.len() {
+          0 => {},
+          1 => {},
+          2 => {
+              let index = v[1].parse::<usize>().unwrap();
+              self.insert(index, Default::default());
+          },
+          _ => {
+              let yep : String = v[1..].join("/");
+              let index = v[0].parse::<usize>().unwrap();
+              self[index].add_item(yep.as_ref(), index);
           }
       }
   }

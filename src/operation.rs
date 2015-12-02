@@ -28,6 +28,8 @@ pub enum OperationData
     OldNew(Box<Any>, Box<Any>),
     ToNone(Box<Any>),
     ToSome,
+    VecAdd(usize),
+    VecDel(usize),
     Function(fn(LinkedList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
     List(LinkedList<Box<Any>>, LinkedList<Box<Any>>),
     Vector(Vec<Box<Any>>, Vec<Box<Any>>),
@@ -147,6 +149,18 @@ impl OperationTrait for Operation
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
                     ob.set_property_hier(s.as_ref(), property::WriteValue::None);
+                    ids.push_back(ob.id.clone());
+                }
+                return Change::Objects(s, ids);
+            },
+            OperationData::VecAdd(i) => {
+                println!("to none, apply,  operation set property hier {:?}", self.name);
+                let s = join_string(&self.name);
+                let mut ids = LinkedList::new();
+                for o in self.objects.iter() {
+                    let mut ob = o.write().unwrap();
+                    //TODO chris
+                    ob.add_item(s.as_ref(), i);
                     ids.push_back(ob.id.clone());
                 }
                 return Change::Objects(s, ids);

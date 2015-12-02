@@ -144,11 +144,20 @@ pub trait Encode
 #[derive(Clone, RustcEncodable, RustcDecodable)]
 pub enum CompData
 {
+    None,
     Player(Player),
     Enemy(Enemy),
     Collider(Collider),
     Armature(ArmaturePath),
     MeshRender(MeshRender)
+}
+
+impl Default for CompData
+{
+    fn default() -> CompData 
+    { 
+        CompData::None
+    }
 }
 
 impl CompData

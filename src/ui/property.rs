@@ -146,8 +146,8 @@ extern {
 
     pub fn jk_property_list_register_vec_cb(
         property : *const JkPropertyList,
-        vec_add : ButtonCallback,
-        vec_del : ButtonCallback);
+        vec_add : RegisterChangeFunc,
+        vec_del : RegisterChangeFunc);
 
     fn property_list_group_add(
         pl : *const JkPropertyList,
@@ -1427,17 +1427,38 @@ pub extern fn panel_move(
 }
 
 
-pub extern fn vec_add(data : *const c_void)
+pub extern fn vec_add(
+    data : *const c_void,
+    name : *const c_char,
+    old : *const c_void,
+    new : *const c_void,
+    action : c_int)
 {
-    println!("TODO vec add");
+    let s = unsafe {CStr::from_ptr(name).to_bytes()};
+
+    let path = match str::from_utf8(s) {
+        Ok(pp) => pp,
+        _ => {
+            println!("problem with the path");
+            return;}
+    };
+
+    println!("TODO vec add : {}", path);
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
+    container.request_operation_vec_add(path);
+
     //ui::add_empty(container, action.view_id);
 }
 
-pub extern fn vec_del(data : *const c_void)
+pub extern fn vec_del(
+    data : *const c_void,
+    name : *const c_char,
+    old : *const c_void,
+    new : *const c_void,
+    action : c_int)
 {
     println!("TODO vec del");
 }

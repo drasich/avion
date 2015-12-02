@@ -1040,6 +1040,26 @@ impl WidgetContainer
             )
     }
 
+    pub fn request_operation_vec_add(
+        &mut self,
+        path : &str)
+        -> operation::Change
+    {
+        let v: Vec<&str> = path.split('/').collect();
+
+        let mut vs = Vec::new();
+        for i in v.iter()
+        {
+            vs.push(i.to_string());
+        }
+
+        self.request_operation(
+            vs,
+            operation::OperationData::VecAdd(0)//TODO
+            )
+    }
+
+
     pub fn remove_selected_objects(&mut self) -> operation::Change
     {
         println!("control remove sel");
