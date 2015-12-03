@@ -151,20 +151,7 @@ pub trait PropertyWrite
 
   fn add_item(&mut self, name : &str, index :usize)
   {
-      let mut v : Vec<&str> = name.split('/').collect();
-
-      match v.len() {
-          0 => {},
-          1 => {
-          },
-          _ => {
-              let yep : String = v[1..].join("/");
-              //TODO
-              //if let Some(ref mut child) = self.get_property_hier(yep) {
-               //   child.add_item(yep.as_ref(), index);
-              //}
-          }
-      }
+      println!("default add item does nothing");
   }
 
   fn del_item(&mut self, name : &str, index :usize)
@@ -201,9 +188,8 @@ impl<T:PropertyWrite+Default> PropertyWrite for Vec<T> {
 
       match v.len() {
           0 => {},
-          1 => {},
-          2 => {
-              let index = v[1].parse::<usize>().unwrap();
+          1 => {
+              let index = v[0].parse::<usize>().unwrap();
               self.insert(index, Default::default());
           },
           _ => {
@@ -604,7 +590,33 @@ macro_rules! property_set_impl(
                     }
                 }
             }
+
+            fn add_item(&mut self, name : &str, index :usize)
+            {
+                let mut v : Vec<&str> = name.split('/').collect();
+
+                //TODO remove this?
+                if v[0] == "object" {
+                    v = v[1..].to_vec();
+                }
+
+                match v.len() {
+                    0 => {},
+                    1 => {
+                    },
+                    _ => {
+                        let yep : String = v[1..].join("/");
+                        match v[0] {
+                            $(
+                                stringify!($member) => self.$member.add_item(yep.as_ref(), index),
+                                )+
+                                _ => println!(">>>> 1 , no such member, add_item : {}, {}", v[0], name)
+                        }
+                    }
+                }
+            }
         }
+
 )
 );
 

@@ -1448,8 +1448,8 @@ pub extern fn vec_add(
     let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    container.request_operation_vec_add(path);
-
+    let change = container.request_operation_vec_add(path);
+    container.handle_change(&change, p.id);
     //ui::add_empty(container, action.view_id);
 }
 

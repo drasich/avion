@@ -154,7 +154,7 @@ impl OperationTrait for Operation
                 return Change::Objects(s, ids);
             },
             OperationData::VecAdd(i) => {
-                println!("to none, apply,  operation set property hier {:?}", self.name);
+                println!("vec add operation {:?}", self.name);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
