@@ -159,6 +159,11 @@ extern {
         name : *const c_char
         ) -> *const PropertyValue;
 
+    fn property_list_vec_add(
+        pl : *const JkPropertyList,
+        name : *const c_char
+        ) -> *const PropertyValue;
+
     fn property_list_nodes_remove(
         pl : *const JkPropertyList,
         name : *const c_char
@@ -404,6 +409,28 @@ impl Property
             }
         }
     }
+
+    pub fn add_vec(&mut self, ps : &PropertyShow, name : &str) {
+        println!("____added vec : {}", name);
+        let f = CString::new(name.as_bytes()).unwrap();
+        let pv = unsafe {
+            property_list_vec_add(
+                self.jk_property_list,
+                f.as_ptr()
+                )
+        };
+
+        if pv != ptr::null() {
+            self.pv.insert(name.to_string(), pv);
+        }
+
+        if self.config.expand.contains(name) {
+            unsafe {
+                property_expand(pv);
+            }
+        }
+    }
+
 
     pub fn add_enum(
         &mut self,
