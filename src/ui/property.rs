@@ -192,6 +192,10 @@ extern {
         container: *const PropertyValue,
         ) -> *const PropertyValue;
 
+    fn property_list_vec_update(
+        pv : *const PropertyValue,
+        len : c_int);
+
     /*
     fn property_list_vec_item_add(
         ps : *const JkPropertyList,
@@ -1207,6 +1211,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
             if self.is_empty() {
                 //add "no item" item
             }
+        println!("create widget VECCCCCCCCCCCCCCCCCCCCCCCC++++++++++++++");
             for (n,i) in self.iter().enumerate() {
                 let mut nf = String::from(field);
                 nf.push_str("/");
@@ -1230,20 +1235,26 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
-        for i in self.iter() {
-            let r = i.get_property(field);
-            if r.is_some() {
-                println!("$$$$$$$$$$$$$$$ Vec return some : {}", field);
-                return r;
+        match field.parse::<usize>() {
+            Ok(index) => {
+                if index > self.len() -1 {
+                    //println!("5555555555555555555get property of vec :: index is too big {}, {}", index, self.len());
+                    None
+                }
+                else {
+                    Some(&self[index] as &PropertyShow)
+                }
+            }
+            _ => {
+                //println!("$$$$$$$$$$$$$$$ Vec return none for field {}", field);
+                None
             }
         }
-
-        println!("$$$$$$$$$$$$$$$ Vec return none for field {}", field);
-        None
     }
 
     fn update_widget(&self, pv : *const PropertyValue) {
         println!("update widget VECCCCCCCCCCCCCCCCCCCCCCCC");
+        unsafe { property_list_vec_update(pv, self.len() as c_int); }
         unsafe { property_expand(pv); }
         /*
         for i in self.iter() {
