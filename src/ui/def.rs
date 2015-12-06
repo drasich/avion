@@ -1053,10 +1053,13 @@ impl WidgetContainer
             vs.push(i.to_string());
         }
 
-        self.request_operation(
-            vs,
-            operation::OperationData::VecAdd(0)//TODO
-            )
+        match v[v.len()-1].parse::<usize>() {
+            Ok(index) => self.request_operation(
+                vs,
+                operation::OperationData::VecAdd(index)
+                ),
+                _ => operation::Change::None
+        }
     }
 
     pub fn request_operation_vec_del(
@@ -1084,10 +1087,13 @@ impl WidgetContainer
             return operation::Change::None;
         };
 
-        self.request_operation(
-            vs,
-            operation::OperationData::VecDel(0, prop)//TODO index
-            )
+        match v[v.len()-1].parse::<usize>() {
+            Ok(index) => self.request_operation(
+                vs,
+                operation::OperationData::VecDel(index, prop)//TODO index
+                ),
+                _ => operation::Change::None
+        }
     }
 
 
