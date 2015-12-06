@@ -149,7 +149,7 @@ pub trait PropertyWrite
       }
   }
 
-  fn add_item(&mut self, name : &str, index :usize)
+  fn add_item(&mut self, name : &str, index :usize, value : &Any)
   {
       println!("default add item does nothing");
   }
@@ -181,7 +181,7 @@ impl<T:PropertyWrite+Default> PropertyWrite for Vec<T> {
       }
   }
 
-  fn add_item(&mut self, name : &str, index : usize)
+  fn add_item(&mut self, name : &str, index : usize, value : &Any)
   {
       let mut v : Vec<&str> = name.split('/').collect();
       println!("yooooooooo : {}", name);
@@ -191,11 +191,12 @@ impl<T:PropertyWrite+Default> PropertyWrite for Vec<T> {
           1 => {
               let index = v[0].parse::<usize>().unwrap();
               self.insert(index, Default::default());
+              self[index].test_set_property(value);
           },
           _ => {
               let yep : String = v[1..].join("/");
               let index = v[0].parse::<usize>().unwrap();
-              self[index].add_item(yep.as_ref(), index);
+              self[index].add_item(yep.as_ref(), index, value);
           }
       }
   }
@@ -220,18 +221,23 @@ impl<T:PropertyWrite+Default> PropertyWrite for Vec<T> {
   }
 }
 
-impl<T:PropertyGet> PropertyGet for Vec<T> {
+impl<T:PropertyGet+PropertyRead> PropertyGet for Vec<T> {
 
   fn get_property_hier(&self, name : &str) -> Option<Box<Any>>
   {
-      for i in self.iter() {
-          let r = i.get_property_hier(name);
-          if r.is_some() {
-              return r;
+      let mut v : Vec<&str> = name.split('/').collect();
+      match v.len() {
+          0 => {None},
+          1 => {
+              let index = v[0].parse::<usize>().unwrap();
+              self[index].get_property()
+          },
+          _ => {
+              let yep : String = v[1..].join("/");
+              let index = v[0].parse::<usize>().unwrap();
+              self[index].get_property_hier(yep.as_ref())
           }
       }
-
-      None
   }
 }
 
@@ -610,7 +616,7 @@ macro_rules! property_set_impl(
                 }
             }
 
-            fn add_item(&mut self, name : &str, index :usize)
+            fn add_item(&mut self, name : &str, index :usize, value : &Any)
             {
                 let mut v : Vec<&str> = name.split('/').collect();
                 println!("yooooooooo frommacro : {}", name);
@@ -628,7 +634,7 @@ macro_rules! property_set_impl(
                         let yep : String = v[1..].join("/");
                         match v[0] {
                             $(
-                                stringify!($member) => self.$member.add_item(yep.as_ref(), index),
+                                stringify!($member) => self.$member.add_item(yep.as_ref(), index, value),
                                 )+
                                 _ => println!(">>>> 1 , no such member, add_item : {}, {}", v[0], name)
                         }
@@ -705,7 +711,7 @@ macro_rules! property_get_impl(
                                 stringify!($member) => self.$member.get_property_hier(yep.as_ref()),
                                 )+
                                 _ => {
-                                    println!(">>>> 1 , no such member,hier : {}, {}", v[0], name);
+                                    println!("GET >>>> 1 , no such member,hier : {}, {}", v[0], name);
                                     None
                                 }
                         }
@@ -722,5 +728,5 @@ property_get_impl!(resource::ResTT<mesh::Mesh>,[name]);
 property_get_impl!(resource::ResTT<material::Material>,[name]);
 //property_get_impl!(mesh_render::MeshRender,[mesh,material]);
 //property_get_impl!(object::Object,[name,position,orientation,scale]);
-property_get_impl!(object::Object,[name,position,orientation,scale,comp_data]);
+property_get_impl!(object::Object,[name,position,orientation,scale,comp_data,comp_lua]);
 

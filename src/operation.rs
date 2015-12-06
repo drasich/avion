@@ -159,7 +159,7 @@ impl OperationTrait for Operation
                 let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
-                    ob.add_item(s.as_ref(), i);
+                    ob.add_item(s.as_ref(), i, &String::from("empty"));
                     ids.push_back(ob.id.clone());
                 }
                 return Change::Objects(s, ids);
@@ -294,9 +294,7 @@ impl OperationTrait for Operation
                 let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
                     let mut ob = o.write().unwrap();
-                    //TODO chris
-                    println!("yeeeeeeeeeeeee call add_item : {}", ob.name);
-                    ob.add_item(s.as_ref(), i);
+                    ob.add_item(s.as_ref(), i, &**value);
                     ids.push_back(ob.id.clone());
                 }
                 return Change::Objects(s, ids);

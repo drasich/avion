@@ -1059,10 +1059,9 @@ impl WidgetContainer
             )
     }
 
-    pub fn request_operation_vec_del<T : Any+PartialEq>(
+    pub fn request_operation_vec_del(
         &mut self,
-        path : &str,
-        old : Box<T>
+        path : &str
         )
         -> operation::Change
     {
@@ -1074,9 +1073,20 @@ impl WidgetContainer
             vs.push(i.to_string());
         }
 
+        let  prop = if let Some(o) = self.get_selected_object(){
+            let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path);
+            match p {
+                Some(pp) => pp,
+                None => return operation::Change::None
+            }
+        }
+        else {
+            return operation::Change::None;
+        };
+
         self.request_operation(
             vs,
-            operation::OperationData::VecDel(0, old)//TODO
+            operation::OperationData::VecDel(0, prop)//TODO index
             )
     }
 

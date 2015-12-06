@@ -609,7 +609,7 @@ pub extern fn register_change_option(
 
     //println!("the string is {}", ss);
     if old == ptr::null() {
-        println!("old is null, return");
+        println!("option : old is null, return");
         return;
     }
 
@@ -1499,27 +1499,7 @@ pub extern fn vec_del(
     let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    let sso = {
-        if old == ptr::null() {
-            println!("old is null, return");
-            String::from("dance")
-        }
-        else {
-            let oldchar = old as *const i8;
-            let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
-            match str::from_utf8(so) {
-                Ok(ssso) => ssso.to_string(),
-                _ => {
-                    println!("error");
-                    return
-                }
-            }
-        }
-    };
-
-    //TODO only work with string
-
-    let change = container.request_operation_vec_del(path, box sso);
+    let change = container.request_operation_vec_del(path);
     container.handle_change(&change, p.id);
     //ui::add_empty(container, action.view_id);
 }
