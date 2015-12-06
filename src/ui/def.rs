@@ -1059,6 +1059,28 @@ impl WidgetContainer
             )
     }
 
+    pub fn request_operation_vec_del<T : Any+PartialEq>(
+        &mut self,
+        path : &str,
+        old : Box<T>
+        )
+        -> operation::Change
+    {
+        let v: Vec<&str> = path.split('/').collect();
+
+        let mut vs = Vec::new();
+        for i in v.iter()
+        {
+            vs.push(i.to_string());
+        }
+
+        self.request_operation(
+            vs,
+            operation::OperationData::VecDel(0, old)//TODO
+            )
+    }
+
+
 
     pub fn remove_selected_objects(&mut self) -> operation::Change
     {

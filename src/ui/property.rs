@@ -326,13 +326,18 @@ impl Property
 
     pub fn update_object_property(&self, object : &PropertyShow, prop : &str)
     {
-        for (f,pv) in self.pv.iter() {
-            let starts_with_prop = {
-                let fstr : &str = f.as_ref();
-                fstr.starts_with(prop)
-            };
+        // update_widget might add/remove/update self.pv so we have to copy it
+        // and check
+        let copy = self.pv.clone();
 
-            if starts_with_prop {
+        for (f,pv) in copy.iter() {
+            match self.pv.get(f) {
+                Some(p) => if *p != *pv {
+                    continue
+                },
+                None => continue
+            }
+            if f.starts_with(prop) {
                 let yep = make_vec_from_string(f)[1..].to_vec();
                 match find_property_show(object, yep.clone()) {
                     Some(ppp) => {
@@ -350,7 +355,16 @@ impl Property
             println!("UPDATEOBJECt contains property : Val : {}", f);
         }
 
-        for (f,pv) in self.pv.iter() {
+        // update_widget might add/remove/update self.pv so we have to copy it
+        // and check
+        let copy = self.pv.clone();
+        for (f,pv) in copy.iter() {
+            match self.pv.get(f) {
+                Some(p) => if *p != *pv {
+                    continue
+                },
+                None => continue
+            }
             let fstr : &str = f.as_ref();
             //if f.as_ref() as &str == but {
             if fstr == but {
@@ -379,6 +393,10 @@ impl Property
                 f.as_ptr()
                 )
         };
+
+        if pv != ptr::null() {
+            self.pv.insert(name.to_string(), pv);
+        }
 
         if self.config.expand.contains(name) {
             unsafe {
@@ -1193,9 +1211,14 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
     }
 
     fn update_widget(&self, pv : *const PropertyValue) {
+        println!("update widget VECCCCCCCCCCCCCCCCCCCCCCCC");
+        unsafe { property_expand(pv); }
+        /*
         for i in self.iter() {
             i.update_widget(pv);
         }
+        */
+
     }
 }
 
@@ -1461,5 +1484,43 @@ pub extern fn vec_del(
     action : c_int)
 {
     println!("TODO vec del");
+
+    let s = unsafe {CStr::from_ptr(name).to_bytes()};
+
+    let path = match str::from_utf8(s) {
+        Ok(pp) => pp,
+        _ => {
+            println!("problem with the path");
+            return;}
+    };
+
+    println!("TODO vec del : {}", path);
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    let sso = {
+        if old == ptr::null() {
+            println!("old is null, return");
+            String::from("dance")
+        }
+        else {
+            let oldchar = old as *const i8;
+            let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
+            match str::from_utf8(so) {
+                Ok(ssso) => ssso.to_string(),
+                _ => {
+                    println!("error");
+                    return
+                }
+            }
+        }
+    };
+
+    //TODO only work with string
+
+    let change = container.request_operation_vec_del(path, box sso);
+    container.handle_change(&change, p.id);
+    //ui::add_empty(container, action.view_id);
 }
 

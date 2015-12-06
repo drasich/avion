@@ -199,6 +199,25 @@ impl<T:PropertyWrite+Default> PropertyWrite for Vec<T> {
           }
       }
   }
+
+  fn del_item(&mut self, name : &str, index : usize)
+  {
+      let mut v : Vec<&str> = name.split('/').collect();
+      println!("yooooooooo del : {}", name);
+
+      match v.len() {
+          0 => {},
+          1 => {
+              let index = v[0].parse::<usize>().unwrap();
+              self.remove(index);
+          },
+          _ => {
+              let yep : String = v[1..].join("/");
+              let index = v[0].parse::<usize>().unwrap();
+              self[index].del_item(yep.as_ref(), index);
+          }
+      }
+  }
 }
 
 impl<T:PropertyGet> PropertyGet for Vec<T> {
@@ -594,6 +613,7 @@ macro_rules! property_set_impl(
             fn add_item(&mut self, name : &str, index :usize)
             {
                 let mut v : Vec<&str> = name.split('/').collect();
+                println!("yooooooooo frommacro : {}", name);
 
                 //TODO remove this?
                 if v[0] == "object" {
@@ -611,6 +631,32 @@ macro_rules! property_set_impl(
                                 stringify!($member) => self.$member.add_item(yep.as_ref(), index),
                                 )+
                                 _ => println!(">>>> 1 , no such member, add_item : {}, {}", v[0], name)
+                        }
+                    }
+                }
+            }
+
+            fn del_item(&mut self, name : &str, index :usize)
+            {
+                let mut v : Vec<&str> = name.split('/').collect();
+                println!("yooooooooo frommacro : {}", name);
+
+                //TODO remove this?
+                if v[0] == "object" {
+                    v = v[1..].to_vec();
+                }
+
+                match v.len() {
+                    0 => {},
+                    1 => {
+                    },
+                    _ => {
+                        let yep : String = v[1..].join("/");
+                        match v[0] {
+                            $(
+                                stringify!($member) => self.$member.del_item(yep.as_ref(), index),
+                                )+
+                                _ => println!(">>>> 1 , no such member, del_item : {}, {}", v[0], name)
                         }
                     }
                 }
