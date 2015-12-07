@@ -1053,13 +1053,15 @@ impl WidgetContainer
             vs.push(i.to_string());
         }
 
-        match v[v.len()-1].parse::<usize>() {
-            Ok(index) => self.request_operation(
-                vs,
-                operation::OperationData::VecAdd(index)
-                ),
-                _ => operation::Change::None
-        }
+        let index = match v[v.len()-1].parse::<usize>() {
+            Ok(index) => index,
+            _ => 0
+        };
+
+        self.request_operation(
+            vs,
+            operation::OperationData::VecAdd(index)
+            )
     }
 
     pub fn request_operation_vec_del(

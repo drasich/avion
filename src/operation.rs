@@ -154,7 +154,7 @@ impl OperationTrait for Operation
                 return Change::Objects(s, ids);
             },
             OperationData::VecAdd(i) => {
-                println!("vec add operation {:?}", self.name);
+                println!("vec add operation {:?}, {}", self.name,i);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
                 for o in self.objects.iter() {
@@ -278,7 +278,7 @@ impl OperationTrait for Operation
                 return Change::Objects(s, ids);
             },
             OperationData::VecAdd(i) => {
-                println!("vec add operation undo {:?}", self.name);
+                println!("vec add operation undo {:?}, {}", self.name, i);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
                 for o in self.objects.iter() {

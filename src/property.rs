@@ -187,15 +187,18 @@ impl<T:PropertyWrite+Default> PropertyWrite for Vec<T> {
       println!("yooooooooo : {}", name);
 
       match v.len() {
-          0 => {},
+          0 => {
+              self.insert(index, Default::default());
+              self[index].test_set_property(value);
+          },
           1 => {
-              let index = v[0].parse::<usize>().unwrap();
+              //let index = v[0].parse::<usize>().unwrap();
               self.insert(index, Default::default());
               self[index].test_set_property(value);
           },
           _ => {
               let yep : String = v[1..].join("/");
-              let index = v[0].parse::<usize>().unwrap();
+              //let index = v[0].parse::<usize>().unwrap();
               self[index].add_item(yep.as_ref(), index, value);
           }
       }
@@ -207,14 +210,16 @@ impl<T:PropertyWrite+Default> PropertyWrite for Vec<T> {
       println!("yooooooooo del : {}", name);
 
       match v.len() {
-          0 => {},
+          0 => {
+              self.remove(index);
+          },
           1 => {
-              let index = v[0].parse::<usize>().unwrap();
+              //let index = v[0].parse::<usize>().unwrap();
               self.remove(index);
           },
           _ => {
               let yep : String = v[1..].join("/");
-              let index = v[0].parse::<usize>().unwrap();
+              //let index = v[0].parse::<usize>().unwrap();
               self[index].del_item(yep.as_ref(), index);
           }
       }
@@ -628,8 +633,8 @@ macro_rules! property_set_impl(
 
                 match v.len() {
                     0 => {},
-                    1 => {
-                    },
+                    //1 => {
+                    //},
                     _ => {
                         let yep : String = v[1..].join("/");
                         match v[0] {
@@ -654,8 +659,8 @@ macro_rules! property_set_impl(
 
                 match v.len() {
                     0 => {},
-                    1 => {
-                    },
+                    //1 => {
+                    //},
                     _ => {
                         let yep : String = v[1..].join("/");
                         match v[0] {

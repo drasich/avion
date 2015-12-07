@@ -161,7 +161,8 @@ extern {
 
     fn property_list_vec_add(
         pl : *const JkPropertyList,
-        name : *const c_char
+        name : *const c_char,
+        len : c_int
         ) -> *const PropertyValue;
 
     fn property_list_nodes_remove(
@@ -410,13 +411,14 @@ impl Property
         }
     }
 
-    pub fn add_vec(&mut self, ps : &PropertyShow, name : &str) {
+    pub fn add_vec(&mut self, ps : &PropertyShow, name : &str, len : usize) {
         println!("____added vec : {}", name);
         let f = CString::new(name.as_bytes()).unwrap();
         let pv = unsafe {
             property_list_vec_add(
                 self.jk_property_list,
-                f.as_ptr()
+                f.as_ptr(),
+                len as c_int
                 )
         };
 
@@ -1198,10 +1200,13 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 
         if depth == 0 && field != ""
         {
-            property.add_node(self, field);
+            property.add_vec(self, field, self.len());
         }
 
         if depth > 0 {
+            if self.is_empty() {
+                //add "no item" item
+            }
             for (n,i) in self.iter().enumerate() {
                 let mut nf = String::from(field);
                 nf.push_str("/");
