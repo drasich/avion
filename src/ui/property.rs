@@ -1515,7 +1515,7 @@ pub extern fn vec_add(
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let change = container.request_operation_vec_add(path);
-    container.handle_change(&change, p.id);
+    container.handle_change(&change, uuid::Uuid::nil());//p.id);
     //ui::add_empty(container, action.view_id);
 }
 
@@ -1543,7 +1543,7 @@ pub extern fn vec_del(
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let change = container.request_operation_vec_del(path);
-    container.handle_change(&change, p.id);
+    container.handle_change(&change, uuid::Uuid::nil());//p.id);
     //ui::add_empty(container, action.view_id);
 }
 
