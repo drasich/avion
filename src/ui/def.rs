@@ -160,6 +160,8 @@ extern {
         part : *const c_char,
         text : *const c_char);
 
+    fn jk_list_wdg_new(win : *const Window, name : *const c_char) -> *const Evas_Object;
+
     //fn window_object_get(
     //    obj : *const Window) -> *const Evas_Object;
 
@@ -536,6 +538,27 @@ pub struct WidgetContainer
     pub op_mgr : operation::OperationManager,
     pub holder : Rc<RefCell<Holder>>,
     pub menu : Option<Box<Action>>,
+
+    pub list : Box<ListWidget>,
+}
+
+pub struct ListWidget
+{
+    object : Option<*const Evas_Object>
+}
+
+impl ListWidget
+{
+    pub fn create(&mut self, win : *const Window)
+    {
+        let name = CString::new("xaca".as_bytes()).unwrap().as_ptr();
+        self.object = Some(unsafe { jk_list_wdg_new(win, name) });
+    }
+
+    fn show_list(&self, entries : Vec<String>)
+    {
+
+    }
 }
 
 /*
@@ -565,6 +588,7 @@ impl WidgetContainer
             factory : factory::Factory::new(),
             op_mgr : operation::OperationManager::new(),
             holder : Rc::new(RefCell::new(Holder { gameview : None })),
+            list : box ListWidget { object : None },
 
         }
     }
@@ -1509,3 +1533,9 @@ pub fn scene_new(container : &mut WidgetContainer, view_id : Uuid)
     container.context.set_scene(rs);
 }
 
+
+pub fn scene_list(container : &mut WidgetContainer, view_id : Uuid)
+{
+    println!("TODO show the list of scene");
+    container.list.show_list(Vec::new());
+}

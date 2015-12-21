@@ -225,6 +225,7 @@ impl View
             }
         };
 
+        menu.add_button(">", ui::action::scene_list, ad.clone());
         menu.add_entry(String::from("scene"),&name, ui::action::scene_rename, ad.clone());
         menu.add_button("+", ui::action::scene_new, ad.clone());
 
@@ -233,6 +234,8 @@ impl View
         container.action = Some(a);
         container.command = Some(command);
         container.menu = Some(menu);
+
+        container.list.create(w);
 
     }
 

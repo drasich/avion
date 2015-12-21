@@ -23,7 +23,8 @@ pub use self::def::{
     window_callback_set,
 
     add_empty,
-    scene_new
+    scene_new,
+    scene_list
 };
 
 pub use self::tree::{Tree};
