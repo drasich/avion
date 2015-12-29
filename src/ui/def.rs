@@ -165,6 +165,9 @@ extern {
     //fn window_object_get(
     //    obj : *const Window) -> *const Evas_Object;
 
+
+    fn evas_object_show(o : *const Evas_Object);
+
 }
 
 fn object_geometry_get(obj : *const Evas_Object) -> (i32, i32, i32, i32)
@@ -557,7 +560,13 @@ impl ListWidget
 
     fn show_list(&self, entries : Vec<String>)
     {
-
+        if let Some(o) = self.object {
+            println!("show list widget ON ");
+            unsafe { evas_object_show(o) }
+        }
+        else {
+            println!("show list widget OFF ");
+        }
     }
 }
 
@@ -1539,3 +1548,5 @@ pub fn scene_list(container : &mut WidgetContainer, view_id : Uuid)
     println!("TODO show the list of scene");
     container.list.show_list(Vec::new());
 }
+
+

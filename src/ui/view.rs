@@ -153,6 +153,7 @@ impl View
 
         let p = box ui::Property::new(w, property_config);
         let mut t = box ui::Tree::new(w, tree_config);
+        container.list.create(w);
 
         let mut menu = box ui::Action::new(w, ui::action::Position::Top, self.uuid);
 
@@ -174,42 +175,40 @@ impl View
             ui::action::play_scene,
             ad.clone());
 
-        {
-            unsafe {
-                ui::tree::tree_register_cb(
-                    t.jk_tree,
-                    mem::transmute(box tsd),
-                    ui::tree::name_get,
-                    ui::tree::item_selected,
-                    ui::tree::can_expand,
-                    ui::tree::expand,
-                    ui::tree::selected,
-                    ui::tree::unselected,
-                    ui::tree::panel_move,
-                    );
-            }
+        unsafe {
+            ui::tree::tree_register_cb(
+                t.jk_tree,
+                mem::transmute(box tsd),
+                ui::tree::name_get,
+                ui::tree::item_selected,
+                ui::tree::can_expand,
+                ui::tree::expand,
+                ui::tree::selected,
+                ui::tree::unselected,
+                ui::tree::panel_move,
+                );
+        }
 
-            unsafe {
-             ui::property::jk_property_list_register_cb(
-                 p.jk_property_list,
-                 mem::transmute(box pd),
-                 ui::property::changed_set_float,
-                 ui::property::changed_set_string,
-                 ui::property::changed_set_enum,
-                 ui::property::register_change_string,
-                 ui::property::register_change_float,
-                 ui::property::register_change_enum,
-                 ui::property::register_change_option,
-                 ui::property::expand,
-                 ui::property::contract,
-                 ui::property::panel_move,
-                 );
+        unsafe {
+            ui::property::jk_property_list_register_cb(
+                p.jk_property_list,
+                mem::transmute(box pd),
+                ui::property::changed_set_float,
+                ui::property::changed_set_string,
+                ui::property::changed_set_enum,
+                ui::property::register_change_string,
+                ui::property::register_change_float,
+                ui::property::register_change_enum,
+                ui::property::register_change_option,
+                ui::property::expand,
+                ui::property::contract,
+                ui::property::panel_move,
+                );
 
-             ui::property::jk_property_list_register_vec_cb(
-                 p.jk_property_list,
-                 ui::property::vec_add,
-                 ui::property::vec_del);
-            }
+            ui::property::jk_property_list_register_vec_cb(
+                p.jk_property_list,
+                ui::property::vec_add,
+                ui::property::vec_del);
         }
 
         let name = match container.context.scene {
@@ -235,7 +234,7 @@ impl View
         container.command = Some(command);
         container.menu = Some(menu);
 
-        container.list.create(w);
+        //container.list.create(w);
 
     }
 
