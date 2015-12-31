@@ -148,6 +148,11 @@ extern {
         master: *const c_void
         ) -> ();
 
+    fn jk_list_wdg_new(win : *const Window, name : *const c_char) -> *const Evas_Object;
+
+    //fn window_object_get(
+    //    obj : *const Window) -> *const Evas_Object;
+
     fn evas_object_geometry_get(
         obj : *const Evas_Object,
         x : *mut c_int,
@@ -160,13 +165,9 @@ extern {
         part : *const c_char,
         text : *const c_char);
 
-    fn jk_list_wdg_new(win : *const Window, name : *const c_char) -> *const Evas_Object;
-
-    //fn window_object_get(
-    //    obj : *const Window) -> *const Evas_Object;
-
-
     fn evas_object_show(o : *const Evas_Object);
+    fn evas_object_move(o : *const Evas_Object, x : c_int, y : c_int);
+    fn evas_object_resize(o : *const Evas_Object, w : c_int, h : c_int);
 
 }
 
@@ -558,11 +559,14 @@ impl ListWidget
         self.object = Some(unsafe { jk_list_wdg_new(win, name) });
     }
 
-    fn show_list(&self, entries : Vec<String>)
+    fn show_list(&self, entries : Vec<String>, x : i32, y : i32)
     {
         if let Some(o) = self.object {
             println!("show list widget ON ");
-            unsafe { evas_object_show(o) }
+            unsafe { 
+                evas_object_show(o);
+                evas_object_move(o, x, y);
+            }
         }
         else {
             println!("show list widget OFF ");
@@ -1371,7 +1375,8 @@ impl WidgetContainer
 pub struct WidgetCbData
 {
     pub container : *const WidgetContainer,
-    pub widget : *const c_void
+    pub widget : *const c_void,
+    pub object : Option<*const Evas_Object>
 }
 
 impl Clone for WidgetCbData {
@@ -1379,7 +1384,8 @@ impl Clone for WidgetCbData {
     {
         WidgetCbData {
             container : self.container,
-            widget : self.widget
+            widget : self.widget,
+            object : self.object,
         }
     }
 }
@@ -1391,7 +1397,18 @@ impl WidgetCbData {
         println!("TODO free me in c");
         WidgetCbData {
             container : unsafe {mem::transmute(c)},
-            widget : widget
+            widget : widget,
+            object : None
+        }
+    }
+
+    pub fn with_ptr_obj(c : &Box<WidgetContainer>, widget : *const c_void, object : *const Evas_Object) -> WidgetCbData
+    {
+        println!("TODO free me in c");
+        WidgetCbData {
+            container : unsafe {mem::transmute(c)},
+            widget : widget,
+            object : Some(object)
         }
     }
 }
@@ -1543,10 +1560,19 @@ pub fn scene_new(container : &mut WidgetContainer, view_id : Uuid)
 }
 
 
-pub fn scene_list(container : &mut WidgetContainer, view_id : Uuid)
+pub fn scene_list(container : &mut WidgetContainer, view_id : Uuid, obj : Option<*const Evas_Object>)
 {
-    println!("TODO show the list of scene");
-    container.list.show_list(Vec::new());
+    let (x, y) = if let Some(o) = obj {
+        println!("TODO show the list of scene, there is an obj");
+        let (mut x, mut y, mut w, mut h) : (c_int, c_int, c_int, c_int) = (5,6,7,8);
+        unsafe { evas_object_geometry_get(o, &mut x, &mut y, &mut w, &mut h); }
+        (x, y + h + 5)
+    }
+    else {
+        println!("TODO show the list of scene, no obj");
+        (250, 50)
+    };
+    container.list.show_list(Vec::new(), x, y);
 }
 
 

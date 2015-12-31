@@ -34,7 +34,16 @@ extern {
         action : *const JkAction,
         name : *const c_char,
         data : *const c_void,
-        button_callback : ButtonCallback);
+        button_callback : ButtonCallback) -> *const ui::Evas_Object;
+    fn action_button_new1(
+        action : *const JkAction,
+        name : *const c_char)-> *const ui::Evas_Object;
+
+    fn btn_cb_set(
+        o : *const ui::Evas_Object,
+        button_callback: ButtonCallback,
+        data : *const c_void);
+
     fn action_label_new(
         action : *const JkAction,
         name : *const c_char) -> *const JkLabel;
@@ -90,14 +99,28 @@ impl Action
     }
 
     //pub fn add_button(&self, name : &str, cb : ButtonCallback, data : ActionData)
-    pub fn add_button(&self, name : &str, cb : ButtonCallback, data : ui::WidgetCbData)
+    pub fn add_button(&self, name : &str, cb : ButtonCallback, data : ui::WidgetCbData) -> *const ui::Evas_Object
     {
         unsafe {
+            /*
             action_button_new(
                 self.jk_action,
                 CString::new(name.as_bytes()).unwrap().as_ptr(),
                 mem::transmute(box data),
-                cb);
+                cb)
+                */
+
+            let b = action_button_new1(
+                self.jk_action,
+                CString::new(name.as_bytes()).unwrap().as_ptr());
+
+            let mut data = data;
+            data.object = Some(b);
+
+            btn_cb_set(b,
+                       cb,
+                       mem::transmute(box data));
+            b
         }
     }
 
@@ -177,7 +200,7 @@ pub extern fn scene_list(data : *const c_void)
     let action : &Action = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    ui::scene_list(container, action.view_id);
+    ui::scene_list(container, action.view_id, wcb.object);
 }
 
 
