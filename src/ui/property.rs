@@ -1511,7 +1511,7 @@ pub extern fn vec_add(
 
     println!("TODO vec add : {}", path);
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
-    let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
+    //let p : &Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let change = container.request_operation_vec_add(path);
@@ -1539,7 +1539,7 @@ pub extern fn vec_del(
 
     println!("TODO vec del : {}", path);
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
-    let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
+    //let p : & Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let change = container.request_operation_vec_del(path);
