@@ -165,7 +165,7 @@ impl<T:PropertyWrite+Default> PropertyWrite for Vec<T> {
 
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {
-      let mut v : Vec<&str> = name.split('/').collect();
+      let v : Vec<&str> = name.split('/').collect();
 
       match v.len() {
           0 => {},
@@ -183,7 +183,7 @@ impl<T:PropertyWrite+Default> PropertyWrite for Vec<T> {
 
   fn add_item(&mut self, name : &str, index : usize, value : &Any)
   {
-      let mut v : Vec<&str> = name.split('/').collect();
+      let v : Vec<&str> = name.split('/').collect();
       println!("yooooooooo : {}", name);
 
       match v.len() {
@@ -206,7 +206,7 @@ impl<T:PropertyWrite+Default> PropertyWrite for Vec<T> {
 
   fn del_item(&mut self, name : &str, index : usize)
   {
-      let mut v : Vec<&str> = name.split('/').collect();
+      let v : Vec<&str> = name.split('/').collect();
       println!("yooooooooo del : {}", name);
 
       match v.len() {
@@ -230,7 +230,7 @@ impl<T:PropertyGet+PropertyRead> PropertyGet for Vec<T> {
 
   fn get_property_hier(&self, name : &str) -> Option<Box<Any>>
   {
-      let mut v : Vec<&str> = name.split('/').collect();
+      let v : Vec<&str> = name.split('/').collect();
       match v.len() {
           0 => {None},
           1 => {
