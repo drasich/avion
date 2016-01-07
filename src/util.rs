@@ -46,6 +46,11 @@ pub fn to_cstring(v : Vec<PathBuf>) -> Vec<CString>
     v.iter().map(|x| CString::new(x.to_str().unwrap()).unwrap()).collect()
 }
 
+pub fn string_to_cstring(v : Vec<String>) -> Vec<CString>
+{
+    v.iter().map(|x| CString::new(x.as_str()).unwrap()).collect()
+}
+
 pub fn print_vec_cstring(v : Vec<CString>)
 {
     let y : Vec<*const c_char> = v.iter().map( |x| x.as_ptr()).collect();

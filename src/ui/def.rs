@@ -1,4 +1,4 @@
-use libc::{c_char, c_void, c_int};
+use libc::{c_char, c_void, c_int, size_t};
 use std::mem;
 use std::sync::{RwLock, Arc};
 use std::collections::{LinkedList};
@@ -38,6 +38,7 @@ use component;
 use dragger;
 use property::{PropertyWrite,PropertyGet};
 use transform;
+use util;
 
 #[repr(C)]
 pub struct Window;
@@ -169,6 +170,8 @@ extern {
     fn evas_object_move(o : *const Evas_Object, x : c_int, y : c_int);
     fn evas_object_resize(o : *const Evas_Object, w : c_int, h : c_int);
 
+
+    fn jklist_set_names(o : *const Evas_Object, names : *const c_void, len : size_t);
 }
 
 fn object_geometry_get(obj : *const Evas_Object) -> (i32, i32, i32, i32)
@@ -562,14 +565,20 @@ impl ListWidget
     fn show_list(&self, entries : Vec<String>, x : i32, y : i32)
     {
         if let Some(o) = self.object {
-            println!("show list widget ON ");
             unsafe { 
                 evas_object_show(o);
                 evas_object_move(o, x, y);
             }
-        }
-        else {
-            println!("show list widget OFF ");
+
+            let cs = util::string_to_cstring(entries);
+            let csp : Vec<*const c_char> = cs.into_iter().map( |x| x.as_ptr()).collect();
+
+            unsafe { 
+                jklist_set_names(o, csp.as_ptr() as *const c_void, csp.len() as size_t);
+                //TODO
+                println!("TODO handle and remove this");
+                mem::forget(csp);
+            }
         }
     }
 }
@@ -1572,7 +1581,12 @@ pub fn scene_list(container : &mut WidgetContainer, view_id : Uuid, obj : Option
         println!("TODO show the list of scene, no obj");
         (250, 50)
     };
-    container.list.show_list(Vec::new(), x, y);
+
+    let files = util::get_files_in_dir("scene");
+    let filesstring : Vec<String> = files.iter().map(|x| String::from(x.to_str().unwrap())).collect();
+
+    //container.list.show_list(Vec::new(), x, y);
+    container.list.show_list(filesstring, x, y);
 }
 
 
