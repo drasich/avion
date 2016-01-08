@@ -551,7 +551,8 @@ pub struct WidgetContainer
 
 pub struct ListWidget
 {
-    object : Option<*const Evas_Object>
+    object : Option<*const Evas_Object>,
+    entries : Vec<*const c_char>
 }
 
 impl ListWidget
@@ -562,7 +563,7 @@ impl ListWidget
         self.object = Some(unsafe { jk_list_wdg_new(win, name) });
     }
 
-    fn show_list(&self, entries : Vec<String>, x : i32, y : i32)
+    fn show_list(&mut self, entries : Vec<String>, x : i32, y : i32)
     {
         if let Some(o) = self.object {
             unsafe { 
@@ -571,13 +572,10 @@ impl ListWidget
             }
 
             let cs = util::string_to_cstring(entries);
-            let csp : Vec<*const c_char> = cs.into_iter().map( |x| x.as_ptr()).collect();
+            self.entries = cs.into_iter().map( |x| x.as_ptr()).collect();
 
             unsafe { 
-                jklist_set_names(o, csp.as_ptr() as *const c_void, csp.len() as size_t);
-                //TODO
-                println!("TODO handle and remove this");
-                mem::forget(csp);
+                jklist_set_names(o, self.entries.as_ptr() as *const c_void, self.entries.len() as size_t);
             }
         }
     }
@@ -610,7 +608,7 @@ impl WidgetContainer
             factory : factory::Factory::new(),
             op_mgr : operation::OperationManager::new(),
             holder : Rc::new(RefCell::new(Holder { gameview : None })),
-            list : box ListWidget { object : None },
+            list : box ListWidget { object : None, entries : Vec::new() },
 
         }
     }
