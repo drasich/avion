@@ -99,7 +99,7 @@ collections {
                rel1.to: "resizexleft";
                rel2.to:"resizebottomright";
                rel1.offset : 4 4;
-               rel2.offset : -1 -4;
+               rel2.offset : -4 -4;
             }
          }
          part {

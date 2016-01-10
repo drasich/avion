@@ -8,8 +8,8 @@ dependencies = [
  "lazy_static 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "lua 0.2.0 (git+https://github.com/indefini/rust-lua.git)",
- "png 0.1.0 (git+https://github.com/servo/rust-png.git)",
- "rustc-serialize 0.3.15 (git+https://github.com/indefini/rustc-serialize.git)",
+ "png 0.1.0 (git+https://github.com/indefini/rust-png.git)",
+ "rustc-serialize 0.3.16 (git+https://github.com/indefini/rustc-serialize.git)",
  "toml 0.1.25 (git+https://github.com/alexcrichton/toml-rs)",
  "uuid 0.1.18 (git+https://github.com/rust-lang/uuid.git)",
 ]
@@ -50,7 +50,7 @@ dependencies = [
 [[package]]
 name = "joker-sys"
 version = "0.1.0"
-source = "git+https://github.com/drasich/joker.git#55452c467e26944452adbc110fcb3c22df252260"
+source = "git+https://github.com/drasich/joker.git#c1a2350ad5e5d73892f40399644c0152d0381323"
 dependencies = [
  "cypher-sys 0.1.0 (git+https://github.com/drasich/cypher.git)",
  "gcc 0.3.21 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -65,21 +65,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "libc"
-version = "0.1.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "libc"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "libz-sys"
-version = "0.1.9"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "gcc 0.3.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -99,24 +94,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "png"
 version = "0.1.0"
-source = "git+https://github.com/servo/rust-png.git#b8c2bf074719e5a39b9e4423989f5f06fa79317d"
+source = "git+https://github.com/indefini/rust-png.git#81f5fc68cec331c376d3a9db5ac8a05efce5a07b"
 dependencies = [
  "gcc 0.3.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "png-sys 1.6.16 (git+https://github.com/servo/rust-png.git)",
+ "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "png_sys 1.6.16 (git+https://github.com/indefini/rust-png.git)",
 ]
 
 [[package]]
-name = "png-sys"
+name = "png_sys"
 version = "1.6.16"
-source = "git+https://github.com/servo/rust-png.git#b8c2bf074719e5a39b9e4423989f5f06fa79317d"
+source = "git+https://github.com/indefini/rust-png.git#81f5fc68cec331c376d3a9db5ac8a05efce5a07b"
 dependencies = [
- "libz-sys 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libz-sys 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "rand"
-version = "0.3.12"
+version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "advapi32-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -126,8 +121,8 @@ dependencies = [
 
 [[package]]
 name = "rustc-serialize"
-version = "0.3.15"
-source = "git+https://github.com/indefini/rustc-serialize.git#f30213166a74b2b1bfbc197a42e3b194135ecdb4"
+version = "0.3.16"
+source = "git+https://github.com/indefini/rustc-serialize.git#892dce5a90a30e33feb9853f0f8d333807abbf8e"
 
 [[package]]
 name = "rustc-serialize"
@@ -137,7 +132,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "toml"
 version = "0.1.25"
-source = "git+https://github.com/alexcrichton/toml-rs#67138b6c8eb7c9420eb212b5bae3a4170f16ec0b"
+source = "git+https://github.com/alexcrichton/toml-rs#af2c45147d020b3280cc81d4a94973d8f1bf4816"
 dependencies = [
  "rustc-serialize 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -147,7 +142,7 @@ name = "uuid"
 version = "0.1.18"
 source = "git+https://github.com/rust-lang/uuid.git#f644f234f7d2e901e932700c7f3c18b2ebc9346f"
 dependencies = [
- "rand 0.3.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.3.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
