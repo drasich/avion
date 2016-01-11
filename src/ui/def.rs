@@ -13,7 +13,7 @@ use std::fs;
 use std::fs::File;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::{Read,Write};
-use std::ffi::CString;
+use std::ffi::{CString,CStr};
 
 use uuid::Uuid;
 
@@ -63,6 +63,10 @@ pub type PanelGeomFunc = extern fn(
 
 pub type ButtonCallback = extern fn(
     data : *const c_void);
+
+pub type SelectCallback = extern fn(
+    data : *const c_void,
+    name : *const c_char);
 
 /*
         init_cb: extern fn(*mut View),// -> (),
@@ -150,6 +154,11 @@ extern {
         ) -> ();
 
     fn jk_list_wdg_new(win : *const Window, name : *const c_char) -> *const Evas_Object;
+
+    fn jk_list_fn_set(
+        o : *const ui::Evas_Object,
+        sel_callback: SelectCallback,
+        data : *const c_void);
 
     //fn window_object_get(
     //    obj : *const Window) -> *const Evas_Object;
@@ -496,9 +505,9 @@ pub extern fn exit_cb(data: *mut c_void) -> () {
     //let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(app_data.master)};
     //let master = master_rc.borrow();
 
-
     match container.context.scene {
         Some(ref s) => {
+            println!("going to save: {}", s.borrow().name);
             s.borrow().save();
             //old
             //s.read().unwrap().save();
@@ -547,6 +556,7 @@ pub struct WidgetContainer
     pub menu : Option<Box<Action>>,
 
     pub list : Box<ListWidget>,
+    pub name : String
 }
 
 pub struct ListWidget
@@ -563,12 +573,24 @@ impl ListWidget
         self.object = Some(unsafe { jk_list_wdg_new(win, name) });
     }
 
+    pub fn set_fn(&self, cb : SelectCallback, data : ui::WidgetCbData)
+    {
+        unsafe {
+            if let Some(o) = self.object {
+                jk_list_fn_set(o,
+                           cb,
+                           mem::transmute(box data));
+            }
+        }
+    }
+
     fn show_list(&mut self, entries : Vec<String>, x : i32, y : i32)
     {
         if let Some(o) = self.object {
             unsafe { 
                 evas_object_show(o);
                 evas_object_move(o, x, y);
+                evas_object_resize(o, 150, 300);
             }
 
             let cs = util::string_to_cstring(entries);
@@ -609,6 +631,7 @@ impl WidgetContainer
             op_mgr : operation::OperationManager::new(),
             holder : Rc::new(RefCell::new(Holder { gameview : None })),
             list : box ListWidget { object : None, entries : Vec::new() },
+            name : String::from("yoplaboum")
 
         }
     }
@@ -1376,6 +1399,28 @@ impl WidgetContainer
         }
         None
     }
+
+    pub fn set_scene(&mut self, s : scene::Scene)
+    {
+        if let Some(ref mut t) = self.tree {
+            t.set_scene(&s);
+        }
+
+        if let Some(ref mut p) = self.property {
+            p.set_nothing();
+        }
+
+        if let Some(ref mut m) = self.menu {
+            if let Entry::Occupied(en) = m.entries.entry(String::from("scene")) {
+                elm_object_text_set(
+                    unsafe {mem::transmute(*en.get())},
+                    CString::new(s.name.as_str()).unwrap().as_ptr());
+            }
+        }
+
+        let rs =  Rc::new(RefCell::new(s));
+        self.context.set_scene(rs);
+    }
 }
 
 //Send to c with mem::transmute(box data)  and free in c
@@ -1401,7 +1446,17 @@ impl WidgetCbData {
     //pub fn new(c : &Box<WidgetContainer>, widget : &Box<Widget>)
     pub fn with_ptr(c : &Box<WidgetContainer>, widget : *const c_void) -> WidgetCbData
     {
-        println!("TODO free me in c");
+        println!("TODO free me");
+        WidgetCbData {
+            container : unsafe {mem::transmute(c)},
+            widget : widget,
+            object : None
+        }
+    }
+
+    pub fn new(c : &WidgetContainer, widget : *const c_void) -> WidgetCbData
+    {
+        println!("TODO free me");
         WidgetCbData {
             container : unsafe {mem::transmute(c)},
             widget : widget,
@@ -1411,7 +1466,7 @@ impl WidgetCbData {
 
     pub fn with_ptr_obj(c : &Box<WidgetContainer>, widget : *const c_void, object : *const Evas_Object) -> WidgetCbData
     {
-        println!("TODO free me in c");
+        println!("TODO free me");
         WidgetCbData {
             container : unsafe {mem::transmute(c)},
             widget : widget,
@@ -1545,27 +1600,8 @@ pub fn scene_new(container : &mut WidgetContainer, view_id : Uuid)
     }
 
     let s = container.factory.create_scene(ss.as_ref());
-
-    if let Some(ref mut t) = container.tree {
-        t.set_scene(&s);
-    }
-
-    if let Some(ref mut p) = container.property {
-        p.set_nothing();
-    }
-
-    if let Some(ref mut m) = container.menu {
-        if let Entry::Occupied(en) = m.entries.entry(String::from("scene")) {
-                elm_object_text_set(
-                    unsafe {mem::transmute(*en.get())},
-                    CString::new(ss.as_bytes()).unwrap().as_ptr());
-        }
-    }
-
-    let rs =  Rc::new(RefCell::new(s));
-    container.context.set_scene(rs);
+    container.set_scene(s);
 }
-
 
 pub fn scene_list(container : &mut WidgetContainer, view_id : Uuid, obj : Option<*const Evas_Object>)
 {
@@ -1585,6 +1621,29 @@ pub fn scene_list(container : &mut WidgetContainer, view_id : Uuid, obj : Option
 
     //container.list.show_list(Vec::new(), x, y);
     container.list.show_list(filesstring, x, y);
+
+    let listwd = ui::WidgetCbData::new(container, unsafe { mem::transmute(&*container.list)});
+    container.list.set_fn(select_list, listwd);
 }
 
+pub extern fn select_list(data : *const c_void, name : *const c_char)
+{
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let action : &Action = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut ui::WidgetContainer = unsafe {mem::transmute(wcb.container)};
+    
+    let s = unsafe {CStr::from_ptr(name)}.to_str().unwrap();
+    println!("selection ..........{},  {}", container.name, s);
+    //let scene = container.factory.create_scene(s);
+    let mut scene = scene::Scene::new_from_file(s, &*container.resource);
+    if let None = scene.camera {
+        let mut cam = container.factory.create_camera();
+        cam.pan(&vec::Vec3::new(-100f64,20f64,100f64));
+        cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
+        scene.camera = Some(Rc::new(RefCell::new(cam)));
+    }
+    //let scene = Rc::new(RefCell::new(ss));
+
+    container.set_scene(scene);
+}
 

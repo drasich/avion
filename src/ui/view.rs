@@ -153,6 +153,7 @@ impl View
 
         let p = box ui::Property::new(w, property_config);
         let mut t = box ui::Tree::new(w, tree_config);
+
         container.list.create(w);
 
         let mut menu = box ui::Action::new(w, ui::action::Position::Top, self.uuid);
