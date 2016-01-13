@@ -575,6 +575,7 @@ impl ListWidget
 
     pub fn set_fn(&self, cb : SelectCallback, data : ui::WidgetCbData)
     {
+
         unsafe {
             if let Some(o) = self.object {
                 jk_list_fn_set(o,
@@ -1629,7 +1630,7 @@ pub fn scene_list(container : &mut WidgetContainer, view_id : Uuid, obj : Option
 pub extern fn select_list(data : *const c_void, name : *const c_char)
 {
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
-    let action : &Action = unsafe {mem::transmute(wcb.widget)};
+    let list : &ListWidget = unsafe {mem::transmute(wcb.widget)};
     let container : &mut ui::WidgetContainer = unsafe {mem::transmute(wcb.container)};
     
     let s = unsafe {CStr::from_ptr(name)}.to_str().unwrap();
