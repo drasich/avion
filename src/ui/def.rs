@@ -154,6 +154,8 @@ extern {
         ) -> ();
 
     fn jk_list_wdg_new(win : *const Window, name : *const c_char) -> *const Evas_Object;
+    fn jk_list_wdg_new2(win : *const Window, name : *const c_char) -> *const Evas_Object;
+    fn elm_hover_target_set(hover : *const Evas_Object, target : *const Evas_Object);
 
     fn jk_list_fn_set(
         o : *const ui::Evas_Object,
@@ -570,7 +572,8 @@ impl ListWidget
     pub fn create(&mut self, win : *const Window)
     {
         let name = CString::new("xaca".as_bytes()).unwrap().as_ptr();
-        self.object = Some(unsafe { jk_list_wdg_new(win, name) });
+        //self.object = Some(unsafe { jk_list_wdg_new(win, name) });
+        self.object = Some(unsafe { jk_list_wdg_new2(win, name) });
     }
 
     pub fn set_fn(&self, cb : SelectCallback, data : ui::WidgetCbData)
@@ -592,6 +595,25 @@ impl ListWidget
                 evas_object_show(o);
                 evas_object_move(o, x, y);
                 evas_object_resize(o, 150, 300);
+            }
+
+            let cs = util::string_to_cstring(entries);
+            self.entries = cs.into_iter().map( |x| x.as_ptr()).collect();
+
+            unsafe { 
+                jklist_set_names(o, self.entries.as_ptr() as *const c_void, self.entries.len() as size_t);
+            }
+        }
+    }
+
+    fn show_list_target(&mut self, entries : Vec<String>, target : *const Evas_Object)
+    {
+        if let Some(o) = self.object {
+            unsafe { 
+                elm_hover_target_set(o, target);
+                evas_object_show(o);
+                //evas_object_move(o, x, y);
+                //evas_object_resize(o, 150, 300);
             }
 
             let cs = util::string_to_cstring(entries);
@@ -1606,10 +1628,15 @@ pub fn scene_new(container : &mut WidgetContainer, view_id : Uuid)
 
 pub fn scene_list(container : &mut WidgetContainer, view_id : Uuid, obj : Option<*const Evas_Object>)
 {
+    let files = util::get_files_in_dir("scene");
+    let filesstring : Vec<String> = files.iter().map(|x| String::from(x.to_str().unwrap())).collect();
+
     let (x, y) = if let Some(o) = obj {
         println!("TODO show the list of scene, there is an obj");
         let (mut x, mut y, mut w, mut h) : (c_int, c_int, c_int, c_int) = (5,6,7,8);
         unsafe { evas_object_geometry_get(o, &mut x, &mut y, &mut w, &mut h); }
+        container.list.show_list_target(filesstring, o);
+
         (x, y + h + 5)
     }
     else {
@@ -1617,11 +1644,7 @@ pub fn scene_list(container : &mut WidgetContainer, view_id : Uuid, obj : Option
         (250, 50)
     };
 
-    let files = util::get_files_in_dir("scene");
-    let filesstring : Vec<String> = files.iter().map(|x| String::from(x.to_str().unwrap())).collect();
-
-    //container.list.show_list(Vec::new(), x, y);
-    container.list.show_list(filesstring, x, y);
+    //container.list.show_list(filesstring, x, y);
 
     let listwd = ui::WidgetCbData::new(container, unsafe { mem::transmute(&*container.list)});
     container.list.set_fn(select_list, listwd);
