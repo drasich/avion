@@ -99,6 +99,7 @@ impl Tree
     pub fn set_scene(&mut self, scene : &scene::Scene)
     {
         unsafe {tree_clear(self.jk_tree);}
+        self.objects.clear();
         for o in scene.objects.iter() {
             self.add_object(o.clone());
         }

@@ -558,7 +558,12 @@ pub struct WidgetContainer
     pub menu : Option<Box<Action>>,
 
     pub list : Box<ListWidget>,
-    pub name : String
+
+    pub scenes : HashMap<String, Rc<RefCell<scene::Scene>>>,
+
+    pub name : String,
+
+
 }
 
 pub struct ListWidget
@@ -654,7 +659,8 @@ impl WidgetContainer
             op_mgr : operation::OperationManager::new(),
             holder : Rc::new(RefCell::new(Holder { gameview : None })),
             list : box ListWidget { object : None, entries : Vec::new() },
-            name : String::from("yoplaboum")
+            name : String::from("yoplaboum"),
+            scenes : HashMap::new()
 
         }
     }
@@ -1423,10 +1429,40 @@ impl WidgetContainer
         None
     }
 
-    pub fn set_scene(&mut self, s : scene::Scene)
+    pub fn add_empty_scene(&mut self, name : String)
+    {
+        let scene = self.scenes.entry(name.clone()).or_insert(
+            {
+                let mut ns = self.factory.create_scene(name.as_str());
+                Rc::new(RefCell::new(ns))
+            }).clone();
+
+        self._set_scene(scene);
+    }
+
+    pub fn set_scene(&mut self, name : &str)
+    {
+        let scene = self.scenes.entry(String::from(name)).or_insert(
+            {
+                let mut ns = scene::Scene::new_from_file(name, &*self.resource);
+
+                if let None = ns.camera {
+                    let mut cam = self.factory.create_camera();
+                    cam.pan(&vec::Vec3::new(-100f64,20f64,100f64));
+                    cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
+                    ns.camera = Some(Rc::new(RefCell::new(cam)));
+                }
+
+                Rc::new(RefCell::new(ns))
+            }).clone();
+
+        self._set_scene(scene);
+    }
+
+    fn _set_scene(&mut self, scene : Rc<RefCell<scene::Scene>>)
     {
         if let Some(ref mut t) = self.tree {
-            t.set_scene(&s);
+            t.set_scene(&scene.borrow());
         }
 
         if let Some(ref mut p) = self.property {
@@ -1437,12 +1473,11 @@ impl WidgetContainer
             if let Entry::Occupied(en) = m.entries.entry(String::from("scene")) {
                 elm_object_text_set(
                     unsafe {mem::transmute(*en.get())},
-                    CString::new(s.name.as_str()).unwrap().as_ptr());
+                    CString::new(scene.borrow().name.as_str()).unwrap().as_ptr());
             }
         }
 
-        let rs =  Rc::new(RefCell::new(s));
-        self.context.set_scene(rs);
+        self.context.set_scene(scene);
     }
 }
 
@@ -1622,8 +1657,7 @@ pub fn scene_new(container : &mut WidgetContainer, view_id : Uuid)
         ss = newname.clone();
     }
 
-    let s = container.factory.create_scene(ss.as_ref());
-    container.set_scene(s);
+    container.add_empty_scene(ss);
 }
 
 pub fn scene_list(container : &mut WidgetContainer, view_id : Uuid, obj : Option<*const Evas_Object>)
@@ -1659,6 +1693,7 @@ pub extern fn select_list(data : *const c_void, name : *const c_char)
     let s = unsafe {CStr::from_ptr(name)}.to_str().unwrap();
     println!("selection ..........{},  {}", container.name, s);
     //let scene = container.factory.create_scene(s);
+    /*
     let mut scene = scene::Scene::new_from_file(s, &*container.resource);
     if let None = scene.camera {
         let mut cam = container.factory.create_camera();
@@ -1667,7 +1702,9 @@ pub extern fn select_list(data : *const c_void, name : *const c_char)
         scene.camera = Some(Rc::new(RefCell::new(cam)));
     }
     //let scene = Rc::new(RefCell::new(ss));
+    */
 
-    container.set_scene(scene);
+    //container.set_scene(scene);
+    container.set_scene(s);
 }
 
