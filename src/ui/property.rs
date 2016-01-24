@@ -159,6 +159,11 @@ extern {
         name : *const c_char
         ) -> *const PropertyValue;
 
+    fn property_list_single_node_add(
+        pl : *const JkPropertyList,
+        val : *const PropertyValue,
+        ) -> *const PropertyValue;
+
     fn property_list_vec_add(
         pl : *const JkPropertyList,
         name : *const c_char,
@@ -188,6 +193,12 @@ extern {
         ) -> *const PropertyValue;
 
     fn property_list_single_vec_add(
+        ps : *const JkPropertyList,
+        container: *const PropertyValue,
+        is_node : bool
+        ) -> *const PropertyValue;
+
+    fn property_list_node_vec_add(
         ps : *const JkPropertyList,
         container: *const PropertyValue,
         ) -> *const PropertyValue;
@@ -394,15 +405,24 @@ impl Property
         }
     }
 
-    pub fn add_node(&mut self, ps : &PropertyShow, name : &str) {
+    pub fn add_node(&mut self, ps : &PropertyShow, name : &str, has_container : bool) -> *const PropertyValue
+    {
         println!("____added node : {}", name);
         let f = CString::new(name.as_bytes()).unwrap();
-        let pv = unsafe {
+        let mut pv = unsafe {
             property_list_node_add(
                 self.jk_property_list,
                 f.as_ptr()
                 )
         };
+
+        if !has_container {
+            unsafe {
+            pv = property_list_single_node_add(
+                self.jk_property_list,
+                pv);
+            }
+        }
 
         if pv != ptr::null() {
             self.pv.insert(name.to_string(), pv);
@@ -413,6 +433,8 @@ impl Property
                 property_expand(pv);
             }
         }
+        
+        return pv;
     }
 
     pub fn add_vec(&mut self, ps : &PropertyShow, name : &str, len : usize) {
@@ -1050,7 +1072,7 @@ impl PropertyShow for String {
             if pv != ptr::null() {
                 property.pv.insert(field.to_string(), pv);
             }
-            
+
             Some(pv)
         }
     }
@@ -1167,7 +1189,7 @@ impl<T> PropertyShow for resource::ResTT<T>
 
         if depth == 0 && field != ""
         {
-            property.add_node(self, field);
+            property.add_node(self, field, has_container);
         }
 
         if depth > 0 {
@@ -1216,12 +1238,19 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                 let mut nf = String::from(field);
                 nf.push_str("/");
                 nf.push_str(n.to_string().as_str());
+                println!("___ Vec : try to create widget for {}", nf );
                 if let Some(ref mut pv) = i.create_widget(property, nf.as_str(), depth -1, true) {
+                    println!("___ Vec : success, trying to add single vec" );
                     unsafe {
                     property_list_single_vec_add(
                         property.jk_property_list,
-                        *pv);
+                        *pv,
+                        false
+                        );
                     }
+                }
+                else {
+                    println!("___ Vec : failed" );
                 }
 
                 //if pv != ptr::null() {
@@ -1294,6 +1323,7 @@ impl PropertyShow for CompData
         let field = yo.as_ref();
         */
 
+        println!("create widget for COMPDATA ___________________________ depth {}, field {}", depth, field);
 
 
         if depth < 0 {
@@ -1302,13 +1332,14 @@ impl PropertyShow for CompData
 
         if depth == 0 && field != ""
         {
-            println!("--> compdata property show for : {}, {}, {}", s, depth, kind );
-            property.add_node(self, s);
+            println!("00--> compdata property show for : {}, {}, {}", s, depth, kind );
+            let pv = property.add_node(self, s, has_container);
+            return Some(pv);
         }
 
         if depth > 0
         {
-            println!("--> compdata property show for : {}, {}, {}", field, depth, kind );
+            println!(">>>>>0--> compdata property show for : {}, {}, {}", field, depth, kind );
 
             match *self {
                 CompData::Player(ref p) => {
@@ -1385,7 +1416,7 @@ macro_rules! property_show_impl(
 
                 if depth == 0 && field != ""
                 {
-                    property.add_node(self, field);
+                    property.add_node(self, field, has_container);
                 }
 
                 if depth > 0 {
