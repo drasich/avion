@@ -1,0 +1,103 @@
+{
+  "name": "scene/simple000.scene",
+  "id": "230a65ed-128c-4a09-8b47-9e625d683c19",
+  "objects": [
+    {
+      "name": "testobject",
+      "id": "a7fadfcc-0e27-4b71-aa0e-d3cc9df515fd",
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "orientation": {
+        "variant": "Quat",
+        "fields": [
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          }
+        ]
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "children": [],
+      "components": [],
+      "comp_data": [],
+      "comp_lua": []
+    }
+  ],
+  "camera": {
+    "data": {
+      "fovy": 0.39269908169872414,
+      "fovy_base": 0.39269908169872414,
+      "near": 1.0,
+      "far": 10000.0,
+      "aspect": 1.6,
+      "width": 800.0,
+      "height": 500.0,
+      "height_base": 500,
+      "yaw": 0.0,
+      "pitch": 0.0,
+      "roll": 0.0,
+      "clear_color": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 0.0
+      },
+      "projection": "Perspective",
+      "origin": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "local_offset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "center": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      }
+    },
+    "object": {
+      "name": "camera",
+      "id": "81462277-c699-43d0-b44a-4d2f6a7bdc6a",
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "orientation": {
+        "variant": "Quat",
+        "fields": [
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          }
+        ]
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "children": [],
+      "components": [],
+      "comp_data": [],
+      "comp_lua": []
+    },
+    "id": "182afadc-991e-4642-bdc2-3a807b39e3a1",
+    "object_id": null
+  }
+}
