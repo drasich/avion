@@ -996,6 +996,11 @@ pub trait PropertyShow
     {
         return None;
     }
+
+    fn is_node(&self) -> bool
+    {
+        return false;
+    }
 }
 
 /*
@@ -1102,6 +1107,11 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
         (**self).get_property(field)
+    }
+
+    fn is_node(&self) -> bool
+    {
+        (**self).is_node()
     }
 }
 
@@ -1240,13 +1250,13 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                 nf.push_str(n.to_string().as_str());
                 println!("___ Vec : try to create widget for {}", nf );
                 if let Some(ref mut pv) = i.create_widget(property, nf.as_str(), depth -1, true) {
-                    println!("___ Vec : success, trying to add single vec" );
                     unsafe {
-                    property_list_single_vec_add(
-                        property.jk_property_list,
-                        *pv,
-                        false
-                        );
+                        println!("___ Vec : success, trying to add single vec" );
+                        property_list_single_vec_add(
+                            property.jk_property_list,
+                            *pv,
+                            i.is_node()
+                            );
                     }
                 }
                 else {
@@ -1333,7 +1343,8 @@ impl PropertyShow for CompData
         if depth == 0 && field != ""
         {
             println!("00--> compdata property show for : {}, {}, {}", s, depth, kind );
-            let pv = property.add_node(self, s, has_container);
+            //let pv = property.add_node(self, s, has_container);
+            let pv = property.add_node(self, field, has_container);
             return Some(pv);
         }
 
@@ -1394,6 +1405,12 @@ impl PropertyShow for CompData
             }
         }
     }
+
+    fn is_node(&self) -> bool
+    {
+        true
+    }
+
 }
 
 
@@ -1456,6 +1473,11 @@ macro_rules! property_show_impl(
                  )+
                     _ => None
                 }
+            }
+
+            fn is_node(&self) -> bool
+            {
+                true
             }
         }
     )
