@@ -224,11 +224,25 @@ impl CompData
 impl PropertyWrite for CompData {
   fn test_set_property_hier(&mut self, name : &str, value: &Any)
   {
+      println!("compdata TEST set property hier: {}", name);
       let v : Vec<&str> = name.split('/').collect();
 
       match v.len() {
           0 => {},
-          1 => {},
+          1 => {
+              match *self {
+                  CompData::Player(ref mut p) => {
+                      p.test_set_property_hier(v[0], value);
+                  },
+                  CompData::Armature(ref mut p) => {
+                      p.test_set_property_hier(v[0], value);
+                  },
+                  CompData::MeshRender(ref mut p) => {
+                      p.test_set_property_hier(v[0], value);
+                  },
+                  _ => {println!("not yet implemented");}
+              }
+          },
           _ => {
               let yep : String = v[1..].join("/");
               if v[0] == self.get_kind_string() {
@@ -251,6 +265,7 @@ impl PropertyWrite for CompData {
 
   fn set_property_hier(&mut self, name : &str, value: WriteValue)
   {
+      println!("compdata set property hier: {}", name);
       let v : Vec<&str> = name.split('/').collect();
 
       match v.len() {

@@ -689,7 +689,9 @@ impl WidgetContainer
                         }
                     };
                 }
-                else if name.starts_with("object/comp_data/MeshRender") {
+                else if name.starts_with("object/comp_data/MeshRender")
+                    //TODO chris
+                {
                     let mut ob = o.write().unwrap();
                     let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
                     if let Some(ref mr) = omr {
