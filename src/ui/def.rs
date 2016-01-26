@@ -689,16 +689,22 @@ impl WidgetContainer
                         }
                     };
                 }
-                else if name.starts_with("object/comp_data/MeshRender")
-                    //TODO chris
-                {
-                    let mut ob = o.write().unwrap();
-                    let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
-                    if let Some(ref mr) = omr {
-                        ob.mesh_render =
-                            Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
+                //else if name.starts_with("object/comp_data/MeshRender")
+                //else if name.contains("MeshRender")
+                //else if must_update(&*o.read().unwrap(), name)
+                let ups = must_update(&*o.read().unwrap(), name);
+                for up in ups.iter() {
+                    println!("here I do stuff");
+                    if let ui::property::ShouldUpdate::Mesh = *up {
+                        let mut ob = o.write().unwrap();
+                        let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
+                        if let Some(ref mr) = omr {
+                            ob.mesh_render =
+                                Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
+                        }
                     }
                 }
+                println!("and I am done");
 
                 match self.property {
                     Some(ref p) => {
@@ -1710,3 +1716,32 @@ pub extern fn select_list(data : *const c_void, name : *const c_char)
     container.set_scene(s);
 }
 
+fn must_update(p : &ui::property::PropertyShow, path : &str) -> Vec<ui::property::ShouldUpdate>
+{
+    let mut vs: Vec<&str> = path.split('/').collect();
+    println!("must update {:?}", vs);
+
+    let mut v = Vec::new();
+    for i in vs.iter()
+    {
+        v.push(i.to_string());
+    }
+    v = v[1..].to_vec();
+
+    let mut r = Vec::new();
+
+    while !v.is_empty() {
+        let prop = ui::property::find_property_show(p, v.clone());
+        if let Some(pp) = prop {
+            println!("do i have to update {:?} ? : {:?}", v, pp.to_update());
+            r.push(pp.to_update())
+        }
+        else {
+            println!("no property for : {:?}", v);
+        }
+
+        v.pop();
+    }
+
+    r
+}

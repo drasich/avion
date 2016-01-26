@@ -979,6 +979,13 @@ impl WidgetUpdate for Property
     }
 }
 
+#[derive(Debug)]
+pub enum ShouldUpdate
+{
+    Nothing,
+    Mesh
+}
+
 pub trait PropertyShow
 {
     fn create_widget(
@@ -994,12 +1001,17 @@ pub trait PropertyShow
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
-        return None;
+        None
     }
 
     fn is_node(&self) -> bool
     {
-        return false;
+        false
+    }
+
+    fn to_update(&self) -> ShouldUpdate
+    {
+        ShouldUpdate::Nothing
     }
 }
 
@@ -1113,6 +1125,11 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
     {
         (**self).is_node()
     }
+
+    fn to_update(&self) -> ShouldUpdate
+    {
+        (**self).to_update()
+    }
 }
 
 impl<T : PropertyShow> PropertyShow for Option<T> {
@@ -1182,6 +1199,16 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
                 v.as_ptr());
         };
     }
+
+    fn to_update(&self) -> ShouldUpdate
+    {
+        match *self {
+            Some(ref s) =>
+                s.to_update(),
+            None => ShouldUpdate::Nothing
+        }
+    }
+
 }
 
 impl<T> PropertyShow for resource::ResTT<T>
@@ -1277,15 +1304,16 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         match field.parse::<usize>() {
             Ok(index) => {
                 if index > self.len() -1 {
-                    //println!("5555555555555555555get property of vec :: index is too big {}, {}", index, self.len());
+                    println!("5555555555555555555get property of vec :: index is too big {}, {}", index, self.len());
                     None
                 }
                 else {
+                    println!("return something");
                     Some(&self[index] as &PropertyShow)
                 }
             }
             _ => {
-                //println!("$$$$$$$$$$$$$$$ Vec return none for field {}", field);
+                println!("$$$$$$$$$$$$$$$ Vec return none for field {}", field);
                 None
             }
         }
@@ -1300,7 +1328,6 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
             i.update_widget(pv);
         }
         */
-
     }
 }
 
@@ -1316,6 +1343,7 @@ impl PropertyShow for CompData
         let kind : String = self.get_kind_string();
         let kindr : &str = kind.as_ref();
         let ss = field.to_string() + "/" + kindr;
+        //let ss = field.to_string() + ":" + kindr;
         let s : &str = ss.as_ref();
 
         /*
@@ -1411,9 +1439,27 @@ impl PropertyShow for CompData
         true
     }
 
+    fn to_update(&self) -> ShouldUpdate
+    {
+        match *self {
+            CompData::Player(ref p) => {
+                p.to_update()
+            },
+            CompData::Armature(ref p) => {
+                p.to_update()
+            },
+            CompData::MeshRender(ref p) => {
+                p.to_update()
+            },
+            _ => {
+                println!("not yet implemented");
+                ShouldUpdate::Nothing
+            }
+        }
+    }
+
+
 }
-
-
 
 macro_rules! property_show_impl(
     ($my_type:ty, [ $($member:ident),+ ]) => (
@@ -1479,6 +1525,12 @@ macro_rules! property_show_impl(
             {
                 true
             }
+
+            fn to_update(&self) -> ShouldUpdate
+            {
+                ShouldUpdate::Mesh //TODO
+            }
+
         }
     )
 );
