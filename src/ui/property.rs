@@ -1461,11 +1461,9 @@ impl PropertyShow for CompData
 
 }
 
-macro_rules! property_show_impl(
+macro_rules! property_show_methods(
     ($my_type:ty, [ $($member:ident),+ ]) => (
 
-        impl PropertyShow for $my_type
-        {
             fn create_widget(
                 &self,
                 property : &mut Property,
@@ -1525,15 +1523,25 @@ macro_rules! property_show_impl(
             {
                 true
             }
+    )
+);
+
+macro_rules! property_show_impl(
+    ($my_type:ty, $e:tt) => (
+        impl PropertyShow for $my_type {
+            property_show_methods!($my_type, $e);
+        });
+    ($my_type:ty, $e:tt, $up:expr) => (
+        impl PropertyShow for $my_type {
+            property_show_methods!($my_type, $e);
 
             fn to_update(&self) -> ShouldUpdate
             {
-                ShouldUpdate::Mesh //TODO
+                $up
             }
-
         }
-    )
-);
+        )
+    );
 
 property_show_impl!(vec::Vec3,[x,y,z]);
 property_show_impl!(vec::Quat,[x,y,z,w]);
@@ -1543,7 +1551,7 @@ property_show_impl!(object::Object,
                      //[name,position,orientation,scale]);
                      [name,position,orientation,scale,comp_data,comp_lua]);
 
-property_show_impl!(component::mesh_render::MeshRender,[mesh,material]);
+property_show_impl!(component::mesh_render::MeshRender,[mesh,material], ShouldUpdate::Mesh);
 property_show_impl!(component::player::Player,[speed]);
 property_show_impl!(component::player::Enemy,[name]);
 property_show_impl!(component::player::Collider,[name]);

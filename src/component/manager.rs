@@ -49,97 +49,10 @@ pub trait Component : Any
 
 }
 
-#[derive(Clone)]
-pub enum Components
-{
-    Empty,
-    MeshRender(MeshRenderer),
-    ArmatureAnimation(ArmatureAnimation),
-    PlayerBehavior(PlayerBehavior)
-}
-
-impl Components {
-    pub fn get_comp<T:Any>(&self) -> Option<&T>
-    {
-        match *self {
-            Components::Empty => {
-                None
-            }
-            Components::MeshRender(ref p) => {
-                let anyp = p as &Any;
-                anyp.downcast_ref::<T>()
-            },
-            Components::ArmatureAnimation(ref p) => {
-                let anyp = p as &Any;
-                anyp.downcast_ref::<T>()
-            },
-            Components::PlayerBehavior(ref p) => {
-                let anyp = p as &Any;
-                anyp.downcast_ref::<T>()
-            },
-            //_ => None
-        }
-    }
-
-}
-
-impl Component for Components
-{
-    /*
-    fn copy(&self) -> Rc<RefCell<Box<Component>>>
-    {
-        //TODO
-        Rc::new(RefCell::new(box PlayerBehavior))
-    }
-    */
-
-    fn get_name(&self) -> String
-    {
-        match *self {
-            Components::Empty => {
-                String::from("empty")
-            },
-            Components::MeshRender(ref p) => {
-                p.get_name()
-            },
-            Components::ArmatureAnimation(ref p) => {
-                p.get_name()
-            },
-            Components::PlayerBehavior(ref p) => {
-                p.get_name()
-            },
-            //_ => String::from_str("no_name_implemented")
-        }
-
-    }
-
-    fn update(&mut self, ob : &mut Object, dt : f64)
-    {
-        match *self {
-            Components::Empty => {},
-            Components::MeshRender(ref mut p) => {
-                p.update(ob, dt);
-            },
-            Components::ArmatureAnimation(ref mut p) => {
-                p.update(ob, dt);
-            },
-            Components::PlayerBehavior(ref mut p) => {
-                p.update(ob, dt);
-            },
-            //_ => String::from_str("no_name_implemented")
-        }
-
-    }
-
-
-}
-
-
 pub trait Encode
 {
   fn encode_this<E: Encoder>(&self, encoder: &mut E);// -> Result<(), &str>;
 }
-
 
 #[derive(Clone, RustcEncodable, RustcDecodable)]
 pub enum CompData
@@ -407,4 +320,71 @@ impl Decodable for Box<Component> {
   }
 }
 */
+
+macro_rules! components_def(
+    ($($member:ident),+) => (
+
+#[derive(Clone)]
+pub enum Components
+{
+    Empty,
+    $(
+    $member($member),
+    )+
+}
+
+impl Components {
+    pub fn get_comp<T:Any>(&self) -> Option<&T>
+    {
+        match *self {
+            Components::Empty => {
+                None
+            }
+            $(
+            Components::$member(ref p) => {
+                let anyp = p as &Any;
+                anyp.downcast_ref::<T>()
+            },
+            )+
+        }
+    }
+}
+
+impl Component for Components
+{
+    fn get_name(&self) -> String
+    {
+        match *self {
+            Components::Empty => {
+                String::from("empty")
+            },
+            $(
+            Components::$member(ref p) => {
+                p.get_name()
+            },
+            )+
+        }
+
+    }
+
+    fn update(&mut self, ob : &mut Object, dt : f64)
+    {
+        match *self {
+            Components::Empty => {},
+            $(
+            Components::$member(ref mut p) => {
+                p.update(ob, dt);
+            },
+            )+
+        }
+    }
+}
+
+));
+
+
+components_def!(
+    MeshRenderer,
+    ArmatureAnimation,
+    PlayerBehavior);
 
