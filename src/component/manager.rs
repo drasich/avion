@@ -49,268 +49,9 @@ pub trait Component : Any
 
 }
 
-#[derive(Clone)]
-pub enum Components
-{
-    Empty,
-    MeshRender(MeshRenderer),
-    ArmatureAnimation(ArmatureAnimation),
-    PlayerBehavior(PlayerBehavior)
-}
-
-impl Components {
-    pub fn get_comp<T:Any>(&self) -> Option<&T>
-    {
-        match *self {
-            Components::Empty => {
-                None
-            }
-            Components::MeshRender(ref p) => {
-                let anyp = p as &Any;
-                anyp.downcast_ref::<T>()
-            },
-            Components::ArmatureAnimation(ref p) => {
-                let anyp = p as &Any;
-                anyp.downcast_ref::<T>()
-            },
-            Components::PlayerBehavior(ref p) => {
-                let anyp = p as &Any;
-                anyp.downcast_ref::<T>()
-            },
-            //_ => None
-        }
-    }
-
-}
-
-impl Component for Components
-{
-    /*
-    fn copy(&self) -> Rc<RefCell<Box<Component>>>
-    {
-        //TODO
-        Rc::new(RefCell::new(box PlayerBehavior))
-    }
-    */
-
-    fn get_name(&self) -> String
-    {
-        match *self {
-            Components::Empty => {
-                String::from("empty")
-            },
-            Components::MeshRender(ref p) => {
-                p.get_name()
-            },
-            Components::ArmatureAnimation(ref p) => {
-                p.get_name()
-            },
-            Components::PlayerBehavior(ref p) => {
-                p.get_name()
-            },
-            //_ => String::from_str("no_name_implemented")
-        }
-
-    }
-
-    fn update(&mut self, ob : &mut Object, dt : f64)
-    {
-        match *self {
-            Components::Empty => {},
-            Components::MeshRender(ref mut p) => {
-                p.update(ob, dt);
-            },
-            Components::ArmatureAnimation(ref mut p) => {
-                p.update(ob, dt);
-            },
-            Components::PlayerBehavior(ref mut p) => {
-                p.update(ob, dt);
-            },
-            //_ => String::from_str("no_name_implemented")
-        }
-
-    }
-
-
-}
-
-
 pub trait Encode
 {
   fn encode_this<E: Encoder>(&self, encoder: &mut E);// -> Result<(), &str>;
-}
-
-
-#[derive(Clone, RustcEncodable, RustcDecodable)]
-pub enum CompData
-{
-    None,
-    Player(Player),
-    Enemy(Enemy),
-    Collider(Collider),
-    Armature(ArmaturePath),
-    MeshRender(MeshRender)
-}
-
-impl Default for CompData
-{
-    fn default() -> CompData 
-    { 
-        CompData::None
-    }
-}
-
-impl CompData
-{
-    pub fn get_comp<T:Any>(&self) -> Option<&T>
-    {
-        match *self {
-            CompData::Player(ref p) => {
-                let anyp = p as &Any;
-                anyp.downcast_ref::<T>()
-            },
-            CompData::Armature(ref p) => {
-                let anyp = p as &Any;
-                anyp.downcast_ref::<T>()
-            },
-            CompData::MeshRender(ref c) => {
-                let anyp = c as &Any;
-                anyp.downcast_ref::<T>()
-            },
-            _ => None
-        }
-    }
-
-    pub fn get_mut_comp<T:Any>(&mut self) -> Option<&mut T>
-    {
-        match *self {
-            CompData::Player(ref mut p) => {
-                let anyp = p as &mut Any;
-                anyp.downcast_mut::<T>()
-            },
-            CompData::Armature(ref mut p) => {
-                let anyp = p as &mut Any;
-                anyp.downcast_mut::<T>()
-            },
-            CompData::MeshRender(ref mut p) => {
-                let anyp = p as &mut Any;
-                anyp.downcast_mut::<T>()
-            },
-            _ => None
-        }
-    }
-
-    pub fn get_kind_string(&self) -> String
-    {
-        match *self {
-            CompData::Player(_) => {
-                String::from("Player")
-            },
-            CompData::Armature(_) => {
-                String::from("Armature")
-            },
-            CompData::MeshRender(_) => {
-                String::from("MeshRender")
-            },
-            _ => {
-                String::from("NotImplemented")
-            }
-        }
-
-    }
-
-}
-
-impl PropertyWrite for CompData {
-  fn test_set_property_hier(&mut self, name : &str, value: &Any)
-  {
-      let v : Vec<&str> = name.split('/').collect();
-
-      match v.len() {
-          0 => {},
-          1 => {},
-          _ => {
-              let yep : String = v[1..].join("/");
-              if v[0] == self.get_kind_string() {
-                  match *self {
-                      CompData::Player(ref mut p) => {
-                          p.test_set_property_hier(yep.as_ref(), value);
-                      },
-                      CompData::Armature(ref mut p) => {
-                          p.test_set_property_hier(yep.as_ref(), value);
-                      },
-                      CompData::MeshRender(ref mut p) => {
-                          p.test_set_property_hier(yep.as_ref(), value);
-                      },
-                      _ => {println!("not yet implemented");}
-                  }
-              }
-          }
-      }
-  }
-
-  fn set_property_hier(&mut self, name : &str, value: WriteValue)
-  {
-      let v : Vec<&str> = name.split('/').collect();
-
-      match v.len() {
-          0 => {},
-          1 => {},
-          _ => {
-              let yep : String = v[1..].join("/");
-              if v[0] == self.get_kind_string() {
-                  match *self {
-                      CompData::Player(ref mut p) => {
-                          p.set_property_hier(yep.as_ref(), value);
-                      },
-                      CompData::Armature(ref mut p) => {
-                          p.set_property_hier(yep.as_ref(), value);
-                      },
-                      CompData::MeshRender(ref mut p) => {
-                          p.set_property_hier(yep.as_ref(), value);
-                      },
-                      _ => {println!("not yet implemented");}
-                  }
-              }
-          }
-      }
-  }
-}
-
-impl PropertyGet for CompData
-{
-  fn get_property_hier(&self, name : &str) -> Option<Box<Any>>
-  {
-      let v : Vec<&str> = name.split('/').collect();
-
-      match v.len() {
-          0 => None,
-          1 => None,
-          _ => {
-              let yep : String = v[1..].join("/");
-              if v[0] == self.get_kind_string() {
-                  match *self {
-                      CompData::Player(ref p) => {
-                          p.get_property_hier(yep.as_ref())
-                      },
-                      CompData::Armature(ref p) => {
-                          p.get_property_hier(yep.as_ref())
-                      },
-                      CompData::MeshRender(ref p) => {
-                          p.get_property_hier(yep.as_ref())
-                      },
-                      _ => {
-                          println!("not yet implemented");
-                          None
-                      }
-                  }
-              }
-              else {
-                  None
-              }
-          }
-      }
-  }
 }
 
 
@@ -392,4 +133,237 @@ impl Decodable for Box<Component> {
   }
 }
 */
+
+macro_rules! components_def(
+    ($($member:ident),+) => (
+
+#[derive(Clone)]
+pub enum Components
+{
+    Empty,
+    $(
+    $member($member),
+    )+
+}
+
+impl Components {
+    pub fn get_comp<T:Any>(&self) -> Option<&T>
+    {
+        match *self {
+            Components::Empty => {
+                None
+            }
+            $(
+            Components::$member(ref p) => {
+                let anyp = p as &Any;
+                anyp.downcast_ref::<T>()
+            },
+            )+
+        }
+    }
+}
+
+impl Component for Components
+{
+    fn get_name(&self) -> String
+    {
+        match *self {
+            Components::Empty => {
+                String::from("empty")
+            },
+            $(
+            Components::$member(ref p) => {
+                p.get_name()
+            },
+            )+
+        }
+
+    }
+
+    fn update(&mut self, ob : &mut Object, dt : f64)
+    {
+        match *self {
+            Components::Empty => {},
+            $(
+            Components::$member(ref mut p) => {
+                p.update(ob, dt);
+            },
+            )+
+        }
+    }
+}
+
+));
+
+components_def!(
+    MeshRenderer,
+    ArmatureAnimation,
+    PlayerBehavior);
+
+
+macro_rules! compdata_def(
+    ($($member:ident),+) => (
+
+#[derive(Clone, RustcEncodable, RustcDecodable)]
+pub enum CompData
+{
+    None,
+    $(
+    $member($member),
+    )+
+}
+
+impl CompData
+{
+    pub fn get_comp<T:Any>(&self) -> Option<&T>
+    {
+        match *self {
+            $(
+            CompData::$member(ref p) => {
+                let anyp = p as &Any;
+                anyp.downcast_ref::<T>()
+            },
+            )+
+            _ => None
+        }
+    }
+
+    pub fn get_mut_comp<T:Any>(&mut self) -> Option<&mut T>
+    {
+        match *self {
+            $(
+            CompData::$member(ref mut p) => {
+                let anyp = p as &mut Any;
+                anyp.downcast_mut::<T>()
+            },
+            )+
+            _ => None
+        }
+    }
+
+    pub fn get_kind_string(&self) -> String
+    {
+        match *self {
+            $(
+            CompData::$member(_) => {
+                String::from(stringify!($member))
+            },
+            )+
+            _ => {
+                String::from("NotImplemented")
+            }
+        }
+
+    }
+}
+
+impl PropertyWrite for CompData {
+  fn test_set_property_hier(&mut self, name : &str, value: &Any)
+  {
+      println!("compdata TEST set property hier: {}", name);
+      let v : Vec<&str> = name.split('/').collect();
+
+      match v.len() {
+          0 => {},
+          1 => {
+              match *self {
+                  $(
+                  CompData::$member(ref mut p) => {
+                      p.test_set_property_hier(v[0], value);
+                  },
+                  )+
+                  _ => {println!("not yet implemented");}
+              }
+          },
+          _ => {
+              let yep : String = v[1..].join("/");
+              if v[0] == self.get_kind_string() {
+                  match *self {
+                      $(
+                      CompData::$member(ref mut p) => {
+                          p.test_set_property_hier(yep.as_ref(), value);
+                      },
+                      )+
+                      _ => {println!("not yet implemented");}
+                  }
+              }
+          }
+      }
+  }
+
+  fn set_property_hier(&mut self, name : &str, value: WriteValue)
+  {
+      println!("compdata set property hier: {}", name);
+      let v : Vec<&str> = name.split('/').collect();
+
+      match v.len() {
+          0 => {},
+          1 => {},
+          _ => {
+              let yep : String = v[1..].join("/");
+              if v[0] == self.get_kind_string() {
+                  match *self {
+                      $(
+                      CompData::$member(ref mut p) => {
+                          p.set_property_hier(yep.as_ref(), value);
+                      },
+                      )+
+                      _ => {println!("not yet implemented");}
+                  }
+              }
+          }
+      }
+  }
+}
+
+impl PropertyGet for CompData
+{
+  fn get_property_hier(&self, name : &str) -> Option<Box<Any>>
+  {
+      let v : Vec<&str> = name.split('/').collect();
+
+      match v.len() {
+          0 => None,
+          1 => None,
+          _ => {
+              let yep : String = v[1..].join("/");
+              if v[0] == self.get_kind_string() {
+                  match *self {
+                      $(
+                      CompData::$member(ref p) => {
+                          p.get_property_hier(yep.as_ref())
+                      },
+                      )+
+                      _ => {
+                          println!("not yet implemented");
+                          None
+                      }
+                  }
+              }
+              else {
+                  None
+              }
+          }
+      }
+  }
+}
+
+));
+
+impl Default for CompData
+{
+    fn default() -> CompData 
+    { 
+        CompData::None
+    }
+}
+
+compdata_def!(
+    Player,
+    Enemy,
+    Collider,
+    ArmaturePath,
+    MeshRender
+);
+
 
