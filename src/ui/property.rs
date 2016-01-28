@@ -1384,7 +1384,7 @@ impl PropertyShow for CompData
                 CompData::Player(ref p) => {
                     return p.create_widget(property, field, depth, has_container);
                 },
-                CompData::Armature(ref p) => {
+                CompData::ArmaturePath(ref p) => {
                     return p.create_widget(property, field, depth, has_container);
                 },
                 CompData::MeshRender(ref p) => {
@@ -1401,7 +1401,7 @@ impl PropertyShow for CompData
             CompData::Player(ref p) => {
                 p.update_widget(pv);
             },
-            CompData::Armature(ref p) => {
+            CompData::ArmaturePath(ref p) => {
                 p.update_widget(pv);
             },
             CompData::MeshRender(ref p) => {
@@ -1421,7 +1421,7 @@ impl PropertyShow for CompData
             CompData::Player(ref p) => {
                 Some(p)
             },
-            CompData::Armature(ref p) => {
+            CompData::ArmaturePath(ref p) => {
                 Some(p)
             },
             CompData::MeshRender(ref p) => {
@@ -1445,7 +1445,7 @@ impl PropertyShow for CompData
             CompData::Player(ref p) => {
                 p.to_update()
             },
-            CompData::Armature(ref p) => {
+            CompData::ArmaturePath(ref p) => {
                 p.to_update()
             },
             CompData::MeshRender(ref p) => {
