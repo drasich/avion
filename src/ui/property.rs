@@ -407,7 +407,7 @@ impl Property
 
     pub fn add_node(&mut self, ps : &PropertyShow, name : &str, has_container : bool) -> *const PropertyValue
     {
-        println!("____added node : {}", name);
+        println!("____added node : {}, container : {}", name, has_container);
         let f = CString::new(name.as_bytes()).unwrap();
         let mut pv = unsafe {
             property_list_node_add(
@@ -840,7 +840,7 @@ pub extern fn expand(
     let path = match str::from_utf8(s) {
         Ok(pp) => pp,
         _ => {
-            println!("problem with the path");
+            panic!("problem with the path");
             return;}
     };
 
@@ -1279,20 +1279,28 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                 if let Some(ref mut pv) = i.create_widget(property, nf.as_str(), depth -1, true) {
                     unsafe {
                         println!("___ Vec : success, trying to add single vec" );
-                        property_list_single_vec_add(
+                        let pv = property_list_single_vec_add(
                             property.jk_property_list,
                             *pv,
                             i.is_node()
                             );
+
+                        if pv != ptr::null() {
+                            property.pv.insert(nf.clone(), pv);
+                        }
+
+                        if property.config.expand.contains(nf.as_str()) {
+                            unsafe {
+                                property_expand(pv);
+                            }
+                        }
+
                     }
+
                 }
                 else {
                     println!("___ Vec : failed" );
                 }
-
-                //if pv != ptr::null() {
-                    //property.pv.insert(field.to_string(), pv);
-                //}
             }
         }
 
