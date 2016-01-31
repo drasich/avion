@@ -156,7 +156,8 @@ extern {
 
     fn property_list_node_add(
         pl : *const JkPropertyList,
-        name : *const c_char
+        path : *const c_char,
+        added_name : *const c_char
         ) -> *const PropertyValue;
 
     fn property_list_single_node_add(
@@ -405,14 +406,32 @@ impl Property
         }
     }
 
-    pub fn add_node(&mut self, ps : &PropertyShow, name : &str, has_container : bool) -> *const PropertyValue
+    pub fn add_node(
+        &mut self,
+        ps : &PropertyShow,
+        name : &str,
+        has_container : bool,
+        added_name : Option<&str>,
+        ) -> *const PropertyValue
     {
         println!("____added node : {}, container : {}", name, has_container);
         let f = CString::new(name.as_bytes()).unwrap();
         let mut pv = unsafe {
+            let test = if has_container {
+                if let Some(n) = added_name {
+                    CString::new(n).unwrap().as_ptr()
+                }
+                else {
+                    ptr::null()
+                }
+            }
+            else {
+                ptr::null()
+            };
             property_list_node_add(
                 self.jk_property_list,
-                f.as_ptr()
+                f.as_ptr(),
+                test
                 )
         };
 
@@ -1226,7 +1245,7 @@ impl<T> PropertyShow for resource::ResTT<T>
 
         if depth == 0 && field != ""
         {
-            property.add_node(self, field, has_container);
+            property.add_node(self, field, has_container, None);
         }
 
         if depth > 0 {
@@ -1380,7 +1399,7 @@ impl PropertyShow for CompData
         {
             println!("00--> compdata property show for : {}, {}, {}", s, depth, kind );
             //let pv = property.add_node(self, s, has_container);
-            let pv = property.add_node(self, field, has_container);
+            let pv = property.add_node(self, field, has_container, Some(kindr));
             return Some(pv);
         }
 
@@ -1485,7 +1504,7 @@ macro_rules! property_show_methods(
 
                 if depth == 0 && field != ""
                 {
-                    property.add_node(self, field, has_container);
+                    property.add_node(self, field, has_container, None);
                 }
 
                 if depth > 0 {
