@@ -361,6 +361,12 @@ pub extern fn mouse_down(
         container.handle_change(op, view.uuid);
     }
 
+    if !op_list.is_empty() {
+        if let Some(w) = view.window {
+            unsafe {ui::jk_window_request_update(w);}
+        }
+    }
+
 }
 
 pub extern fn mouse_up(
@@ -385,6 +391,10 @@ pub extern fn mouse_up(
 
     view.handle_control_change(&change);
     container.handle_change(&change, view.uuid);
+
+    if let Some(w) = view.window {
+        unsafe {ui::jk_window_request_update(w);}
+    }
 }
 
 pub extern fn mouse_move(
@@ -424,6 +434,12 @@ pub extern fn mouse_move(
         container.handle_change(change, view.uuid);
     }
 
+    if !change_list.is_empty() {
+        if let Some(w) = view.window {
+            unsafe {ui::jk_window_request_update(w);}
+        }
+    }
+
 }
 
 pub extern fn mouse_wheel(
@@ -444,6 +460,10 @@ pub extern fn mouse_wheel(
     //let control_rc : &Rc<RefCell<Control>> = unsafe {mem::transmute(data)};
     let c = control_rc.borrow_mut();
     c.mouse_wheel(modifiers_flag, direction, z, x, y, timestamp);
+
+    if let Some(w) = view.window {
+        unsafe {ui::jk_window_request_update(w);}
+    }
 }
 
 pub extern fn key_down(

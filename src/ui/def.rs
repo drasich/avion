@@ -87,6 +87,8 @@ extern {
         draw : RenderFunc,
         resize : ResizeFunc
         ) -> *const JkGlview;
+    pub fn jk_window_request_update(win : *const Window);
+
     pub fn tmp_func(
         window: *const Window,
         data : *const c_void,
@@ -507,16 +509,13 @@ pub extern fn exit_cb(data: *mut c_void) -> () {
     //let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(app_data.master)};
     //let master = master_rc.borrow();
 
-    match container.context.scene {
-        Some(ref s) => {
-            println!("going to save: {}", s.borrow().name);
-            s.borrow().save();
-            //old
-            //s.read().unwrap().save();
-            //s.read().unwrap().savetoml();
-            //s.borrow().savetoml();
-        },
-        None => {}
+    if let Some(ref s) = container.context.scene {
+        println!("going to save: {}", s.borrow().name);
+        s.borrow().save();
+        //old
+        //s.read().unwrap().save();
+        //s.read().unwrap().savetoml();
+        //s.borrow().savetoml();
     }
 
     //TODO save window pos/size widgets pos/size
@@ -706,15 +705,12 @@ impl WidgetContainer
                 }
                 println!("and I am done");
 
-                match self.property {
-                    Some(ref p) => {
-                         //p.update_object(&*o.read().unwrap(), s);
-                        if widget_origin != p.id {
-                            p.update_object_property(&*o.read().unwrap(), name);
-                        }
-                     },
-                    None => {}
-                };
+                if let Some(ref p) = self.property {
+                    //p.update_object(&*o.read().unwrap(), s);
+                    if widget_origin != p.id {
+                        p.update_object_property(&*o.read().unwrap(), name);
+                    }
+                }
             },
             operation::Change::Objects(ref name, ref id_list) => {
                 let sel = self.get_selected_object();

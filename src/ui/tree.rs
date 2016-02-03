@@ -100,7 +100,7 @@ impl Tree
     {
         unsafe {tree_clear(self.jk_tree);}
         self.objects.clear();
-        for o in scene.objects.iter() {
+        for o in &scene.objects {
             self.add_object(o.clone());
         }
     }
@@ -116,7 +116,7 @@ impl Tree
 
     pub fn add_objects(&mut self, objects : LinkedList<Arc<RwLock<object::Object>>>)
     {
-        for o in objects.iter() {
+        for o in &objects {
             self.add_object(o.clone());
         }
     }
@@ -185,14 +185,10 @@ impl Tree
 
     pub fn remove_objects_by_id(&mut self, ids : Vec<Uuid>)
     {
-        for id in ids.iter() {
+        for id in &ids {
             let item = self.objects.remove(id);
-            match item {
-                Some(i) => unsafe {
-                    tree_object_remove(i);
-                },
-                None => {
-                }
+            if let Some(i) = item {
+                unsafe { tree_object_remove(i);}
             }
         }
     }
@@ -207,7 +203,7 @@ impl Tree
     pub fn select_objects(&mut self, ids: Vec<Uuid>)
     {
         unsafe { tree_deselect_all(self.jk_tree); }
-        for id in ids.iter() {
+        for id in &ids {
             self._select(id);
         }
     }
@@ -215,11 +211,8 @@ impl Tree
     fn _select(&mut self, id: &Uuid)
     {
         println!("select from tree");
-        match self.objects.get(id) {
-            Some(item) => {
-                unsafe {tree_item_select(*item);}
-            }
-            _ => {}
+        if let Some(item) = self.objects.get(id) {
+            unsafe {tree_item_select(*item);}
         }
 
         println!("select from tree end");
@@ -230,12 +223,9 @@ impl Tree
     {
         unsafe { tree_deselect_all(self.jk_tree); }
 
-        for id in ids.iter() {
-            match self.objects.get(id) {
-                Some(item) => {
-                    unsafe {tree_item_select(*item);}
-                }
-                _ => {}
+        for id in &ids {
+            if let Some(item) = self.objects.get(id) {
+                unsafe {tree_item_select(*item);}
             }
         }
 
@@ -249,11 +239,8 @@ impl Tree
 
     pub fn update_object(& self, id: &Uuid)
     {
-        match self.objects.get(id) {
-            Some(item) => {
-                unsafe {tree_item_update(*item);}
-            }
-            _ => {}
+        if let Some(item) = self.objects.get(id) {
+            unsafe {tree_item_update(*item);}
         }
     }
 
@@ -325,7 +312,7 @@ pub extern fn expand(
     println!("expanding ! {} ", o.read().unwrap().name);
     println!("expanding ! tree name {} ", t.name);
 
-    for c in o.read().unwrap().children.iter() {
+    for c in &o.read().unwrap().children {
         println!("expanding ! with child {} ", (*c).read().unwrap().name);
         unsafe {
             let eoi = tree_object_add(t.jk_tree, mem::transmute(c), parent);
