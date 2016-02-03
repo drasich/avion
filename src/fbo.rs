@@ -56,17 +56,15 @@ impl Fbo
 
     pub fn cgl_resize(&self, w : c_int, h : c_int)
     {
-        match self.cgl_fbo {
-            Some(f) => unsafe { cgl_fbo_resize(f, w, h); },
-            None => {}
+        if let Some(f) = self.cgl_fbo {
+            unsafe { cgl_fbo_resize(f, w, h); }
         }
     }
 
     pub fn cgl_use(&self)
     {
-        match self.cgl_fbo {
-            Some(f) => unsafe { cgl_fbo_use(f); },
-            None => {}
+        if let Some(f) = self.cgl_fbo {
+            unsafe { cgl_fbo_use(f); }
         }
     }
 

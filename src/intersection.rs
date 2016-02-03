@@ -33,7 +33,7 @@ pub fn ray_object(ray : &geometry::Ray, o : &object::Object) -> IntersectionRay
     let out = IntersectionRay::new();
 
     match o.mesh_render {
-        None => return out,
+        None => out,
         Some(ref mr) => {
             let wp = o.world_position();
             let wq = o.world_orientation();
@@ -42,7 +42,7 @@ pub fn ray_object(ray : &geometry::Ray, o : &object::Object) -> IntersectionRay
             //TODO
             //let ir_box = ray_box(ray, .... 
             let m = &mr.mesh;
-            return ray_mesh(ray, &*m.read().unwrap(), &wp, &wq, &ws);
+            ray_mesh(ray, &*m.read().unwrap(), &wp, &wq, &ws)
         }
     }
 }
@@ -76,7 +76,7 @@ pub fn ray_mesh(
         Some(v) => v
     };
 
-    fn get_vertex(v : &Vec<f32>, index: usize) -> Vec3
+    fn get_vertex(v : &[f32], index: usize) -> Vec3
     {
         Vec3::new(
             v[index*3] as f64,
@@ -411,7 +411,7 @@ pub fn is_position_in_plane(p : &geometry::Plane, v : Vec3) -> bool
 
 pub fn is_position_in_planes(planes : &[geometry::Plane], v : Vec3) -> bool
 {
-    for p in planes.iter() {
+    for p in planes {
         if !is_position_in_plane(p, v) {
             return false;
         }
@@ -427,7 +427,7 @@ pub fn planes_is_box_in_allow_false_positives(planes : &[geometry::Plane], b : &
 
     // for each plane do ...
     //for(i=0; i < nb_planes; ++i) {
-    for plane in planes.iter() {
+    for plane in planes {
 
         out=0;
         inn=0;
@@ -435,7 +435,7 @@ pub fn planes_is_box_in_allow_false_positives(planes : &[geometry::Plane], b : &
         // get out of the cycle as soon as a box has corners
         // both inside and out of the frustum
         //for (k = 0; k < 8 && (inn==0 || out==0); k++) {
-        for pos in b.v.iter() {
+        for pos in &b.v {
 
             // is the corner on the good or bad side of the plane
             if is_position_in_plane(plane, *pos) {
@@ -487,17 +487,12 @@ pub fn is_object_in_planes(planes : &[geometry::Plane], o : &object::Object)
     let r = geometry::Repere { origin : o.position, rotation : o.orientation.as_quat()};
     let iq = r.rotation.conj();
 
-    for p in new_planes.iter_mut() {
+    for p in &mut new_planes {
         let point = p.point;
         p.point =  r.world_to_local(&point);
         p.normal = r.world_to_local(&(p.normal + point));
         p.normal = p.normal - p.point;
     }
-
-
-
-
-
 
 
     let vertices = match m.buffer_f32_get("position") {
@@ -513,7 +508,7 @@ pub fn is_object_in_planes(planes : &[geometry::Plane], o : &object::Object)
         Some(f) => f
     };
 
-    fn get_vertex(v : &Vec<f32>, index: usize) -> Vec3
+    fn get_vertex(v : &[f32], index: usize) -> Vec3
     {
         Vec3::new(
             v[index*3] as f64,
@@ -533,7 +528,7 @@ pub fn is_object_in_planes(planes : &[geometry::Plane], o : &object::Object)
 
         let tri = geometry::Triangle::new(v0,v1,v2);
 
-        if planes_is_in_triangle(new_planes.as_slice(), &tri) {
+        if planes_is_in_triangle(&new_planes, &tri) {
             return true;
         }
     }
@@ -545,7 +540,7 @@ pub fn planes_is_in_triangle(planes : &[geometry::Plane], t : &geometry::Triangl
 {
   let mut point_is_in = true;
   //for (i = 0; i< nb_planes; i++) {
-  for p in planes.iter() {
+  for p in planes {
     if !is_position_in_plane(p, t.v0) {
       point_is_in = false;
       break;
@@ -558,7 +553,7 @@ pub fn planes_is_in_triangle(planes : &[geometry::Plane], t : &geometry::Triangl
 
   point_is_in = true;
   //for (i = 0; i< nb_planes; i++) {
-  for p in planes.iter() {
+  for p in planes {
     if !is_position_in_plane(p, t.v1) {
       point_is_in = false;
       break;
@@ -570,7 +565,7 @@ pub fn planes_is_in_triangle(planes : &[geometry::Plane], t : &geometry::Triangl
   }
 
   point_is_in = true;
-  for p in planes.iter() {
+  for p in planes {
     if !is_position_in_plane(p, t.v2) {
       point_is_in = false;
       break;
@@ -586,7 +581,7 @@ pub fn planes_is_in_triangle(planes : &[geometry::Plane], t : &geometry::Triangl
 
   //for (i = 0; i< nb_planes; i++) {
   let mut i = 0;
-  for p in planes.iter() {
+  for p in planes {
     let ipt = _intersection_plane_triangle(p, t);
     //test everything but the current plane
     if ipt.intersect {
@@ -662,17 +657,20 @@ fn _intersection_plane_triangle(p : &geometry::Plane, t : &geometry::Triangle) -
 }
 
 
-fn _check_inter(planes : &[geometry::Plane], notthisplane : usize, notthisplaneeither : usize, s : &geometry::Segment) -> bool
+fn _check_inter(
+    planes : &[geometry::Plane],
+    notthisplane : usize,
+    notthisplaneeither : usize,
+    s : &geometry::Segment) -> bool
 {
-  //for (i = 0; i< nb_planes; i++) {
-  for i in 0..planes.len() {
+  for (i,p) in planes.iter().enumerate() {
     if i == notthisplane || i == notthisplaneeither {
         continue;
     }
 
-    let planedot = planes[i].normal.dot(&planes[i].point);
-    let s0dot = planes[i].normal.dot(&s.p0);
-    let s1dot = planes[i].normal.dot(&s.p1);
+    let planedot = planes[i].normal.dot(&p.point);
+    let s0dot = p.normal.dot(&s.p0);
+    let s1dot = p.normal.dot(&s.p1);
 
     if s0dot >= planedot || s1dot >= planedot {
         continue;
@@ -682,7 +680,7 @@ fn _check_inter(planes : &[geometry::Plane], notthisplane : usize, notthisplanee
     }
   }
   //we tested all the planes and can return true
-  return true;
+  true
 }
 
 

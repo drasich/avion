@@ -135,7 +135,7 @@ impl OperationTrait for Operation
                 println!("operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(s.as_ref(), &**new);
                     ids.push_back(ob.id.clone());
@@ -146,7 +146,7 @@ impl OperationTrait for Operation
                 println!("to none, apply,  operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.set_property_hier(s.as_ref(), property::WriteValue::None);
                     ids.push_back(ob.id.clone());
@@ -157,7 +157,7 @@ impl OperationTrait for Operation
                 println!("vec add operation {:?}, {}", self.name,i);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.add_item(s.as_ref(), i, &String::from("empty"));
                     ids.push_back(ob.id.clone());
@@ -168,7 +168,7 @@ impl OperationTrait for Operation
                 println!("vec del operation {:?}", self.name);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     //TODO chris
                     println!("yeeeeeeeeeeeee call del_item : {}", ob.name);
@@ -181,7 +181,7 @@ impl OperationTrait for Operation
                 println!("to some, apply,  operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.set_property_hier(s.as_ref(), property::WriteValue::Some);
                     ids.push_back(ob.id.clone());
@@ -192,7 +192,7 @@ impl OperationTrait for Operation
                 let mut i = 0;
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(
                         s.as_ref(),
@@ -248,7 +248,7 @@ impl OperationTrait for Operation
             OperationData::OldNew(ref old,_) => {
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(s.as_ref(), &**old);
                     ids.push_back(ob.id.clone());
@@ -259,7 +259,7 @@ impl OperationTrait for Operation
                 println!("to none, undo, operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(s.as_ref(), &**old);
                     ids.push_back(ob.id.clone());
@@ -270,7 +270,7 @@ impl OperationTrait for Operation
                 println!("to some, undo,  operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.set_property_hier(s.as_ref(), property::WriteValue::None);
                     ids.push_back(ob.id.clone());
@@ -281,7 +281,7 @@ impl OperationTrait for Operation
                 println!("vec add operation undo {:?}, {}", self.name, i);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.del_item(s.as_ref(), i);
                     ids.push_back(ob.id.clone());
@@ -292,7 +292,7 @@ impl OperationTrait for Operation
                 println!("vec del operation undo {:?}", self.name);
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.add_item(s.as_ref(), i, &**value);
                     ids.push_back(ob.id.clone());
@@ -303,7 +303,7 @@ impl OperationTrait for Operation
                 let mut i = 0;
                 let s = join_string(&self.name);
                 let mut ids = LinkedList::new();
-                for o in self.objects.iter() {
+                for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(
                         s.as_ref(),
@@ -440,11 +440,11 @@ impl OperationManager
 }
 
 //TODO remove
-fn join_string(path : &Vec<String>) -> String
+fn join_string(path : &[String]) -> String
 {
     let mut s = String::new();
     let mut first = true;
-    for v in path.iter() {
+    for v in path {
         if !first {
             s.push('/');
         }
@@ -455,10 +455,10 @@ fn join_string(path : &Vec<String>) -> String
     s
 }
 
-fn get_ids(obs : &Vec<Arc<RwLock<object::Object>>>) -> Vec<uuid::Uuid>
+fn get_ids(obs : &[Arc<RwLock<object::Object>>]) -> Vec<uuid::Uuid>
 {
     let mut list = Vec::new();
-    for o in obs.iter() {
+    for o in obs {
         list.push(o.read().unwrap().id.clone());
     }
 

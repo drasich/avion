@@ -555,9 +555,8 @@ macro_rules! property_set_impl(
         {
             fn test_set_property(&mut self, value: &Any)
             {
-                match value.downcast_ref::<$my_type>() {
-                    Some(v) => *self = (*v).clone(),
-                    None => {}
+                if let Some(v) = value.downcast_ref::<$my_type>() {
+                    *self = (*v).clone();
                 }
             }
 

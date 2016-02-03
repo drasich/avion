@@ -66,7 +66,7 @@ impl Component for PlayerBehavior
     }
 
     fn get_name(&self) -> String {
-        "player_behavior".to_string()
+        "player_behavior".to_owned()
     }
 
     /*

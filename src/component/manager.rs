@@ -56,7 +56,7 @@ pub trait Encode
 
 
 //type ComponentCreationFn = fn() -> Box<Component>;
-type ComponentCreationFn = fn(&Object, &resource::ResourceGroup) -> Box<Components>;
+pub type ComponentCreationFn = fn(&Object, &resource::ResourceGroup) -> Box<Components>;
 
 pub struct Manager {
     name : String,
@@ -67,7 +67,7 @@ impl Manager {
     pub fn new() -> Self
     {
         Manager {
-            name : "test".to_string(),
+            name : "test".to_owned(),
             components: HashMap::new()
         }
     }
@@ -76,13 +76,13 @@ impl Manager {
                               //f : fn() -> Box<Component>)
                               //f : fn() -> Component)
     {
-        self.components.insert(name.to_string(), f);
+        self.components.insert(name.to_owned(), f);
     }
 
     pub fn get_component_create_fn(&self, name : &str) -> Option<&ComponentCreationFn>
     {
-        //self.components.get(&name.to_string())
-        match self.components.get(&name.to_string()) {
+        //self.components.get(&name.to_owned())
+        match self.components.get(&name.to_owned()) {
             Some(f) => Some(f),
             None => None
         }

@@ -148,7 +148,7 @@ impl DraggerManager
     {
         let mut found_length = 0f64;
         let mut closest_dragger = None;
-        for dragger in self.draggers[self.current].iter_mut() {
+        for dragger in &mut self.draggers[self.current] {
             let mut d = dragger.borrow_mut();
             d.set_state(State::Idle);
             let (hit, len) = d.check_collision(&r, d.scale);
@@ -215,7 +215,7 @@ impl DraggerManager
     }
 
     pub fn set_position(&mut self, p : vec::Vec3) {
-        for d in self.draggers[self.current].iter_mut() {
+        for d in &mut self.draggers[self.current] {
             let mut db =d.borrow_mut();
             db.object.write().unwrap().position = p;
         }
@@ -224,7 +224,7 @@ impl DraggerManager
 
     pub fn set_orientation(&mut self, ori : transform::Orientation, camera : &camera::Camera) {
         self.ori = ori.as_quat();
-        for d in self.draggers[self.current].iter_mut() {
+        for d in &mut self.draggers[self.current] {
             let mut d = d.borrow_mut();
             if self.current == 2usize {
                 d.face_camera(camera, self.ori);
@@ -241,7 +241,7 @@ impl DraggerManager
         let projection = camera.get_perspective();
         let cam_mat_inv = cam_mat.get_inverse();
 
-        for d in self.draggers[self.current].iter_mut() {
+        for d in &mut self.draggers[self.current] {
 
             d.borrow_mut().scale_to_camera_data(&cam_mat_inv, &projection);
         }
@@ -250,7 +250,7 @@ impl DraggerManager
     pub fn get_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
     {
         let mut l = LinkedList::new();
-        for d in self.draggers[self.current].iter() {
+        for d in &self.draggers[self.current] {
             l.push_back(d.borrow().object.clone());
         }
 
@@ -258,7 +258,7 @@ impl DraggerManager
     }
 
     pub fn set_state(&mut self, state : State) {
-        for d in self.draggers[self.current].iter_mut() {
+        for d in &mut self.draggers[self.current] {
             d.borrow_mut().set_state(state);
         }
     }

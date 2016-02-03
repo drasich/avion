@@ -289,7 +289,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 
     let wc = WindowConfig::load();
 
-    for v in wc.views.iter() {
+    for v in &wc.views {
         let wc = &v.window;
         let v = box View::new(master.resource.clone(), container,wc.w,wc.h);
         master.views.push_back(v);
@@ -413,7 +413,7 @@ impl WindowConfig {
             }
         };
 
-        for v in c.views.iter() {
+        for v in &c.views {
             let vc = ViewConfig {
                 //window : WidgetConfig::new( unsafe { window_object_get(win) })
                 window : WidgetConfig{
@@ -693,7 +693,7 @@ impl WidgetContainer
                 //else if name.contains("MeshRender")
                 //else if must_update(&*o.read().unwrap(), name)
                 let ups = must_update(&*o.read().unwrap(), name);
-                for up in ups.iter() {
+                for up in &ups {
                     println!("here I do stuff");
                     if let ui::property::ShouldUpdate::Mesh = *up {
                         let mut ob = o.write().unwrap();
@@ -718,7 +718,7 @@ impl WidgetContainer
             },
             operation::Change::Objects(ref name, ref id_list) => {
                 let sel = self.get_selected_object();
-                for id in id_list.iter() {
+                for id in id_list {
 
                     if name == "object/name" {
                         if let Some(ref t) = self.tree {
@@ -764,19 +764,13 @@ impl WidgetContainer
                 println!("comp changed : {} ", comp_name);
                 let sel = self.get_selected_object();
                 if let Some(ref o) = sel {
-                    {
                     let ob = o.read().unwrap();
                     if uuid == ob.id  {
-                        match self.property {
-                            Some(ref mut p) =>
-                                {
-                                    if widget_origin != p.id {
-                                        p.update_object(&*ob, "");
-                                    }
-                                },
-                            None => {}
+                        if let Some(ref mut p) = self.property {
+                            if widget_origin != p.id {
+                                p.update_object(&*ob, "");
+                            }
                         }
-                    }
                     }
                 }
 
@@ -816,32 +810,25 @@ impl WidgetContainer
                 }
 
                 if sel.len() != 1 {
-                    match self.property {
-                        Some(ref mut p) => {
-                            if widget_origin != p.id {
-                                    p.set_nothing();
-                            }
-                        },
-                        None => {
-                            println!("container no property");
+                    if let Some(ref mut p) = self.property {
+                        if widget_origin != p.id {
+                            p.set_nothing();
                         }
+                    }
+                    else {
+                        println!("container no property");
                     }
                 }
                 else {
-                    match sel.front() {
-                        Some(o) => {
-                            match self.property {
-                                Some(ref mut p) => {
-                                    if widget_origin != p.id {
-                                        p.set_object(&*o.read().unwrap());
-                                    }
-                                },
-                                None => {
-                                    println!("container no property");
-                                }
+                    if let Some(o) = sel.front() {
+                        if let Some(ref mut p) = self.property {
+                            if widget_origin != p.id {
+                                p.set_object(&*o.read().unwrap());
                             }
-                        },
-                        _ => {},
+                        }
+                        else {
+                            println!("container has no property");
+                        }
                     }
                 }
             },
@@ -884,14 +871,14 @@ impl WidgetContainer
                     let context = &self.context;;
                     match *op {
                         dragger::Operation::Translation(v) => {
-                            let prop = vec!["object".to_string(),"position".to_string()];
+                            let prop = vec!["object".to_owned(),"position".to_owned()];
                             let cxpos = context.saved_positions.clone();
                             let mut saved_positions = Vec::with_capacity(cxpos.len());
-                            for p in cxpos.iter() {
+                            for p in &cxpos {
                                 saved_positions.push((box *p ) as Box<Any>);
                             }
                             let mut new_pos = Vec::with_capacity(cxpos.len());
-                            for p in cxpos.iter() {
+                            for p in &cxpos {
                                 let np = *p + v;
                                 new_pos.push((box np) as Box<Any>);
                             }
@@ -902,14 +889,14 @@ impl WidgetContainer
                             (prop, change)
                         },
                         dragger::Operation::Scale(v) => {
-                            let prop = vec!["object".to_string(),"scale".to_string()];
+                            let prop = vec!["object".to_owned(),"scale".to_owned()];
                             let cxsc = context.saved_scales.clone();
                             let mut saved_scales = Vec::with_capacity(cxsc.len());
-                            for p in cxsc.iter() {
+                            for p in &cxsc {
                                 saved_scales.push((box *p ) as Box<Any>);
                             }
                             let mut new_sc = Vec::with_capacity(cxsc.len());
-                            for s in cxsc.iter() {
+                            for s in &cxsc {
                                 let ns = *s * v;
                                 new_sc.push((box ns) as Box<Any>);
                             }
@@ -920,14 +907,14 @@ impl WidgetContainer
                             (prop, change)
                         },
                         dragger::Operation::Rotation(q) => {
-                            let prop = vec!["object".to_string(),"orientation".to_string()];
+                            let prop = vec!["object".to_owned(),"orientation".to_owned()];
                             let cxoris = context.saved_oris.clone();
                             let mut saved_oris = Vec::with_capacity(cxoris.len());
-                            for p in cxoris.iter() {
+                            for p in &cxoris {
                                 saved_oris.push((box *p ) as Box<Any>);
                             }
                             let mut new_ori = Vec::with_capacity(cxoris.len());
-                            for p in cxoris.iter() {
+                            for p in &cxoris {
                                 let no = *p * q;
                                 new_ori.push((box no) as Box<Any>);
                             }
@@ -1097,11 +1084,10 @@ impl WidgetContainer
         let v: Vec<&str> = path.split('/').collect();
 
         let mut vs = Vec::new();
-        for i in v.iter()
+        for i in &v
         {
             vs.push(i.to_string());
         }
-
 
         let  prop = if let Some(o) = self.get_selected_object(){
             let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path);
@@ -1152,7 +1138,7 @@ impl WidgetContainer
         let v: Vec<&str> = path.split('/').collect();
 
         let mut vs = Vec::new();
-        for i in v.iter()
+        for i in &v
         {
             vs.push(i.to_string());
         }
@@ -1177,7 +1163,7 @@ impl WidgetContainer
         let v: Vec<&str> = path.split('/').collect();
 
         let mut vs = Vec::new();
-        for i in v.iter()
+        for i in &v
         {
             vs.push(i.to_string());
         }
@@ -1216,7 +1202,7 @@ impl WidgetContainer
 
         let list = self.get_selected_objects();
         let mut vec = Vec::new();
-        for o in list.iter() {
+        for o in &list {
             vec.push(o.clone());
         }
 
@@ -1238,7 +1224,7 @@ impl WidgetContainer
 
         let list = self.get_selected_objects();
         let mut vec = Vec::new();
-        for o in list.iter() {
+        for o in &list {
             //vec.push(o.clone());
             vec.push(Arc::new(RwLock::new(self.factory.copy_object(&*o.read().unwrap()))));
         }
@@ -1344,9 +1330,9 @@ impl WidgetContainer
 
         let mut newlist = LinkedList::new();
 
-        for o in c.selected.iter() {
+        for o in &c.selected {
             let mut should_remove = false;
-            for id_to_rm in ids.iter() {
+            for id_to_rm in ids {
                 if o.read().unwrap().id == *id_to_rm {
                     should_remove = true;
                     break;
@@ -1383,13 +1369,13 @@ impl WidgetContainer
         let mut obs = self.get_selected_objects();
 
         let mut i = 0;
-        for o in obs.iter_mut() {
+        for o in &mut obs {
             //o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
             o.write().unwrap().position = sp[i] + translation;
             i = i+1;
         }
 
-        return operation::Change::DirectChange("object/position".to_string());
+        return operation::Change::DirectChange("object/position".to_owned());
     }
 
     fn request_scale(
@@ -1400,13 +1386,13 @@ impl WidgetContainer
         let mut obs = self.get_selected_objects();
 
         let mut i = 0;
-        for o in obs.iter_mut() {
+        for o in &mut obs {
             //o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
             o.write().unwrap().scale = sp[i] * scale;
             i = i+1;
         }
 
-        return operation::Change::DirectChange("object/scale".to_string());
+        return operation::Change::DirectChange("object/scale".to_owned());
     }
 
     fn request_rotation(
@@ -1417,18 +1403,18 @@ impl WidgetContainer
         let mut obs = self.get_selected_objects();
 
         let mut i = 0;
-        for o in obs.iter_mut() {
+        for o in &mut obs {
             o.write().unwrap().orientation = so[i] * transform::Orientation::new_with_quat(&rotation);
             i = i+1;
         }
 
-        return operation::Change::DirectChange("object/orientation".to_string());
+        return operation::Change::DirectChange("object/orientation".to_owned());
     }
 
 
     pub fn find_view(&self, id : Uuid) -> Option<&View>
     {
-        for v in self.views.iter()
+        for v in &self.views
         {
             if v.uuid == id {
                 return Some(v)
@@ -1574,7 +1560,7 @@ fn join_string(path : &Vec<String>) -> String
 {
     let mut s = String::new();
     let mut first = true;
-    for v in path.iter() {
+    for v in path {
         if !first {
             s.push('/');
         }
@@ -1627,7 +1613,7 @@ pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)
     ops.push(addob);
     ops.push(operation::Change::ChangeSelected(list));
 
-    for op in ops.iter() {
+    for op in &ops {
         container.handle_change(op, view_id);
     }
 }
@@ -1718,11 +1704,11 @@ pub extern fn select_list(data : *const c_void, name : *const c_char)
 
 fn must_update(p : &ui::property::PropertyShow, path : &str) -> Vec<ui::property::ShouldUpdate>
 {
-    let mut vs: Vec<&str> = path.split('/').collect();
+    let vs: Vec<&str> = path.split('/').collect();
     println!("must update {:?}", vs);
 
     let mut v = Vec::new();
-    for i in vs.iter()
+    for i in &vs
     {
         v.push(i.to_string());
     }

@@ -113,7 +113,7 @@ impl Component for ArmatureAnimation
     }
 
     fn get_name(&self) -> String {
-        "armature_animation".to_string()
+        "armature_animation".to_owned()
     }
 }
 
@@ -149,7 +149,7 @@ fn update_mesh_with_armature(
     arm : &armature::ArmatureInstance)
 {
     let mut i = 0;
-    for v in base.weights.iter() {
+    for v in &base.weights {
         //TODO get vertex and normal
         let vertex_pos = if let Some(b) = base.buffer_f32_get("position") {
             vec::Vec3::new(

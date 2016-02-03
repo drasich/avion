@@ -165,7 +165,7 @@ impl AABox
         o[6] = o[4] + (y * (a.min.y - a.max.y));
         o[7] = o[4] + (z * (a.min.z - a.max.z));
 
-        for oi in o.iter_mut() {
+        for oi in &mut o {
             *oi = *oi + v;
         }
 

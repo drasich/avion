@@ -45,7 +45,7 @@ impl Context
     pub fn save_positions(&mut self)
     {
         self.saved_positions.clear();
-        for o in self.selected.iter() {
+        for o in &self.selected {
             self.saved_positions.push(o.read().unwrap().position);
         }
     }
@@ -53,7 +53,7 @@ impl Context
     pub fn save_scales(&mut self)
     {
         self.saved_scales.clear();
-        for o in self.selected.iter() {
+        for o in &self.selected {
             self.saved_scales.push(o.read().unwrap().scale);
         }
     }
@@ -61,7 +61,7 @@ impl Context
     pub fn save_oris(&mut self)
     {
         self.saved_oris.clear();
-        for o in self.selected.iter() {
+        for o in &self.selected {
             self.saved_oris.push(o.read().unwrap().orientation);
         }
     }
@@ -69,7 +69,7 @@ impl Context
     pub fn get_selected_ids(&self) -> LinkedList<uuid::Uuid>
     {
         let mut list = LinkedList::new();
-        for o in self.selected.iter() {
+        for o in &self.selected {
             list.push_back(o.read().unwrap().id.clone());
         }
 
@@ -79,7 +79,7 @@ impl Context
     pub fn get_vec_selected_ids(&self) -> Vec<uuid::Uuid>
     {
         let mut v = Vec::with_capacity(self.selected.len());
-        for o in self.selected.iter() {
+        for o in &self.selected {
             v.push(o.read().unwrap().id.clone());
         }
 
@@ -89,9 +89,9 @@ impl Context
     pub fn remove_objects_by_id(&mut self, ids : Vec<uuid::Uuid>)
     {
         let mut new_list = LinkedList::new();
-        for o in self.selected.iter() {
+        for o in &self.selected {
             let mut not_found = true;
-            for id in ids.iter() {
+            for id in &ids {
                 if *id == o.read().unwrap().id {
                     not_found = false;
                     break;
@@ -107,9 +107,9 @@ impl Context
 
     pub fn add_objects_by_id(&mut self, ids : Vec<uuid::Uuid>)
     {
-        for id in ids.iter() {
+        for id in &ids {
             let mut found = false;
-            for o in self.selected.iter() {
+            for o in &self.selected {
                 if *id == o.read().unwrap().id {
                     found = true;
                     break;
@@ -117,7 +117,7 @@ impl Context
             }
             if !found {
                 if let Some(ref s) = self.scene {
-                    for so in s.borrow().objects.iter() {
+                    for so in &s.borrow().objects {
                         if *id == so.read().unwrap().id {
                             self.selected.push_back(so.clone());
                             break;

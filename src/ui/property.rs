@@ -312,7 +312,7 @@ impl Property
                 CString::new("object".as_bytes()).unwrap().as_ptr());
         }
         let mut v = Vec::new();
-        v.push("object".to_string());
+        v.push("object".to_owned());
         o.create_widget(self, "object", 1, false);
 
         self.add_tools();
@@ -352,7 +352,7 @@ impl Property
         // and check
         let copy = self.pv.clone();
 
-        for (f,pv) in copy.iter() {
+        for (f,pv) in &copy {
             match self.pv.get(f) {
                 Some(p) => if *p != *pv {
                     continue
@@ -361,11 +361,8 @@ impl Property
             }
             if f.starts_with(prop) {
                 let yep = make_vec_from_string(f)[1..].to_vec();
-                match find_property_show(object, yep.clone()) {
-                    Some(ppp) => {
-                        ppp.update_widget(*pv);
-                    },
-                    None => {}
+                if let Some(ppp) = find_property_show(object, yep.clone()) {
+                    ppp.update_widget(*pv);
                 }
             }
         }
@@ -373,14 +370,14 @@ impl Property
 
     pub fn update_object(&self, object : &PropertyShow, but : &str)
     {
-        for (f,pv) in self.pv.iter() {
+        for (f,pv) in &self.pv {
             println!("UPDATEOBJECt contains property : Val : {}", f);
         }
 
         // update_widget might add/remove/update self.pv so we have to copy it
         // and check
         let copy = self.pv.clone();
-        for (f,pv) in copy.iter() {
+        for (f,pv) in &copy {
             match self.pv.get(f) {
                 Some(p) => if *p != *pv {
                     continue
@@ -444,7 +441,7 @@ impl Property
         }
 
         if pv != ptr::null() {
-            self.pv.insert(name.to_string(), pv);
+            self.pv.insert(name.to_owned(), pv);
         }
 
         if self.config.expand.contains(name) {
@@ -468,7 +465,7 @@ impl Property
         };
 
         if pv != ptr::null() {
-            self.pv.insert(name.to_string(), pv);
+            self.pv.insert(name.to_owned(), pv);
         }
 
         if self.config.expand.contains(name) {
@@ -501,7 +498,7 @@ impl Property
         };
 
         if pv != ptr::null() {
-            self.pv.insert(path.to_string(), pv);
+            self.pv.insert(path.to_owned(), pv);
         }
 
         if self.config.expand.contains(path) {
@@ -554,7 +551,7 @@ pub extern fn changed_set_string(
     let datachar = data as *const i8;
     let s = unsafe {CStr::from_ptr(datachar).to_bytes()};
     let ss = match str::from_utf8(s) {
-        Ok(sss) => sss.to_string(),
+        Ok(sss) => sss.to_owned(),
         _ => {
             return;
         }
@@ -582,7 +579,7 @@ pub extern fn register_change_string(
     let newchar = new as *const i8;
     let s = unsafe {CStr::from_ptr(newchar).to_bytes()};
     let ss = match str::from_utf8(s) {
-        Ok(sss) => sss.to_string(),
+        Ok(sss) => sss.to_owned(),
         _ => {
             println!("error");
             return;
@@ -594,7 +591,7 @@ pub extern fn register_change_string(
         let oldchar = old as *const i8;
         let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
         let sso = match str::from_utf8(so) {
-            Ok(ssso) => ssso.to_string(),
+            Ok(ssso) => ssso.to_owned(),
             _ => {
                 println!("error");
                 return;
@@ -638,7 +635,7 @@ pub extern fn register_change_enum(
     let newchar = new as *const i8;
     let s = unsafe {CStr::from_ptr(newchar).to_bytes()};
     let ss = match str::from_utf8(s) {
-        Ok(sss) => sss.to_string(),
+        Ok(sss) => sss.to_owned(),
         _ => {
             println!("error");
             return
@@ -650,7 +647,7 @@ pub extern fn register_change_enum(
         let oldchar = old as *const i8;
         let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
         let sso = match str::from_utf8(so) {
-            Ok(ssso) => ssso.to_string(),
+            Ok(ssso) => ssso.to_owned(),
             _ => {
                 println!("error");
                 return
@@ -674,7 +671,7 @@ pub extern fn register_change_option(
     let newchar = new as *const i8;
     let s = unsafe {CStr::from_ptr(newchar).to_bytes()};
     let ss = match str::from_utf8(s) {
-        Ok(sss) => sss.to_string(),
+        Ok(sss) => sss.to_owned(),
         _ => {
             println!("error");
             return
@@ -690,7 +687,7 @@ pub extern fn register_change_option(
     let oldchar = old as *const i8;
     let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
     let sso = match str::from_utf8(so) {
-        Ok(ssso) => ssso.to_string(),
+        Ok(ssso) => ssso.to_owned(),
         _ => {
             println!("error");
             return
@@ -723,7 +720,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
     let v: Vec<&str> = path.split('/').collect();
 
     let mut vs = Vec::new();
-    for i in v.iter()
+    for i in &v
     {
         vs.push(i.to_string());
     }
@@ -772,7 +769,7 @@ fn changed_option(
     let v: Vec<&str> = path.split('/').collect();
 
     let mut vs = Vec::new();
-    for i in v.iter()
+    for i in &v
     {
         vs.push(i.to_string());
     }
@@ -860,12 +857,12 @@ pub extern fn expand(
         Ok(pp) => pp,
         _ => {
             panic!("problem with the path");
-            return;}
+        }
     };
 
     println!("I expand the value {} ", path);
 
-    let vs = make_vec_from_string(&path.to_string());
+    let vs = make_vec_from_string(&path.to_owned());
 
     let yep = vs[1..].to_vec();
     println!("expand : {:?}", vs);
@@ -884,7 +881,7 @@ pub extern fn expand(
             //p.create_entries(&*ppp, vs.clone());
             println!("I found and create {:?} ", vs);
             ppp.create_widget(p, path , 1, false);
-            p.config.expand.insert(path.to_string());
+            p.config.expand.insert(path.to_owned());
         },
         None => {
             println!("could not find property {:?} ", vs);
@@ -923,14 +920,14 @@ pub extern fn contract(
 
     p.config.expand.remove(path);
 
-    let vs = make_vec_from_string(&path.to_string());
+    let vs = make_vec_from_string(&path.to_owned());
 
     let yep = vs[1..].to_vec();
     println!("contract : {:?}", vs);
 
     let clone = p.pv.clone();
 
-    for (key,pv) in clone.iter() {
+    for (key,pv) in &clone {
         println!("cccccccccccccccccontract  start with key '{}' ", key);
         let starts_with_path = {
             let ks : &str = key.as_ref();
@@ -958,7 +955,7 @@ impl WidgetUpdate for Property
 
         //println!("property update changed {}", name);
 
-        let pv = match self.pv.get(&name.to_string()) {
+        let pv = match self.pv.get(&name.to_owned()) {
             Some(p) => p,
             None => {
                 println!("widget update, could not find {}", name);
@@ -1064,7 +1061,7 @@ impl PropertyShow for f64 {
                 f.as_ptr(),
                 *self as c_float);
             if pv != ptr::null() {
-                property.pv.insert(field.to_string(), pv);
+                property.pv.insert(field.to_owned(), pv);
             }
 
             Some(pv)
@@ -1106,7 +1103,7 @@ impl PropertyShow for String {
             }
 
             if pv != ptr::null() {
-                property.pv.insert(field.to_string(), pv);
+                property.pv.insert(field.to_owned(), pv);
             }
 
             Some(pv)
@@ -1178,7 +1175,7 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
 
                 if pv != ptr::null() {
                     println!("ADDING : {}", field);
-                    property.pv.insert(field.to_string(), pv);
+                    property.pv.insert(field.to_owned(), pv);
                 }
 
                 return Some(pv);
@@ -1186,11 +1183,8 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
         }
 
         if depth == 1 {
-            match *self {
-                Some(ref s) =>  {
-                    return s.create_widget(property, field, depth, has_container);
-                },
-                None => {}
+            if let Some(ref s) = *self {
+                return s.create_widget(property, field, depth, has_container);
             };
         }
 
@@ -1249,7 +1243,7 @@ impl<T> PropertyShow for resource::ResTT<T>
         }
 
         if depth > 0 {
-            let s = field.to_string() + "/name";
+            let s = field.to_owned() + "/name";
             return self.name.create_widget(property, s.as_ref(), depth-1, has_container);
         }
 
@@ -1309,9 +1303,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                         }
 
                         if property.config.expand.contains(nf.as_str()) {
-                            unsafe {
-                                property_expand(pv);
-                            }
+                            property_expand(pv);
                         }
 
                     }
@@ -1369,8 +1361,8 @@ impl PropertyShow for CompData
     {
         let kind : String = self.get_kind_string();
         let kindr : &str = kind.as_ref();
-        let ss = field.to_string() + "/" + kindr;
-        //let ss = field.to_string() + ":" + kindr;
+        let ss = field.to_owned() + "/" + kindr;
+        //let ss = field.to_owned() + ":" + kindr;
         let s : &str = ss.as_ref();
 
         /*
@@ -1509,9 +1501,9 @@ macro_rules! property_show_methods(
 
                 if depth > 0 {
                 $(
-                    let s = field.to_string()
-                    + "/"//.to_string()
-                    + stringify!($member);//.to_string();
+                    let s = field.to_owned()
+                    + "/"//.to_owned()
+                    + stringify!($member);//.to_owned();
                     self.$member.create_widget(property, s.as_ref(), depth-1, has_container);
                  )+
                 }
@@ -1584,12 +1576,12 @@ property_show_impl!(component::player::Enemy,[name]);
 property_show_impl!(component::player::Collider,[name]);
 property_show_impl!(armature::ArmaturePath,[name]);
 
-fn make_vec_from_string(s : &String) -> Vec<String>
+fn make_vec_from_string(s : &str) -> Vec<String>
 {
     let v: Vec<&str> = s.split('/').collect();
 
     let mut vs = Vec::new();
-    for i in v.iter()
+    for i in &v
     {
         vs.push(i.to_string());
     }
@@ -1600,7 +1592,7 @@ fn make_vec_from_string(s : &String) -> Vec<String>
 pub fn find_property_show(p : &PropertyShow, path : Vec<String>) ->
 Option<&PropertyShow>
 {
-    //let vs = make_vec_from_string(&field.to_string());
+    //let vs = make_vec_from_string(&field.to_owned());
 
     match path.len() {
         0 =>  None,

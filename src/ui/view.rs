@@ -256,12 +256,12 @@ impl View
 
         let mut center = vec::Vec3::zero();
         let mut ori = vec::Quat::identity();
-        for o in sel.iter() {
+        for o in sel {
             center = center + o.read().unwrap().world_position();
             ori = ori * o.read().unwrap().world_orientation();
         }
 
-        if sel.len() > 0 {
+        if !sel.is_empty() {
             center = center / (sel.len() as f64);
 
             //TODO println!("remove this code from here, put in update or when moving the camera");
@@ -350,7 +350,7 @@ pub extern fn mouse_down(
         c.mouse_down(&*container.context, modifier, button,x,y,timestamp)
     };
 
-    for op in op_list.iter() {
+    for op in &op_list {
         if let operation::Change::DraggerClicked = *op {
             let c = &mut container.context;;
             c.save_positions();
@@ -419,7 +419,7 @@ pub extern fn mouse_move(
             timestamp)
     };
 
-    for change in change_list.iter() {
+    for change in &change_list {
         view.handle_control_change(change);
         container.handle_change(change, view.uuid);
     }
@@ -467,7 +467,7 @@ pub extern fn key_down(
         let key_str = {
             let s = unsafe {CStr::from_ptr(key).to_bytes()};
             match str::from_utf8(s) {
-                Ok(ss) => ss.to_string(),
+                Ok(ss) => ss.to_owned(),
                 _ => {
                     println!("error");
                     return;
@@ -479,7 +479,7 @@ pub extern fn key_down(
             let keynameconst = keyname as *const c_char;
             let s = unsafe {CStr::from_ptr(keynameconst).to_bytes()};
             match str::from_utf8(s) {
-                Ok(ss) => ss.to_string(),
+                Ok(ss) => ss.to_owned(),
                 _ => {
                     println!("error");
                     return
@@ -528,7 +528,7 @@ pub extern fn key_down(
                     ("copy selected", ui::command::copy_selected),
                     ];
 
-                    for a in scene_actions.iter() {
+                    for a in scene_actions {
                         let (ref name, f) = *a;
                         cmd.add_ptr(name, f, data);
                     }
@@ -676,7 +676,7 @@ impl GameView {
             render : render,
             window : win,
             scene : scene,
-            name : "cacayop".to_string(),
+            name : "cacayop".to_owned(),
             state : 0
             //camera : camera todo
         };

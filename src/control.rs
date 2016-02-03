@@ -68,7 +68,7 @@ impl Control
     {
         let mut list = LinkedList::new();
 
-        if modifier & (1 << 0) != 0 {
+        if (modifier & 1) != 0 {
             println!("pressed shift");
         }
         else if modifier & (1 << 1) != 0 {
@@ -81,7 +81,7 @@ impl Control
         }
 
         let objs = context.selected.clone();
-        if objs.len() > 0 {
+        if !objs.is_empty() {
             let click = self.dragger.borrow_mut().mouse_down(
                 &*self.camera.borrow(),button, x, y);
             if click {
@@ -167,7 +167,7 @@ impl Control
 
         let mut found_length = 0f64;
         let mut closest_obj = None;
-        for o in scene.borrow().objects.iter() {
+        for o in &scene.borrow().objects {
             let ir = intersection::ray_object(&r, &*o.read().unwrap());
             if ir.hit {
                 let length = (ir.position - r.start).length2();
@@ -224,7 +224,7 @@ impl Control
                 )
         };
 
-        if context.selected.len() > 0 {
+        if !context.selected.is_empty() {
             let center = util::objects_center(&context.selected);
             camera.set_center(&center);
         }
@@ -274,7 +274,7 @@ impl Control
                     let x : f64 = curx as f64 - prevx as f64;
                     let y : f64 = cury as f64 - prevy as f64;
 
-                    if (mod_flag & (1 << 0)) != 0 {
+                    if (mod_flag & 1) != 0 {
                         let t = vec::Vec3::new(-x*0.5f64, y*0.5f64, 0f64);
                         let mut camera = self.camera.borrow_mut();
                         camera.pan(&t);
@@ -340,7 +340,7 @@ impl Control
                     };
 
                     let mut oblist = LinkedList::new();
-                    for o in s.borrow().objects.iter() {
+                    for o in &s.borrow().objects {
                         let b = intersection::is_object_in_planes(planes.as_ref(), &*o.read().unwrap());
                         if b {
                             oblist.push_back(o.clone());
@@ -452,7 +452,7 @@ impl Control
 
 }
 
-fn join_string(path : &Vec<String>) -> String
+fn join_string(path : &[String]) -> String
 {
     let mut s = String::new();
     let mut first = true;

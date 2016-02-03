@@ -28,8 +28,8 @@ impl MeshRender
     pub fn new(mesh : &str, material : &str) -> MeshRender
     {
         MeshRender {
-            mesh : mesh.to_string(),
-            material : material.to_string(),
+            mesh : mesh.to_owned(),
+            material : material.to_owned(),
         }
     }
 }
@@ -77,7 +77,7 @@ impl Component for MeshRenderer
     }
 
     fn get_name(&self) -> String {
-        "mesh_render".to_string()
+        "mesh_render".to_owned()
     }
 }
 

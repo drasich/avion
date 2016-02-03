@@ -87,7 +87,7 @@ impl Factory {
     pub fn copy_object(&self, o : &object::Object) -> object::Object
     {
         let mut children_copy = LinkedList::new();
-        for c in o.children.iter() {
+        for c in &o.children {
             children_copy.push_back(Arc::new(RwLock::new(self.copy_object(&*c.read().unwrap()))));
         }
 
