@@ -265,7 +265,8 @@ impl Control
                     }
                 };
 
-                self.dragger.borrow_mut().check_collision(r, button);
+                let update = 
+                    self.dragger.borrow_mut().mouse_move_hover(r, button) || button == 1;
 
                 if button == 1 {
 
@@ -283,9 +284,12 @@ impl Control
                         self.rotate_camera(context, x, y);
                         let camera = self.camera.borrow();
                         println!("remove from update and move here");
-                        list.push_back(operation::Change::CameraChange);
                         //self.dragger.borrow_mut().set_orienation(&*camera);
                     }
+                }
+
+                if update {
+                    list.push_back(operation::Change::CameraChange);
                 }
             },
             State::Dragger =>

@@ -16,6 +16,7 @@ use intersection;
 use matrix;
 use factory;
 use camera;
+use uuid;
 
 use dragger::{
     TranslationMove,
@@ -38,7 +39,8 @@ pub struct DraggerManager
     mouse_start : vec::Vec2,
     mouse : Option<Box<DraggerMouse+'static>>,
     pub ori : vec::Quat,
-    current : usize
+    current_group : usize,
+    dragger_focus : Option<uuid::Uuid>
 }
 
 #[derive(Copy,Clone,Debug)]
@@ -91,6 +93,7 @@ pub struct Dragger
     collision : Collision,
     state : State,
     scale : f64,
+    id : uuid::Uuid
 }
 
 impl DraggerManager
@@ -102,7 +105,8 @@ impl DraggerManager
             mouse_start : vec::Vec2::zero(),
             mouse : None,
             ori : vec::Quat::identity(),
-            current : 0usize
+            current_group : 0usize,
+            dragger_focus : None
         };
 
         let tr = create_dragger_translation_group(factory, resource);
@@ -122,7 +126,8 @@ impl DraggerManager
         self.mouse_start.x = x as f64;
         self.mouse_start.y = y as f64;
         let r = c.ray_from_screen(x as f64, y as f64, 10000f64);
-        return self.check_collision(r, button);
+
+        self.check_collision(r, button).is_some()
     }
 
     pub fn mouse_up(&mut self, c : &camera::Camera, button : i32, x : i32, y : i32)
@@ -144,11 +149,11 @@ impl DraggerManager
         return op;
     }
 
-    pub fn check_collision(&mut self, r: geometry::Ray, button : i32) -> bool
+    pub fn check_collision(&mut self, r: geometry::Ray, button : i32) -> Option<uuid::Uuid>
     {
         let mut found_length = 0f64;
         let mut closest_dragger = None;
-        for dragger in &mut self.draggers[self.current] {
+        for dragger in &mut self.draggers[self.current_group] {
             let mut d = dragger.borrow_mut();
             d.set_state(State::Idle);
             let (hit, len) = d.check_collision(&r, d.scale);
@@ -207,15 +212,36 @@ impl DraggerManager
                 }
                 _ => {}
             };
-            return true;
+            Some(d.borrow().id)
         }
         else {
-            return false;
+            None
         }
     }
 
+    pub fn mouse_move_hover(&mut self, r: geometry::Ray, button : i32) -> bool
+    {
+        let result = self.check_collision(r, button);
+
+        if let Some(id) = result {
+            if let Some(focus) = self.dragger_focus {
+                if focus == id {
+                    return false;
+                }
+            }
+        }
+        else {
+            if self.dragger_focus.is_none(){
+                return false;
+            }
+        }
+
+        self.dragger_focus = result;
+        true
+    }
+
     pub fn set_position(&mut self, p : vec::Vec3) {
-        for d in &mut self.draggers[self.current] {
+        for d in &mut self.draggers[self.current_group] {
             let mut db =d.borrow_mut();
             db.object.write().unwrap().position = p;
         }
@@ -224,9 +250,9 @@ impl DraggerManager
 
     pub fn set_orientation(&mut self, ori : transform::Orientation, camera : &camera::Camera) {
         self.ori = ori.as_quat();
-        for d in &mut self.draggers[self.current] {
+        for d in &mut self.draggers[self.current_group] {
             let mut d = d.borrow_mut();
-            if self.current == 2usize {
+            if self.current_group == 2usize {
                 d.face_camera(camera, self.ori);
             }
             else {
@@ -241,7 +267,7 @@ impl DraggerManager
         let projection = camera.get_perspective();
         let cam_mat_inv = cam_mat.get_inverse();
 
-        for d in &mut self.draggers[self.current] {
+        for d in &mut self.draggers[self.current_group] {
 
             d.borrow_mut().scale_to_camera_data(&cam_mat_inv, &projection);
         }
@@ -250,7 +276,7 @@ impl DraggerManager
     pub fn get_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
     {
         let mut l = LinkedList::new();
-        for d in &self.draggers[self.current] {
+        for d in &self.draggers[self.current_group] {
             l.push_back(d.borrow().object.clone());
         }
 
@@ -258,7 +284,7 @@ impl DraggerManager
     }
 
     pub fn set_state(&mut self, state : State) {
-        for d in &mut self.draggers[self.current] {
+        for d in &mut self.draggers[self.current_group] {
             d.borrow_mut().set_state(state);
         }
     }
@@ -281,12 +307,12 @@ impl DraggerManager
 
     pub fn change(&mut self)
     {
-        let mut newlen = self.current + 1;
+        let mut newlen = self.current_group + 1;
         if newlen >= self.draggers.len() {
             newlen = 0;
         }
 
-        self.current = newlen;
+        self.current_group = newlen;
     }
 
 }
@@ -356,6 +382,7 @@ impl Dragger
             collision : collision,
             state : State::Idle,
             scale : 1f64,
+            id : uuid::Uuid::new_v4()
         }
     }
 
