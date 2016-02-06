@@ -210,7 +210,7 @@ pub extern fn scene_rename(data : *const c_void)
     let action : &Action = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    println!("todo");
+    println!("todo scene rename");
     //TODO
     //ui::scene_new(container, action.view_id);
 }
