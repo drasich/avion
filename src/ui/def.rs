@@ -64,6 +64,11 @@ pub type PanelGeomFunc = extern fn(
 pub type ButtonCallback = extern fn(
     data : *const c_void);
 
+pub type EntryCallback = extern fn(
+    data : *const c_void,
+    text : *const c_char
+    );
+
 pub type SelectCallback = extern fn(
     data : *const c_void,
     name : *const c_char);
@@ -1727,3 +1732,35 @@ fn must_update(p : &ui::property::PropertyShow, path : &str) -> Vec<ui::property
 
     r
 }
+
+pub fn scene_rename(container : &mut WidgetContainer, widget_id : Uuid, name : &str)
+{
+
+    let s = if let Some(ref s) = container.context.scene {
+        s.clone()
+    }
+    else {
+        return;
+    };
+
+    fs::remove_file(s.borrow().name.as_str());
+
+    s.borrow_mut().name = String::from(name);
+    s.borrow().save();
+    
+
+    /*
+    let addob = container.request_operation(
+            vs,
+            operation::OperationData::SceneAddObjects(s.clone(),vec)
+            );
+
+    ops.push(addob);
+    ops.push(operation::Change::ChangeSelected(list));
+
+    for op in &ops {
+        container.handle_change(op, view_id);
+    }
+    */
+}
+

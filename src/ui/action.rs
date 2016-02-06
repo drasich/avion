@@ -8,13 +8,13 @@ use std::cell::{RefCell, BorrowState};
 use std::rc::Weak;
 use std::rc::Rc;
 use uuid::Uuid;
-use std::ffi::CString;
+use std::ffi::{CString, CStr};
 
 use scene;
 use object;
 use ui::Window;
 use ui::Master;
-use ui::ButtonCallback;
+use ui::{ButtonCallback,EntryCallback};
 use ui;
 use control::Control;
 use resource;
@@ -56,7 +56,7 @@ extern {
         action : *const JkAction,
         name : *const c_char,
         data : *const c_void,
-        button_callback : ButtonCallback ) -> *const JkEntry;
+        entry_callback : EntryCallback ) -> *const JkEntry;
 
     fn action_show(
         action : *const JkAction,
@@ -147,7 +147,7 @@ impl Action
         }
     }
 
-    pub fn add_entry(&mut self, key : String, name : &str, cb : ButtonCallback, data : ui::WidgetCbData)
+    pub fn add_entry(&mut self, key : String, name : &str, cb : EntryCallback, data : ui::WidgetCbData)
         -> *const JkEntry
     {
         let en = unsafe {
@@ -204,15 +204,16 @@ pub extern fn scene_list(data : *const c_void)
 }
 
 
-pub extern fn scene_rename(data : *const c_void)
+pub extern fn scene_rename(data : *const c_void, name : *const c_char)
 {
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     let action : &Action = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    println!("todo scene rename");
-    //TODO
-    //ui::scene_new(container, action.view_id);
+    let s = unsafe {CStr::from_ptr(name)}.to_str().unwrap();
+
+    println!("todo scene rename to : {}", s);
+    ui::scene_rename(container, action.view_id, s);
 }
 
 pub extern fn play_scene(data : *const c_void)

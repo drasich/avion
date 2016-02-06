@@ -9,6 +9,7 @@ pub use self::def::{
     
     PanelGeomFunc,
     ButtonCallback,
+    EntryCallback,
 
     init_cb,
     exit_cb,
@@ -25,7 +26,8 @@ pub use self::def::{
 
     add_empty,
     scene_new,
-    scene_list
+    scene_list,
+    scene_rename
 };
 
 pub use self::tree::{Tree};
