@@ -14,6 +14,7 @@ use std::fs::File;
 use rustc_serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::io::{Read,Write};
 use std::ffi::{CString,CStr};
+use std::thread;
 
 use uuid::Uuid;
 
@@ -45,6 +46,8 @@ pub struct Window;
 #[repr(C)]
 pub struct Evas_Object;
 #[repr(C)]
+pub struct Ecore_Animator;
+#[repr(C)]
 pub struct JkGlview;
 
 pub type RustCb = extern fn(data : *mut c_void);
@@ -60,6 +63,9 @@ pub type PanelGeomFunc = extern fn(
     y : c_int,
     w : c_int,
     h : c_int);
+
+pub type AnimatorCallback = extern fn(
+    data : *const c_void) -> bool;
 
 pub type ButtonCallback = extern fn(
     data : *const c_void);
@@ -190,6 +196,8 @@ extern {
 
 
     fn jklist_set_names(o : *const Evas_Object, names : *const c_void, len : size_t);
+
+    fn ecore_animator_add(cb : AnimatorCallback, data : *const c_void) -> *const Ecore_Animator;
 }
 
 fn object_geometry_get(obj : *const Evas_Object) -> (i32, i32, i32, i32)
@@ -1503,6 +1511,61 @@ impl WidgetContainer
         for view in &self.views {
             view.request_update();
         }
+    }
+
+    pub fn play_gameview(&mut self) -> bool
+    {
+        if let Some(ref mut gv) = self.holder.borrow_mut().gameview {
+            gv.state = 0;
+            true
+        }
+        else {
+            false
+        }
+    }
+
+    pub fn can_create_gameview(&mut self) ->
+        Option<(Rc<RefCell<camera::Camera>>, Rc<RefCell<scene::Scene>>)>
+    {
+        if self.holder.borrow_mut().gameview.is_some() {
+            return None;
+        }
+
+        let scene = if let Some(ref s) = self.context.scene {
+            let scene = s.clone();
+            scene.borrow_mut().init_components(&self.resource);
+            scene
+        }
+        else {
+            return None;
+        };
+
+        let camera = if let Some(ref c) = scene.borrow().camera {
+            c.clone()
+        }
+        else {
+            return None;
+        };
+
+        Some((camera, scene))
+    }
+
+    pub fn start_gameview(&mut self, gv : Box<ui::GameView>)
+    {
+        let gvo = &mut self.holder.borrow_mut().gameview;
+        if gvo.is_some() {
+            panic!("cannot start animator");
+            return;
+        }
+
+        //self.holder.borrow_mut().gameview = Some(gv);
+
+        println!("ADDDDDDDD animator");
+        unsafe {
+            ecore_animator_add(ui::gv_up_cb, mem::transmute(&*gv));
+        }
+
+        *gvo = Some(gv);
     }
 }
 

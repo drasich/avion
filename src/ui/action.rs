@@ -222,22 +222,12 @@ pub extern fn play_scene(data : *const c_void)
     let action : &Action = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    if let Some(ref mut gv) = container.holder.borrow_mut().gameview {
-        gv.state = 0;
+    if container.play_gameview() {
         return;
     }
 
-    let scene = if let Some(ref s) = container.context.scene {
-        let scene = s.clone();
-        scene.borrow_mut().init_components(&container.resource);
-        scene
-    }
-    else {
-        return;
-    };
-
-    let camera = if let Some(ref c) = scene.borrow().camera {
-        c.clone()
+    let (camera, scene) = if let Some((camera, scene)) = container.can_create_gameview() {
+        (camera, scene)
     }
     else {
         return;
@@ -248,7 +238,8 @@ pub extern fn play_scene(data : *const c_void)
     };
 
     let gv = ui::view::GameView::new(win, camera, scene, container.resource.clone());
-    container.holder.borrow_mut().gameview = Some(gv);
+    //container.holder.borrow_mut().gameview = Some(gv);
+    container.start_gameview(gv);
 }
 
 pub extern fn pause_scene(data : *const c_void)
