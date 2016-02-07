@@ -298,8 +298,26 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 
     for v in &wc.views {
         let wc = &v.window;
-        let v = box View::new(master.resource.clone(), container,wc.w,wc.h);
-        master.views.push_back(v);
+        let view = box View::new(master.resource.clone(), container,wc.w,wc.h);
+        master.views.push_back(view);
+        if let Some(ref scene) = v.scene {
+            container.set_scene(scene.as_str());
+        }
+        else {
+            if container.scenes.is_empty() {
+                let files = util::get_files_in_dir("scene");
+                if files.is_empty() {
+                    scene_new(container, uuid::Uuid::nil());
+                }
+                else {
+                    container.set_scene(files[0].to_str().unwrap());
+                }
+            }
+            else {
+                let first_key = container.scenes.keys().nth(0).unwrap().clone();
+                container.set_scene(first_key.as_str());
+            }
+        }
     }
 
     while let Some(mut v) = master.views.pop_front() {
@@ -393,7 +411,8 @@ impl WidgetConfig
 #[derive(RustcDecodable, RustcEncodable, Clone)]
 pub struct ViewConfig
 {
-    window : WidgetConfig
+    window : WidgetConfig,
+    scene : Option<String>
 }
 
 #[derive(RustcDecodable, RustcEncodable, Clone)]
@@ -430,6 +449,12 @@ impl WindowConfig {
                     h : v.height,
                     visible : true
                 },
+                scene : match c.context.scene {
+                    Some(ref s) => {
+                        Some(s.borrow().name.clone())
+                    },
+                    None => None
+                }
             };
             wc.views.push(vc);
         }
@@ -454,6 +479,7 @@ impl WindowConfig {
                 h : 500,
                 visible : true
             },
+            scene : None
             /*
             property : WidgetConfig{
                 x : 0,
@@ -1473,6 +1499,10 @@ impl WidgetContainer
         }
 
         self.context.set_scene(scene);
+
+        for view in &self.views {
+            view.request_update();
+        }
     }
 }
 

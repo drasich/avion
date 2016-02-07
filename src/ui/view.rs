@@ -58,6 +58,8 @@ extern {
         y : c_float,
         w : c_float,
         h : c_float);
+
+   pub fn jk_glview_request_update(glview : *const ui::JkGlview);
 }
 
 pub struct Holder
@@ -93,17 +95,6 @@ impl View
         h : i32
         ) -> View
     {
-        let scene_path = "scene/simple.scene";
-        let mut ss = scene::Scene::new_from_file(scene_path, &*resource);
-        if let None = ss.camera {
-            let mut cam = container.factory.create_camera();
-            cam.pan(&vec::Vec3::new(-100f64,20f64,100f64));
-            cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
-            ss.camera = Some(Rc::new(RefCell::new(cam)));
-        }
-        let scene = Rc::new(RefCell::new(ss));
-
-
         let camera = Rc::new(RefCell::new(container.factory.create_camera()));
         {
             let mut cam = camera.borrow_mut();
@@ -111,7 +102,7 @@ impl View
             cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
         }
 
-        container.context.scene = Some(scene.clone());
+
         let dragger = Rc::new(RefCell::new(dragger::DraggerManager::new(&container.factory, &*resource)));
 
         let control = Rc::new(RefCell::new(
@@ -315,6 +306,12 @@ impl View
         (c.position, c.orientation.as_quat())
     }
 
+    pub fn request_update(&self)
+    {
+        if let Some(w) = self.window {
+            unsafe {ui::jk_window_request_update(w);}
+        }
+    }
 
 
 }
@@ -362,9 +359,7 @@ pub extern fn mouse_down(
     }
 
     if !op_list.is_empty() {
-        if let Some(w) = view.window {
-            unsafe {ui::jk_window_request_update(w);}
-        }
+        view.request_update();
     }
 
 }
@@ -392,9 +387,7 @@ pub extern fn mouse_up(
     view.handle_control_change(&change);
     container.handle_change(&change, view.uuid);
 
-    if let Some(w) = view.window {
-        unsafe {ui::jk_window_request_update(w);}
-    }
+    view.request_update();
 }
 
 pub extern fn mouse_move(
@@ -435,9 +428,7 @@ pub extern fn mouse_move(
     }
 
     if !change_list.is_empty() {
-        if let Some(w) = view.window {
-            unsafe {ui::jk_window_request_update(w);}
-        }
+        view.request_update();
     }
 
 }
@@ -461,9 +452,7 @@ pub extern fn mouse_wheel(
     let c = control_rc.borrow_mut();
     c.mouse_wheel(modifiers_flag, direction, z, x, y, timestamp);
 
-    if let Some(w) = view.window {
-        unsafe {ui::jk_window_request_update(w);}
-    }
+    view.request_update();
 }
 
 pub extern fn key_down(
@@ -589,6 +578,7 @@ pub extern fn key_down(
                 let mut cam = view.camera.borrow_mut();
                 let pos = center + cam.object.read().unwrap().orientation.rotate_vec3(&vec::Vec3::new(0f64,0f64,100f64));
                 cam.set_position(pos);
+                view.request_update();
                 return;
             },
             _ => {
@@ -657,6 +647,7 @@ pub extern fn resize_cb(v : *mut View, w : c_int, h : c_int) -> () {
 pub struct GameView
 {
     window : *const ui::Evas_Object,
+    glview : *const ui::JkGlview,
     render : Box<GameRender>,
     scene : Rc<RefCell<scene::Scene>>,
     name : String,
@@ -692,12 +683,13 @@ impl GameView {
         //let render = box GameRender::new(factory, camera);
         let render = box GameRender::new(camera, resource);
 
-        let v = box GameView {
+        let mut v = box GameView {
             render : render,
             window : win,
             scene : scene,
             name : "cacayop".to_owned(),
-            state : 0
+            state : 0,
+            glview : ptr::null()
             //camera : camera todo
         };
 
@@ -710,6 +702,8 @@ impl GameView {
                 gv_resize_cb
                 ) };
 
+        v.glview = glview;
+
         return v;
     }
 
@@ -719,6 +713,7 @@ impl GameView {
         }
 
         self.render.draw(&self.scene.borrow().objects);
+        //unsafe { jk_glview_request_update(self.glview); }
     }
 
     fn init(&mut self) {

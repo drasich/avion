@@ -1,4 +1,5 @@
 TODO in def.rs
+detach game from tool
 
 DONE?
 uniforms in material
@@ -11,7 +12,6 @@ TODO
 - spinner entry undo/redo problem
 - make tree a widget like property
 - focus when writing data in entries
-- center camera on current object
 - add remove compdata, components
 
 - when we changed property of a compdata, we have to reinit his components...

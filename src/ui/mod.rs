@@ -19,6 +19,7 @@ pub use self::def::{
     Window,
     window_new,
     Evas_Object,
+    JkGlview,
     jk_window_new,
     jk_window_request_update,
     jk_glview_new,
