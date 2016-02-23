@@ -30,6 +30,8 @@ pub use self::def::{
     scene_list,
     scene_rename,
 
+    ecore_animator_add,
+    update_play_cb
 };
 
 pub use self::tree::{Tree};
@@ -39,7 +41,7 @@ pub use self::property::{Property,PropertyConfig,ChangedFunc};
 pub use self::property::{PropertyShow};
 pub use self::property::{JkPropertyList, PropertyValue};
 
-pub use self::view::{View, GameView, Holder, gv_close_cb, gv_up_cb};
+pub use self::view::{View, GameView, Holder, gv_close_cb};
 
 mod tree;
 mod action;

@@ -197,7 +197,7 @@ extern {
 
     fn jklist_set_names(o : *const Evas_Object, names : *const c_void, len : size_t);
 
-    fn ecore_animator_add(cb : AnimatorCallback, data : *const c_void) -> *const Ecore_Animator;
+    pub fn ecore_animator_add(cb : AnimatorCallback, data : *const c_void) -> *const Ecore_Animator;
 }
 
 fn object_geometry_get(obj : *const Evas_Object) -> (i32, i32, i32, i32)
@@ -1554,18 +1554,30 @@ impl WidgetContainer
     {
         let gvo = &mut self.holder.borrow_mut().gameview;
         if gvo.is_some() {
-            panic!("cannot start animator");
+            //panic!("cannot start animator");
             return;
         }
 
         //self.holder.borrow_mut().gameview = Some(gv);
 
-        println!("ADDDDDDDD animator");
-        unsafe {
-            ecore_animator_add(ui::gv_up_cb, mem::transmute(&*gv));
-        }
-
         *gvo = Some(gv);
+    }
+
+    pub fn update_play(&mut self) -> bool
+    {
+        if let Some(ref mut gv) = self.holder.borrow_mut().gameview {
+            let was_updated = gv.update();
+
+            if was_updated {
+                for view in &self.views {
+                    view.request_update();
+                }
+            }
+            true
+        }
+        else {
+            false
+        }
     }
 }
 
@@ -1856,4 +1868,11 @@ pub fn scene_rename(container : &mut WidgetContainer, widget_id : Uuid, name : &
     }
     */
 }
+
+pub extern fn update_play_cb(container_data : *const c_void) -> bool
+{
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(container_data)};
+    container.update_play()
+}
+
 

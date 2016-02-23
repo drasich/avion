@@ -240,6 +240,12 @@ pub extern fn play_scene(data : *const c_void)
     let gv = ui::view::GameView::new(win, camera, scene, container.resource.clone());
     //container.holder.borrow_mut().gameview = Some(gv);
     container.start_gameview(gv);
+
+        println!("ADDDDDDDD animator");
+        unsafe {
+            ui::ecore_animator_add(ui::update_play_cb, mem::transmute(wcb.container));
+        }
+
 }
 
 pub extern fn pause_scene(data : *const c_void)

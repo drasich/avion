@@ -707,10 +707,14 @@ impl GameView {
         return v;
     }
 
-    fn update(&mut self) {
+    pub fn update(&mut self) -> bool {
         if self.state == 0 {
             self.scene.borrow_mut().update(0.01f64);
             unsafe { jk_glview_request_update(self.glview); }
+            true
+        }
+        else {
+            false
         }
     }
 
@@ -726,16 +730,6 @@ impl GameView {
     {
         self.render.resize(w, h);
     }
-}
-
-pub extern fn gv_up_cb(v : *const c_void) -> bool
-{
-    unsafe {
-        let gv : *mut GameView = mem::transmute(v);
-        //println!("GV_UP_CB update cb!!!!!! {}", (*gv).name);
-        (*gv).update();
-    }
-    true
 }
 
 pub extern fn gv_init_cb(v : *const c_void) {
