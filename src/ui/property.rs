@@ -73,6 +73,7 @@ pub struct PropertyValue;
 #[link(name = "ecore")]
 #[link(name = "edje")]
 #[link(name = "eo")]
+//#[link(name = "GLESv2")]
 #[link(name = "joker")]
 extern {
     /*

@@ -27,6 +27,8 @@ git = "https://github.com/drasich/joker.git"
 #git = "https://github.com/drasich/cypher.git"
 [dependencies.cypher-sys]
 git = "https://github.com/drasich/cypher.git"
+#path = "/home/chris/code/cypher/"
+features = ["evas"]
 
 [dependencies.toml]
 git = "https://github.com/alexcrichton/toml-rs"
