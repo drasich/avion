@@ -3,25 +3,15 @@ name = "avion"
 version = "0.1.0"
 dependencies = [
  "byteorder 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "clippy 0.0.37 (registry+https://github.com/rust-lang/crates.io-index)",
- "dormin 0.1.0",
+ "dormin 0.1.0 (git+https://github.com/indefini/dormin.git)",
  "joker-sys 0.1.0 (git+https://github.com/drasich/joker.git)",
  "lazy_static 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "lua 0.2.0 (git+https://github.com/indefini/rust-lua.git)",
  "png 0.1.0 (git+https://github.com/indefini/rust-png.git)",
  "rustc-serialize 0.3.16 (git+https://github.com/indefini/rustc-serialize.git)",
- "toml 0.1.25 (git+https://github.com/alexcrichton/toml-rs)",
+ "toml 0.1.27 (git+https://github.com/alexcrichton/toml-rs)",
  "uuid 0.1.18 (git+https://github.com/rust-lang/uuid.git)",
-]
-
-[[package]]
-name = "advapi32-sys"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "winapi 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -30,66 +20,45 @@ version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "clippy"
-version = "0.0.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "semver 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "unicode-normalization 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
 name = "cypher-sys"
 version = "0.1.0"
-source = "git+https://github.com/drasich/cypher.git#460fa1fe7fff4ea39c6481b844ead00557e4848f"
+source = "git+https://github.com/drasich/cypher.git#afbf77e1876ba6c6f0738fea11cc6d38429a614f"
 dependencies = [
- "gcc 0.3.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "cypher-sys"
-version = "0.1.0"
-dependencies = [
- "gcc 0.3.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gcc 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "dormin"
 version = "0.1.0"
+source = "git+https://github.com/indefini/dormin.git#436c439148da0bb5ee3284d071c6ee8720806363"
 dependencies = [
  "byteorder 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "cypher-sys 0.1.0",
+ "cypher-sys 0.1.0 (git+https://github.com/drasich/cypher.git)",
  "lazy_static 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "lua 0.2.0 (git+https://github.com/indefini/rust-lua.git)",
  "png 0.1.0 (git+https://github.com/indefini/rust-png.git)",
  "rustc-serialize 0.3.16 (git+https://github.com/indefini/rustc-serialize.git)",
- "toml 0.1.25 (git+https://github.com/alexcrichton/toml-rs)",
+ "toml 0.1.27 (git+https://github.com/alexcrichton/toml-rs)",
  "uuid 0.1.18 (git+https://github.com/rust-lang/uuid.git)",
 ]
 
 [[package]]
 name = "gcc"
-version = "0.3.21"
+version = "0.3.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "advapi32-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "winapi 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [[package]]
 name = "joker-sys"
 version = "0.1.0"
-source = "git+https://github.com/drasich/joker.git#c1a2350ad5e5d73892f40399644c0152d0381323"
+source = "git+https://github.com/drasich/joker.git#147056a44973ce659eefa330d973e99703193ce4"
 dependencies = [
  "cypher-sys 0.1.0 (git+https://github.com/drasich/cypher.git)",
- "gcc 0.3.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gcc 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -99,17 +68,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "libc"
-version = "0.2.4"
+version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "libz-sys"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "gcc 0.3.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gcc 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -117,17 +86,12 @@ name = "lua"
 version = "0.2.0"
 source = "git+https://github.com/indefini/rust-lua.git#fdc77617d2b017fb65cddcf5981a05ed43ab349c"
 dependencies = [
- "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
-name = "nom"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
 name = "pkg-config"
-version = "0.3.6"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -135,8 +99,8 @@ name = "png"
 version = "0.1.0"
 source = "git+https://github.com/indefini/rust-png.git#81f5fc68cec331c376d3a9db5ac8a05efce5a07b"
 dependencies = [
- "gcc 0.3.21 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gcc 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "png_sys 1.6.16 (git+https://github.com/indefini/rust-png.git)",
 ]
 
@@ -145,17 +109,15 @@ name = "png_sys"
 version = "1.6.16"
 source = "git+https://github.com/indefini/rust-png.git#81f5fc68cec331c376d3a9db5ac8a05efce5a07b"
 dependencies = [
- "libz-sys 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libz-sys 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "rand"
-version = "0.3.13"
+version = "0.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "advapi32-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "winapi 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -165,46 +127,23 @@ source = "git+https://github.com/indefini/rustc-serialize.git#892dce5a90a30e33fe
 
 [[package]]
 name = "rustc-serialize"
-version = "0.3.16"
+version = "0.3.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "semver"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "nom 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [[package]]
 name = "toml"
-version = "0.1.25"
-source = "git+https://github.com/alexcrichton/toml-rs#af2c45147d020b3280cc81d4a94973d8f1bf4816"
+version = "0.1.27"
+source = "git+https://github.com/alexcrichton/toml-rs#77be56048c57614fd0f0a2e80c089861d68aadc3"
 dependencies = [
- "rustc-serialize 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "unicode-normalization"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "uuid"
 version = "0.1.18"
-source = "git+https://github.com/rust-lang/uuid.git#f644f234f7d2e901e932700c7f3c18b2ebc9346f"
+source = "git+https://github.com/rust-lang/uuid.git#5ad707c0a54e6c9a226852737b466018a517cf6f"
 dependencies = [
- "rand 0.3.13 (registry+https://github.com/rust-lang/crates.io-index)",
- "rustc-serialize 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
-
-[[package]]
-name = "winapi"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "winapi-build"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 

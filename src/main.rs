@@ -18,7 +18,7 @@
 //#![allow(ctypes)]
 
 #![feature(plugin)]
-#![plugin(clippy)]
+//#![plugin(clippy)]
 
 extern crate rustc_serialize;
 extern crate byteorder;
