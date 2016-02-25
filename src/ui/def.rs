@@ -18,27 +18,27 @@ use std::thread;
 
 use uuid::Uuid;
 
-use intersection;
-use resource;
-use geometry;
-use vec;
-use scene;
-use object;
+use dormin::intersection;
+use dormin::resource;
+use dormin::geometry;
+use dormin::vec;
+use dormin::scene;
+use dormin::object;
 use ui::{Tree,Property,PropertyConfig,Holder,View,Command,Action};
 use ui;
-use factory;
+use dormin::factory;
 use operation;
-use camera;
-use property;
+use dormin::camera;
+use dormin::property;
 use context;
 use control;
 use control::Control;
 use control::WidgetUpdate;
 use uuid;
-use component;
+use dormin::component;
 use dragger;
-use property::{PropertyWrite,PropertyGet};
-use transform;
+use dormin::property::{PropertyWrite,PropertyGet};
+use dormin::transform;
 use util;
 
 #[repr(C)]

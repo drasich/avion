@@ -4,7 +4,7 @@ version = "0.1.0"
 dependencies = [
  "byteorder 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "clippy 0.0.37 (registry+https://github.com/rust-lang/crates.io-index)",
- "cypher-sys 0.1.0 (git+https://github.com/drasich/cypher.git)",
+ "dormin 0.1.0",
  "joker-sys 0.1.0 (git+https://github.com/drasich/joker.git)",
  "lazy_static 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -46,6 +46,30 @@ dependencies = [
  "gcc 0.3.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "cypher-sys"
+version = "0.1.0"
+dependencies = [
+ "gcc 0.3.21 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "dormin"
+version = "0.1.0"
+dependencies = [
+ "byteorder 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cypher-sys 0.1.0",
+ "lazy_static 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lua 0.2.0 (git+https://github.com/indefini/rust-lua.git)",
+ "png 0.1.0 (git+https://github.com/indefini/rust-png.git)",
+ "rustc-serialize 0.3.16 (git+https://github.com/indefini/rustc-serialize.git)",
+ "toml 0.1.25 (git+https://github.com/alexcrichton/toml-rs)",
+ "uuid 0.1.18 (git+https://github.com/rust-lang/uuid.git)",
 ]
 
 [[package]]

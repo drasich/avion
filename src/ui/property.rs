@@ -16,22 +16,23 @@ use std::ffi::CStr;
 use core::marker;
 use uuid;
 
-use scene;
-use object;
+use dormin::scene;
+use dormin::object;
 use ui::{Window, ButtonCallback};
 use ui;
-use property;
+use dormin::property;
 use operation;
 use control::WidgetUpdate;
-use vec;
-use transform;
-use resource;
-use mesh;
-use material;
-use property::PropertyGet;
-use component;
-use component::CompData;
-use armature;
+use dormin::vec;
+use dormin::transform;
+use dormin::resource;
+use dormin::mesh;
+use dormin::material;
+use dormin::property::PropertyGet;
+use dormin::component;
+use dormin::component::CompData;
+use dormin::armature;
+use dormin::transform::Orientation;
 
 #[repr(C)]
 pub struct Elm_Object_Item;
@@ -247,6 +248,9 @@ extern {
 
     fn property_show(obj : *const JkPropertyList, b : bool);
 
+    fn property_list_enum_update(
+        pv : *const ui::PropertyValue,
+        value : *const c_char);
 }
 
 #[derive(RustcDecodable, RustcEncodable, Clone)]
@@ -1478,8 +1482,79 @@ impl PropertyShow for CompData
         }
     }
 
+}
+
+impl ui::PropertyShow for Orientation {
+
+    fn create_widget(
+        &self,
+        property : &mut ui::Property,
+        field : &str,
+        depth : i32,
+        has_container : bool ) -> Option<*const ui::PropertyValue>
+    {
+        println!("...................DEPTH, field  : {}, {}", depth, field);
+        if depth == 0 {
+            let type_value = match *self {
+                Orientation::AngleXYZ(_) => "AngleXYZ",
+                Orientation::Quat(_) => "Quat"
+            };
+
+            let types = "AngleXYZ/Quat";
+            property.add_enum(self, field, types, type_value);
+        }
+
+        if depth == 1 {
+            match *self {
+                Orientation::AngleXYZ(ref v) =>  {
+                    return v.create_widget(property, field, depth, has_container);
+                },
+                Orientation::Quat(ref q) => {
+                    return q.create_widget(property, field, depth, has_container)
+                }
+            };
+        }
+
+        None
+    }
+
+    fn update_widget(&self, pv : *const ui::property::PropertyValue) {
+        let type_value = match *self {
+            Orientation::AngleXYZ(_) => "AngleXYZ",
+            Orientation::Quat(_) => "Quat"
+        };
+
+        let v = CString::new(type_value.as_bytes()).unwrap();
+        unsafe {
+            property_list_enum_update(pv, v.as_ptr());
+        }
+    }
+
+    fn get_property(&self, field : &str) -> Option<&ui::PropertyShow>
+    {
+        match *self {
+            Orientation::AngleXYZ(ref v) =>  {
+                match field {
+                    "x" => Some(&v.x as &ui::PropertyShow),
+                    "y" => Some(&v.y as &ui::PropertyShow),
+                    "z" => Some(&v.z as &ui::PropertyShow),
+                    _ => None
+                }
+            },
+            Orientation::Quat(ref q) => {
+                match field {
+                    "x" => Some(&q.x as &ui::PropertyShow),
+                    "y" => Some(&q.y as &ui::PropertyShow),
+                    "z" => Some(&q.z as &ui::PropertyShow),
+                    "w" => Some(&q.w as &ui::PropertyShow),
+                    _ => None
+                }
+            }
+        }
+    }
 
 }
+
 
 macro_rules! property_show_methods(
     ($my_type:ty, [ $($member:ident),+ ]) => (
