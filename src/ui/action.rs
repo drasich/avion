@@ -10,14 +10,14 @@ use std::rc::Rc;
 use uuid::Uuid;
 use std::ffi::{CString, CStr};
 
-use scene;
-use object;
+use dormin::scene;
+use dormin::object;
 use ui::Window;
 use ui::Master;
 use ui::{ButtonCallback,EntryCallback};
 use ui;
 use control::Control;
-use resource;
+use dormin::resource;
 use uuid;
 
 #[repr(C)]

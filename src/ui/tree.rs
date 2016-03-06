@@ -10,8 +10,8 @@ use std::rc::Rc;
 use uuid::Uuid;
 use std::ffi::CString;
 
-use scene;
-use object;
+use dormin::scene;
+use dormin::object;
 use ui::Window;
 use ui::Master;
 use ui;

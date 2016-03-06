@@ -4,24 +4,28 @@ use std::any::{Any};//, AnyRefExt};
 use std::sync::{RwLock, Arc};
 use std::collections::LinkedList;
 use std::f64::consts;
-use transform;
 
 use uuid::Uuid;
 
+use dormin::transform;
 use operation;
-use camera;
+use dormin::camera;
 use context;
 use ui;
 use dragger;
-use intersection;
-use vec;
-use object;
-use property::PropertyWrite;
-use resource;
-use property::PropertyGet;
-use factory;
-use component;
+use dormin::intersection;
+use dormin::vec;
+use dormin::object;
+use dormin::property::PropertyWrite;
+use dormin::resource;
+use dormin::property::PropertyGet;
+use dormin::factory;
+use dormin::component;
+
 use util;
+
+use dormin::scene::Scene;
+use dormin::object::Object;
 
 pub enum State
 {

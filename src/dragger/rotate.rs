@@ -2,19 +2,19 @@ use std::collections::LinkedList;
 use std::rc::{Rc,Weak};
 use std::cell::RefCell;
 use std::sync::{RwLock, Arc};
-use object;
-use mesh;
-use vec;
-use resource;
-use resource::Create;
-use shader;
-use material;
-use transform;
-use geometry;
-use intersection;
-use matrix;
-use factory;
-use camera;
+use dormin::object;
+use dormin::mesh;
+use dormin::vec;
+use dormin::resource;
+use dormin::resource::Create;
+use dormin::shader;
+use dormin::material;
+use dormin::transform;
+use dormin::geometry;
+use dormin::intersection;
+use dormin::matrix;
+use dormin::factory;
+use dormin::camera;
 
 use dragger::manager::{
     Repere,

@@ -1,8 +1,8 @@
-use object;
-use scene;
-use vec;
+use dormin::object;
+use dormin::scene;
+use dormin::vec;
 use uuid;
-use transform;
+use dormin::transform;
 
 use std::collections::{LinkedList};
 use std::sync::{RwLock, Arc};

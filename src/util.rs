@@ -4,8 +4,8 @@ use std::fs;
 use std::mem;
 
 
-use vec;
-use object;
+use dormin::vec;
+use dormin::object;
 
 pub fn objects_center(objects : &LinkedList<Arc<RwLock<object::Object>>>) -> vec::Vec3
 {

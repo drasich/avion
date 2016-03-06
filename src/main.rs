@@ -18,7 +18,7 @@
 //#![allow(ctypes)]
 
 #![feature(plugin)]
-#![plugin(clippy)]
+//#![plugin(clippy)]
 
 extern crate rustc_serialize;
 extern crate byteorder;
@@ -36,6 +36,8 @@ extern crate lazy_static;
 #[macro_use]
 extern crate lua;
 
+extern crate dormin;
+
 //use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
 use std::sync::{RwLock, Arc};
@@ -48,10 +50,11 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process;
 
+/*
 #[macro_use]
-mod property;
+use dormin::property;
 
-mod resource;
+use dormin::resource;
 mod shader;
 mod material;
 mod armature;
@@ -65,16 +68,11 @@ mod vec;
 mod camera;
 mod scene;
 mod texture;
-mod ui;
-mod dragger;
 mod geometry;
 mod intersection;
 mod fbo;
 mod factory;
-mod operation;
 
-mod context;
-mod control;
 
 mod transform;
 
@@ -82,9 +80,16 @@ mod model;
 
 mod component;
 use component::manager;
+*/
 
+mod dragger;
+mod ui;
+mod operation;
+mod context;
+mod control;
 mod util;
 
+use dormin::component;
 
 static mut sTest : i32 = 5;
 

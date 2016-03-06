@@ -6,14 +6,14 @@ use std::fmt;
 use std::collections::LinkedList;
 use uuid;
 
-use object;
-use property;
-use property::PropertyWrite;
+use dormin::object;
+use dormin::property;
+use dormin::property::PropertyWrite;
 use ui;
 use control::WidgetUpdate;
-use vec;
-use scene;
-use component::CompData;
+use dormin::vec;
+use dormin::scene;
+use dormin::component::CompData;
 
 use dragger;
 
