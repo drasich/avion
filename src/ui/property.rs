@@ -1327,8 +1327,8 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
     {
         match field.parse::<usize>() {
             Ok(index) => {
-                if index > self.len() -1 {
-                    println!("5555555555555555555get property of vec :: index is too big {}, {}", index, self.len());
+                if self.is_empty() || index > self.len() -1 {
+                    println!("5555555555555555555get property of vec :: index is too big, or list is empty : {}, {}", index, self.len());
                     None
                 }
                 else {
