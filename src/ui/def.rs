@@ -710,6 +710,10 @@ impl WidgetContainer
             return;
         }
 
+        for view in &self.views {
+            view.request_update();
+        }
+
         match *change {
             operation::Change::DirectChange(ref name) => {
                 let o = match self.get_selected_object() {
