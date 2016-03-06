@@ -710,10 +710,6 @@ impl WidgetContainer
             return;
         }
 
-        for view in &self.views {
-            view.request_update();
-        }
-
         match *change {
             operation::Change::DirectChange(ref name) => {
                 let o = match self.get_selected_object() {
@@ -989,6 +985,11 @@ impl WidgetContainer
             },
             _ => {}
         }
+
+        for view in &self.views {
+            view.request_update();
+        }
+
     }
 
     pub fn handle_event(&mut self, event : ui::Event, widget_origin: uuid::Uuid)

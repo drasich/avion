@@ -1,5 +1,6 @@
 TODO in def.rs
-detach game from tool
+- add/change compdata
+- dragger resource load
 
 DONE?
 uniforms in material
@@ -12,7 +13,6 @@ TODO
 - spinner entry undo/redo problem
 - make tree a widget like property
 - focus when writing data in entries
-- add remove compdata, components
 
 - when we changed property of a compdata, we have to reinit his components...
 - separate texture and img
@@ -25,4 +25,7 @@ TODO
   - undo/redo
   - dragger
 
-- component system
+
+Components
+- review component system
+- lua component serialization?

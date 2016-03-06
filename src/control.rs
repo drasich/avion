@@ -269,7 +269,7 @@ impl Control
                     }
                 };
 
-                let update = 
+                let update =
                     self.dragger.borrow_mut().mouse_move_hover(r, button) || button == 1;
 
                 if button == 1 {
