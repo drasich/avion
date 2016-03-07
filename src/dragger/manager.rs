@@ -339,9 +339,15 @@ fn create_mat(color : vec::Vec4, name : &str) -> Arc<RwLock<material::Material>>
 {
     let mut mat : material::Material = Create::create("material/dragger.mat");
     mat.inittt();
+
+    if let Some(ref mut s) = mat.shader {
+        s.load_instant_no_manager();
+    }
+
     mat.set_uniform_data(
         "color",
         shader::UniformData::Vec4(color));
+
     let matarc = Arc::new(RwLock::new(mat));
 
     matarc
