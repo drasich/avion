@@ -486,14 +486,15 @@ impl Property
         ps : &PropertyShow,
         path : &str,
         types : &str,
-        value : &str
-        )
+        value : &str,
+        has_container : bool
+        ) -> *const PropertyValue
     {
         let f = CString::new(path.as_bytes()).unwrap();
         let types = CString::new(types.as_bytes()).unwrap();
         let v = CString::new(value.as_bytes()).unwrap();
 
-        let pv = unsafe {
+        let mut pv = unsafe {
             property_list_enum_add(
                 self.jk_property_list,
                 f.as_ptr(),
@@ -501,6 +502,15 @@ impl Property
                 v.as_ptr())
 
         };
+
+        if !has_container {
+            unsafe {
+            pv = property_list_single_node_add(
+                self.jk_property_list,
+                pv);
+            }
+        }
+
 
         if pv != ptr::null() {
             self.pv.insert(path.to_owned(), pv);
@@ -511,6 +521,8 @@ impl Property
                 property_expand(pv);
             }
         }
+
+        pv
     }
 
     pub fn set_visible(&mut self, b : bool)
@@ -1394,9 +1406,17 @@ impl PropertyShow for CompData
 
         if depth == 0 && field != ""
         {
+            /*
             println!("00--> compdata property show for : {}, {}, {}", s, depth, kind );
             //let pv = property.add_node(self, s, has_container);
             let pv = property.add_node(self, field, has_container, Some(kindr));
+            return Some(pv);
+            */
+
+            let type_value = self.get_kind_string();
+
+            let types = CompData::get_all_kind();
+            let pv = property.add_enum(self, field, types.as_str(), type_value.as_str(), has_container);
             return Some(pv);
         }
 
@@ -1493,7 +1513,8 @@ impl ui::PropertyShow for Orientation {
         depth : i32,
         has_container : bool ) -> Option<*const ui::PropertyValue>
     {
-        println!("...................DEPTH, field  : {}, {}", depth, field);
+        println!("...................DEPTH, field, has container  : {}, {}, {}", 
+                 depth, field, has_container);
         if depth == 0 {
             let type_value = match *self {
                 Orientation::AngleXYZ(_) => "AngleXYZ",
@@ -1501,7 +1522,7 @@ impl ui::PropertyShow for Orientation {
             };
 
             let types = "AngleXYZ/Quat";
-            property.add_enum(self, field, types, type_value);
+            property.add_enum(self, field, types, type_value, has_container);
         }
 
         if depth == 1 {
