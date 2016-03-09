@@ -1,5 +1,8 @@
 TODO in def.rs
 - add/change compdata
+- remove child of object
+- update material/shader in live, reread files.
+
 
 DONE?
 uniforms in material
