@@ -1051,13 +1051,13 @@ impl WidgetContainer
     pub fn request_operation(
         &mut self,
         name : Vec<String>,
-        change : operation::OperationData
+        op_data : operation::OperationData
         ) -> operation::Change
     {
         let op = operation::Operation::new(
             self.get_selected_objects(),
             name.clone(),
-            change
+            op_data
             );
 
         let change = self.op_mgr.add(op);
@@ -1092,6 +1092,46 @@ impl WidgetContainer
             operation::OperationData::OldNew(old,new)
             )
     }
+
+    pub fn request_operation_old_new_enum<T : Any+PartialEq>(
+        &mut self,
+        name : Vec<String>,
+        new : Box<T>) -> operation::Change
+    {
+        /*
+        if *old == *new {
+            return operation::Change::None;
+        }
+        */
+        println!("TODO TODO clean");
+
+
+        let path = join_string(&name);
+
+        let objs = self.get_selected_objects();
+
+        let mut olds = Vec::new();
+        for o in &objs {
+            let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path.as_str());
+            if let Some(pp) = p {
+                olds.push(pp);
+            }
+        }
+
+        let yep = olds.remove(0);
+
+        let op = operation::Operation::new(
+            objs,
+            name.clone(),
+            //operation::OperationData::OldNewVec(olds, new)
+            operation::OperationData::OldNew(yep, new)
+            );
+
+        let change = self.op_mgr.add(op);
+        change
+
+    }
+
 
     pub fn request_direct_change(
         &mut self,

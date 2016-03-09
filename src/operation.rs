@@ -40,7 +40,9 @@ pub enum OperationData
         Option<Arc<RwLock<object::Object>>>,
         Option<Arc<RwLock<object::Object>>>),
     //AddComponent(uuid::Uuid, uuid::Uuid) //object id, component id?
-    AddComponent(Arc<RwLock<object::Object>>, Box<CompData>)
+    AddComponent(Arc<RwLock<object::Object>>, Box<CompData>),
+    OldNewVec(Vec<Box<Any>>, Box<Any>),
+
 }
 
 pub struct Operation

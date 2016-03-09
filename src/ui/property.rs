@@ -670,10 +670,12 @@ pub extern fn register_change_enum(
                 return
             }
         };
-        changed_set(widget_cb_data, name, Some(&sso), &ss, action);
+        println!("enum changed with old,  {}, {}, {} ", sso, ss, action);
+        changed_enum(widget_cb_data, name, &ss);
     }
     else {
-        changed_set(widget_cb_data, name, None, &ss, action);
+        println!("enum changed no old,  {}, {} ", ss, action);
+        changed_enum(widget_cb_data, name, &ss);
     }
 }
 
@@ -751,7 +753,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
 
     let change = match (old, action) {
         (Some(oldd), 1) => {
-            println!(".....adding operation!!");
+            println!(".....adding operation!! : {:?}", vs );
             container.request_operation_old_new(
                 vs,
                 box oldd.clone(),
@@ -764,6 +766,49 @@ fn changed_set<T : Any+Clone+PartialEq>(
 
     container.handle_change(&change, p.id);
 }
+
+fn changed_enum<T : Any+Clone+PartialEq>(
+    widget_data : *const c_void,
+    name : *const c_char,
+    new : &T,
+    ) {
+    let s = unsafe {CStr::from_ptr(name).to_bytes()};
+
+    let path = match str::from_utf8(s) {
+        Ok(pp) => pp,
+        _ => {
+            println!("problem with the path");
+            return;}
+    };
+
+    println!("I changed the value {} ", path);
+
+    let v: Vec<&str> = path.split('/').collect();
+
+    let mut vs = Vec::new();
+    for i in &v
+    {
+        vs.push(i.to_string());
+    }
+
+    //let vs = vs[1..].to_vec();
+
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
+    let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    //let p : & Property = unsafe {mem::transmute(property)};
+
+    let change = {
+        println!(".....adding operation!! : {:?}", vs );
+        container.request_operation_old_new_enum(
+            vs,
+            //box oldd.clone(),
+            box new.clone())
+    };
+
+    container.handle_change(&change, p.id);
+}
+
 
 fn changed_option(
 //fn changed_option<T : Any+Clone+PartialEq>(
