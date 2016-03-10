@@ -12,7 +12,7 @@ pub fn objects_center(objects : &LinkedList<Arc<RwLock<object::Object>>>) -> vec
     let mut v = vec::Vec3::zero();
     for o in objects.iter()
     {
-        v = v + o.read().unwrap().position;
+        v = v + o.read().unwrap().world_position();
     }
 
     v = v / objects.len() as f64;
