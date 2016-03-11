@@ -11,7 +11,7 @@ use std::cell::{RefCell, BorrowState};
 
 pub struct Context
 {
-    pub selected : LinkedList<Arc<RwLock<object::Object>>>,
+    pub selected : Vec<Arc<RwLock<object::Object>>>,
     pub scene : Option<Rc<RefCell<scene::Scene>>>,
     pub saved_positions : Vec<vec::Vec3>,
     pub saved_scales : Vec<vec::Vec3>,
@@ -23,7 +23,7 @@ impl Context
     pub fn new() -> Context
     {
         Context {
-            selected: LinkedList::new(),
+            selected: Vec::new(),
             scene : None,
             saved_positions : Vec::new(),
             saved_scales : Vec::new(),
@@ -88,7 +88,7 @@ impl Context
 
     pub fn remove_objects_by_id(&mut self, ids : Vec<uuid::Uuid>)
     {
-        let mut new_list = LinkedList::new();
+        let mut new_list = Vec::new();
         for o in &self.selected {
             let mut not_found = true;
             for id in &ids {
@@ -98,7 +98,7 @@ impl Context
                 }
             }
             if not_found {
-                new_list.push_back(o.clone());
+                new_list.push(o.clone());
             }
         }
 
@@ -119,7 +119,7 @@ impl Context
                 if let Some(ref s) = self.scene {
                     for so in &s.borrow().objects {
                         if *id == so.read().unwrap().id {
-                            self.selected.push_back(so.clone());
+                            self.selected.push(so.clone());
                             break;
                         }
                     }

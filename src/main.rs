@@ -92,6 +92,23 @@ mod util;
 use dormin::component;
 
 static mut sTest : i32 = 5;
+#[derive(Debug)]
+struct Ob {
+    pos : i32
+}
+
+#[derive(Debug)]
+struct Cha {
+    left : Ob,
+    right : Ob
+}
+
+fn testcha(left : &mut Ob, right : &mut Ob)
+{
+    left.pos = 13;
+    right.pos = 16;
+}
+
 
 fn main() {
     let files = util::get_files_in_dir("scene");
@@ -101,6 +118,43 @@ fn main() {
     unsafe {
     sTest = 4432;
     }
+
+    let mut t = Vec::new();
+    t.push(Ob { pos : 1i32 }); 
+    t.push(Ob { pos : 2i32 }); 
+    t.push(Ob { pos : 3i32 }); 
+    t.push(Ob { pos : 4i32 }); 
+    t.push(Ob { pos : 5i32 }); 
+    t.push(Ob { pos : 6i32 }); 
+    t.push(Ob { pos : 7i32 }); 
+
+    let slicefirst = t.as_mut_slice();
+
+    let mut col = slicefirst.iter_mut().filter(|x| x.pos != 1).collect::<Vec<_>>();
+    let slice = col.as_mut_slice();
+
+    let (left,right) = slice.split_at_mut(2);
+    let (middle, right) = right.split_at_mut(1);
+
+    let left = &mut left[0];
+    let middle = &mut middle[0];
+    let right = &mut right[0];
+
+    left.pos = middle.pos + 10;
+    middle.pos = left.pos + 100;
+    right.pos = left.pos + middle.pos;
+    println!("left, middle, r2, {:?}, {:?}, {:?}", left, middle, right);
+
+    //println!("test {:?}", slicefirst);
+
+    let mut cha = Cha {
+      left : Ob { pos : 5i32 },
+      right : Ob { pos : 7i32 },
+    };
+
+    testcha(&mut cha.left, &mut cha.right);
+    println!("cha : {:?}", cha);
+
 
     {
      println!("The map has {} entries.", *component::manager::COUNT);

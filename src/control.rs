@@ -190,13 +190,13 @@ impl Control
             }
         }
 
-        let mut list = LinkedList::new();
+        let mut v = Vec::new();
         match closest_obj {
             None => {},
-            Some(o) => list.push_back(o)
+            Some(o) => v.push(o)
         }
 
-        return operation::Change::ChangeSelected(list);
+        return operation::Change::ChangeSelected(v);
     }
 
     fn rotate_camera(&mut self, context : &context::Context, x : f64, y : f64)
@@ -348,11 +348,11 @@ impl Control
                         None => return list
                     };
 
-                    let mut oblist = LinkedList::new();
+                    let mut oblist = Vec::new();
                     for o in &s.borrow().objects {
                         let b = intersection::is_object_in_planes(planes.as_ref(), &*o.read().unwrap());
                         if b {
-                            oblist.push_back(o.clone());
+                            oblist.push(o.clone());
                         }
                     }
 

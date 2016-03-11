@@ -7,10 +7,10 @@ use std::mem;
 use dormin::vec;
 use dormin::object;
 
-pub fn objects_center(objects : &LinkedList<Arc<RwLock<object::Object>>>) -> vec::Vec3
+pub fn objects_center(objects : &[Arc<RwLock<object::Object>>]) -> vec::Vec3
 {
     let mut v = vec::Vec3::zero();
-    for o in objects.iter()
+    for o in objects
     {
         v = v + o.read().unwrap().world_position();
     }

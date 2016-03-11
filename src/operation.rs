@@ -47,7 +47,7 @@ pub enum OperationData
 
 pub struct Operation
 {
-    pub objects : LinkedList<Arc<RwLock<object::Object>>>,
+    pub objects : Vec<Arc<RwLock<object::Object>>>,
     pub name : Vec<String>,
     pub change : OperationData
     //pub old : Box<Any>,
@@ -62,7 +62,7 @@ pub enum Change
     Tree,
     Objects(String, LinkedList<uuid::Uuid>),
     DirectChange(String),
-    ChangeSelected(LinkedList<Arc<RwLock<object::Object>>>),
+    ChangeSelected(Vec<Arc<RwLock<object::Object>>>),
     SelectedChange,
     SceneAdd(uuid::Uuid, Vec<uuid::Uuid>),
     SceneRemove(uuid::Uuid, Vec<uuid::Uuid>),
@@ -87,7 +87,7 @@ pub enum Change
 impl Operation
 {
     pub fn new(
-        objects : LinkedList<Arc<RwLock<object::Object>>>,
+        objects : Vec<Arc<RwLock<object::Object>>>,
         name : Vec<String>,
         //old : Box<Any>,
         //new : Box<Any>)
@@ -207,12 +207,12 @@ impl OperationTrait for Operation
             },
             OperationData::SceneAddObjects(ref s, ref obs)  => {
                 let mut sc = s.borrow_mut();
-                sc.add_objects_by_vec(obs.clone());
+                sc.add_objects(obs);
                 return Change::SceneAdd(sc.id.clone(), get_ids(obs));
             },
             OperationData::SceneRemoveObjects(ref s, ref obs)  => {
                 let mut sc = s.borrow_mut();
-                sc.remove_objects_by_vec(obs.clone());
+                sc.remove_objects(obs);
                 return Change::SceneRemove(sc.id.clone(), get_ids(obs));
             },
             OperationData::SetSceneCamera(ref s, _, ref new)   => {
@@ -319,13 +319,13 @@ impl OperationTrait for Operation
             OperationData::SceneAddObjects(ref s, ref obs)  => {
                 println!("undo scene add objects !!!");
                 let mut sc = s.borrow_mut();
-                sc.remove_objects_by_vec(obs.clone());
+                sc.remove_objects(obs);
                 return Change::SceneRemove(sc.id.clone(), get_ids(obs));
             },
             OperationData::SceneRemoveObjects(ref s, ref obs)  => {
                 println!("undo scene remove objects !!!");
                 let mut sc = s.borrow_mut();
-                sc.add_objects_by_vec(obs.clone());
+                sc.add_objects(obs);
                 return Change::SceneAdd(sc.id.clone(), get_ids(obs));
             },
             OperationData::SetSceneCamera(ref s, ref old, _)   => {

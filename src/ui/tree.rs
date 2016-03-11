@@ -114,9 +114,9 @@ impl Tree
         self._add_object(object);
     }
 
-    pub fn add_objects(&mut self, objects : LinkedList<Arc<RwLock<object::Object>>>)
+    pub fn add_objects(&mut self, objects : &[Arc<RwLock<object::Object>>])
     {
-        for o in &objects {
+        for o in objects {
             self.add_object(o.clone());
         }
     }

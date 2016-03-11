@@ -834,7 +834,7 @@ impl WidgetContainer
                 self.handle_change(&operation::Change::SelectedChange, widget_origin);
             },
             operation::Change::SelectedChange => {
-                let sel = self.get_selected_objects();
+                let sel = self.get_selected_objects().to_vec();
                 println!("container, object seclected : {}",  sel.len());
 
                 if let Some(ref mut t) = self.tree {
@@ -855,7 +855,7 @@ impl WidgetContainer
                     }
                 }
                 else {
-                    if let Some(o) = sel.front() {
+                    if let Some(o) = sel.get(0) {
                         if let Some(ref mut p) = self.property {
                             if widget_origin != p.id {
                                 p.set_object(&*o.read().unwrap());
@@ -893,7 +893,7 @@ impl WidgetContainer
                 match self.tree {
                     Some(ref mut t) => {
                         if widget_origin != t.id {
-                            t.add_objects(objects);
+                            t.add_objects(&objects);
                         }
                     },
                     None => {
@@ -1016,7 +1016,7 @@ impl WidgetContainer
 
     pub fn get_selected_object(&self) -> Option<Arc<RwLock<object::Object>>>
     {
-        match self.context.selected.front() {
+        match self.context.selected.get(0) {
             Some(o) => return Some(o.clone()),
             None => {
                 println!("view get selected objects, no objects selected");
@@ -1043,9 +1043,9 @@ impl WidgetContainer
         }
     }
 
-    fn get_selected_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
+    fn get_selected_objects(&self) -> &Vec<Arc<RwLock<object::Object>>>
     {
-        self.context.selected.clone()
+        &self.context.selected
     }
 
     pub fn request_operation(
@@ -1055,7 +1055,7 @@ impl WidgetContainer
         ) -> operation::Change
     {
         let op = operation::Operation::new(
-            self.get_selected_objects(),
+            self.get_selected_objects().to_vec(),
             name.clone(),
             op_data
             );
@@ -1108,7 +1108,7 @@ impl WidgetContainer
 
         let path = join_string(&name);
 
-        let objs = self.get_selected_objects();
+        let objs = self.get_selected_objects().to_vec();
 
         let mut olds = Vec::new();
         for o in &objs {
@@ -1280,7 +1280,7 @@ impl WidgetContainer
         };
 
 
-        let list = self.get_selected_objects();
+        let list = self.get_selected_objects().to_vec();
         let mut vec = Vec::new();
         for o in &list {
             vec.push(o.clone());
@@ -1302,7 +1302,7 @@ impl WidgetContainer
             None => return operation::Change::None
         };
 
-        let list = self.get_selected_objects();
+        let list = self.get_selected_objects().to_vec();
         let mut vec = Vec::new();
         for o in &list {
             //vec.push(o.clone());
@@ -1321,10 +1321,8 @@ impl WidgetContainer
 
     pub fn add_component(&mut self, component_name : &str) -> operation::Change
     {
-
-        let list = self.get_selected_objects();
-        let o = if list.len() == 1 {
-            list.front().unwrap()
+        let o = if let Some(o) = self.get_selected_objects().get(0) {
+            o.clone()
         }
         else
         {
@@ -1408,7 +1406,7 @@ impl WidgetContainer
             None => return
         };
 
-        let mut newlist = LinkedList::new();
+        let mut newlist = Vec::new();
 
         for o in &c.selected {
             let mut should_remove = false;
@@ -1420,7 +1418,7 @@ impl WidgetContainer
             }
 
             if !should_remove {
-                newlist.push_back(o.clone());
+                newlist.push(o.clone());
             }
         }
 
@@ -1449,7 +1447,7 @@ impl WidgetContainer
         let mut obs = self.get_selected_objects();
 
         let mut i = 0;
-        for o in &mut obs {
+        for o in obs {
             //o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
             o.write().unwrap().position = sp[i] + translation;
             i = i+1;
@@ -1466,7 +1464,7 @@ impl WidgetContainer
         let mut obs = self.get_selected_objects();
 
         let mut i = 0;
-        for o in &mut obs {
+        for o in obs {
             //o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
             o.write().unwrap().scale = sp[i] * scale;
             i = i+1;
@@ -1483,7 +1481,7 @@ impl WidgetContainer
         let mut obs = self.get_selected_objects();
 
         let mut i = 0;
-        for o in &mut obs {
+        for o in obs {
             o.write().unwrap().orientation = so[i] * transform::Orientation::new_with_quat(&rotation);
             i = i+1;
         }
@@ -1741,8 +1739,8 @@ pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)
 
     let ao =  Arc::new(RwLock::new(o));
 
-    let mut list = LinkedList::new();
-    list.push_back(ao.clone());
+    let mut list = Vec::new();
+    list.push(ao.clone());
 
     let s = if let Some(ref s) = container.context.scene {
         s.clone()

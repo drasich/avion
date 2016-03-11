@@ -273,11 +273,11 @@ impl DraggerManager
         }
     }
 
-    pub fn get_objects(&self) -> LinkedList<Arc<RwLock<object::Object>>>
+    pub fn get_objects(&self) -> Vec<Arc<RwLock<object::Object>>>
     {
-        let mut l = LinkedList::new();
+        let mut l = Vec::new();
         for d in &self.draggers[self.current_group] {
-            l.push_back(d.borrow().object.clone());
+            l.push(d.borrow().object.clone());
         }
 
         l
