@@ -867,7 +867,7 @@ impl WidgetContainer
                     }
                 }
             },
-            operation::Change::SceneRemove(ref id, ref obs) => {
+            operation::Change::SceneRemove(ref id, ref parents, ref obs) => {
                 {
                     println!("container, sceneremove!!!!!!!!");
                     self.context.remove_objects_by_id(obs.clone());
@@ -881,7 +881,7 @@ impl WidgetContainer
                 println!("do something for the other widget");
                 self.handle_change(&operation::Change::SelectedChange, widget_origin);
             },
-            operation::Change::SceneAdd(ref id, ref obs) => {
+            operation::Change::SceneAdd(ref id, ref parents, ref obs) => {
                 let scene = match self.get_scene() {
                     Some(s) => s,
                     None => return
@@ -1282,14 +1282,22 @@ impl WidgetContainer
 
         let list = self.get_selected_objects().to_vec();
         let mut vec = Vec::new();
+        let mut parent = Vec::new();
         for o in &list {
             vec.push(o.clone());
+            let parent_id = if let Some(p) = o.read().unwrap().parent {
+                p.read().unwrap().id
+            }
+            else {
+                uuid::Uuid::nil()
+            };
+            parent.push(parent_id);
         }
 
         let vs = Vec::new();
         return self.request_operation(
             vs,
-            operation::OperationData::SceneRemoveObjects(s.clone(),vec.clone())
+            operation::OperationData::SceneRemoveObjects(s.clone(),parent, vec)
             );
 
         //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
@@ -1304,15 +1312,25 @@ impl WidgetContainer
 
         let list = self.get_selected_objects().to_vec();
         let mut vec = Vec::new();
+        let mut parents = Vec::new();
         for o in &list {
             //vec.push(o.clone());
-            vec.push(Arc::new(RwLock::new(self.factory.copy_object(&*o.read().unwrap()))));
+            let ob = o.read().unwrap();
+            vec.push(Arc::new(RwLock::new(self.factory.copy_object(&*ob))));
+            let parent_id = if let Some(p) = ob.parent {
+                p.read().unwrap().id
+            }
+            else {
+                uuid::Uuid::nil()
+            };
+
+            parents.push(parent_id);
         }
 
         let vs = Vec::new();
         return self.request_operation(
             vs,
-            operation::OperationData::SceneAddObjects(s.clone(),vec.clone())
+            operation::OperationData::SceneAddObjects(s.clone(), parents, vec)
             );
 
         //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
@@ -1752,11 +1770,14 @@ pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)
     let mut vec = Vec::new();
     vec.push(ao.clone());
 
+    let mut parent = Vec::new();
+    parent.push(uuid::Uuid::nil());
+
     let mut ops = Vec::new();
     let vs = Vec::new();
     let addob = container.request_operation(
             vs,
-            operation::OperationData::SceneAddObjects(s.clone(),vec)
+            operation::OperationData::SceneAddObjects(s.clone(),parent,vec)
             );
 
     ops.push(addob);
