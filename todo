@@ -4,8 +4,9 @@
   unless the scene structure changed we must remove children from the scene
 
 - update material/shader in live, reread files.
-- tree : 
-  move object, 
+- tree : make another widget to replace genlist tree? : 
+  change object order?
+  change object parent,
   remove one object with suppr, 
   remove all seleted object with suppr, 
   rename object

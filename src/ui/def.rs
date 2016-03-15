@@ -1285,7 +1285,7 @@ impl WidgetContainer
         let mut parent = Vec::new();
         for o in &list {
             vec.push(o.clone());
-            let parent_id = if let Some(p) = o.read().unwrap().parent {
+            let parent_id = if let Some(ref p) = o.read().unwrap().parent {
                 p.read().unwrap().id
             }
             else {
@@ -1297,7 +1297,7 @@ impl WidgetContainer
         let vs = Vec::new();
         return self.request_operation(
             vs,
-            operation::OperationData::SceneRemoveObjects(s.clone(),parent, vec)
+            operation::OperationData::SceneRemoveObjects(s.clone(), parent, vec)
             );
 
         //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
@@ -1317,7 +1317,7 @@ impl WidgetContainer
             //vec.push(o.clone());
             let ob = o.read().unwrap();
             vec.push(Arc::new(RwLock::new(self.factory.copy_object(&*ob))));
-            let parent_id = if let Some(p) = ob.parent {
+            let parent_id = if let Some(ref p) = ob.parent {
                 p.read().unwrap().id
             }
             else {

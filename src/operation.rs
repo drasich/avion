@@ -208,12 +208,12 @@ impl OperationTrait for Operation
             OperationData::SceneAddObjects(ref s, ref parents, ref obs)  => {
                 let mut sc = s.borrow_mut();
                 sc.add_objects(parents, obs);
-                return Change::SceneAdd(sc.id.clone(), *parents, get_ids(obs));
+                return Change::SceneAdd(sc.id.clone(), parents.clone(), get_ids(obs));
             },
             OperationData::SceneRemoveObjects(ref s, ref parents, ref obs)  => {
                 let mut sc = s.borrow_mut();
                 sc.remove_objects(parents, obs);
-                return Change::SceneRemove(sc.id.clone(), parents, get_ids(obs));
+                return Change::SceneRemove(sc.id.clone(), parents.clone(), get_ids(obs));
             },
             OperationData::SetSceneCamera(ref s, _, ref new)   => {
                 println!("operation set camera");
@@ -316,17 +316,17 @@ impl OperationTrait for Operation
                 }
                 return Change::Objects(s, ids);
             },
-            OperationData::SceneAddObjects(ref s, parents, ref obs)  => {
+            OperationData::SceneAddObjects(ref s, ref parents, ref obs)  => {
                 println!("undo scene add objects !!!");
                 let mut sc = s.borrow_mut();
                 sc.remove_objects(parents, obs);
-                return Change::SceneRemove(sc.id.clone(), parents, get_ids(obs));
+                return Change::SceneRemove(sc.id.clone(), parents.clone(), get_ids(obs));
             },
             OperationData::SceneRemoveObjects(ref s, ref parents, ref obs)  => {
                 println!("undo scene remove objects !!!");
                 let mut sc = s.borrow_mut();
                 sc.add_objects(parents, obs);
-                return Change::SceneAdd(sc.id.clone(), parents, get_ids(obs));
+                return Change::SceneAdd(sc.id.clone(), parents.clone(), get_ids(obs));
             },
             OperationData::SetSceneCamera(ref s, ref old, _)   => {
                 let sc = s.borrow();
