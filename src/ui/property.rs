@@ -67,6 +67,7 @@ pub struct PropertyValue;
 #[link(name = "png")]
 
 #[link(name = "ecore_evas")]
+#[link(name = "ecore_file")]
 #[link(name = "elementary")]
 #[link(name = "eina")]
 #[link(name = "eet")]

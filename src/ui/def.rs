@@ -79,6 +79,11 @@ pub type SelectCallback = extern fn(
     data : *const c_void,
     name : *const c_char);
 
+type MonitorCallback = extern fn(
+    data : *const c_void,
+    path : *const c_char,
+    event : i32);
+
 /*
         init_cb: extern fn(*mut View),// -> (),
         draw_cb: extern fn(*mut View), // -> (),
@@ -198,6 +203,7 @@ extern {
     fn jklist_set_names(o : *const Evas_Object, names : *const c_void, len : size_t);
 
     pub fn ecore_animator_add(cb : AnimatorCallback, data : *const c_void) -> *const Ecore_Animator;
+    fn jk_monitor_add(cb : MonitorCallback, data : *const c_void, path : *const c_char);
 }
 
 fn object_geometry_get(obj : *const Evas_Object) -> (i32, i32, i32, i32)
@@ -257,50 +263,6 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(app_data.master)};
     let container : &mut Box<WidgetContainer> = unsafe {mem::transmute(app_data.container)};
     let mut master = master_rc.borrow_mut();
-
-    /*
-    for v in master.views.iter_mut()
-    {
-        v.init(container);
-
-        if let Some(w) = v.window {
-            unsafe {
-                {
-                let view : *const c_void = mem::transmute(&**v);
-                let wcb = ui::WidgetCbData::with_ptr(container, view);
-
-                ui::window_callback_set(
-                    w,
-                    mem::transmute(box wcb),
-                    //view
-                    //mem::transmute(v),
-                    ui::view::mouse_down,
-                    ui::view::mouse_up,
-                    ui::view::mouse_move,
-                    ui::view::mouse_wheel,
-                    ui::view::key_down
-                    );
-                }
-            }
-        }
-    }
-    */
-
-    /*
-    for v in master.views.iter()
-    {
-        if let Some(w) = v.window {
-            unsafe {
-                tmp_func(
-                    w,
-                    mem::transmute(&**v),
-                    ui::view::init_cb,
-                    ui::view::draw_cb,
-                    ui::view::resize_cb);
-            }
-        }
-    }
-    */
 
     let wc = WindowConfig::load();
 
@@ -376,6 +338,9 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         }
         container.views.push(v);
     }
+
+    let path = CString::new("shader".as_bytes()).unwrap().as_ptr();
+    unsafe { jk_monitor_add(file_changed, mem::transmute(container), path); }
 }
 
 #[derive(RustcDecodable, RustcEncodable, Clone)]
@@ -1940,3 +1905,43 @@ pub extern fn update_play_cb(container_data : *const c_void) -> bool
 }
 
 
+pub extern fn file_changed(
+    data : *const c_void,
+    path : *const c_char,
+    event : i32)
+{
+    let s = unsafe {CStr::from_ptr(path)}.to_str().unwrap();
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(data)};
+
+    if s.ends_with(".frag") || s.ends_with(".vert") {
+        println!("file changed : {}", s);
+        let shader_manager = container.resource.shader_manager.borrow();
+
+        for (name, res_arc) in &shader_manager.resources {
+            println!("shader resource name : {}", name);
+            let res = res_arc.read().unwrap();
+            let shader_arc = if let resource::ResTest::ResData(ref r) = *res {
+                r
+            }
+            else {
+                println!("early return");
+                continue
+            };
+            let mut shader = shader_arc.write().unwrap();
+
+            let mut reload = false;
+            if let Some(ref vert) = shader.vert_path {
+                reload = vert == s;
+            };
+
+            if let Some(ref frag) = shader.frag_path {
+                println!("FRAG : {}, {}", frag, s);
+                reload = reload || frag == s;
+            };
+
+            if reload {
+                shader.reload();
+            }
+        }
+    }
+}
