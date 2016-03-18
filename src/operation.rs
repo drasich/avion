@@ -33,8 +33,8 @@ pub enum OperationData
     Function(fn(LinkedList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
     List(LinkedList<Box<Any>>, LinkedList<Box<Any>>),
     Vector(Vec<Box<Any>>, Vec<Box<Any>>),
-    SceneAddObjects(Rc<RefCell<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>),
-    SceneRemoveObjects(Rc<RefCell<scene::Scene>>,Vec<Arc<RwLock<object::Object>>>),
+    SceneAddObjects(Rc<RefCell<scene::Scene>>, Vec<uuid::Uuid>, Vec<Arc<RwLock<object::Object>>>), //scene, parent, objects
+    SceneRemoveObjects(Rc<RefCell<scene::Scene>>, Vec<uuid::Uuid>, Vec<Arc<RwLock<object::Object>>>),
     SetSceneCamera(
         Rc<RefCell<scene::Scene>>,
         Option<Arc<RwLock<object::Object>>>,
@@ -64,8 +64,8 @@ pub enum Change
     DirectChange(String),
     ChangeSelected(Vec<Arc<RwLock<object::Object>>>),
     SelectedChange,
-    SceneAdd(uuid::Uuid, Vec<uuid::Uuid>),
-    SceneRemove(uuid::Uuid, Vec<uuid::Uuid>),
+    SceneAdd(uuid::Uuid, Vec<uuid::Uuid>, Vec<uuid::Uuid>),
+    SceneRemove(uuid::Uuid, Vec<uuid::Uuid>, Vec<uuid::Uuid>),
     Scene(uuid::Uuid),
     ComponentChanged(uuid::Uuid, String),
 
@@ -205,15 +205,15 @@ impl OperationTrait for Operation
                 }
                 return Change::Objects(s, ids);
             },
-            OperationData::SceneAddObjects(ref s, ref obs)  => {
+            OperationData::SceneAddObjects(ref s, ref parents, ref obs)  => {
                 let mut sc = s.borrow_mut();
-                sc.add_objects(obs);
-                return Change::SceneAdd(sc.id.clone(), get_ids(obs));
+                sc.add_objects(parents, obs);
+                return Change::SceneAdd(sc.id.clone(), parents.clone(), get_ids(obs));
             },
-            OperationData::SceneRemoveObjects(ref s, ref obs)  => {
+            OperationData::SceneRemoveObjects(ref s, ref parents, ref obs)  => {
                 let mut sc = s.borrow_mut();
-                sc.remove_objects(obs);
-                return Change::SceneRemove(sc.id.clone(), get_ids(obs));
+                sc.remove_objects(parents, obs);
+                return Change::SceneRemove(sc.id.clone(), parents.clone(), get_ids(obs));
             },
             OperationData::SetSceneCamera(ref s, _, ref new)   => {
                 println!("operation set camera");
@@ -316,17 +316,17 @@ impl OperationTrait for Operation
                 }
                 return Change::Objects(s, ids);
             },
-            OperationData::SceneAddObjects(ref s, ref obs)  => {
+            OperationData::SceneAddObjects(ref s, ref parents, ref obs)  => {
                 println!("undo scene add objects !!!");
                 let mut sc = s.borrow_mut();
-                sc.remove_objects(obs);
-                return Change::SceneRemove(sc.id.clone(), get_ids(obs));
+                sc.remove_objects(parents, obs);
+                return Change::SceneRemove(sc.id.clone(), parents.clone(), get_ids(obs));
             },
-            OperationData::SceneRemoveObjects(ref s, ref obs)  => {
+            OperationData::SceneRemoveObjects(ref s, ref parents, ref obs)  => {
                 println!("undo scene remove objects !!!");
                 let mut sc = s.borrow_mut();
-                sc.add_objects(obs);
-                return Change::SceneAdd(sc.id.clone(), get_ids(obs));
+                sc.add_objects(parents, obs);
+                return Change::SceneAdd(sc.id.clone(), parents.clone(), get_ids(obs));
             },
             OperationData::SetSceneCamera(ref s, ref old, _)   => {
                 let sc = s.borrow();

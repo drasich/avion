@@ -193,7 +193,6 @@ impl Tree
         }
     }
 
-
     pub fn select(&mut self, id: &Uuid)
     {
         unsafe { tree_deselect_all(self.jk_tree); }

@@ -79,6 +79,11 @@ pub type SelectCallback = extern fn(
     data : *const c_void,
     name : *const c_char);
 
+type MonitorCallback = extern fn(
+    data : *const c_void,
+    path : *const c_char,
+    event : i32);
+
 /*
         init_cb: extern fn(*mut View),// -> (),
         draw_cb: extern fn(*mut View), // -> (),
@@ -198,6 +203,7 @@ extern {
     fn jklist_set_names(o : *const Evas_Object, names : *const c_void, len : size_t);
 
     pub fn ecore_animator_add(cb : AnimatorCallback, data : *const c_void) -> *const Ecore_Animator;
+    fn jk_monitor_add(cb : MonitorCallback, data : *const c_void, path : *const c_char);
 }
 
 fn object_geometry_get(obj : *const Evas_Object) -> (i32, i32, i32, i32)
@@ -257,50 +263,6 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     let master_rc : &Rc<RefCell<Master>> = unsafe {mem::transmute(app_data.master)};
     let container : &mut Box<WidgetContainer> = unsafe {mem::transmute(app_data.container)};
     let mut master = master_rc.borrow_mut();
-
-    /*
-    for v in master.views.iter_mut()
-    {
-        v.init(container);
-
-        if let Some(w) = v.window {
-            unsafe {
-                {
-                let view : *const c_void = mem::transmute(&**v);
-                let wcb = ui::WidgetCbData::with_ptr(container, view);
-
-                ui::window_callback_set(
-                    w,
-                    mem::transmute(box wcb),
-                    //view
-                    //mem::transmute(v),
-                    ui::view::mouse_down,
-                    ui::view::mouse_up,
-                    ui::view::mouse_move,
-                    ui::view::mouse_wheel,
-                    ui::view::key_down
-                    );
-                }
-            }
-        }
-    }
-    */
-
-    /*
-    for v in master.views.iter()
-    {
-        if let Some(w) = v.window {
-            unsafe {
-                tmp_func(
-                    w,
-                    mem::transmute(&**v),
-                    ui::view::init_cb,
-                    ui::view::draw_cb,
-                    ui::view::resize_cb);
-            }
-        }
-    }
-    */
 
     let wc = WindowConfig::load();
 
@@ -376,6 +338,9 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         }
         container.views.push(v);
     }
+
+    let path = CString::new("shader".as_bytes()).unwrap().as_ptr();
+    unsafe { jk_monitor_add(file_changed, mem::transmute(container), path); }
 }
 
 #[derive(RustcDecodable, RustcEncodable, Clone)]
@@ -867,7 +832,7 @@ impl WidgetContainer
                     }
                 }
             },
-            operation::Change::SceneRemove(ref id, ref obs) => {
+            operation::Change::SceneRemove(ref id, ref parents, ref obs) => {
                 {
                     println!("container, sceneremove!!!!!!!!");
                     self.context.remove_objects_by_id(obs.clone());
@@ -881,7 +846,7 @@ impl WidgetContainer
                 println!("do something for the other widget");
                 self.handle_change(&operation::Change::SelectedChange, widget_origin);
             },
-            operation::Change::SceneAdd(ref id, ref obs) => {
+            operation::Change::SceneAdd(ref id, ref parents, ref obs) => {
                 let scene = match self.get_scene() {
                     Some(s) => s,
                     None => return
@@ -1282,14 +1247,22 @@ impl WidgetContainer
 
         let list = self.get_selected_objects().to_vec();
         let mut vec = Vec::new();
+        let mut parent = Vec::new();
         for o in &list {
             vec.push(o.clone());
+            let parent_id = if let Some(ref p) = o.read().unwrap().parent {
+                p.read().unwrap().id
+            }
+            else {
+                uuid::Uuid::nil()
+            };
+            parent.push(parent_id);
         }
 
         let vs = Vec::new();
         return self.request_operation(
             vs,
-            operation::OperationData::SceneRemoveObjects(s.clone(),vec.clone())
+            operation::OperationData::SceneRemoveObjects(s.clone(), parent, vec)
             );
 
         //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
@@ -1304,15 +1277,25 @@ impl WidgetContainer
 
         let list = self.get_selected_objects().to_vec();
         let mut vec = Vec::new();
+        let mut parents = Vec::new();
         for o in &list {
             //vec.push(o.clone());
-            vec.push(Arc::new(RwLock::new(self.factory.copy_object(&*o.read().unwrap()))));
+            let ob = o.read().unwrap();
+            vec.push(Arc::new(RwLock::new(self.factory.copy_object(&*ob))));
+            let parent_id = if let Some(ref p) = ob.parent {
+                p.read().unwrap().id
+            }
+            else {
+                uuid::Uuid::nil()
+            };
+
+            parents.push(parent_id);
         }
 
         let vs = Vec::new();
         return self.request_operation(
             vs,
-            operation::OperationData::SceneAddObjects(s.clone(),vec.clone())
+            operation::OperationData::SceneAddObjects(s.clone(), parents, vec)
             );
 
         //return operation::Change::SceneRemove(s.read().unwrap().id, vec);
@@ -1752,11 +1735,14 @@ pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)
     let mut vec = Vec::new();
     vec.push(ao.clone());
 
+    let mut parent = Vec::new();
+    parent.push(uuid::Uuid::nil());
+
     let mut ops = Vec::new();
     let vs = Vec::new();
     let addob = container.request_operation(
             vs,
-            operation::OperationData::SceneAddObjects(s.clone(),vec)
+            operation::OperationData::SceneAddObjects(s.clone(),parent,vec)
             );
 
     ops.push(addob);
@@ -1919,3 +1905,43 @@ pub extern fn update_play_cb(container_data : *const c_void) -> bool
 }
 
 
+pub extern fn file_changed(
+    data : *const c_void,
+    path : *const c_char,
+    event : i32)
+{
+    let s = unsafe {CStr::from_ptr(path)}.to_str().unwrap();
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(data)};
+
+    if s.ends_with(".frag") || s.ends_with(".vert") {
+        println!("file changed : {}", s);
+        let shader_manager = container.resource.shader_manager.borrow();
+
+        for (name, res_arc) in &shader_manager.resources {
+            println!("shader resource name : {}", name);
+            let res = res_arc.read().unwrap();
+            let shader_arc = if let resource::ResTest::ResData(ref r) = *res {
+                r
+            }
+            else {
+                println!("early return");
+                continue
+            };
+            let mut shader = shader_arc.write().unwrap();
+
+            let mut reload = false;
+            if let Some(ref vert) = shader.vert_path {
+                reload = vert == s;
+            };
+
+            if let Some(ref frag) = shader.frag_path {
+                println!("FRAG : {}, {}", frag, s);
+                reload = reload || frag == s;
+            };
+
+            if reload {
+                shader.reload();
+            }
+        }
+    }
+}

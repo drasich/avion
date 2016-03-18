@@ -1,0 +1,9 @@
+list of items
+
+item composition :
+  margin (blank space)
+  arrow icon to expand, or just blank space
+  text (an entry)
+  a rect that makes it selectable. click again to activate to entry,
+    click and move the mouse to display a thing to move the object
+
