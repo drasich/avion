@@ -35,6 +35,7 @@ use control::WidgetUpdate;
 use dormin::scene;
 use dormin::component;
 use util;
+use dormin::input;
 
 /*
 #[link(name = "cypher")]
@@ -651,7 +652,8 @@ pub struct GameView
     render : Box<GameRender>,
     scene : Rc<RefCell<scene::Scene>>,
     name : String,
-    pub state : i32
+    pub state : i32,
+    input : input::Input
 }
 
 
@@ -689,7 +691,8 @@ impl GameView {
             scene : scene,
             name : "cacayop".to_owned(),
             state : 0,
-            glview : ptr::null()
+            glview : ptr::null(),
+            input : input::Input::new()
             //camera : camera todo
         };
 
@@ -709,7 +712,7 @@ impl GameView {
 
     pub fn update(&mut self) -> bool {
         if self.state == 0 {
-            self.scene.borrow_mut().update(0.01f64);
+            self.scene.borrow_mut().update(0.01f64, &self.input);
             unsafe { jk_glview_request_update(self.glview); }
             true
         }

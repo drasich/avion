@@ -1,3 +1,5 @@
+-update input for gameview
+
 - add/change compdata : confirm it works
 - remove child of object : view dormin and how to change the scene.
   def.rs : remove_selected_objects, must save parents info, must check and not remove child if the parent will be removed anyway
