@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use std::cell::{RefCell, BorrowState};
 use std::sync::{RwLock, Arc};
-use libc::{c_char, c_void, c_int, c_float};
+use libc::{c_char, c_void, c_int, c_uint, c_float};
 use std::collections::{LinkedList};
 use std::mem;
 use std::ffi;
@@ -459,8 +459,9 @@ pub extern fn mouse_wheel(
 pub extern fn key_down(
     data : *const c_void,
     modifier : c_int,
-    keyname : *mut c_char,
+    keyname : *const c_char,
     key : *const c_char,
+    keycode : c_uint,
     timestamp : c_int
     )
 {
@@ -702,7 +703,8 @@ impl GameView {
                 mem::transmute(&*v),
                 gv_init_cb,
                 gv_draw_cb,
-                gv_resize_cb
+                gv_resize_cb,
+                gv_key_down,
                 ) };
 
         v.glview = glview;
@@ -714,6 +716,7 @@ impl GameView {
         if self.state == 0 {
             self.scene.borrow_mut().update(0.01f64, &self.input);
             unsafe { jk_glview_request_update(self.glview); }
+            self.input.clear();
             true
         }
         else {
@@ -765,3 +768,16 @@ pub extern fn gv_close_cb(data : *mut c_void) {
     container.holder.borrow_mut().gameview = None;
 }
 
+extern fn gv_key_down(
+    data : *const c_void,
+    modifier : c_int,
+    keyname : *const c_char,
+    key : *const c_char,
+    keycode : c_uint,
+    timestamp : c_int)
+{
+    let gv : *mut GameView = unsafe { mem::transmute(data) };
+    let gv : &mut GameView = unsafe { &mut *gv };
+    //unsafe { (*gv).input.add_key(keycode as u8); }
+    gv.input.add_key(keycode as u8);
+}

@@ -1,4 +1,4 @@
-use libc::{c_char, c_void, c_int, size_t};
+use libc::{c_char, c_void, c_int, c_uint, size_t};
 use std::mem;
 use std::sync::{RwLock, Arc};
 use std::collections::{LinkedList};
@@ -84,6 +84,14 @@ type MonitorCallback = extern fn(
     path : *const c_char,
     event : i32);
 
+pub type KeyDownFunc = extern fn(
+    data : *const c_void,
+    modifier : c_int,
+    keyname : *const c_char,
+    key : *const c_char,
+    keycode : c_uint,
+    timestamp : c_int);
+
 /*
         init_cb: extern fn(*mut View),// -> (),
         draw_cb: extern fn(*mut View), // -> (),
@@ -101,7 +109,8 @@ extern {
         data : *const c_void,
         init : RenderFunc,
         draw : RenderFunc,
-        resize : ResizeFunc
+        resize : ResizeFunc,
+        key : KeyDownFunc
         ) -> *const JkGlview;
     pub fn jk_window_request_update(win : *const Window);
 
@@ -151,13 +160,7 @@ extern {
             y : c_int,
             timestamp : c_int
             ),
-        key_down : extern fn(
-            data : *const c_void,
-            modifier : c_int,
-            keyname : *mut c_char,
-            key : *const c_char,
-            timestamp : c_int
-            ),
+        key_down : KeyDownFunc
         );
 
     pub fn init_callback_set(
