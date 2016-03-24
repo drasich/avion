@@ -1,4 +1,12 @@
 -update input for gameview
+- make camera view
+- represent the camera with somthing visible and selectable
+  + differentiate between current camera and other cameras.
+- be able to set camera of the scene -> scene settings (when nothing selected?)
+- restore previous scene when closing the gameview.
+- be able to save the current "playing scene"
+
+
 
 - add/change compdata : confirm it works
 - remove child of object : view dormin and how to change the scene.
