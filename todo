@@ -1,8 +1,10 @@
 -update input for gameview
-- make camera view
+- make camera view or just show the gameview while working.
+- views update : scene changed so update the views.
 - represent the camera with somthing visible and selectable
   + differentiate between current camera and other cameras.
 - be able to set camera of the scene -> scene settings (when nothing selected?)
+  -> be able to represent any struct with a widget, look at serde for more tricks
 - restore previous scene when closing the gameview.
 - be able to save the current "playing scene"
 

@@ -31,7 +31,10 @@ pub use self::def::{
     scene_rename,
 
     ecore_animator_add,
-    update_play_cb
+    update_play_cb,
+
+    evas_object_show,
+    evas_object_hide,
 };
 
 pub use self::tree::{Tree};

@@ -160,6 +160,10 @@ impl View
         a.add_button("new scene", ui::action::scene_new, ad.clone());
         a.add_button("add empty", ui::action::add_empty, ad.clone());
         a.add_button(
+            "open game view",
+            ui::action::open_game_view,
+            ad.clone());
+        a.add_button(
             "pause",
             ui::action::pause_scene,
             ad.clone());
@@ -723,6 +727,11 @@ impl GameView {
             false
         }
     }
+    
+    pub fn request_update(&self)
+    {
+        unsafe { jk_glview_request_update(self.glview); }
+    }
 
     fn draw(&mut self) {
         self.render.draw(&self.scene.borrow().objects);
@@ -735,6 +744,16 @@ impl GameView {
     fn resize(&mut self, w : c_int, h : c_int)
     {
         self.render.resize(w, h);
+    }
+
+    pub fn set_visible(&self, b : bool)
+    {
+        if b {
+            unsafe { ui::evas_object_show(self.window); }
+        }
+        else {
+            unsafe { ui::evas_object_hide(self.window); }
+        }
     }
 }
 

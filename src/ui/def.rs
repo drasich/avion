@@ -198,7 +198,8 @@ extern {
         part : *const c_char,
         text : *const c_char);
 
-    fn evas_object_show(o : *const Evas_Object);
+    pub fn evas_object_show(o : *const Evas_Object);
+    pub fn evas_object_hide(o : *const Evas_Object);
     fn evas_object_move(o : *const Evas_Object, x : c_int, y : c_int);
     fn evas_object_resize(o : *const Evas_Object, w : c_int, h : c_int);
 
@@ -958,6 +959,10 @@ impl WidgetContainer
             view.request_update();
         }
 
+        if let Some(ref gv) = self.holder.borrow().gameview {
+            gv.request_update();
+        }
+
     }
 
     pub fn handle_event(&mut self, event : ui::Event, widget_origin: uuid::Uuid)
@@ -1553,6 +1558,19 @@ impl WidgetContainer
         }
     }
 
+    pub fn open_gameview(&mut self) -> bool
+    {
+        if let Some(ref mut gv) = self.holder.borrow_mut().gameview {
+            gv.set_visible(true);
+            true
+        }
+        else {
+            false
+        }
+    }
+
+
+
     pub fn can_create_gameview(&mut self) ->
         Option<(Rc<RefCell<camera::Camera>>, Rc<RefCell<scene::Scene>>)>
     {
@@ -1579,7 +1597,7 @@ impl WidgetContainer
         Some((camera, scene))
     }
 
-    pub fn start_gameview(&mut self, gv : Box<ui::GameView>)
+    pub fn set_gameview(&mut self, gv : Box<ui::GameView>)
     {
         let gvo = &mut self.holder.borrow_mut().gameview;
         if gvo.is_some() {

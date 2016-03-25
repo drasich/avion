@@ -10,8 +10,7 @@ use std::rc::Rc;
 use uuid::Uuid;
 use std::ffi::{CString, CStr};
 
-use dormin::scene;
-use dormin::object;
+use dormin::{camera, object, scene};
 use ui::Window;
 use ui::Master;
 use ui::{ButtonCallback,EntryCallback};
@@ -216,6 +215,44 @@ pub extern fn scene_rename(data : *const c_void, name : *const c_char)
     ui::scene_rename(container, action.view_id, s);
 }
 
+fn create_gameview_window(
+    container : *const ui::WidgetContainer,
+    camera : Rc<RefCell<camera::Camera>>,
+    scene : Rc<RefCell<scene::Scene>>
+    ) -> Box<ui::view::GameView>
+{
+    let win = unsafe {
+        ui::jk_window_new(ui::view::gv_close_cb, mem::transmute(container))
+    };
+
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(container)};
+
+    ui::view::GameView::new(win, camera, scene, container.resource.clone())
+}
+
+pub extern fn open_game_view(data : *const c_void)
+{
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let action : &Action = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    if container.open_gameview() {
+        return;
+    }
+
+    let (camera, scene) = if let Some((camera, scene)) = container.can_create_gameview() {
+        (camera, scene)
+    }
+    else {
+        return;
+    };
+
+    let gv = create_gameview_window(wcb.container, camera, scene);
+
+    //container.holder.borrow_mut().gameview = Some(gv);
+    container.set_gameview(gv);
+}
+
 pub extern fn play_scene(data : *const c_void)
 {
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
@@ -233,19 +270,14 @@ pub extern fn play_scene(data : *const c_void)
         return;
     };
 
-    let win = unsafe {
-        ui::jk_window_new(ui::view::gv_close_cb, mem::transmute(wcb.container))
-    };
-
-    let gv = ui::view::GameView::new(win, camera, scene, container.resource.clone());
+    let gv = create_gameview_window(wcb.container, camera, scene);
     //container.holder.borrow_mut().gameview = Some(gv);
-    container.start_gameview(gv);
+    container.set_gameview(gv);
 
         println!("ADDDDDDDD animator");
         unsafe {
             ui::ecore_animator_add(ui::update_play_cb, mem::transmute(wcb.container));
         }
-
 }
 
 pub extern fn pause_scene(data : *const c_void)
