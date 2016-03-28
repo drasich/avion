@@ -54,6 +54,57 @@ pub struct Operation
     //pub new : Box<Any>,
 }
 
+pub enum OperationActor{
+    Scene(uuid::Uuid),
+    Object(uuid::Uuid),
+    Objects(Vec<uuid::Uuid>),
+    //PropertyWrite(&PropertyWrite),
+}
+
+pub struct OperationNew
+{
+    pub actor : OperationActor,
+    pub name : String,
+    pub change : OperationData
+    //pub old : Box<Any>,
+    //pub new : Box<Any>,
+}
+
+impl OperationTrait for OperationNew
+{
+    fn apply(&self) -> Change
+    {
+        Change::None
+    }
+
+    fn undo(&self) -> Change
+    {
+        Change::None
+    }
+}
+
+pub struct OldNew{
+    pub object : Arc<RwLock<PropertyWrite>>,
+    pub old : Box<Any>,
+    pub new : Box<Any>
+}
+
+impl OperationTrait for OldNew
+{
+    fn apply(&self) -> Change
+    {
+        Change::None
+    }
+
+    fn undo(&self) -> Change
+    {
+        Change::None
+    }
+}
+
+
+
+
 //#[derive(PartialEq)]
 pub enum Change
 {
@@ -380,6 +431,15 @@ impl OperationManager
     {
         let change = op.apply();
         self.add_undo(box op);
+        self.redo.clear();
+
+        change
+    }
+
+    pub fn add_with_trait(&mut self, op : Box<OperationTrait>) -> Change
+    {
+        let change = op.apply();
+        self.add_undo(op);
         self.redo.clear();
 
         change

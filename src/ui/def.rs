@@ -813,7 +813,14 @@ impl WidgetContainer
                     }
                 }
 
-                if sel.len() != 1 {
+                if sel.is_empty() {
+                    if let Some(ref mut p) = self.property {
+                        if let Some(ref s) = self.context.scene {
+                            p.set_scene(&*s.borrow());
+                        }
+                    }
+                }
+                else if sel.len() != 1 {
                     if let Some(ref mut p) = self.property {
                         if widget_origin != p.id {
                             p.set_nothing();
@@ -1033,7 +1040,17 @@ impl WidgetContainer
             op_data
             );
 
-        let change = self.op_mgr.add(op);
+        /*
+        let opp = operation::OldNew {
+            object : self.get_selected_objects()[0].clone(),
+            old : box 1f64,
+            new : box 1f64,
+        };
+        let change = self.op_mgr.add_with_trait(box opp);
+        */
+
+        //let change = self.op_mgr.add(op);
+        let change = self.op_mgr.add_with_trait(box op);
         change
 
         //let s = join_string(&name);

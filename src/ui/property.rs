@@ -317,12 +317,28 @@ impl Property
                 self.jk_property_list,
                 CString::new("object".as_bytes()).unwrap().as_ptr());
         }
-        let mut v = Vec::new();
-        v.push("object".to_owned());
+        //let mut v = Vec::new();
+        //v.push("object".to_owned());
         o.create_widget(self, "object", 1, false);
 
         self.add_tools();
     }
+
+    pub fn set_scene(&mut self, s : &scene::Scene)
+    {
+        unsafe { property_list_clear(self.jk_property_list); }
+        self.pv.clear();
+
+        unsafe {
+            property_list_group_add(
+                self.jk_property_list,
+                CString::new("scene".as_bytes()).unwrap().as_ptr());
+        }
+        //let mut v = Vec::new();
+        //v.push("object".to_owned());
+        s.create_widget(self, "scene", 1, false);
+    }
+
 
     fn add_tools(&mut self)
     {
@@ -1711,13 +1727,15 @@ property_show_impl!(transform::Transform,[position,orientation]);
 //property_show_impl!(mesh_render::MeshRender,[mesh,material]);
 property_show_impl!(object::Object,
                      //[name,position,orientation,scale]);
-                     [name,position,orientation,scale,comp_data,comp_lua]);
+                     [name,position,orientation,scale]);//,comp_data,comp_lua]);
 
 property_show_impl!(component::mesh_render::MeshRender,[mesh,material], ShouldUpdate::Mesh);
 property_show_impl!(component::player::Player,[speed]);
 property_show_impl!(component::player::Enemy,[name]);
 property_show_impl!(component::player::Collider,[name]);
 property_show_impl!(armature::ArmaturePath,[name]);
+
+property_show_impl!(scene::Scene,[name]);
 
 fn make_vec_from_string(s : &str) -> Vec<String>
 {
