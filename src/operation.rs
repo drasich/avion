@@ -14,6 +14,7 @@ use control::WidgetUpdate;
 use dormin::vec;
 use dormin::scene;
 use dormin::component::CompData;
+use ui::RefMut;
 
 use dragger;
 
@@ -58,6 +59,7 @@ pub enum OperationActor{
     Scene(uuid::Uuid),
     Object(uuid::Uuid),
     Objects(Vec<uuid::Uuid>),
+    Ref(RefMut<PropertyWrite>),
     //PropertyWrite(&PropertyWrite),
 }
 
@@ -70,35 +72,61 @@ pub struct OperationNew
     //pub new : Box<Any>,
 }
 
-impl OperationTrait for OperationNew
-{
-    fn apply(&self) -> Change
-    {
-        Change::None
-    }
-
-    fn undo(&self) -> Change
-    {
-        Change::None
-    }
-}
-
 pub struct OldNew{
-    pub object : Arc<RwLock<PropertyWrite>>,
+    pub object : RefMut<PropertyWrite>,
+    pub name : String,
     pub old : Box<Any>,
     pub new : Box<Any>
+}
+
+impl OldNew
+{
+    pub fn new(
+        object : RefMut<PropertyWrite>,
+        name : String,
+        old : Box<Any>,
+        new : Box<Any>
+        ) -> OldNew
+    {
+        OldNew{
+            object : object,
+            name : name,
+            old : old,
+            new : new
+        }
+    }
+
 }
 
 impl OperationTrait for OldNew
 {
     fn apply(&self) -> Change
     {
-        Change::None
+        println!("NEW TEST operation set property hier {:?}", self.name);
+        match self.object {
+            RefMut::Arc(ref a) => {
+                a.write().unwrap().test_set_property_hier(self.name.as_ref(), &*self.new);
+            },
+            RefMut::Cell(ref c) => { 
+                c.borrow_mut().test_set_property_hier(self.name.as_ref(), &*self.new);
+            }
+        }
+
+        Change::Property
     }
 
     fn undo(&self) -> Change
     {
-        Change::None
+        match self.object {
+            RefMut::Arc(ref a) => {
+                a.write().unwrap().test_set_property_hier(self.name.as_ref(), &*self.old);
+            },
+            RefMut::Cell(ref c) => { 
+                c.borrow_mut().test_set_property_hier(self.name.as_ref(), &*self.old);
+            }
+        }
+
+        Change::Property
     }
 }
 

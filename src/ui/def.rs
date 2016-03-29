@@ -24,7 +24,7 @@ use dormin::geometry;
 use dormin::vec;
 use dormin::scene;
 use dormin::object;
-use ui::{Tree,Property,PropertyConfig,Holder,View,Command,Action};
+use ui::{Tree,Property,RefMut, PropertyConfig,Holder,View,Command,Action};
 use ui;
 use dormin::factory;
 use operation;
@@ -816,7 +816,8 @@ impl WidgetContainer
                 if sel.is_empty() {
                     if let Some(ref mut p) = self.property {
                         if let Some(ref s) = self.context.scene {
-                            p.set_scene(&*s.borrow());
+                            //p.set_scene(&*s.borrow());
+                            p.set_prop_cell(s.clone(), "scene");
                         }
                     }
                 }
@@ -834,7 +835,8 @@ impl WidgetContainer
                     if let Some(o) = sel.get(0) {
                         if let Some(ref mut p) = self.property {
                             if widget_origin != p.id {
-                                p.set_object(&*o.read().unwrap());
+                                //p.set_object(&*o.read().unwrap());
+                                p.set_prop_arc(o.clone(), "object");
                             }
                         }
                         else {
@@ -1057,6 +1059,26 @@ impl WidgetContainer
         //return operation::Change::Objects(s,self.context.borrow().get_selected_ids());
     }
 
+    /*
+    pub fn request_operation_property(
+        &mut self,
+        property : RefMut<PropertyWrite>,
+        name : Vec<String>,
+        op_data : operation::OperationData
+        ) -> operation::Change
+    {
+        let op = operation::OldNew::new(
+            property,
+            name.clone(),
+            op_data
+            );
+
+        let change = self.op_mgr.add_with_trait(box op);
+        change
+    }
+    */
+
+
     pub fn undo(&mut self) -> operation::Change
     {
         self.op_mgr.undo()
@@ -1069,6 +1091,23 @@ impl WidgetContainer
 
     pub fn request_operation_old_new<T : Any+PartialEq>(
         &mut self,
+        name : Vec<String>,
+        old : Box<T>,
+        new : Box<T>) -> operation::Change
+    {
+        if *old == *new {
+            return operation::Change::None;
+        }
+
+        self.request_operation(
+            name,
+            operation::OperationData::OldNew(old,new)
+            )
+    }
+
+    pub fn request_operation_property_old_new<T : Any+PartialEq>(
+        &mut self,
+        property : RefMut<PropertyWrite>,
         name : Vec<String>,
         old : Box<T>,
         new : Box<T>) -> operation::Change

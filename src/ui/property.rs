@@ -278,6 +278,28 @@ impl PropertyConfig
     }
 }
 
+pub trait PropertyUser : property::PropertyWrite + PropertyShow {
+    fn as_show(&self) -> &PropertyShow;
+    fn as_write(&self) -> &property::PropertyWrite;
+}
+impl<T: property::PropertyWrite + PropertyShow > PropertyUser for T {
+    fn as_show(&self) -> &PropertyShow
+    {
+        self
+    }
+
+    fn as_write(&self) -> &property::PropertyWrite
+    {
+        self
+    }
+}
+
+
+pub enum RefMut<T:?Sized> {
+    Arc(Arc<RwLock<T>>),
+    Cell(Rc<RefCell<T>>),
+}
+
 pub struct Property
 {
     pub name : String,
@@ -285,7 +307,8 @@ pub struct Property
     pub pv : HashMap<String, *const PropertyValue>,
     visible : bool,
     pub id : uuid::Uuid,
-    pub config : PropertyConfig
+    pub config : PropertyConfig,
+    pub current : Option<RefMut<PropertyUser>>
 }
 
 impl Property
@@ -300,13 +323,15 @@ impl Property
             jk_property_list : unsafe {jk_property_list_new(
                     window,
                     pc.x, pc.y, pc.w, pc.h)},
-                    pv : HashMap::new(),
-                    visible: true,
-                    id : uuid::Uuid::new_v4(),
-                    config : pc.clone()
+            pv : HashMap::new(),
+            visible: true,
+            id : uuid::Uuid::new_v4(),
+            config : pc.clone(),
+            current : None
         }
     }
 
+    /*
     pub fn set_object(&mut self, o : &object::Object)
     {
         unsafe { property_list_clear(self.jk_property_list); }
@@ -323,6 +348,39 @@ impl Property
 
         self.add_tools();
     }
+    */
+
+    pub fn set_prop_cell(&mut self, p : Rc<RefCell<PropertyUser>>, title : &str)
+    {
+        //self._set_prop(&*p.borrow() as &PropertyShow, title);
+        self._set_prop(&*p.borrow().as_show(), title);
+        self.current = Some(RefMut::Cell(p));
+    }
+
+    pub fn set_prop_arc(&mut self, p : Arc<RwLock<PropertyUser>>, title : &str)
+    {
+        self._set_prop(&*p.read().unwrap().as_show(), title);
+        self.current = Some(RefMut::Arc(p));
+    }
+
+    fn _set_prop(&mut self, p : &PropertyShow, title : &str)
+    {
+        unsafe { property_list_clear(self.jk_property_list); }
+        self.pv.clear();
+
+        unsafe {
+            property_list_group_add(
+                self.jk_property_list,
+                CString::new("object".as_bytes()).unwrap().as_ptr());
+        }
+        //let mut v = Vec::new();
+        //v.push("object".to_owned());
+        p.create_widget(self, title, 1, false);
+
+
+        self.add_tools();
+    }
+
 
     pub fn set_scene(&mut self, s : &scene::Scene)
     {
@@ -360,6 +418,8 @@ impl Property
     {
         unsafe { property_list_clear(self.jk_property_list); }
         self.pv.clear();
+
+        self.current = None;
     }
 
     pub fn data_set(&self, data : *const c_void)
