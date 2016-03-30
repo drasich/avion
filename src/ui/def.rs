@@ -24,7 +24,7 @@ use dormin::geometry;
 use dormin::vec;
 use dormin::scene;
 use dormin::object;
-use ui::{Tree,Property,RefMut, PropertyConfig,Holder,View,Command,Action};
+use ui::{Tree,Property,RefMut,PropertyUser,PropertyConfig,Holder,View,Command,Action};
 use ui;
 use dormin::factory;
 use operation;
@@ -1059,26 +1059,6 @@ impl WidgetContainer
         //return operation::Change::Objects(s,self.context.borrow().get_selected_ids());
     }
 
-    /*
-    pub fn request_operation_property(
-        &mut self,
-        property : RefMut<PropertyWrite>,
-        name : Vec<String>,
-        op_data : operation::OperationData
-        ) -> operation::Change
-    {
-        let op = operation::OldNew::new(
-            property,
-            name.clone(),
-            op_data
-            );
-
-        let change = self.op_mgr.add_with_trait(box op);
-        change
-    }
-    */
-
-
     pub fn undo(&mut self) -> operation::Change
     {
         self.op_mgr.undo()
@@ -1091,7 +1071,7 @@ impl WidgetContainer
 
     pub fn request_operation_old_new<T : Any+PartialEq>(
         &mut self,
-        name : Vec<String>,
+        name : &str,
         old : Box<T>,
         new : Box<T>) -> operation::Change
     {
@@ -1100,15 +1080,15 @@ impl WidgetContainer
         }
 
         self.request_operation(
-            name,
+            make_vec_from_str(name),
             operation::OperationData::OldNew(old,new)
             )
     }
 
     pub fn request_operation_property_old_new<T : Any+PartialEq>(
         &mut self,
-        property : RefMut<PropertyWrite>,
-        name : Vec<String>,
+        property : RefMut<PropertyUser>,
+        name : &str,
         old : Box<T>,
         new : Box<T>) -> operation::Change
     {
@@ -1116,15 +1096,20 @@ impl WidgetContainer
             return operation::Change::None;
         }
 
-        self.request_operation(
-            name,
-            operation::OperationData::OldNew(old,new)
-            )
+        let op = operation::OldNew::new(
+            property,
+            String::from(name),
+            old,
+            new
+            );
+
+        let change = self.op_mgr.add_with_trait(box op);
+        change
     }
 
     pub fn request_operation_old_new_enum<T : Any+PartialEq>(
         &mut self,
-        name : Vec<String>,
+        name : &str,
         new : Box<T>) -> operation::Change
     {
         /*
@@ -1134,14 +1119,11 @@ impl WidgetContainer
         */
         println!("TODO TODO clean");
 
-
-        let path = join_string(&name);
-
         let objs = self.get_selected_objects().to_vec();
 
         let mut olds = Vec::new();
         for o in &objs {
-            let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path.as_str());
+            let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(name);
             if let Some(pp) = p {
                 olds.push(pp);
             }
@@ -1151,7 +1133,7 @@ impl WidgetContainer
 
         let op = operation::Operation::new(
             objs,
-            name.clone(),
+            make_vec_from_str(name),
             //operation::OperationData::OldNewVec(olds, new)
             operation::OperationData::OldNew(yep, new)
             );
@@ -1164,7 +1146,7 @@ impl WidgetContainer
 
     pub fn request_direct_change(
         &mut self,
-        name : Vec<String>,
+        name : &str,
         new : &Any) -> operation::Change
     {
         println!("request direct change {:?}", name);
@@ -1176,13 +1158,12 @@ impl WidgetContainer
             }
         };
 
-        let vs = name[1..].to_vec();
+        //let vs = name[1..].to_vec();
 
         //o.write().set_property_hier(vs, new);
-        o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
+        o.write().unwrap().test_set_property_hier(name, new);
 
-        let s = join_string(&name);
-        return operation::Change::DirectChange(s);
+        return operation::Change::DirectChange(String::from(name));
     }
 
     pub fn request_operation_option_to_none(
@@ -1217,7 +1198,7 @@ impl WidgetContainer
 
     pub fn request_operation_option_to_some(
         &mut self,
-        name : Vec<String>) -> operation::Change
+        name : &str) -> operation::Change
     {
         /*
         let n = if new == "None" {
@@ -1234,7 +1215,7 @@ impl WidgetContainer
         //todo chris
         //return operation::Change::None;
         self.request_operation(
-            name,
+            make_vec_from_str(name),
             operation::OperationData::ToSome
             )
     }
@@ -1778,6 +1759,19 @@ fn join_string(path : &Vec<String>) -> String
     }
 
     s
+}
+
+fn make_vec_from_str(s : &str) -> Vec<String>
+{
+    let v: Vec<&str> = s.split('/').collect();
+
+    let mut vs = Vec::new();
+    for i in &v
+    {
+        vs.push(i.to_string());
+    }
+
+    vs
 }
 
 pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)

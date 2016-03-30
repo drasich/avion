@@ -10,6 +10,7 @@ use dormin::object;
 use dormin::property;
 use dormin::property::PropertyWrite;
 use ui;
+use ui::PropertyUser;
 use control::WidgetUpdate;
 use dormin::vec;
 use dormin::scene;
@@ -73,7 +74,7 @@ pub struct OperationNew
 }
 
 pub struct OldNew{
-    pub object : RefMut<PropertyWrite>,
+    pub object : RefMut<PropertyUser>,
     pub name : String,
     pub old : Box<Any>,
     pub new : Box<Any>
@@ -82,7 +83,7 @@ pub struct OldNew{
 impl OldNew
 {
     pub fn new(
-        object : RefMut<PropertyWrite>,
+        object : RefMut<PropertyUser>,
         name : String,
         old : Box<Any>,
         new : Box<Any>

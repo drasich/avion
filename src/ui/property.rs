@@ -294,10 +294,20 @@ impl<T: property::PropertyWrite + PropertyShow > PropertyUser for T {
     }
 }
 
-
 pub enum RefMut<T:?Sized> {
     Arc(Arc<RwLock<T>>),
     Cell(Rc<RefCell<T>>),
+}
+
+impl<T:?Sized> Clone for RefMut<T>
+{
+    fn clone(&self) -> RefMut<T>
+    {
+        match *self {
+            RefMut::Arc(ref a) => RefMut::Arc(a.clone()),
+            RefMut::Cell(ref c) => RefMut::Cell(c.clone()),
+        }
+    }
 }
 
 pub struct Property
@@ -352,7 +362,6 @@ impl Property
 
     pub fn set_prop_cell(&mut self, p : Rc<RefCell<PropertyUser>>, title : &str)
     {
-        //self._set_prop(&*p.borrow() as &PropertyShow, title);
         self._set_prop(&*p.borrow().as_show(), title);
         self.current = Some(RefMut::Cell(p));
     }
@@ -371,17 +380,15 @@ impl Property
         unsafe {
             property_list_group_add(
                 self.jk_property_list,
-                CString::new("object".as_bytes()).unwrap().as_ptr());
+                CString::new(title.as_bytes()).unwrap().as_ptr());
         }
-        //let mut v = Vec::new();
-        //v.push("object".to_owned());
         p.create_widget(self, title, 1, false);
-
 
         self.add_tools();
     }
 
 
+    /*
     pub fn set_scene(&mut self, s : &scene::Scene)
     {
         unsafe { property_list_clear(self.jk_property_list); }
@@ -396,6 +403,7 @@ impl Property
         //v.push("object".to_owned());
         s.create_widget(self, "scene", 1, false);
     }
+    */
 
 
     fn add_tools(&mut self)
@@ -793,51 +801,73 @@ pub extern fn register_change_option(
     changed_option(widget_cb_data, name, &sso, &ss);
 }
 
+fn get_str<'a>(cstr : *const c_char) -> Option<&'a str>
+{
+    let s = unsafe {CStr::from_ptr(cstr).to_bytes()};
 
-//fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
+    match str::from_utf8(s) {
+        Ok(pp) => {
+            if let Some(i) = pp.find("/") {
+                Some(pp.split_at(i+1).1)
+            }
+            else {
+                Some(pp)
+            }
+        },
+        _ => {
+            println!("problem with the path");
+            None
+        }
+    }
+}
+
+fn get_widget_data<'a>(widget_data : *const c_void) -> (&'a mut ui::Property, &'a mut Box<ui::WidgetContainer>)
+{
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
+    let p : &mut ui::Property = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    (p, container)
+}
+
 fn changed_set<T : Any+Clone+PartialEq>(
     widget_data : *const c_void,
     name : *const c_char,
     old : Option<&T>,
     new : &T,
-    action : c_int
-    ) {
-    let s = unsafe {CStr::from_ptr(name).to_bytes()};
-
-    let path = match str::from_utf8(s) {
-        Ok(pp) => pp,
-        _ => {
-            println!("problem with the path");
-            return;}
+    action : i32
+    ) 
+{
+    let path = if let Some(p) = get_str(name) {
+        p
+    }
+    else {
+        return;
     };
 
     println!("I changed the value {} ", path);
 
-    let v: Vec<&str> = path.split('/').collect();
-
-    let mut vs = Vec::new();
-    for i in &v
-    {
-        vs.push(i.to_string());
-    }
-
-    //let vs = vs[1..].to_vec();
-
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
-    let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
-    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
-    //let p : & Property = unsafe {mem::transmute(property)};
+    let (p, container) = get_widget_data(widget_data);
 
     let change = match (old, action) {
         (Some(oldd), 1) => {
-            println!(".....adding operation!! : {:?}", vs );
-            container.request_operation_old_new(
-                vs,
-                box oldd.clone(),
-                box new.clone())
+            if let Some(ref cur) = p.current {
+                container.request_operation_property_old_new(
+                    (*cur).clone(),
+                    path,
+                    box oldd.clone(),
+                    box new.clone())
+            }
+            else
+            {
+                container.request_operation_old_new(
+                    path,
+                    box oldd.clone(),
+                    box new.clone())
+            }
         },
         _ => {
-            container.request_direct_change(vs, new)
+            container.request_direct_change(path, new)
         }
     };
 
@@ -848,137 +878,53 @@ fn changed_enum<T : Any+Clone+PartialEq>(
     widget_data : *const c_void,
     name : *const c_char,
     new : &T,
-    ) {
-    let s = unsafe {CStr::from_ptr(name).to_bytes()};
-
-    let path = match str::from_utf8(s) {
-        Ok(pp) => pp,
-        _ => {
-            println!("problem with the path");
-            return;}
+    )
+{
+    let path = if let Some(p) = get_str(name) {
+        p
+    }
+    else {
+        return;
     };
 
     println!("I changed the value {} ", path);
 
-    let v: Vec<&str> = path.split('/').collect();
-
-    let mut vs = Vec::new();
-    for i in &v
-    {
-        vs.push(i.to_string());
-    }
-
-    //let vs = vs[1..].to_vec();
-
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
-    let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
-    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
-    //let p : & Property = unsafe {mem::transmute(property)};
+    let (p, container) = get_widget_data(widget_data);
 
     let change = {
-        println!(".....adding operation!! : {:?}", vs );
         container.request_operation_old_new_enum(
-            vs,
-            //box oldd.clone(),
+            path,
             box new.clone())
     };
 
     container.handle_change(&change, p.id);
 }
 
-
 fn changed_option(
-//fn changed_option<T : Any+Clone+PartialEq>(
     widget_cb_data : *const c_void,
     name : *const c_char,
     old : &str,
     new : &str
-    ) {
-    let s = unsafe {CStr::from_ptr(name).to_bytes()};
-
-    let path = match str::from_utf8(s) {
-        Ok(pp) => pp,
-        _ => {
-            println!("problem with the path");
-            return;}
-    };
-
-    println!("OPTIONNNNNNNNNN I changed the value {} ", path);
-
-    let v: Vec<&str> = path.split('/').collect();
-
-    let mut vs = Vec::new();
-    for i in &v
-    {
-        vs.push(i.to_string());
-    }
-
-    //let vs = vs[1..].to_vec();
-
-    //let p : & Property = unsafe {mem::transmute(property)};
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
-    let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
-    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
-
-    /*
-    let mut control = match p.control.borrow_state() {
-        BorrowState::Unused => p.control.borrow_mut(),
-        _ => { println!("cannot borrow control"); return; }
-    };
-    */
-
-    /*
-    let (id, prop) = if let Some(o) = control.get_selected_object(){
-        let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path);
-        (o.read().unwrap().id.clone(),p)
+    )
+{
+    let path = if let Some(p) = get_str(name) {
+        p
     }
     else {
         return;
     };
-    */
+
+    println!("OPTIONNNNNNNNNN I changed the value {} ", path);
+
+    let (p, container) = get_widget_data(widget_cb_data);
 
     let change = if new == "Some" {
-        container.request_operation_option_to_some(vs)
+        container.request_operation_option_to_some(path)
     }
     else {
         container.request_operation_option_to_none(path)
-        /*
-        if let Some(propget) = prop {
-                let test = *propget;
-            control.request_operation_option_to_none(
-                vs,
-                box test.clone())
-        }
-        else {
-            return
-        }
-        */
     };
-
-    /*
-    match change {
-        operation::Change::DirectChange(s) |
-        operation::Change::Objects(s, _) => {
-            if s == "object/name" {
-                match control.tree {
-                    Some(ref t) =>
-                        match t.borrow_state() {
-                            BorrowState::Writing => {}
-                            _ => {
-                                t.borrow().update_object(&id);
-                            },
-                        },
-                        None => {}
-                };
-            }
-        },
-        _ => {}
-    }
-    */
-
 }
-
-
 
 pub extern fn expand(
     widget_cb_data: *const c_void,
@@ -987,10 +933,8 @@ pub extern fn expand(
 {
     let datachar = data as *const i8;
     let s = unsafe {CStr::from_ptr(datachar).to_bytes()};
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
-    //let mut p : &mut Property = unsafe {mem::transmute(property)};
-    let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
-    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    let (p, container) = get_widget_data(widget_cb_data);
 
     let path = match str::from_utf8(s) {
         Ok(pp) => pp,
