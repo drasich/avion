@@ -658,7 +658,6 @@ pub extern fn changed_set_string(
             return;
         }
     };
-    println!("the string is {}", ss);
     changed_set(property, name, None, &ss, 0);
 }
 
@@ -977,16 +976,12 @@ pub extern fn contract(
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
-    //let mut p : &mut Property = unsafe {mem::transmute(property)};
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
-    let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
-    //let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    let (p,_) = get_widget_data(widget_cb_data);
 
     unsafe {
         property_list_nodes_remove(
             p.jk_property_list,
             data as *const c_char
-            //s.unwrap(),
             );
     };
 
@@ -1002,11 +997,6 @@ pub extern fn contract(
     println!("I contract the path {} ", path);
 
     p.config.expand.remove(path);
-
-    let vs = make_vec_from_string(&path.to_owned());
-
-    let yep = vs[1..].to_vec();
-    println!("contract : {:?}", vs);
 
     let clone = p.pv.clone();
 
