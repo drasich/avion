@@ -689,7 +689,8 @@ impl WidgetContainer
                     }
                 };
 
-                if name == "object/name" {
+                //if name == "object/name" {
+                if name == "name" {
                     if let Some(ref t) = self.tree {
                         if widget_origin != t.id {
                             t.update_object(&o.read().unwrap().id);
@@ -724,7 +725,8 @@ impl WidgetContainer
                 let sel = self.get_selected_object();
                 for id in id_list {
 
-                    if name == "object/name" {
+                    //if name == "object/name" {
+                    if name == "name" {
                         if let Some(ref t) = self.tree {
                             if widget_origin != t.id {
                                 t.update_object(id);
