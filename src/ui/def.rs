@@ -804,7 +804,6 @@ impl WidgetContainer
             },
             operation::Change::SelectedChange => {
                 let sel = self.get_selected_objects().to_vec();
-                println!("container, object seclected : {}",  sel.len());
 
                 if let Some(ref mut t) = self.tree {
                     if widget_origin != t.id {

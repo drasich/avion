@@ -209,12 +209,9 @@ impl Tree
 
     fn _select(&mut self, id: &Uuid)
     {
-        println!("select from tree");
         if let Some(item) = self.objects.get(id) {
             unsafe {tree_item_select(*item);}
         }
-
-        println!("select from tree end");
     }
 
 
@@ -227,8 +224,6 @@ impl Tree
                 unsafe {tree_item_select(*item);}
             }
         }
-
-        println!("select from tree end");
     }
 
     pub fn update(&self)
@@ -341,6 +336,7 @@ pub extern fn selected(
         mem::transmute(data)
     };
 
+    //TODO
     println!("TODO do the following in widget container 'handle' ");
     container.handle_event(ui::Event::SelectObject(o.clone()), tree.id);
 

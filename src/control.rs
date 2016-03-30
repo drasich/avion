@@ -105,7 +105,6 @@ impl Control
             y : i32,
             timestamp : i32) -> operation::Change
     {
-        println!("control fn mouse up");
         match self.state {
             State::CameraRotation => {
                 self.state = State::Idle;
@@ -167,7 +166,8 @@ impl Control
              }
         };
 
-        println!("objects in the scene : {}", scene.borrow().objects.len());
+        //TODO
+        println!("TODO dont test all objects in the scene, but only visible ones : {}", scene.borrow().objects.len());
 
         let mut found_length = 0f64;
         let mut closest_obj = None;

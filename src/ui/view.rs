@@ -362,11 +362,6 @@ pub extern fn mouse_down(
         view.handle_control_change(op);
         container.handle_change(op, view.uuid);
     }
-
-    if !op_list.is_empty() {
-        view.request_update();
-    }
-
 }
 
 pub extern fn mouse_up(
@@ -391,8 +386,6 @@ pub extern fn mouse_up(
 
     view.handle_control_change(&change);
     container.handle_change(&change, view.uuid);
-
-    view.request_update();
 }
 
 pub extern fn mouse_move(
@@ -431,11 +424,6 @@ pub extern fn mouse_move(
         view.handle_control_change(change);
         container.handle_change(change, view.uuid);
     }
-
-    if !change_list.is_empty() {
-        view.request_update();
-    }
-
 }
 
 pub extern fn mouse_wheel(
