@@ -545,6 +545,13 @@ pub trait Widget
     {
         println!("please implement me");
     }
+
+    fn handle_change_prop(&self, prop_user : RefMut<PropertyUser> , name : &str)
+    {
+        println!("implement handle_change_prop");
+    }
+
+    fn get_id(&self) -> Uuid;
 }
 
 pub struct WidgetContainer
@@ -569,6 +576,8 @@ pub struct WidgetContainer
     pub scenes : HashMap<String, Rc<RefCell<scene::Scene>>>,
 
     pub name : String,
+
+    pub visible_prop : HashMap<Uuid, RefMut<Widget>>
 
 
 }
@@ -667,7 +676,8 @@ impl WidgetContainer
             holder : Rc::new(RefCell::new(Holder { gameview : None })),
             list : box ListWidget { object : None, entries : Vec::new() },
             name : String::from("yoplaboum"),
-            scenes : HashMap::new()
+            scenes : HashMap::new(),
+            visible_prop : HashMap::new()
 
         }
     }
@@ -962,6 +972,9 @@ impl WidgetContainer
             operation::Change::DraggerRotation(r) => {
                 let change = self.request_rotation(r);
                 self.handle_change(&change, widget_origin);
+            },
+            operation::Change::Property(ref p, ref name) => {
+                self.handle_change_new(widget_origin, p.clone(), name);
             },
             _ => {}
         }
@@ -1663,6 +1676,25 @@ impl WidgetContainer
         }
         else {
             false
+        }
+    }
+
+    pub fn handle_change_new(&self, widget_id : Uuid, p : RefMut<PropertyUser>, name : &str)
+    {
+        let pid = match p {
+            RefMut::Arc(ref a) => a.read().unwrap().get_id(),
+            RefMut::Cell(ref c) => c.borrow().get_id()
+        };
+
+        if let Some(widgets) = self.visible_prop.get(&pid) {
+
+            for w in &self.widgets {
+                if w.get_id() == widget_id {
+                    continue;
+                }
+
+                 w.handle_change_prop(p.clone(), name);
+            }
         }
     }
 }

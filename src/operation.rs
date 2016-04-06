@@ -113,7 +113,7 @@ impl OperationTrait for OldNew
             }
         }
 
-        Change::Property
+        Change::Property(self.object.clone(), self.name.clone())
     }
 
     fn undo(&self) -> Change
@@ -127,7 +127,7 @@ impl OperationTrait for OldNew
             }
         }
 
-        Change::Property
+        Change::Property(self.object.clone(), self.name.clone())
     }
 }
 
@@ -138,7 +138,7 @@ impl OperationTrait for OldNew
 pub enum Change
 {
     None,
-    Property,
+    Property(RefMut<PropertyUser>, String),
     Tree,
     Objects(String, LinkedList<uuid::Uuid>),
     DirectChange(String),

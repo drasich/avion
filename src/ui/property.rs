@@ -278,17 +278,46 @@ impl PropertyConfig
     }
 }
 
-pub trait PropertyUser : property::PropertyWrite + PropertyShow {
+pub trait PropertyUserId
+{
+    fn get_id(&self) -> uuid::Uuid;
+}
+
+impl PropertyUserId for object::Object
+{
+    fn get_id(&self) -> uuid::Uuid
+    {
+        return self.id
+    }
+}
+
+impl PropertyUserId for scene::Scene
+{
+    fn get_id(&self) -> uuid::Uuid
+    {
+        return self.id
+    }
+}
+
+
+pub trait PropertyUser : property::PropertyWrite + PropertyShow + PropertyUserId {
     fn as_show(&self) -> &PropertyShow;
     fn as_write(&self) -> &property::PropertyWrite;
+    fn as_id(&self) -> &PropertyUserId;
 }
-impl<T: property::PropertyWrite + PropertyShow > PropertyUser for T {
+
+impl<T: property::PropertyWrite + PropertyShow + PropertyUserId > PropertyUser for T {
     fn as_show(&self) -> &PropertyShow
     {
         self
     }
 
     fn as_write(&self) -> &property::PropertyWrite
+    {
+        self
+    }
+
+    fn as_id(&self) -> &PropertyUserId
     {
         self
     }
@@ -941,7 +970,6 @@ pub extern fn expand(
             panic!("problem with the path");
         }
     };
-
     println!("I expand the value {} ", path);
 
     let vs = make_vec_from_string(&path.to_owned());
