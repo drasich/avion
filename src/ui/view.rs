@@ -143,7 +143,7 @@ impl View
         let w = unsafe {ui::window_new(self.width,self.height)};
         self.window = Some(w);
 
-        let p = box ui::Property::new(w, property_config);
+        let p = Rc::new(ui::Property::new(w, property_config));
         let mut t = box ui::Tree::new(w, tree_config);
 
         container.list.create(w);

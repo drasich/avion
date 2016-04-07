@@ -7,7 +7,7 @@ use std::mem;
 use std::collections::{LinkedList};
 use std::ptr;
 use std::rc::Rc;
-use std::cell::{RefCell, BorrowState};
+use std::cell::{Cell, RefCell, BorrowState};
 use std::rc::Weak;
 use std::any::{Any};//, AnyRefExt};
 use std::ffi::CString;
@@ -15,6 +15,7 @@ use std::ffi;
 use std::ffi::CStr;
 use core::marker;
 use uuid;
+use uuid::Uuid;
 
 use dormin::scene;
 use dormin::object;
@@ -343,11 +344,11 @@ pub struct Property
 {
     pub name : String,
     pub jk_property_list : *const JkPropertyList,
-    pub pv : HashMap<String, *const PropertyValue>,
-    visible : bool,
+    pub pv : RefCell<HashMap<String, *const PropertyValue>>,
+    visible : Cell<bool>,
     pub id : uuid::Uuid,
     pub config : PropertyConfig,
-    pub current : Option<RefMut<PropertyUser>>
+    pub current : RefCell<Option<RefMut<PropertyUser>>>
 }
 
 impl Property
@@ -362,11 +363,11 @@ impl Property
             jk_property_list : unsafe {jk_property_list_new(
                     window,
                     pc.x, pc.y, pc.w, pc.h)},
-            pv : HashMap::new(),
-            visible: true,
+            pv : RefCell::new(HashMap::new()),
+            visible: Cell::new(true),
             id : uuid::Uuid::new_v4(),
             config : pc.clone(),
-            current : None
+            current : RefCell::new(None)
         }
     }
 
@@ -389,22 +390,24 @@ impl Property
     }
     */
 
-    pub fn set_prop_cell(&mut self, p : Rc<RefCell<PropertyUser>>, title : &str)
+    pub fn set_prop_cell(&self, p : Rc<RefCell<PropertyUser>>, title : &str)
     {
         self._set_prop(&*p.borrow().as_show(), title);
-        self.current = Some(RefMut::Cell(p));
+        let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
+        *cur = Some(RefMut::Cell(p));
     }
 
-    pub fn set_prop_arc(&mut self, p : Arc<RwLock<PropertyUser>>, title : &str)
+    pub fn set_prop_arc(&self, p : Arc<RwLock<PropertyUser>>, title : &str)
     {
         self._set_prop(&*p.read().unwrap().as_show(), title);
-        self.current = Some(RefMut::Arc(p));
+        let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
+        *cur = Some(RefMut::Arc(p));
     }
 
-    fn _set_prop(&mut self, p : &PropertyShow, title : &str)
+    fn _set_prop(&self, p : &PropertyShow, title : &str)
     {
         unsafe { property_list_clear(self.jk_property_list); }
-        self.pv.clear();
+        self.pv.borrow_mut().clear();
 
         unsafe {
             property_list_group_add(
@@ -435,7 +438,7 @@ impl Property
     */
 
 
-    fn add_tools(&mut self)
+    fn add_tools(&self)
     {
         //add component
         // add as prefab
@@ -451,12 +454,13 @@ impl Property
     }
 
 
-    pub fn set_nothing(&mut self)
+    pub fn set_nothing(&self)
     {
         unsafe { property_list_clear(self.jk_property_list); }
-        self.pv.clear();
+        self.pv.borrow_mut().clear();
 
-        self.current = None;
+        //self.current = None;
+        *(self.current.borrow_mut()) = None;
     }
 
     pub fn data_set(&self, data : *const c_void)
@@ -467,19 +471,30 @@ impl Property
 
     pub fn update_object_property(&self, object : &PropertyShow, prop : &str)
     {
+        println!("property : {} ", prop);
         // update_widget might add/remove/update self.pv so we have to copy it
         // and check
-        let copy = self.pv.clone();
+        let copy = self.pv.borrow().clone();
 
         for (f,pv) in &copy {
-            match self.pv.get(f) {
+            println!("...... in the copy : {}", f);
+            match self.pv.borrow().get(f) {
                 Some(p) => if *p != *pv {
+                    println!("             different so continue");
                     continue
                 },
                 None => continue
             }
-            if f.starts_with(prop) {
+
+            //TODO remove this
+            println!("todo remove this, property.rs update_object_property");
+            let mut test = String::from("object/");
+            test.push_str(prop);
+
+            if f.starts_with(test.as_str()) {
+            //if f.starts_with(prop) {
                 let yep = make_vec_from_string(f)[1..].to_vec();
+                //let yep = make_vec_from_string(f);
                 if let Some(ppp) = find_property_show(object, yep.clone()) {
                     ppp.update_widget(*pv);
                 }
@@ -489,15 +504,15 @@ impl Property
 
     pub fn update_object(&self, object : &PropertyShow, but : &str)
     {
-        for (f,pv) in &self.pv {
+        for (f,pv) in &*self.pv.borrow() {
             println!("UPDATEOBJECt contains property : Val : {}", f);
         }
 
         // update_widget might add/remove/update self.pv so we have to copy it
         // and check
-        let copy = self.pv.clone();
+        let copy = self.pv.borrow().clone();
         for (f,pv) in &copy {
-            match self.pv.get(f) {
+            match self.pv.borrow().get(f) {
                 Some(p) => if *p != *pv {
                     continue
                 },
@@ -523,7 +538,7 @@ impl Property
     }
 
     pub fn add_node(
-        &mut self,
+        &self,
         ps : &PropertyShow,
         name : &str,
         has_container : bool,
@@ -560,7 +575,7 @@ impl Property
         }
 
         if pv != ptr::null() {
-            self.pv.insert(name.to_owned(), pv);
+            self.pv.borrow_mut().insert(name.to_owned(), pv);
         }
 
         if self.config.expand.contains(name) {
@@ -572,7 +587,7 @@ impl Property
         return pv;
     }
 
-    pub fn add_vec(&mut self, ps : &PropertyShow, name : &str, len : usize) {
+    pub fn add_vec(&self, ps : &PropertyShow, name : &str, len : usize) {
         println!("____added vec : {}", name);
         let f = CString::new(name.as_bytes()).unwrap();
         let pv = unsafe {
@@ -584,7 +599,7 @@ impl Property
         };
 
         if pv != ptr::null() {
-            self.pv.insert(name.to_owned(), pv);
+            self.pv.borrow_mut().insert(name.to_owned(), pv);
         }
 
         if self.config.expand.contains(name) {
@@ -596,7 +611,7 @@ impl Property
 
 
     pub fn add_enum(
-        &mut self,
+        &self,
         ps : &PropertyShow,
         path : &str,
         types : &str,
@@ -627,7 +642,7 @@ impl Property
 
 
         if pv != ptr::null() {
-            self.pv.insert(path.to_owned(), pv);
+            self.pv.borrow_mut().insert(path.to_owned(), pv);
         }
 
         if self.config.expand.contains(path) {
@@ -639,9 +654,9 @@ impl Property
         pv
     }
 
-    pub fn set_visible(&mut self, b : bool)
+    pub fn set_visible(&self, b : bool)
     {
-        self.visible = b;
+        self.visible.set(b);
         unsafe {
             property_show(self.jk_property_list, b);
         }
@@ -649,10 +664,34 @@ impl Property
 
     pub fn visible(&self) -> bool
     {
-        self.visible
+        self.visible.get()
     }
 
 }
+
+impl ui::Widget for Property
+{
+    fn get_id(&self) -> Uuid
+    {
+        self.id
+    }
+
+    fn handle_change_prop(&self, prop_user : RefMut<PropertyUser> , name : &str)
+    {
+        println!("PROPRORPRORPRORPRORPRORP");
+        match prop_user {
+            RefMut::Arc(ref a) => {
+                let prop = &*a.read().unwrap();
+                self.update_object_property(prop.as_show(), name);
+            },
+            RefMut::Cell(ref c) => {
+                let prop = &*c.borrow();
+                self.update_object_property(prop.as_show(), name);
+            }
+        }
+    }
+}
+
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
 
@@ -879,7 +918,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
 
     let change = match (old, action) {
         (Some(oldd), 1) => {
-            if let Some(ref cur) = p.current {
+            if let Some(ref cur) = *p.current.borrow() {
                 container.request_operation_property_old_new(
                     (*cur).clone(),
                     path,
@@ -1026,7 +1065,7 @@ pub extern fn contract(
 
     p.config.expand.remove(path);
 
-    let clone = p.pv.clone();
+    let clone = p.pv.borrow().clone();
 
     for (key,pv) in &clone {
         println!("cccccccccccccccccontract  start with key '{}' ", key);
@@ -1038,7 +1077,7 @@ pub extern fn contract(
         //if key.as_ref().starts_with(path) && key.as_ref() != path  {
         if starts_with_path {
             println!("yes, '{}' starts with '{}'", key, path);
-            match p.pv.remove(key) {
+            match p.pv.borrow_mut().remove(key) {
                 Some(_) => println!("yes I removed {}", key),
                 None => println!("could not find {}", key)
             }
@@ -1055,8 +1094,10 @@ impl WidgetUpdate for Property
     {
 
         //println!("property update changed {}", name);
+        //
+        let pvs = self.pv.borrow();
 
-        let pv = match self.pv.get(&name.to_owned()) {
+        let pv = match pvs.get(&name.to_owned()) {
             Some(p) => p,
             None => {
                 println!("widget update, could not find {}", name);
@@ -1107,7 +1148,7 @@ pub trait PropertyShow
 {
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>;
@@ -1149,7 +1190,7 @@ impl PropertyShow for f64 {
 
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1162,7 +1203,7 @@ impl PropertyShow for f64 {
                 f.as_ptr(),
                 *self as c_float);
             if pv != ptr::null() {
-                property.pv.insert(field.to_owned(), pv);
+                property.pv.borrow_mut().insert(field.to_owned(), pv);
             }
 
             Some(pv)
@@ -1182,7 +1223,7 @@ impl PropertyShow for String {
 
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1204,7 +1245,7 @@ impl PropertyShow for String {
             }
 
             if pv != ptr::null() {
-                property.pv.insert(field.to_owned(), pv);
+                property.pv.borrow_mut().insert(field.to_owned(), pv);
             }
 
             Some(pv)
@@ -1225,7 +1266,7 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
 
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1253,7 +1294,7 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
 
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1276,7 +1317,7 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
 
                 if pv != ptr::null() {
                     println!("ADDING : {}", field);
-                    property.pv.insert(field.to_owned(), pv);
+                    property.pv.borrow_mut().insert(field.to_owned(), pv);
                 }
 
                 return Some(pv);
@@ -1329,7 +1370,7 @@ impl<T> PropertyShow for resource::ResTT<T>
 {
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1364,7 +1405,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 {
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1400,7 +1441,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                             );
 
                         if pv != ptr::null() {
-                            property.pv.insert(nf.clone(), pv);
+                            property.pv.borrow_mut().insert(nf.clone(), pv);
                         }
 
                         if property.config.expand.contains(nf.as_str()) {
@@ -1455,7 +1496,7 @@ impl PropertyShow for CompData
 {
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1592,7 +1633,7 @@ impl ui::PropertyShow for Orientation {
 
     fn create_widget(
         &self,
-        property : &mut ui::Property,
+        property : &ui::Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const ui::PropertyValue>
@@ -1666,7 +1707,7 @@ macro_rules! property_show_methods(
 
             fn create_widget(
                 &self,
-                property : &mut Property,
+                property : &Property,
                 field : &str,
                 depth : i32,
                 has_container : bool ) -> Option<*const PropertyValue>
@@ -1683,8 +1724,8 @@ macro_rules! property_show_methods(
                 if depth > 0 {
                 $(
                     let s = field.to_owned()
-                    + "/"//.to_owned()
-                    + stringify!($member);//.to_owned();
+                            + "/"//.to_owned()
+                            + stringify!($member);//.to_owned();
                     self.$member.create_widget(property, s.as_ref(), depth-1, has_container);
                  )+
                 }

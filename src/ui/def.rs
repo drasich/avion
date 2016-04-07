@@ -3,7 +3,7 @@ use std::mem;
 use std::sync::{RwLock, Arc};
 use std::collections::{LinkedList};
 use std::ptr;
-use std::rc::Rc;
+use std::rc::{Rc,Weak};
 use std::cell::{RefCell, BorrowState};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
@@ -548,7 +548,7 @@ pub trait Widget
 
     fn handle_change_prop(&self, prop_user : RefMut<PropertyUser> , name : &str)
     {
-        println!("implement handle_change_prop");
+        println!("implement handle_change_prop 7777777777777777");
     }
 
     fn get_id(&self) -> Uuid;
@@ -558,7 +558,7 @@ pub struct WidgetContainer
 {
     pub widgets : Vec<Box<Widget>>,
     pub tree : Option<Box<Tree>>,
-    pub property : Option<Box<Property>>,
+    pub property : Option<Rc<Property>>,
     pub command : Option<Box<Command>>,
     pub action : Option<Box<Action>>,
     views : Vec<Box<View>>,
@@ -577,7 +577,7 @@ pub struct WidgetContainer
 
     pub name : String,
 
-    pub visible_prop : HashMap<Uuid, RefMut<Widget>>
+    pub visible_prop : HashMap<Uuid, Weak<Widget>>
 
 
 }
@@ -848,7 +848,10 @@ impl WidgetContainer
                         if let Some(ref mut p) = self.property {
                             if widget_origin != p.id {
                                 //p.set_object(&*o.read().unwrap());
+                                let pu = &*o.read().unwrap() as &PropertyUser;
                                 p.set_prop_arc(o.clone(), "object");
+                                self.visible_prop.insert(
+                                        pu.get_id(), Rc::downgrade(p) as Weak<Widget>);
                             }
                         }
                         else {
@@ -1681,20 +1684,28 @@ impl WidgetContainer
 
     pub fn handle_change_new(&self, widget_id : Uuid, p : RefMut<PropertyUser>, name : &str)
     {
+        println!("handle change newwwwwwwwwwwwwwwwwwwwwwwwwwwwwww ");
         let pid = match p {
             RefMut::Arc(ref a) => a.read().unwrap().get_id(),
             RefMut::Cell(ref c) => c.borrow().get_id()
         };
 
-        if let Some(widgets) = self.visible_prop.get(&pid) {
+        if let Some(w) = self.visible_prop.get(&pid) {
+            println!("handle change newwwwwwwwwwwwwwwwwwwwwwwwwwwwwww  : found a property");
 
-            for w in &self.widgets {
+            //for w in &self.widgets {
+            if let Some(w) = w.upgrade() {
                 if w.get_id() == widget_id {
-                    continue;
+                    println!("same id as the widget so get out");
+                    //continue;
                 }
 
-                 w.handle_change_prop(p.clone(), name);
+                w.handle_change_prop(p.clone(), name);
             }
+            //}
+        }
+        else {
+            println!("handle change newwwwwwwwwwwwwwwwwwwwwwwwwwwwwww  : NONONO widget");
         }
     }
 }
