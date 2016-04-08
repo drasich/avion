@@ -414,7 +414,8 @@ impl Property
                 self.jk_property_list,
                 CString::new(title.as_bytes()).unwrap().as_ptr());
         }
-        p.create_widget(self, title, 1, false);
+        //TODO replace ""
+        p.create_widget(self, "", 1, false);
 
         self.add_tools();
     }
@@ -486,15 +487,8 @@ impl Property
                 None => continue
             }
 
-            //TODO remove this
-            println!("todo remove this, property.rs update_object_property");
-            let mut test = String::from("object/");
-            test.push_str(prop);
-
-            if f.starts_with(test.as_str()) {
-            //if f.starts_with(prop) {
-                let yep = make_vec_from_string(f)[1..].to_vec();
-                //let yep = make_vec_from_string(f);
+            if f.starts_with(prop) {
+                let yep = make_vec_from_string(f);
                 if let Some(ppp) = find_property_show(object, yep.clone()) {
                     ppp.update_widget(*pv);
                 }
@@ -524,7 +518,7 @@ impl Property
                 println!("buuuuuuuuuuuuuuuuuuuuuuuuuut: {} ", f);
                 continue;
             }
-            let yep = make_vec_from_string(f)[1..].to_vec();
+            let yep = make_vec_from_string(f);
             match find_property_show(object, yep.clone()) {
                 Some(ppp) => {
                     println!("I find the property : {:?}", yep);
@@ -871,21 +865,7 @@ pub extern fn register_change_option(
 fn get_str<'a>(cstr : *const c_char) -> Option<&'a str>
 {
     let s = unsafe {CStr::from_ptr(cstr).to_bytes()};
-
-    match str::from_utf8(s) {
-        Ok(pp) => {
-            if let Some(i) = pp.find("/") {
-                Some(pp.split_at(i+1).1)
-            }
-            else {
-                Some(pp)
-            }
-        },
-        _ => {
-            println!("problem with the path");
-            None
-        }
-    }
+    str::from_utf8(s).ok()
 }
 
 fn get_widget_data<'a>(widget_data : *const c_void) -> (&'a mut ui::Property, &'a mut Box<ui::WidgetContainer>)
@@ -1013,7 +993,6 @@ pub extern fn expand(
 
     let vs = make_vec_from_string(&path.to_owned());
 
-    let yep = vs[1..].to_vec();
     println!("expand : {:?}", vs);
 
     let o = match container.get_selected_object() {
@@ -1025,7 +1004,7 @@ pub extern fn expand(
     };
 
     let or = o.read().unwrap();
-    match find_property_show(&*or, yep.clone()) {
+    match find_property_show(&*or, vs.clone()) {
         Some(ppp) => {
             //p.create_entries(&*ppp, vs.clone());
             println!("I found and create {:?} ", vs);
@@ -1723,9 +1702,13 @@ macro_rules! property_show_methods(
 
                 if depth > 0 {
                 $(
-                    let s = field.to_owned()
-                            + "/"//.to_owned()
-                            + stringify!($member);//.to_owned();
+                    let s = if field != "" {
+                        field.to_owned()
+                            + "/"
+                            + stringify!($member)
+                    }else {
+                        stringify!($member).to_owned()
+                    };
                     self.$member.create_widget(property, s.as_ref(), depth-1, has_container);
                  )+
                 }
