@@ -415,6 +415,10 @@ pub extern fn unselected(
 
 impl ui::Widget for Tree
 {
+    fn get_id(&self) -> Uuid
+    {
+        self.id
+    }
 }
 
 pub extern fn panel_move(

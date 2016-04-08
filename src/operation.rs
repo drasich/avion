@@ -10,10 +10,12 @@ use dormin::object;
 use dormin::property;
 use dormin::property::PropertyWrite;
 use ui;
+use ui::PropertyUser;
 use control::WidgetUpdate;
 use dormin::vec;
 use dormin::scene;
 use dormin::component::CompData;
+use ui::RefMut;
 
 use dragger;
 
@@ -54,11 +56,89 @@ pub struct Operation
     //pub new : Box<Any>,
 }
 
+pub enum OperationActor{
+    Scene(uuid::Uuid),
+    Object(uuid::Uuid),
+    Objects(Vec<uuid::Uuid>),
+    Ref(RefMut<PropertyWrite>),
+    //PropertyWrite(&PropertyWrite),
+}
+
+pub struct OperationNew
+{
+    pub actor : OperationActor,
+    pub name : String,
+    pub change : OperationData
+    //pub old : Box<Any>,
+    //pub new : Box<Any>,
+}
+
+pub struct OldNew{
+    pub object : RefMut<PropertyUser>,
+    pub name : String,
+    pub old : Box<Any>,
+    pub new : Box<Any>
+}
+
+impl OldNew
+{
+    pub fn new(
+        object : RefMut<PropertyUser>,
+        name : String,
+        old : Box<Any>,
+        new : Box<Any>
+        ) -> OldNew
+    {
+        OldNew{
+            object : object,
+            name : name,
+            old : old,
+            new : new
+        }
+    }
+
+}
+
+impl OperationTrait for OldNew
+{
+    fn apply(&self) -> Change
+    {
+        println!("NEW TEST operation set property hier {:?}", self.name);
+        match self.object {
+            RefMut::Arc(ref a) => {
+                a.write().unwrap().test_set_property_hier(self.name.as_ref(), &*self.new);
+            },
+            RefMut::Cell(ref c) => { 
+                c.borrow_mut().test_set_property_hier(self.name.as_ref(), &*self.new);
+            }
+        }
+
+        Change::Property(self.object.clone(), self.name.clone())
+    }
+
+    fn undo(&self) -> Change
+    {
+        match self.object {
+            RefMut::Arc(ref a) => {
+                a.write().unwrap().test_set_property_hier(self.name.as_ref(), &*self.old);
+            },
+            RefMut::Cell(ref c) => { 
+                c.borrow_mut().test_set_property_hier(self.name.as_ref(), &*self.old);
+            }
+        }
+
+        Change::Property(self.object.clone(), self.name.clone())
+    }
+}
+
+
+
+
 //#[derive(PartialEq)]
 pub enum Change
 {
     None,
-    Property,
+    Property(RefMut<PropertyUser>, String),
     Tree,
     Objects(String, LinkedList<uuid::Uuid>),
     DirectChange(String),
@@ -380,6 +460,15 @@ impl OperationManager
     {
         let change = op.apply();
         self.add_undo(box op);
+        self.redo.clear();
+
+        change
+    }
+
+    pub fn add_with_trait(&mut self, op : Box<OperationTrait>) -> Change
+    {
+        let change = op.apply();
+        self.add_undo(op);
         self.redo.clear();
 
         change

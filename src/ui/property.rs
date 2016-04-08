@@ -7,7 +7,7 @@ use std::mem;
 use std::collections::{LinkedList};
 use std::ptr;
 use std::rc::Rc;
-use std::cell::{RefCell, BorrowState};
+use std::cell::{Cell, RefCell, BorrowState};
 use std::rc::Weak;
 use std::any::{Any};//, AnyRefExt};
 use std::ffi::CString;
@@ -15,6 +15,7 @@ use std::ffi;
 use std::ffi::CStr;
 use core::marker;
 use uuid;
+use uuid::Uuid;
 
 use dormin::scene;
 use dormin::object;
@@ -278,14 +279,76 @@ impl PropertyConfig
     }
 }
 
+pub trait PropertyUserId
+{
+    fn get_id(&self) -> uuid::Uuid;
+}
+
+impl PropertyUserId for object::Object
+{
+    fn get_id(&self) -> uuid::Uuid
+    {
+        return self.id
+    }
+}
+
+impl PropertyUserId for scene::Scene
+{
+    fn get_id(&self) -> uuid::Uuid
+    {
+        return self.id
+    }
+}
+
+
+pub trait PropertyUser : property::PropertyWrite + PropertyShow + PropertyUserId {
+    fn as_show(&self) -> &PropertyShow;
+    fn as_write(&self) -> &property::PropertyWrite;
+    fn as_id(&self) -> &PropertyUserId;
+}
+
+impl<T: property::PropertyWrite + PropertyShow + PropertyUserId > PropertyUser for T {
+    fn as_show(&self) -> &PropertyShow
+    {
+        self
+    }
+
+    fn as_write(&self) -> &property::PropertyWrite
+    {
+        self
+    }
+
+    fn as_id(&self) -> &PropertyUserId
+    {
+        self
+    }
+}
+
+pub enum RefMut<T:?Sized> {
+    Arc(Arc<RwLock<T>>),
+    Cell(Rc<RefCell<T>>),
+}
+
+impl<T:?Sized> Clone for RefMut<T>
+{
+    fn clone(&self) -> RefMut<T>
+    {
+        match *self {
+            RefMut::Arc(ref a) => RefMut::Arc(a.clone()),
+            RefMut::Cell(ref c) => RefMut::Cell(c.clone()),
+        }
+    }
+}
+
 pub struct Property
 {
     pub name : String,
     pub jk_property_list : *const JkPropertyList,
-    pub pv : HashMap<String, *const PropertyValue>,
-    visible : bool,
+    pub pv : RefCell<HashMap<String, *const PropertyValue>>,
+    visible : Cell<bool>,
     pub id : uuid::Uuid,
-    pub config : PropertyConfig
+    pub config : PropertyConfig,
+    pub current : RefCell<Option<RefMut<PropertyUser>>>
 }
 
 impl Property
@@ -300,13 +363,15 @@ impl Property
             jk_property_list : unsafe {jk_property_list_new(
                     window,
                     pc.x, pc.y, pc.w, pc.h)},
-                    pv : HashMap::new(),
-                    visible: true,
-                    id : uuid::Uuid::new_v4(),
-                    config : pc.clone()
+            pv : RefCell::new(HashMap::new()),
+            visible: Cell::new(true),
+            id : uuid::Uuid::new_v4(),
+            config : pc.clone(),
+            current : RefCell::new(None)
         }
     }
 
+    /*
     pub fn set_object(&mut self, o : &object::Object)
     {
         unsafe { property_list_clear(self.jk_property_list); }
@@ -317,14 +382,64 @@ impl Property
                 self.jk_property_list,
                 CString::new("object".as_bytes()).unwrap().as_ptr());
         }
-        let mut v = Vec::new();
-        v.push("object".to_owned());
+        //let mut v = Vec::new();
+        //v.push("object".to_owned());
         o.create_widget(self, "object", 1, false);
 
         self.add_tools();
     }
+    */
 
-    fn add_tools(&mut self)
+    pub fn set_prop_cell(&self, p : Rc<RefCell<PropertyUser>>, title : &str)
+    {
+        self._set_prop(&*p.borrow().as_show(), title);
+        let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
+        *cur = Some(RefMut::Cell(p));
+    }
+
+    pub fn set_prop_arc(&self, p : Arc<RwLock<PropertyUser>>, title : &str)
+    {
+        self._set_prop(&*p.read().unwrap().as_show(), title);
+        let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
+        *cur = Some(RefMut::Arc(p));
+    }
+
+    fn _set_prop(&self, p : &PropertyShow, title : &str)
+    {
+        unsafe { property_list_clear(self.jk_property_list); }
+        self.pv.borrow_mut().clear();
+
+        unsafe {
+            property_list_group_add(
+                self.jk_property_list,
+                CString::new(title.as_bytes()).unwrap().as_ptr());
+        }
+        //TODO replace ""
+        p.create_widget(self, "", 1, false);
+
+        self.add_tools();
+    }
+
+
+    /*
+    pub fn set_scene(&mut self, s : &scene::Scene)
+    {
+        unsafe { property_list_clear(self.jk_property_list); }
+        self.pv.clear();
+
+        unsafe {
+            property_list_group_add(
+                self.jk_property_list,
+                CString::new("scene".as_bytes()).unwrap().as_ptr());
+        }
+        //let mut v = Vec::new();
+        //v.push("object".to_owned());
+        s.create_widget(self, "scene", 1, false);
+    }
+    */
+
+
+    fn add_tools(&self)
     {
         //add component
         // add as prefab
@@ -340,10 +455,13 @@ impl Property
     }
 
 
-    pub fn set_nothing(&mut self)
+    pub fn set_nothing(&self)
     {
         unsafe { property_list_clear(self.jk_property_list); }
-        self.pv.clear();
+        self.pv.borrow_mut().clear();
+
+        //self.current = None;
+        *(self.current.borrow_mut()) = None;
     }
 
     pub fn data_set(&self, data : *const c_void)
@@ -354,19 +472,23 @@ impl Property
 
     pub fn update_object_property(&self, object : &PropertyShow, prop : &str)
     {
+        println!("property : {} ", prop);
         // update_widget might add/remove/update self.pv so we have to copy it
         // and check
-        let copy = self.pv.clone();
+        let copy = self.pv.borrow().clone();
 
         for (f,pv) in &copy {
-            match self.pv.get(f) {
+            println!("...... in the copy : {}", f);
+            match self.pv.borrow().get(f) {
                 Some(p) => if *p != *pv {
+                    println!("             different so continue");
                     continue
                 },
                 None => continue
             }
+
             if f.starts_with(prop) {
-                let yep = make_vec_from_string(f)[1..].to_vec();
+                let yep = make_vec_from_string(f);
                 if let Some(ppp) = find_property_show(object, yep.clone()) {
                     ppp.update_widget(*pv);
                 }
@@ -376,15 +498,15 @@ impl Property
 
     pub fn update_object(&self, object : &PropertyShow, but : &str)
     {
-        for (f,pv) in &self.pv {
+        for (f,pv) in &*self.pv.borrow() {
             println!("UPDATEOBJECt contains property : Val : {}", f);
         }
 
         // update_widget might add/remove/update self.pv so we have to copy it
         // and check
-        let copy = self.pv.clone();
+        let copy = self.pv.borrow().clone();
         for (f,pv) in &copy {
-            match self.pv.get(f) {
+            match self.pv.borrow().get(f) {
                 Some(p) => if *p != *pv {
                     continue
                 },
@@ -396,7 +518,7 @@ impl Property
                 println!("buuuuuuuuuuuuuuuuuuuuuuuuuut: {} ", f);
                 continue;
             }
-            let yep = make_vec_from_string(f)[1..].to_vec();
+            let yep = make_vec_from_string(f);
             match find_property_show(object, yep.clone()) {
                 Some(ppp) => {
                     println!("I find the property : {:?}", yep);
@@ -410,7 +532,7 @@ impl Property
     }
 
     pub fn add_node(
-        &mut self,
+        &self,
         ps : &PropertyShow,
         name : &str,
         has_container : bool,
@@ -447,7 +569,7 @@ impl Property
         }
 
         if pv != ptr::null() {
-            self.pv.insert(name.to_owned(), pv);
+            self.pv.borrow_mut().insert(name.to_owned(), pv);
         }
 
         if self.config.expand.contains(name) {
@@ -459,7 +581,7 @@ impl Property
         return pv;
     }
 
-    pub fn add_vec(&mut self, ps : &PropertyShow, name : &str, len : usize) {
+    pub fn add_vec(&self, ps : &PropertyShow, name : &str, len : usize) {
         println!("____added vec : {}", name);
         let f = CString::new(name.as_bytes()).unwrap();
         let pv = unsafe {
@@ -471,7 +593,7 @@ impl Property
         };
 
         if pv != ptr::null() {
-            self.pv.insert(name.to_owned(), pv);
+            self.pv.borrow_mut().insert(name.to_owned(), pv);
         }
 
         if self.config.expand.contains(name) {
@@ -483,7 +605,7 @@ impl Property
 
 
     pub fn add_enum(
-        &mut self,
+        &self,
         ps : &PropertyShow,
         path : &str,
         types : &str,
@@ -514,7 +636,7 @@ impl Property
 
 
         if pv != ptr::null() {
-            self.pv.insert(path.to_owned(), pv);
+            self.pv.borrow_mut().insert(path.to_owned(), pv);
         }
 
         if self.config.expand.contains(path) {
@@ -526,9 +648,9 @@ impl Property
         pv
     }
 
-    pub fn set_visible(&mut self, b : bool)
+    pub fn set_visible(&self, b : bool)
     {
-        self.visible = b;
+        self.visible.set(b);
         unsafe {
             property_show(self.jk_property_list, b);
         }
@@ -536,10 +658,34 @@ impl Property
 
     pub fn visible(&self) -> bool
     {
-        self.visible
+        self.visible.get()
     }
 
 }
+
+impl ui::Widget for Property
+{
+    fn get_id(&self) -> Uuid
+    {
+        self.id
+    }
+
+    fn handle_change_prop(&self, prop_user : RefMut<PropertyUser> , name : &str)
+    {
+        println!("PROPRORPRORPRORPRORPRORP");
+        match prop_user {
+            RefMut::Arc(ref a) => {
+                let prop = &*a.read().unwrap();
+                self.update_object_property(prop.as_show(), name);
+            },
+            RefMut::Cell(ref c) => {
+                let prop = &*c.borrow();
+                self.update_object_property(prop.as_show(), name);
+            }
+        }
+    }
+}
+
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
 
@@ -574,7 +720,6 @@ pub extern fn changed_set_string(
             return;
         }
     };
-    println!("the string is {}", ss);
     changed_set(property, name, None, &ss, 0);
 }
 
@@ -717,51 +862,59 @@ pub extern fn register_change_option(
     changed_option(widget_cb_data, name, &sso, &ss);
 }
 
+fn get_str<'a>(cstr : *const c_char) -> Option<&'a str>
+{
+    let s = unsafe {CStr::from_ptr(cstr).to_bytes()};
+    str::from_utf8(s).ok()
+}
 
-//fn changed_set(property : *const c_void, name : *const c_char, data : &Any) {
+fn get_widget_data<'a>(widget_data : *const c_void) -> (&'a mut ui::Property, &'a mut Box<ui::WidgetContainer>)
+{
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
+    let p : &mut ui::Property = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    (p, container)
+}
+
 fn changed_set<T : Any+Clone+PartialEq>(
     widget_data : *const c_void,
     name : *const c_char,
     old : Option<&T>,
     new : &T,
-    action : c_int
-    ) {
-    let s = unsafe {CStr::from_ptr(name).to_bytes()};
-
-    let path = match str::from_utf8(s) {
-        Ok(pp) => pp,
-        _ => {
-            println!("problem with the path");
-            return;}
+    action : i32
+    ) 
+{
+    let path = if let Some(p) = get_str(name) {
+        p
+    }
+    else {
+        return;
     };
 
     println!("I changed the value {} ", path);
 
-    let v: Vec<&str> = path.split('/').collect();
-
-    let mut vs = Vec::new();
-    for i in &v
-    {
-        vs.push(i.to_string());
-    }
-
-    //let vs = vs[1..].to_vec();
-
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
-    let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
-    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
-    //let p : & Property = unsafe {mem::transmute(property)};
+    let (p, container) = get_widget_data(widget_data);
 
     let change = match (old, action) {
         (Some(oldd), 1) => {
-            println!(".....adding operation!! : {:?}", vs );
-            container.request_operation_old_new(
-                vs,
-                box oldd.clone(),
-                box new.clone())
+            if let Some(ref cur) = *p.current.borrow() {
+                container.request_operation_property_old_new(
+                    (*cur).clone(),
+                    path,
+                    box oldd.clone(),
+                    box new.clone())
+            }
+            else
+            {
+                container.request_operation_old_new(
+                    path,
+                    box oldd.clone(),
+                    box new.clone())
+            }
         },
         _ => {
-            container.request_direct_change(vs, new)
+            container.request_direct_change(path, new)
         }
     };
 
@@ -772,137 +925,53 @@ fn changed_enum<T : Any+Clone+PartialEq>(
     widget_data : *const c_void,
     name : *const c_char,
     new : &T,
-    ) {
-    let s = unsafe {CStr::from_ptr(name).to_bytes()};
-
-    let path = match str::from_utf8(s) {
-        Ok(pp) => pp,
-        _ => {
-            println!("problem with the path");
-            return;}
+    )
+{
+    let path = if let Some(p) = get_str(name) {
+        p
+    }
+    else {
+        return;
     };
 
     println!("I changed the value {} ", path);
 
-    let v: Vec<&str> = path.split('/').collect();
-
-    let mut vs = Vec::new();
-    for i in &v
-    {
-        vs.push(i.to_string());
-    }
-
-    //let vs = vs[1..].to_vec();
-
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
-    let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
-    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
-    //let p : & Property = unsafe {mem::transmute(property)};
+    let (p, container) = get_widget_data(widget_data);
 
     let change = {
-        println!(".....adding operation!! : {:?}", vs );
         container.request_operation_old_new_enum(
-            vs,
-            //box oldd.clone(),
+            path,
             box new.clone())
     };
 
     container.handle_change(&change, p.id);
 }
 
-
 fn changed_option(
-//fn changed_option<T : Any+Clone+PartialEq>(
     widget_cb_data : *const c_void,
     name : *const c_char,
     old : &str,
     new : &str
-    ) {
-    let s = unsafe {CStr::from_ptr(name).to_bytes()};
-
-    let path = match str::from_utf8(s) {
-        Ok(pp) => pp,
-        _ => {
-            println!("problem with the path");
-            return;}
-    };
-
-    println!("OPTIONNNNNNNNNN I changed the value {} ", path);
-
-    let v: Vec<&str> = path.split('/').collect();
-
-    let mut vs = Vec::new();
-    for i in &v
-    {
-        vs.push(i.to_string());
-    }
-
-    //let vs = vs[1..].to_vec();
-
-    //let p : & Property = unsafe {mem::transmute(property)};
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
-    let p : &ui::Property = unsafe {mem::transmute(wcb.widget)};
-    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
-
-    /*
-    let mut control = match p.control.borrow_state() {
-        BorrowState::Unused => p.control.borrow_mut(),
-        _ => { println!("cannot borrow control"); return; }
-    };
-    */
-
-    /*
-    let (id, prop) = if let Some(o) = control.get_selected_object(){
-        let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path);
-        (o.read().unwrap().id.clone(),p)
+    )
+{
+    let path = if let Some(p) = get_str(name) {
+        p
     }
     else {
         return;
     };
-    */
+
+    println!("OPTIONNNNNNNNNN I changed the value {} ", path);
+
+    let (p, container) = get_widget_data(widget_cb_data);
 
     let change = if new == "Some" {
-        container.request_operation_option_to_some(vs)
+        container.request_operation_option_to_some(path)
     }
     else {
         container.request_operation_option_to_none(path)
-        /*
-        if let Some(propget) = prop {
-                let test = *propget;
-            control.request_operation_option_to_none(
-                vs,
-                box test.clone())
-        }
-        else {
-            return
-        }
-        */
     };
-
-    /*
-    match change {
-        operation::Change::DirectChange(s) |
-        operation::Change::Objects(s, _) => {
-            if s == "object/name" {
-                match control.tree {
-                    Some(ref t) =>
-                        match t.borrow_state() {
-                            BorrowState::Writing => {}
-                            _ => {
-                                t.borrow().update_object(&id);
-                            },
-                        },
-                        None => {}
-                };
-            }
-        },
-        _ => {}
-    }
-    */
-
 }
-
-
 
 pub extern fn expand(
     widget_cb_data: *const c_void,
@@ -911,10 +980,8 @@ pub extern fn expand(
 {
     let datachar = data as *const i8;
     let s = unsafe {CStr::from_ptr(datachar).to_bytes()};
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
-    //let mut p : &mut Property = unsafe {mem::transmute(property)};
-    let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
-    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    let (p, container) = get_widget_data(widget_cb_data);
 
     let path = match str::from_utf8(s) {
         Ok(pp) => pp,
@@ -922,12 +989,10 @@ pub extern fn expand(
             panic!("problem with the path");
         }
     };
-
     println!("I expand the value {} ", path);
 
     let vs = make_vec_from_string(&path.to_owned());
 
-    let yep = vs[1..].to_vec();
     println!("expand : {:?}", vs);
 
     let o = match container.get_selected_object() {
@@ -939,7 +1004,7 @@ pub extern fn expand(
     };
 
     let or = o.read().unwrap();
-    match find_property_show(&*or, yep.clone()) {
+    match find_property_show(&*or, vs.clone()) {
         Some(ppp) => {
             //p.create_entries(&*ppp, vs.clone());
             println!("I found and create {:?} ", vs);
@@ -957,16 +1022,12 @@ pub extern fn contract(
     data : *const c_void,
     parent : *const Elm_Object_Item) -> ()
 {
-    //let mut p : &mut Property = unsafe {mem::transmute(property)};
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
-    let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
-    //let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    let (p,_) = get_widget_data(widget_cb_data);
 
     unsafe {
         property_list_nodes_remove(
             p.jk_property_list,
             data as *const c_char
-            //s.unwrap(),
             );
     };
 
@@ -983,12 +1044,7 @@ pub extern fn contract(
 
     p.config.expand.remove(path);
 
-    let vs = make_vec_from_string(&path.to_owned());
-
-    let yep = vs[1..].to_vec();
-    println!("contract : {:?}", vs);
-
-    let clone = p.pv.clone();
+    let clone = p.pv.borrow().clone();
 
     for (key,pv) in &clone {
         println!("cccccccccccccccccontract  start with key '{}' ", key);
@@ -1000,7 +1056,7 @@ pub extern fn contract(
         //if key.as_ref().starts_with(path) && key.as_ref() != path  {
         if starts_with_path {
             println!("yes, '{}' starts with '{}'", key, path);
-            match p.pv.remove(key) {
+            match p.pv.borrow_mut().remove(key) {
                 Some(_) => println!("yes I removed {}", key),
                 None => println!("could not find {}", key)
             }
@@ -1017,8 +1073,10 @@ impl WidgetUpdate for Property
     {
 
         //println!("property update changed {}", name);
+        //
+        let pvs = self.pv.borrow();
 
-        let pv = match self.pv.get(&name.to_owned()) {
+        let pv = match pvs.get(&name.to_owned()) {
             Some(p) => p,
             None => {
                 println!("widget update, could not find {}", name);
@@ -1069,7 +1127,7 @@ pub trait PropertyShow
 {
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>;
@@ -1111,7 +1169,7 @@ impl PropertyShow for f64 {
 
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1124,7 +1182,7 @@ impl PropertyShow for f64 {
                 f.as_ptr(),
                 *self as c_float);
             if pv != ptr::null() {
-                property.pv.insert(field.to_owned(), pv);
+                property.pv.borrow_mut().insert(field.to_owned(), pv);
             }
 
             Some(pv)
@@ -1144,7 +1202,7 @@ impl PropertyShow for String {
 
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1166,7 +1224,7 @@ impl PropertyShow for String {
             }
 
             if pv != ptr::null() {
-                property.pv.insert(field.to_owned(), pv);
+                property.pv.borrow_mut().insert(field.to_owned(), pv);
             }
 
             Some(pv)
@@ -1187,7 +1245,7 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
 
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1215,7 +1273,7 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
 
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1238,7 +1296,7 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
 
                 if pv != ptr::null() {
                     println!("ADDING : {}", field);
-                    property.pv.insert(field.to_owned(), pv);
+                    property.pv.borrow_mut().insert(field.to_owned(), pv);
                 }
 
                 return Some(pv);
@@ -1291,7 +1349,7 @@ impl<T> PropertyShow for resource::ResTT<T>
 {
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1326,7 +1384,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 {
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1362,7 +1420,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                             );
 
                         if pv != ptr::null() {
-                            property.pv.insert(nf.clone(), pv);
+                            property.pv.borrow_mut().insert(nf.clone(), pv);
                         }
 
                         if property.config.expand.contains(nf.as_str()) {
@@ -1417,7 +1475,7 @@ impl PropertyShow for CompData
 {
     fn create_widget(
         &self,
-        property : &mut Property,
+        property : &Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1554,7 +1612,7 @@ impl ui::PropertyShow for Orientation {
 
     fn create_widget(
         &self,
-        property : &mut ui::Property,
+        property : &ui::Property,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const ui::PropertyValue>
@@ -1628,7 +1686,7 @@ macro_rules! property_show_methods(
 
             fn create_widget(
                 &self,
-                property : &mut Property,
+                property : &Property,
                 field : &str,
                 depth : i32,
                 has_container : bool ) -> Option<*const PropertyValue>
@@ -1644,9 +1702,13 @@ macro_rules! property_show_methods(
 
                 if depth > 0 {
                 $(
-                    let s = field.to_owned()
-                    + "/"//.to_owned()
-                    + stringify!($member);//.to_owned();
+                    let s = if field != "" {
+                        field.to_owned()
+                            + "/"
+                            + stringify!($member)
+                    }else {
+                        stringify!($member).to_owned()
+                    };
                     self.$member.create_widget(property, s.as_ref(), depth-1, has_container);
                  )+
                 }
@@ -1711,13 +1773,15 @@ property_show_impl!(transform::Transform,[position,orientation]);
 //property_show_impl!(mesh_render::MeshRender,[mesh,material]);
 property_show_impl!(object::Object,
                      //[name,position,orientation,scale]);
-                     [name,position,orientation,scale,comp_data,comp_lua]);
+                     [name,position,orientation,scale]);//,comp_data,comp_lua]);
 
 property_show_impl!(component::mesh_render::MeshRender,[mesh,material], ShouldUpdate::Mesh);
 property_show_impl!(component::player::Player,[speed]);
 property_show_impl!(component::player::Enemy,[name]);
 property_show_impl!(component::player::Collider,[name]);
 property_show_impl!(armature::ArmaturePath,[name]);
+
+property_show_impl!(scene::Scene,[name]);
 
 fn make_vec_from_string(s : &str) -> Vec<String>
 {

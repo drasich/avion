@@ -3,7 +3,7 @@ use std::mem;
 use std::sync::{RwLock, Arc};
 use std::collections::{LinkedList};
 use std::ptr;
-use std::rc::Rc;
+use std::rc::{Rc,Weak};
 use std::cell::{RefCell, BorrowState};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
@@ -24,7 +24,7 @@ use dormin::geometry;
 use dormin::vec;
 use dormin::scene;
 use dormin::object;
-use ui::{Tree,Property,PropertyConfig,Holder,View,Command,Action};
+use ui::{Tree,Property,RefMut,PropertyUser,PropertyConfig,Holder,View,Command,Action};
 use ui;
 use dormin::factory;
 use operation;
@@ -545,13 +545,20 @@ pub trait Widget
     {
         println!("please implement me");
     }
+
+    fn handle_change_prop(&self, prop_user : RefMut<PropertyUser> , name : &str)
+    {
+        println!("implement handle_change_prop 7777777777777777");
+    }
+
+    fn get_id(&self) -> Uuid;
 }
 
 pub struct WidgetContainer
 {
     pub widgets : Vec<Box<Widget>>,
     pub tree : Option<Box<Tree>>,
-    pub property : Option<Box<Property>>,
+    pub property : Option<Rc<Property>>,
     pub command : Option<Box<Command>>,
     pub action : Option<Box<Action>>,
     views : Vec<Box<View>>,
@@ -569,6 +576,8 @@ pub struct WidgetContainer
     pub scenes : HashMap<String, Rc<RefCell<scene::Scene>>>,
 
     pub name : String,
+
+    pub visible_prop : HashMap<Uuid, Weak<Widget>>
 
 
 }
@@ -667,7 +676,8 @@ impl WidgetContainer
             holder : Rc::new(RefCell::new(Holder { gameview : None })),
             list : box ListWidget { object : None, entries : Vec::new() },
             name : String::from("yoplaboum"),
-            scenes : HashMap::new()
+            scenes : HashMap::new(),
+            visible_prop : HashMap::new()
 
         }
     }
@@ -689,7 +699,8 @@ impl WidgetContainer
                     }
                 };
 
-                if name == "object/name" {
+                //if name == "object/name" {
+                if name == "name" {
                     if let Some(ref t) = self.tree {
                         if widget_origin != t.id {
                             t.update_object(&o.read().unwrap().id);
@@ -724,7 +735,8 @@ impl WidgetContainer
                 let sel = self.get_selected_object();
                 for id in id_list {
 
-                    if name == "object/name" {
+                    //if name == "object/name" {
+                    if name == "name" {
                         if let Some(ref t) = self.tree {
                             if widget_origin != t.id {
                                 t.update_object(id);
@@ -812,7 +824,15 @@ impl WidgetContainer
                     }
                 }
 
-                if sel.len() != 1 {
+                if sel.is_empty() {
+                    if let Some(ref mut p) = self.property {
+                        if let Some(ref s) = self.context.scene {
+                            //p.set_scene(&*s.borrow());
+                            p.set_prop_cell(s.clone(), "scene");
+                        }
+                    }
+                }
+                else if sel.len() != 1 {
                     if let Some(ref mut p) = self.property {
                         if widget_origin != p.id {
                             p.set_nothing();
@@ -826,7 +846,11 @@ impl WidgetContainer
                     if let Some(o) = sel.get(0) {
                         if let Some(ref mut p) = self.property {
                             if widget_origin != p.id {
-                                p.set_object(&*o.read().unwrap());
+                                //p.set_object(&*o.read().unwrap());
+                                let pu = &*o.read().unwrap() as &PropertyUser;
+                                p.set_prop_arc(o.clone(), "object");
+                                self.visible_prop.insert(
+                                        pu.get_id(), Rc::downgrade(p) as Weak<Widget>);
                             }
                         }
                         else {
@@ -951,6 +975,9 @@ impl WidgetContainer
                 let change = self.request_rotation(r);
                 self.handle_change(&change, widget_origin);
             },
+            operation::Change::Property(ref p, ref name) => {
+                self.handle_change_new(widget_origin, p.clone(), name);
+            },
             _ => {}
         }
 
@@ -1032,7 +1059,17 @@ impl WidgetContainer
             op_data
             );
 
-        let change = self.op_mgr.add(op);
+        /*
+        let opp = operation::OldNew {
+            object : self.get_selected_objects()[0].clone(),
+            old : box 1f64,
+            new : box 1f64,
+        };
+        let change = self.op_mgr.add_with_trait(box opp);
+        */
+
+        //let change = self.op_mgr.add(op);
+        let change = self.op_mgr.add_with_trait(box op);
         change
 
         //let s = join_string(&name);
@@ -1051,7 +1088,7 @@ impl WidgetContainer
 
     pub fn request_operation_old_new<T : Any+PartialEq>(
         &mut self,
-        name : Vec<String>,
+        name : &str,
         old : Box<T>,
         new : Box<T>) -> operation::Change
     {
@@ -1060,14 +1097,36 @@ impl WidgetContainer
         }
 
         self.request_operation(
-            name,
+            make_vec_from_str(name),
             operation::OperationData::OldNew(old,new)
             )
     }
 
+    pub fn request_operation_property_old_new<T : Any+PartialEq>(
+        &mut self,
+        property : RefMut<PropertyUser>,
+        name : &str,
+        old : Box<T>,
+        new : Box<T>) -> operation::Change
+    {
+        if *old == *new {
+            return operation::Change::None;
+        }
+
+        let op = operation::OldNew::new(
+            property,
+            String::from(name),
+            old,
+            new
+            );
+
+        let change = self.op_mgr.add_with_trait(box op);
+        change
+    }
+
     pub fn request_operation_old_new_enum<T : Any+PartialEq>(
         &mut self,
-        name : Vec<String>,
+        name : &str,
         new : Box<T>) -> operation::Change
     {
         /*
@@ -1077,14 +1136,11 @@ impl WidgetContainer
         */
         println!("TODO TODO clean");
 
-
-        let path = join_string(&name);
-
         let objs = self.get_selected_objects().to_vec();
 
         let mut olds = Vec::new();
         for o in &objs {
-            let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path.as_str());
+            let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(name);
             if let Some(pp) = p {
                 olds.push(pp);
             }
@@ -1094,7 +1150,7 @@ impl WidgetContainer
 
         let op = operation::Operation::new(
             objs,
-            name.clone(),
+            make_vec_from_str(name),
             //operation::OperationData::OldNewVec(olds, new)
             operation::OperationData::OldNew(yep, new)
             );
@@ -1107,7 +1163,7 @@ impl WidgetContainer
 
     pub fn request_direct_change(
         &mut self,
-        name : Vec<String>,
+        name : &str,
         new : &Any) -> operation::Change
     {
         println!("request direct change {:?}", name);
@@ -1119,13 +1175,12 @@ impl WidgetContainer
             }
         };
 
-        let vs = name[1..].to_vec();
+        //let vs = name[1..].to_vec();
 
         //o.write().set_property_hier(vs, new);
-        o.write().unwrap().test_set_property_hier(join_string(&vs).as_ref(), new);
+        o.write().unwrap().test_set_property_hier(name, new);
 
-        let s = join_string(&name);
-        return operation::Change::DirectChange(s);
+        return operation::Change::DirectChange(String::from(name));
     }
 
     pub fn request_operation_option_to_none(
@@ -1160,7 +1215,7 @@ impl WidgetContainer
 
     pub fn request_operation_option_to_some(
         &mut self,
-        name : Vec<String>) -> operation::Change
+        name : &str) -> operation::Change
     {
         /*
         let n = if new == "None" {
@@ -1177,7 +1232,7 @@ impl WidgetContainer
         //todo chris
         //return operation::Change::None;
         self.request_operation(
-            name,
+            make_vec_from_str(name),
             operation::OperationData::ToSome
             )
     }
@@ -1625,6 +1680,33 @@ impl WidgetContainer
             false
         }
     }
+
+    pub fn handle_change_new(&self, widget_id : Uuid, p : RefMut<PropertyUser>, name : &str)
+    {
+        println!("handle change newwwwwwwwwwwwwwwwwwwwwwwwwwwwwww ");
+        let pid = match p {
+            RefMut::Arc(ref a) => a.read().unwrap().get_id(),
+            RefMut::Cell(ref c) => c.borrow().get_id()
+        };
+
+        if let Some(w) = self.visible_prop.get(&pid) {
+            println!("handle change newwwwwwwwwwwwwwwwwwwwwwwwwwwwwww  : found a property");
+
+            //for w in &self.widgets {
+            if let Some(w) = w.upgrade() {
+                if w.get_id() == widget_id {
+                    println!("same id as the widget so get out");
+                    //continue;
+                }
+
+                w.handle_change_prop(p.clone(), name);
+            }
+            //}
+        }
+        else {
+            println!("handle change newwwwwwwwwwwwwwwwwwwwwwwwwwwwwww  : NONONO widget");
+        }
+    }
 }
 
 //Send to c with mem::transmute(box data)  and free in c
@@ -1721,6 +1803,19 @@ fn join_string(path : &Vec<String>) -> String
     }
 
     s
+}
+
+fn make_vec_from_str(s : &str) -> Vec<String>
+{
+    let v: Vec<&str> = s.split('/').collect();
+
+    let mut vs = Vec::new();
+    for i in &v
+    {
+        vs.push(i.to_string());
+    }
+
+    vs
 }
 
 pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)
