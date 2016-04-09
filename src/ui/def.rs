@@ -1681,14 +1681,12 @@ impl WidgetContainer
 
     pub fn handle_change_new(&self, widget_id : Uuid, p : RefMut<PropertyUser>, name : &str)
     {
-        println!("handle change newwwwwwwwwwwwwwwwwwwwwwwwwwwwwww ");
         let pid = match p {
             RefMut::Arc(ref a) => a.read().unwrap().get_id(),
             RefMut::Cell(ref c) => c.borrow().get_id()
         };
 
         if let Some(w) = self.visible_prop.get(&pid) {
-            println!("handle change newwwwwwwwwwwwwwwwwwwwwwwwwwwwwww  : found a property");
 
             //for w in &self.widgets {
             if let Some(w) = w.upgrade() {
@@ -1701,8 +1699,11 @@ impl WidgetContainer
             }
             //}
         }
-        else {
-            println!("handle change newwwwwwwwwwwwwwwwwwwwwwwwwwwwwww  : NONONO widget");
+
+        if name == "name" {
+            if let Some(ref tree) = self.tree {
+                tree.handle_change_prop(p.clone(), name);
+            }
         }
     }
 }

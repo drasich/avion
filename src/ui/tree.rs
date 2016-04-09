@@ -14,6 +14,7 @@ use dormin::scene;
 use dormin::object;
 use ui::Window;
 use ui::Master;
+use ui::{RefMut,PropertyUser};
 use ui;
 
 #[repr(C)]
@@ -418,6 +419,22 @@ impl ui::Widget for Tree
     fn get_id(&self) -> Uuid
     {
         self.id
+    }
+
+    fn handle_change_prop(&self, prop_user : RefMut<PropertyUser> , name : &str)
+    {
+        if name == "name" {
+        match prop_user {
+            RefMut::Arc(ref a) => {
+                let prop = &*a.read().unwrap();
+                self.update_object(&prop.as_id().get_id());
+            },
+            RefMut::Cell(ref c) => {
+                let prop = &*c.borrow();
+                self.update_object(&prop.as_id().get_id());
+            }
+        }
+        }
     }
 }
 

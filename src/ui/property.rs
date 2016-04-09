@@ -672,7 +672,6 @@ impl ui::Widget for Property
 
     fn handle_change_prop(&self, prop_user : RefMut<PropertyUser> , name : &str)
     {
-        println!("PROPRORPRORPRORPRORPRORP");
         match prop_user {
             RefMut::Arc(ref a) => {
                 let prop = &*a.read().unwrap();
