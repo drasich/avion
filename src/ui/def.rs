@@ -699,7 +699,6 @@ impl WidgetContainer
                     }
                 };
 
-                //if name == "object/name" {
                 if name == "name" {
                     if let Some(ref t) = self.tree {
                         if widget_origin != t.id {
@@ -735,7 +734,6 @@ impl WidgetContainer
                 let sel = self.get_selected_object();
                 for id in id_list {
 
-                    //if name == "object/name" {
                     if name == "name" {
                         if let Some(ref t) = self.tree {
                             if widget_origin != t.id {
@@ -743,7 +741,7 @@ impl WidgetContainer
                             }
                         };
                     }
-                    else if name.starts_with("object/comp_data/MeshRender") {
+                    else if name.starts_with("comp_data/MeshRender") {
                         let scene = self.get_scene();
                         let oob = if let Some(ref sc) = scene {
                             let s = sc.borrow();
@@ -898,7 +896,7 @@ impl WidgetContainer
                     let context = &self.context;;
                     match *op {
                         dragger::Operation::Translation(v) => {
-                            let prop = vec!["object".to_owned(),"position".to_owned()];
+                            let prop = vec!["position".to_owned()];
                             let cxpos = context.saved_positions.clone();
                             let mut saved_positions = Vec::with_capacity(cxpos.len());
                             for p in &cxpos {
@@ -916,7 +914,7 @@ impl WidgetContainer
                             (prop, change)
                         },
                         dragger::Operation::Scale(v) => {
-                            let prop = vec!["object".to_owned(),"scale".to_owned()];
+                            let prop = vec!["scale".to_owned()];
                             let cxsc = context.saved_scales.clone();
                             let mut saved_scales = Vec::with_capacity(cxsc.len());
                             for p in &cxsc {
@@ -934,7 +932,7 @@ impl WidgetContainer
                             (prop, change)
                         },
                         dragger::Operation::Rotation(q) => {
-                            let prop = vec!["object".to_owned(),"orientation".to_owned()];
+                            let prop = vec!["orientation".to_owned()];
                             let cxoris = context.saved_oris.clone();
                             let mut saved_oris = Vec::with_capacity(cxoris.len());
                             for p in &cxoris {
@@ -1498,7 +1496,7 @@ impl WidgetContainer
             i = i+1;
         }
 
-        return operation::Change::DirectChange("object/position".to_owned());
+        return operation::Change::DirectChange("position".to_owned());
     }
 
     fn request_scale(
@@ -1515,7 +1513,7 @@ impl WidgetContainer
             i = i+1;
         }
 
-        return operation::Change::DirectChange("object/scale".to_owned());
+        return operation::Change::DirectChange("scale".to_owned());
     }
 
     fn request_rotation(
@@ -1531,7 +1529,7 @@ impl WidgetContainer
             i = i+1;
         }
 
-        return operation::Change::DirectChange("object/orientation".to_owned());
+        operation::Change::DirectChange("orientation".to_owned())
     }
 
 
