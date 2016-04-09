@@ -416,7 +416,7 @@ impl Control
             camera.object.write().unwrap().position = p + t;
         }
 
-        return operation::Change::None;
+        return operation::Change::DraggerChange;
     }
 
     /*

@@ -1773,7 +1773,7 @@ property_show_impl!(transform::Transform,[position,orientation]);
 //property_show_impl!(mesh_render::MeshRender,[mesh,material]);
 property_show_impl!(object::Object,
                      //[name,position,orientation,scale]);
-                     [name,position,orientation,scale]);//,comp_data,comp_lua]);
+                     [name,position,orientation,scale,comp_data,comp_lua]);
 
 property_show_impl!(component::mesh_render::MeshRender,[mesh,material], ShouldUpdate::Mesh);
 property_show_impl!(component::player::Player,[speed]);

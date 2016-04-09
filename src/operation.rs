@@ -160,6 +160,7 @@ pub enum Change
     Undo,
     Redo,
     CameraChange,
+    DraggerChange,
 
     All
 }
