@@ -670,18 +670,9 @@ impl ui::Widget for Property
         self.id
     }
 
-    fn handle_change_prop(&self, prop_user : RefMut<PropertyUser> , name : &str)
+    fn handle_change_prop(&self, prop_user : &PropertyUser, name : &str)
     {
-        match prop_user {
-            RefMut::Arc(ref a) => {
-                let prop = &*a.read().unwrap();
-                self.update_object_property(prop.as_show(), name);
-            },
-            RefMut::Cell(ref c) => {
-                let prop = &*c.borrow();
-                self.update_object_property(prop.as_show(), name);
-            }
-        }
+        self.update_object_property(prop_user.as_show(), name);
     }
 }
 

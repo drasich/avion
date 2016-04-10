@@ -546,7 +546,7 @@ pub trait Widget
         println!("please implement me");
     }
 
-    fn handle_change_prop(&self, prop_user : RefMut<PropertyUser> , name : &str)
+    fn handle_change_prop(&self, prop_user : &PropertyUser , name : &str)
     {
         println!("implement handle_change_prop 7777777777777777");
     }
@@ -974,7 +974,16 @@ impl WidgetContainer
                 self.handle_change(&change, widget_origin);
             },
             operation::Change::Property(ref p, ref name) => {
-                self.handle_change_new(widget_origin, p.clone(), name);
+                match *p {
+                    RefMut::Arc(ref a) => {
+                        let prop = &*a.read().unwrap();
+                        self.handle_change_new(widget_origin, prop, name);
+                    },
+                    RefMut::Cell(ref c) => {
+                        let prop = &*c.borrow();
+                        self.handle_change_new(widget_origin, prop, name);
+                    }
+                }
             },
             _ => {}
         }
@@ -1679,12 +1688,9 @@ impl WidgetContainer
         }
     }
 
-    pub fn handle_change_new(&self, widget_id : Uuid, p : RefMut<PropertyUser>, name : &str)
+    pub fn handle_change_new(&self, widget_id : Uuid, p : &PropertyUser, name : &str)
     {
-        let pid = match p {
-            RefMut::Arc(ref a) => a.read().unwrap().get_id(),
-            RefMut::Cell(ref c) => c.borrow().get_id()
-        };
+        let pid = p.get_id();
 
         if let Some(w) = self.visible_prop.get(&pid) {
 
@@ -1695,14 +1701,14 @@ impl WidgetContainer
                     //continue;
                 }
 
-                w.handle_change_prop(p.clone(), name);
+                w.handle_change_prop(p, name);
             }
             //}
         }
 
         if name == "name" {
             if let Some(ref tree) = self.tree {
-                tree.handle_change_prop(p.clone(), name);
+                tree.handle_change_prop(p, name);
             }
         }
     }
