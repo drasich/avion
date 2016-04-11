@@ -1093,6 +1093,7 @@ impl WidgetContainer
         self.op_mgr.redo()
     }
 
+    /*
     pub fn request_operation_old_new<T : Any+PartialEq>(
         &mut self,
         name : &str,
@@ -1108,6 +1109,7 @@ impl WidgetContainer
             operation::OperationData::OldNew(old,new)
             )
     }
+    */
 
     pub fn request_operation_property_old_new<T : Any+PartialEq>(
         &mut self,
@@ -1131,6 +1133,25 @@ impl WidgetContainer
         change
     }
 
+    pub fn request_operation_property_old_new_dontcheckequal(
+        &mut self,
+        property : RefMut<PropertyUser>,
+        name : &str,
+        old : Box<Any>,
+        new : Box<Any>) -> operation::Change
+    {
+        let op = operation::OldNew::new(
+            property,
+            String::from(name),
+            old,
+            new
+            );
+
+        let change = self.op_mgr.add_with_trait(box op);
+        change
+    }
+
+    /*
     pub fn request_operation_old_new_enum<T : Any+PartialEq>(
         &mut self,
         name : &str,
@@ -1164,8 +1185,8 @@ impl WidgetContainer
 
         let change = self.op_mgr.add(op);
         change
-
     }
+    */
 
 
     pub fn request_direct_change(

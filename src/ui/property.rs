@@ -279,12 +279,12 @@ impl PropertyConfig
     }
 }
 
-pub trait PropertyUserId
+pub trait PropertyId
 {
     fn get_id(&self) -> uuid::Uuid;
 }
 
-impl PropertyUserId for object::Object
+impl PropertyId for object::Object
 {
     fn get_id(&self) -> uuid::Uuid
     {
@@ -292,7 +292,7 @@ impl PropertyUserId for object::Object
     }
 }
 
-impl PropertyUserId for scene::Scene
+impl PropertyId for scene::Scene
 {
     fn get_id(&self) -> uuid::Uuid
     {
@@ -301,13 +301,15 @@ impl PropertyUserId for scene::Scene
 }
 
 
-pub trait PropertyUser : property::PropertyWrite + PropertyShow + PropertyUserId {
+pub trait PropertyUser : property::PropertyWrite + property::PropertyGet + PropertyShow + PropertyId {
     fn as_show(&self) -> &PropertyShow;
     fn as_write(&self) -> &property::PropertyWrite;
-    fn as_id(&self) -> &PropertyUserId;
+    fn as_id(&self) -> &PropertyId;
+    fn as_get(&self) -> &property::PropertyGet;
 }
 
-impl<T: property::PropertyWrite + PropertyShow + PropertyUserId > PropertyUser for T {
+impl<T: property::PropertyWrite + property::PropertyGet + PropertyShow + PropertyId > PropertyUser for T {
+
     fn as_show(&self) -> &PropertyShow
     {
         self
@@ -318,7 +320,12 @@ impl<T: property::PropertyWrite + PropertyShow + PropertyUserId > PropertyUser f
         self
     }
 
-    fn as_id(&self) -> &PropertyUserId
+    fn as_get(&self) -> &property::PropertyGet
+    {
+        self
+    }
+
+    fn as_id(&self) -> &PropertyId
     {
         self
     }
@@ -897,10 +904,14 @@ fn changed_set<T : Any+Clone+PartialEq>(
             }
             else
             {
+                println!("property widget doesn't seem to have a property set to it");
+                operation::Change::None
+                /*
                 container.request_operation_old_new(
                     path,
                     box oldd.clone(),
                     box new.clone())
+                    */
             }
         },
         _ => {
@@ -929,9 +940,36 @@ fn changed_enum<T : Any+Clone+PartialEq>(
     let (p, container) = get_widget_data(widget_data);
 
     let change = {
+        /*
         container.request_operation_old_new_enum(
             path,
             box new.clone())
+            */
+
+        if let Some(ref cur) = *p.current.borrow() {
+
+            let option = match *cur {
+                RefMut::Arc(ref a) => a.read().unwrap().get_property_hier(path),
+                RefMut::Cell(ref c) => c.borrow().get_property_hier(path)
+            };
+
+            if let Some(old) = option {
+                container.request_operation_property_old_new_dontcheckequal(
+                    (*cur).clone(),
+                    path,
+                    old,
+                    box new.clone())
+            }
+            else {
+                operation::Change::None
+            }
+        }
+        else
+        {
+            println!("property widget doesn't seem to have a property set to it");
+            operation::Change::None
+        }
+
     };
 
     container.handle_change(&change, p.id);
