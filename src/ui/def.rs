@@ -1066,21 +1066,8 @@ impl WidgetContainer
             op_data
             );
 
-        /*
-        let opp = operation::OldNew {
-            object : self.get_selected_objects()[0].clone(),
-            old : box 1f64,
-            new : box 1f64,
-        };
-        let change = self.op_mgr.add_with_trait(box opp);
-        */
-
-        //let change = self.op_mgr.add(op);
         let change = self.op_mgr.add_with_trait(box op);
         change
-
-        //let s = join_string(&name);
-        //return operation::Change::Objects(s,self.context.borrow().get_selected_ids());
     }
 
     pub fn undo(&mut self) -> operation::Change
@@ -1092,24 +1079,6 @@ impl WidgetContainer
     {
         self.op_mgr.redo()
     }
-
-    /*
-    pub fn request_operation_old_new<T : Any+PartialEq>(
-        &mut self,
-        name : &str,
-        old : Box<T>,
-        new : Box<T>) -> operation::Change
-    {
-        if *old == *new {
-            return operation::Change::None;
-        }
-
-        self.request_operation(
-            make_vec_from_str(name),
-            operation::OperationData::OldNew(old,new)
-            )
-    }
-    */
 
     pub fn request_operation_property_old_new<T : Any+PartialEq>(
         &mut self,
@@ -1151,118 +1120,45 @@ impl WidgetContainer
         change
     }
 
-    /*
-    pub fn request_operation_old_new_enum<T : Any+PartialEq>(
+    pub fn request_direct_change_property(
         &mut self,
-        name : &str,
-        new : Box<T>) -> operation::Change
-    {
-        /*
-        if *old == *new {
-            return operation::Change::None;
-        }
-        */
-        println!("TODO TODO clean");
-
-        let objs = self.get_selected_objects().to_vec();
-
-        let mut olds = Vec::new();
-        for o in &objs {
-            let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(name);
-            if let Some(pp) = p {
-                olds.push(pp);
-            }
-        }
-
-        let yep = olds.remove(0);
-
-        let op = operation::Operation::new(
-            objs,
-            make_vec_from_str(name),
-            //operation::OperationData::OldNewVec(olds, new)
-            operation::OperationData::OldNew(yep, new)
-            );
-
-        let change = self.op_mgr.add(op);
-        change
-    }
-    */
-
-
-    pub fn request_direct_change(
-        &mut self,
+        property : &mut PropertyUser,
         name : &str,
         new : &Any) -> operation::Change
     {
         println!("request direct change {:?}", name);
-        let o = match self.get_selected_object() {
-            Some(ob) => ob,
-            None => {
-                println!("direct change, no objects selected");
-                return operation::Change::None;
-            }
-        };
-
-        //let vs = name[1..].to_vec();
-
-        //o.write().set_property_hier(vs, new);
-        o.write().unwrap().test_set_property_hier(name, new);
-
-        return operation::Change::DirectChange(String::from(name));
+        property.test_set_property_hier(name, new);
+        operation::Change::DirectChange(String::from(name))
     }
 
     pub fn request_operation_option_to_none(
         &mut self,
-        path : &str)
+        property : RefMut<PropertyUser>,
+        path : &str,
+        old : Box<Any>,
+        )
         -> operation::Change
     {
-        let v: Vec<&str> = path.split('/').collect();
+        let op = operation::ToNone::new(
+            property,
+            String::from(path),
+            old);
 
-        let mut vs = Vec::new();
-        for i in &v
-        {
-            vs.push(i.to_string());
-        }
-
-        let  prop = if let Some(o) = self.get_selected_object(){
-            let p : Option<Box<Any>> = o.read().unwrap().get_property_hier(path);
-            match p {
-                Some(pp) => pp,
-                None => return operation::Change::None
-            }
-        }
-        else {
-            return operation::Change::None;
-        };
-
-        self.request_operation(
-            vs,
-            operation::OperationData::ToNone(prop)
-            )
+        let change = self.op_mgr.add_with_trait(box op);
+        change
     }
 
     pub fn request_operation_option_to_some(
         &mut self,
+        property : RefMut<PropertyUser>,
         name : &str) -> operation::Change
     {
-        /*
-        let n = if new == "None" {
-            None
-        }
-        else {
-            //let r : T = resource::Create::create("yep");
-            //Some(r)
-            None
-        };
-        */
+        let op = operation::ToSome::new(
+            property,
+            String::from(name));
 
-
-        //todo chris
-        //return operation::Change::None;
-        self.request_operation(
-            make_vec_from_str(name),
-            operation::OperationData::ToSome
-            )
+        let change = self.op_mgr.add_with_trait(box op);
+        change
     }
 
     pub fn request_operation_vec_add(

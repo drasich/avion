@@ -27,8 +27,7 @@ pub trait OperationTrait
 
 pub enum OperationData
 {
-    OldNew(Box<Any>, Box<Any>),
-    ToNone(Box<Any>),
+    //ToNone(Box<Any>),
     ToSome,
     VecAdd(usize),
     VecDel(usize, Box<Any>),
@@ -131,6 +130,110 @@ impl OperationTrait for OldNew
     }
 }
 
+pub struct ToNone{
+    pub object : RefMut<PropertyUser>,
+    pub name : String,
+    pub old : Box<Any>,
+}
+
+impl ToNone
+{
+    pub fn new(
+        object : RefMut<PropertyUser>,
+        name : String,
+        old : Box<Any>
+        ) -> ToNone
+    {
+        ToNone{
+            object : object,
+            name : name,
+            old : old,
+        }
+    }
+}
+
+impl OperationTrait for ToNone
+{
+    fn apply(&self) -> Change
+    {
+        println!("TO NONE operation set property hier {:?}", self.name);
+        match self.object {
+            RefMut::Arc(ref a) => {
+                a.write().unwrap().set_property_hier(self.name.as_ref(), property::WriteValue::None);
+            },
+            RefMut::Cell(ref c) => { 
+                c.borrow_mut().set_property_hier(self.name.as_ref(), property::WriteValue::None);
+            }
+        }
+
+        Change::Property(self.object.clone(), self.name.clone())
+    }
+
+    fn undo(&self) -> Change
+    {
+        match self.object {
+            RefMut::Arc(ref a) => {
+                a.write().unwrap().test_set_property_hier(self.name.as_ref(), &*self.old);
+            },
+            RefMut::Cell(ref c) => { 
+                c.borrow_mut().test_set_property_hier(self.name.as_ref(), &*self.old);
+            }
+        }
+
+        Change::Property(self.object.clone(), self.name.clone())
+    }
+}
+
+pub struct ToSome{
+    pub object : RefMut<PropertyUser>,
+    pub name : String,
+}
+
+impl ToSome
+{
+    pub fn new(
+        object : RefMut<PropertyUser>,
+        name : String
+        ) -> ToSome
+    {
+        ToSome{
+            object : object,
+            name : name,
+        }
+    }
+}
+
+impl OperationTrait for ToSome
+{
+    fn apply(&self) -> Change
+    {
+        println!("TO Some operation set property hier {:?}", self.name);
+        match self.object {
+            RefMut::Arc(ref a) => {
+                a.write().unwrap().set_property_hier(self.name.as_ref(), property::WriteValue::Some);
+            },
+            RefMut::Cell(ref c) => { 
+                c.borrow_mut().set_property_hier(self.name.as_ref(), property::WriteValue::Some);
+            }
+        }
+
+        Change::Property(self.object.clone(), self.name.clone())
+    }
+
+    fn undo(&self) -> Change
+    {
+        match self.object {
+            RefMut::Arc(ref a) => {
+                a.write().unwrap().set_property_hier(self.name.as_ref(), property::WriteValue::None);
+            },
+            RefMut::Cell(ref c) => { 
+                c.borrow_mut().set_property_hier(self.name.as_ref(), property::WriteValue::None);
+            }
+        }
+
+        Change::Property(self.object.clone(), self.name.clone())
+    }
+}
 
 
 
@@ -215,17 +318,7 @@ impl OperationTrait for Operation
     fn apply(&self) -> Change
     {
         match self.change {
-            OperationData::OldNew(_,ref new) => {
-                println!("operation set property hier {:?}", self.name);
-                let s = join_string(&self.name);
-                let mut ids = LinkedList::new();
-                for o in &self.objects {
-                    let mut ob = o.write().unwrap();
-                    ob.test_set_property_hier(s.as_ref(), &**new);
-                    ids.push_back(ob.id.clone());
-                }
-                return Change::Objects(s, ids);
-            },
+            /*
             OperationData::ToNone(_) => {
                 println!("to none, apply,  operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
@@ -237,6 +330,7 @@ impl OperationTrait for Operation
                 }
                 return Change::Objects(s, ids);
             },
+            */
             OperationData::VecAdd(i) => {
                 println!("vec add operation {:?}, {}", self.name,i);
                 let s = join_string(&self.name);
@@ -329,16 +423,7 @@ impl OperationTrait for Operation
     fn undo(&self) -> Change
     {
         match self.change {
-            OperationData::OldNew(ref old,_) => {
-                let s = join_string(&self.name);
-                let mut ids = LinkedList::new();
-                for o in &self.objects {
-                    let mut ob = o.write().unwrap();
-                    ob.test_set_property_hier(s.as_ref(), &**old);
-                    ids.push_back(ob.id.clone());
-                }
-                return Change::Objects(s, ids);
-            },
+            /*
             OperationData::ToNone(ref old) => {
                 println!("to none, undo, operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
@@ -350,6 +435,7 @@ impl OperationTrait for Operation
                 }
                 return Change::Objects(s, ids);
             },
+            */
             OperationData::ToSome => {
                 println!("to some, undo,  operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);

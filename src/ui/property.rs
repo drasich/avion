@@ -915,7 +915,18 @@ fn changed_set<T : Any+Clone+PartialEq>(
             }
         },
         _ => {
-            container.request_direct_change(path, new)
+            if let Some(ref cur) = *p.current.borrow() {
+                match *cur {
+                    RefMut::Arc(ref a) => 
+                        container.request_direct_change_property(&mut *a.write().unwrap(),path,new),
+                        RefMut::Cell(ref c) => 
+                            container.request_direct_change_property(&mut *c.borrow_mut(),path,new)
+                }
+            }
+            //container.request_direct_change(path, new)
+            else {
+                operation::Change::None
+            }
         }
     };
 
@@ -993,12 +1004,35 @@ fn changed_option(
 
     let (p, container) = get_widget_data(widget_cb_data);
 
-    let change = if new == "Some" {
-        container.request_operation_option_to_some(path)
+    let change = if let Some(ref cur) = *p.current.borrow() {
+
+        if new == "Some" {
+            container.request_operation_option_to_some(cur.clone(), path)
+        }
+        else {
+
+            let option = match *cur {
+                RefMut::Arc(ref a) => a.read().unwrap().get_property_hier(path),
+                RefMut::Cell(ref c) => c.borrow().get_property_hier(path)
+            };
+
+            if let Some(old) = option {
+                container.request_operation_option_to_none(
+                    (*cur).clone(),
+                    path,
+                    old)
+            }
+            else {
+                operation::Change::None
+            }
+            //container.request_operation_option_to_none(path)
+        }
     }
     else {
-        container.request_operation_option_to_none(path)
+        operation::Change::None
     };
+
+    container.handle_change(&change, p.id);
 }
 
 pub extern fn expand(
