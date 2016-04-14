@@ -495,7 +495,7 @@ impl WindowConfig {
         let mut file = String::new();
         let wc : WindowConfig = match File::open(&Path::new("windowconf")){
             Ok(ref mut f) => {
-                f.read_to_string(&mut file);
+                f.read_to_string(&mut file).unwrap();
                 json::decode(file.as_ref()).unwrap()
             },
             _ => {
@@ -1090,6 +1090,18 @@ impl WidgetContainer
         if *old == *new {
             return operation::Change::None;
         }
+        
+        match (&*old as &Any).downcast_ref::<f64>() {
+            Some(v) => println!("****************     {}",*v),
+            None => {println!("cannot downcast");}
+        }
+
+        match (&*new as &Any).downcast_ref::<f64>() {
+            Some(v) => println!("****************  nnnnnew    {}",*v),
+            None => {println!("cannot downcast");}
+        }
+
+
 
         let op = operation::OldNew::new(
             property,
@@ -1413,7 +1425,7 @@ impl WidgetContainer
         translation : vec::Vec3) -> operation::Change
     {
         let sp = self.context.saved_positions.clone();
-        let mut obs = self.get_selected_objects();
+        let obs = self.get_selected_objects();
 
         let mut i = 0;
         for o in obs {
@@ -1430,7 +1442,7 @@ impl WidgetContainer
         scale : vec::Vec3) -> operation::Change
     {
         let sp = self.context.saved_scales.clone();
-        let mut obs = self.get_selected_objects();
+        let obs = self.get_selected_objects();
 
         let mut i = 0;
         for o in obs {
@@ -1447,7 +1459,7 @@ impl WidgetContainer
         rotation : vec::Quat) -> operation::Change
     {
         let so = self.context.saved_oris.clone();
-        let mut obs = self.get_selected_objects();
+        let obs = self.get_selected_objects();
 
         let mut i = 0;
         for o in obs {
@@ -1474,7 +1486,7 @@ impl WidgetContainer
     {
         let scene = self.scenes.entry(name.clone()).or_insert(
             {
-                let mut ns = self.factory.create_scene(name.as_str());
+                let ns = self.factory.create_scene(name.as_str());
                 Rc::new(RefCell::new(ns))
             }).clone();
 
@@ -1914,11 +1926,10 @@ pub fn scene_rename(container : &mut WidgetContainer, widget_id : Uuid, name : &
         return;
     };
 
-    fs::remove_file(s.borrow().name.as_str());
+    let _ = fs::remove_file(s.borrow().name.as_str());
 
     s.borrow_mut().name = String::from(name);
-    s.borrow().save();
-    
+    s.borrow().save(); 
 
     /*
     let addob = container.request_operation(

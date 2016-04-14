@@ -28,7 +28,7 @@ pub trait OperationTrait
 pub enum OperationData
 {
     //ToNone(Box<Any>),
-    ToSome,
+    //ToSome,
     VecAdd(usize),
     VecDel(usize, Box<Any>),
     Function(fn(LinkedList<Arc<RwLock<object::Object>>>, Box<Any>), Box<Any>),
@@ -355,6 +355,7 @@ impl OperationTrait for Operation
                 }
                 return Change::Objects(s, ids);
             },
+            /*
             OperationData::ToSome => {
                 println!("to some, apply,  operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
@@ -366,6 +367,7 @@ impl OperationTrait for Operation
                 }
                 return Change::Objects(s, ids);
             },
+            */
             OperationData::Vector(_,ref new) => {
                 let mut i = 0;
                 let s = join_string(&self.name);
@@ -435,7 +437,6 @@ impl OperationTrait for Operation
                 }
                 return Change::Objects(s, ids);
             },
-            */
             OperationData::ToSome => {
                 println!("to some, undo,  operation set property hier {:?}", self.name);
                 let s = join_string(&self.name);
@@ -447,6 +448,7 @@ impl OperationTrait for Operation
                 }
                 return Change::Objects(s, ids);
             },
+            */
             OperationData::VecAdd(i) => {
                 println!("vec add operation undo {:?}, {}", self.name, i);
                 let s = join_string(&self.name);
