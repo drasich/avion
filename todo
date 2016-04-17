@@ -1,4 +1,5 @@
 - check if option some/none in property works correctly
+- press tab in property
 - todo over operations
 - update input for gameview
 - make camera view or just show the gameview while working.
@@ -18,11 +19,11 @@
   unless the scene structure changed we must remove children from the scene
 
 - update material/shader in live, reread files.
-- tree : make another widget to replace genlist tree? : 
+- tree : make another widget to replace genlist tree? :
   change object order?
   change object parent,
-  remove one object with suppr, 
-  remove all seleted object with suppr, 
+  remove one object with suppr,
+  remove all seleted object with suppr,
   rename object
   copy object
 

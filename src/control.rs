@@ -286,7 +286,7 @@ impl Control
                     }
                     else {
                         self.rotate_camera(context, x, y);
-                        let camera = self.camera.borrow();
+                        //let camera = self.camera.borrow();
                         println!("remove from update and move here");
                         //self.dragger.borrow_mut().set_orienation(&*camera);
                     }

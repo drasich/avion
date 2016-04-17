@@ -38,7 +38,7 @@ pub struct TranslationMove
 impl TranslationMove {
     pub fn new(
         start : vec::Vec3,
-        constraint : vec::Vec3, 
+        constraint : vec::Vec3,
         repere : Repere,
         ori : vec::Quat
         ) -> TranslationMove
@@ -106,8 +106,6 @@ impl TranslationMove {
     {
         let constraint = self.constraint;
         let ori = self.ori;
-
-        println!("constraint : {:?}, ori: {:?}", constraint, ori);
 
         let camup = camera.object.read().unwrap().orientation.rotate_vec3(&vec::Vec3::new(0f64,1f64,0f64));
 
@@ -212,7 +210,7 @@ pub fn create_dragger_translation_group(
         "dragger_y",
         mesh,
         vec::Vec3::new(0f64,1f64,0f64),
-        transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64)), 
+        transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), -90f64)),
         Kind::Translate,
         green,
         Collision::MeshAABox
@@ -224,7 +222,7 @@ pub fn create_dragger_translation_group(
         "dragger_z",
         mesh,
         vec::Vec3::new(0f64,0f64,1f64),
-        transform::Orientation::Quat(vec::Quat::identity()), 
+        transform::Orientation::Quat(vec::Quat::identity()),
         Kind::Translate,
         blue,
         Collision::MeshAABox
@@ -250,7 +248,7 @@ pub fn create_dragger_translation_group(
         mesh_plane,
         vec::Vec3::new(1f64,0f64,1f64),
         transform::Orientation::Quat(
-            vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,0f64,1f64), -90f64)), 
+            vec::Quat::new_axis_angle_deg(vec::Vec3::new(0f64,0f64,1f64), -90f64)),
         Kind::Translate,
         green,
         Collision::MeshAABox
@@ -262,8 +260,8 @@ pub fn create_dragger_translation_group(
         "dragger_yz",
         mesh_plane,
         vec::Vec3::new(0f64,1f64,1f64),
-        //transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), 90f64)), 
-        transform::Orientation::Quat(vec::Quat::identity()), 
+        //transform::Orientation::Quat(vec::Quat::new_axis_angle_deg(vec::Vec3::new(1f64,0f64,0f64), 90f64)),
+        transform::Orientation::Quat(vec::Quat::identity()),
         Kind::Translate,
         blue,
         Collision::MeshAABox

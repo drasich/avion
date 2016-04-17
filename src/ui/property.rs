@@ -479,16 +479,13 @@ impl Property
 
     pub fn update_object_property(&self, object : &PropertyShow, prop : &str)
     {
-        println!("property : {} ", prop);
         // update_widget might add/remove/update self.pv so we have to copy it
         // and check
         let copy = self.pv.borrow().clone();
 
         for (f,pv) in &copy {
-            println!("...... in the copy : {}", f);
             match self.pv.borrow().get(f) {
                 Some(p) => if *p != *pv {
-                    println!("             different so continue");
                     continue
                 },
                 None => continue
@@ -584,7 +581,7 @@ impl Property
                 property_expand(pv);
             }
         }
-        
+
         return pv;
     }
 
@@ -880,7 +877,7 @@ fn changed_set<T : Any+Clone+PartialEq>(
     old : Option<&T>,
     new : &T,
     action : i32
-    ) 
+    )
 {
     let path = if let Some(p) = get_str(name) {
         p
@@ -888,8 +885,6 @@ fn changed_set<T : Any+Clone+PartialEq>(
     else {
         return;
     };
-
-    println!("I changed the value {} ", path);
 
     let (p, container) = get_widget_data(widget_data);
 
@@ -917,9 +912,9 @@ fn changed_set<T : Any+Clone+PartialEq>(
         _ => {
             if let Some(ref cur) = *p.current.borrow() {
                 match *cur {
-                    RefMut::Arc(ref a) => 
+                    RefMut::Arc(ref a) =>
                         container.request_direct_change_property(&mut *a.write().unwrap(),path,new),
-                        RefMut::Cell(ref c) => 
+                        RefMut::Cell(ref c) =>
                             container.request_direct_change_property(&mut *c.borrow_mut(),path,new)
                 }
             }
@@ -945,8 +940,6 @@ fn changed_enum<T : Any+Clone+PartialEq>(
     else {
         return;
     };
-
-    println!("I changed the value {} ", path);
 
     let (p, container) = get_widget_data(widget_data);
 
@@ -999,8 +992,6 @@ fn changed_option(
     else {
         return;
     };
-
-    println!("OPTIONNNNNNNNNN I changed the value {} ", path);
 
     let (p, container) = get_widget_data(widget_cb_data);
 
@@ -1195,7 +1186,7 @@ pub trait PropertyShow
         has_container : bool ) -> Option<*const PropertyValue>;
 
     fn update_widget(&self, pv : *const PropertyValue) {
-        println!("update_widget not implemented for this type");
+        //println!("update_widget not implemented for this type");
     }
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
@@ -1679,7 +1670,7 @@ impl ui::PropertyShow for Orientation {
         depth : i32,
         has_container : bool ) -> Option<*const ui::PropertyValue>
     {
-        println!("...................DEPTH, field, has container  : {}, {}, {}", 
+        println!("...................DEPTH, field, has container  : {}, {}, {}",
                  depth, field, has_container);
         if depth == 0 {
             let type_value = match *self {

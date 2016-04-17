@@ -612,7 +612,7 @@ impl ListWidget
     fn show_list(&mut self, entries : Vec<String>, x : i32, y : i32)
     {
         if let Some(o) = self.object {
-            unsafe { 
+            unsafe {
                 evas_object_show(o);
                 evas_object_move(o, x, y);
                 evas_object_resize(o, 150, 300);
@@ -621,7 +621,7 @@ impl ListWidget
             let cs = util::string_to_cstring(entries);
             self.entries = cs.into_iter().map( |x| x.as_ptr()).collect();
 
-            unsafe { 
+            unsafe {
                 jklist_set_names(o, self.entries.as_ptr() as *const c_void, self.entries.len() as size_t);
             }
         }
@@ -630,7 +630,7 @@ impl ListWidget
     fn show_list_target(&mut self, entries : Vec<String>, target : *const Evas_Object)
     {
         if let Some(o) = self.object {
-            unsafe { 
+            unsafe {
                 elm_hover_target_set(o, target);
                 evas_object_show(o);
                 //evas_object_move(o, x, y);
@@ -640,7 +640,7 @@ impl ListWidget
             let cs = util::string_to_cstring(entries);
             self.entries = cs.into_iter().map( |x| x.as_ptr()).collect();
 
-            unsafe { 
+            unsafe {
                 jklist_set_names(o, self.entries.as_ptr() as *const c_void, self.entries.len() as size_t);
             }
         }
@@ -711,7 +711,6 @@ impl WidgetContainer
                 //else if must_update(&*o.read().unwrap(), name)
                 let ups = must_update(&*o.read().unwrap(), name);
                 for up in &ups {
-                    println!("here I do stuff");
                     if let ui::property::ShouldUpdate::Mesh = *up {
                         let mut ob = o.write().unwrap();
                         let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
@@ -721,7 +720,6 @@ impl WidgetContainer
                         }
                     }
                 }
-                println!("and I am done");
 
                 if let Some(ref p) = self.property {
                     //p.update_object(&*o.read().unwrap(), s);
@@ -1090,7 +1088,7 @@ impl WidgetContainer
         if *old == *new {
             return operation::Change::None;
         }
-        
+
         match (&*old as &Any).downcast_ref::<f64>() {
             Some(v) => println!("****************     {}",*v),
             None => {println!("cannot downcast");}
@@ -1138,7 +1136,6 @@ impl WidgetContainer
         name : &str,
         new : &Any) -> operation::Change
     {
-        println!("request direct change {:?}", name);
         property.test_set_property_hier(name, new);
         operation::Change::DirectChange(String::from(name))
     }
@@ -1652,7 +1649,7 @@ pub struct WidgetCbData
 }
 
 impl Clone for WidgetCbData {
-    fn clone(&self) -> WidgetCbData 
+    fn clone(&self) -> WidgetCbData
     {
         WidgetCbData {
             container : self.container,
@@ -1702,7 +1699,7 @@ pub struct AppCbData
 }
 
 impl Clone for AppCbData {
-    fn clone(&self) -> AppCbData 
+    fn clone(&self) -> AppCbData
     {
         AppCbData {
             master : self.master,
@@ -1815,7 +1812,7 @@ pub fn scene_new(container : &mut WidgetContainer, view_id : Uuid)
             }
             else {
                 s.name.as_ref()
-            };    
+            };
             String::from(old)
         },
         None => String::from("scene/new.scene")
@@ -1867,7 +1864,7 @@ pub extern fn select_list(data : *const c_void, name : *const c_char)
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     let list : &ListWidget = unsafe {mem::transmute(wcb.widget)};
     let container : &mut ui::WidgetContainer = unsafe {mem::transmute(wcb.container)};
-    
+
     let s = unsafe {CStr::from_ptr(name)}.to_str().unwrap();
     println!("selection ..........{},  {}", container.name, s);
     //let scene = container.factory.create_scene(s);
@@ -1889,21 +1886,18 @@ pub extern fn select_list(data : *const c_void, name : *const c_char)
 fn must_update(p : &ui::property::PropertyShow, path : &str) -> Vec<ui::property::ShouldUpdate>
 {
     let vs: Vec<&str> = path.split('/').collect();
-    println!("must update {:?}", vs);
 
     let mut v = Vec::new();
     for i in &vs
     {
         v.push(i.to_string());
     }
-    v = v[1..].to_vec();
 
     let mut r = Vec::new();
 
     while !v.is_empty() {
         let prop = ui::property::find_property_show(p, v.clone());
         if let Some(pp) = prop {
-            println!("do i have to update {:?} ? : {:?}", v, pp.to_update());
             r.push(pp.to_update())
         }
         else {
@@ -1929,7 +1923,7 @@ pub fn scene_rename(container : &mut WidgetContainer, widget_id : Uuid, name : &
     let _ = fs::remove_file(s.borrow().name.as_str());
 
     s.borrow_mut().name = String::from(name);
-    s.borrow().save(); 
+    s.borrow().save();
 
     /*
     let addob = container.request_operation(
