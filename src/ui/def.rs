@@ -1099,8 +1099,6 @@ impl WidgetContainer
             None => {println!("cannot downcast");}
         }
 
-
-
         let op = operation::OldNew::new(
             property,
             String::from(name),

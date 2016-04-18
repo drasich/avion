@@ -1,5 +1,6 @@
 - check if option some/none in property works correctly
-- press tab in property
+- press tab in property : focus
+- resources : instead of writing the name make a selection window (and still be able to write the name)
 - todo over operations
 - update input for gameview
 - make camera view or just show the gameview while working.

@@ -7,7 +7,7 @@ dependencies = [
  "joker-sys 0.1.0 (git+https://github.com/drasich/joker.git)",
  "lazy_static 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "lua 0.2.0 (git+https://github.com/indefini/rust-lua.git)",
+ "lua 0.3.0 (git+https://github.com/indefini/rust-lua.git)",
  "png 0.1.0 (git+https://github.com/indefini/rust-png.git)",
  "rustc-serialize 0.3.16 (git+https://github.com/indefini/rustc-serialize.git)",
  "toml 0.1.27 (git+https://github.com/alexcrichton/toml-rs)",
@@ -38,7 +38,7 @@ dependencies = [
  "cypher-sys 0.1.0 (git+https://github.com/drasich/cypher.git)",
  "lazy_static 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "lua 0.2.0 (git+https://github.com/indefini/rust-lua.git)",
+ "lua 0.3.0 (git+https://github.com/indefini/rust-lua.git)",
  "png 0.1.0 (git+https://github.com/indefini/rust-png.git)",
  "rustc-serialize 0.3.16 (git+https://github.com/indefini/rustc-serialize.git)",
  "toml 0.1.27 (git+https://github.com/alexcrichton/toml-rs)",
@@ -83,8 +83,8 @@ dependencies = [
 
 [[package]]
 name = "lua"
-version = "0.2.0"
-source = "git+https://github.com/indefini/rust-lua.git#fdc77617d2b017fb65cddcf5981a05ed43ab349c"
+version = "0.3.0"
+source = "git+https://github.com/indefini/rust-lua.git#0f24e6e3e8582ad9422e3c65eba2fe006e170713"
 dependencies = [
  "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
