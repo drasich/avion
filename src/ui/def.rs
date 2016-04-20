@@ -24,7 +24,7 @@ use dormin::geometry;
 use dormin::vec;
 use dormin::scene;
 use dormin::object;
-use ui::{Tree,Property,RefMut,PropertyUser,PropertyConfig,Holder,View,Command,Action};
+use ui::{Tree,Property,RefMut,PropertyUser,PropertyConfig,View,Command,Action,GameView};
 use ui;
 use dormin::factory;
 use operation;
@@ -359,7 +359,7 @@ pub struct WidgetConfig
 
 impl WidgetConfig
 {
-    fn new_from_obj(obj : *const Evas_Object) -> WidgetConfig
+    pub fn new_from_obj(obj : *const Evas_Object) -> WidgetConfig
     {
         let (x, y, w, h) = object_geometry_get(obj);
 
@@ -372,7 +372,7 @@ impl WidgetConfig
         }
     }
 
-    fn new() -> WidgetConfig
+    pub fn new() -> WidgetConfig
     {
         WidgetConfig {
             x : 10,
@@ -397,7 +397,8 @@ pub struct WindowConfig
 {
     views: Vec<ViewConfig>,
     property : Option<PropertyConfig>,
-    tree : Option<WidgetConfig>
+    tree : Option<WidgetConfig>,
+    gameview : Option<WidgetConfig>
 }
 
 impl WindowConfig {
@@ -411,6 +412,10 @@ impl WindowConfig {
                 Some(ref p) => Some(p.config.clone())
             },
             tree : match c.tree {
+                None => None,
+                Some(ref t) => Some(t.get_config())
+            },
+            gameview : match c.gameview {
                 None => None,
                 Some(ref t) => Some(t.get_config())
             }
@@ -444,7 +449,8 @@ impl WindowConfig {
         let mut wc = WindowConfig {
             views : Vec::new(),
             property : None,
-            tree : None
+            tree : None,
+            gameview : None
         };
 
         let vc = ViewConfig {
@@ -568,7 +574,7 @@ pub struct WidgetContainer
     //control : Rc<RefCell<control::Control>>
     pub factory : factory::Factory,
     pub op_mgr : operation::OperationManager,
-    pub holder : Rc<RefCell<Holder>>,
+    pub gameview : Option<Box<GameView>>,
     pub menu : Option<Box<Action>>,
 
     pub list : Box<ListWidget>,
@@ -673,7 +679,7 @@ impl WidgetContainer
             resource : Rc::new(resource::ResourceGroup::new()),
             factory : factory::Factory::new(),
             op_mgr : operation::OperationManager::new(),
-            holder : Rc::new(RefCell::new(Holder { gameview : None })),
+            gameview : None,
             list : box ListWidget { object : None, entries : Vec::new() },
             name : String::from("yoplaboum"),
             scenes : HashMap::new(),
@@ -990,7 +996,7 @@ impl WidgetContainer
             view.request_update();
         }
 
-        if let Some(ref gv) = self.holder.borrow().gameview {
+        if let Some(ref gv) = self.gameview {
             gv.request_update();
         }
 
@@ -1534,7 +1540,7 @@ impl WidgetContainer
 
     pub fn play_gameview(&mut self) -> bool
     {
-        if let Some(ref mut gv) = self.holder.borrow_mut().gameview {
+        if let Some(ref mut gv) = self.gameview {
             gv.state = 0;
             true
         }
@@ -1545,7 +1551,7 @@ impl WidgetContainer
 
     pub fn open_gameview(&mut self) -> bool
     {
-        if let Some(ref mut gv) = self.holder.borrow_mut().gameview {
+        if let Some(ref mut gv) = self.gameview {
             gv.set_visible(true);
             true
         }
@@ -1559,7 +1565,7 @@ impl WidgetContainer
     pub fn can_create_gameview(&mut self) ->
         Option<(Rc<RefCell<camera::Camera>>, Rc<RefCell<scene::Scene>>)>
     {
-        if self.holder.borrow_mut().gameview.is_some() {
+        if self.gameview.is_some() {
             return None;
         }
 
@@ -1584,20 +1590,18 @@ impl WidgetContainer
 
     pub fn set_gameview(&mut self, gv : Box<ui::GameView>)
     {
-        let gvo = &mut self.holder.borrow_mut().gameview;
+        let gvo = &mut self.gameview;
         if gvo.is_some() {
             //panic!("cannot start animator");
             return;
         }
-
-        //self.holder.borrow_mut().gameview = Some(gv);
 
         *gvo = Some(gv);
     }
 
     pub fn update_play(&mut self) -> bool
     {
-        if let Some(ref mut gv) = self.holder.borrow_mut().gameview {
+        if let Some(ref mut gv) = self.gameview {
             let was_updated = gv.update();
 
             if was_updated {

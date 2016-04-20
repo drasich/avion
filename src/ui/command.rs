@@ -49,33 +49,6 @@ pub struct Command
     jk_command : *const JkCommand,
 }
 
-#[derive(Clone)]
-pub struct CommandData
-{
-    tree : Rc<RefCell<Box<ui::Tree>>>,
-    property : Rc<RefCell<Box<ui::Property>>>,
-    control : Rc<RefCell<Control>>,
-    holder : Rc<RefCell<ui::view::Holder>>
-}
-
-impl CommandData
-{
-    pub fn new(
-    tree : Rc<RefCell<Box<ui::Tree>>>,
-    property : Rc<RefCell<Box<ui::Property>>>,
-    control : Rc<RefCell<Control>>,
-    holder : Rc<RefCell<ui::view::Holder>>,
-    ) -> CommandData
-    {
-        CommandData {
-            tree : tree,
-            property : property,
-            control : control,
-            holder : holder
-        }
-    }
-}
-
 impl Command
 {
     pub fn new(
@@ -95,17 +68,6 @@ impl Command
     pub fn show(&self)
     {
         unsafe { command_show(self.jk_command); }
-    }
-
-    pub fn add(&self, name : &str, cb : CommandCallback, data : CommandData)
-    {
-        unsafe {
-            command_new(
-                self.jk_command,
-                CString::new(name.as_bytes()).unwrap().as_ptr(),
-                mem::transmute(box data),
-                cb);
-        }
     }
 
     pub fn add_ptr(

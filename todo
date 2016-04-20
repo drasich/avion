@@ -1,3 +1,5 @@
+- open game scene on start if it was open
+- multiple view
 - check if option some/none in property works correctly
 - press tab in property : focus
 - resources : instead of writing the name make a selection window (and still be able to write the name)

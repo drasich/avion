@@ -249,7 +249,6 @@ pub extern fn open_game_view(data : *const c_void)
 
     let gv = create_gameview_window(wcb.container, camera, scene);
 
-    //container.holder.borrow_mut().gameview = Some(gv);
     container.set_gameview(gv);
 }
 
@@ -271,7 +270,6 @@ pub extern fn play_scene(data : *const c_void)
     };
 
     let gv = create_gameview_window(wcb.container, camera, scene);
-    //container.holder.borrow_mut().gameview = Some(gv);
     container.set_gameview(gv);
 
         println!("ADDDDDDDD animator");
@@ -287,7 +285,7 @@ pub extern fn pause_scene(data : *const c_void)
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
 
-    if let Some(ref mut gv) = container.holder.borrow_mut().gameview {
+    if let Some(ref mut gv) = container.gameview {
         gv.state = 1;
         //pause
     }

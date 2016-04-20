@@ -63,11 +63,6 @@ extern {
    pub fn jk_glview_request_update(glview : *const ui::JkGlview);
 }
 
-pub struct Holder
-{
-    pub gameview : Option<Box<GameView>>
-}
-
 pub struct View
 {
     render : Box<Render>,
@@ -79,7 +74,6 @@ pub struct View
     dragger : Rc<RefCell<dragger::DraggerManager>>,
 
     camera : Rc<RefCell<camera::Camera>>,
-    holder : Rc<RefCell<Holder>>,
     pub resource : Rc<resource::ResourceGroup>,
     pub uuid : uuid::Uuid,
 
@@ -123,7 +117,6 @@ impl View
             dragger : dragger,
 
             camera : camera,
-            holder : Rc::new(RefCell::new(Holder { gameview : None })),
             resource : resource,
             uuid : uuid::Uuid::new_v4(),
 
@@ -497,31 +490,6 @@ pub extern fn key_down(
 
                     cmd.clean();
 
-                    /*
-                    let t = if let Some(ref t) = view.tree {
-                        t.clone()
-                    }else {
-                        return;
-                    };
-                    let p = if let Some(ref p) = view.property {
-                        p.clone()
-                    }
-                    else {
-                        return;
-                    };
-
-                    let cd = ui::command::CommandData::new(
-                        t.clone(),
-                        p.clone(),
-                        control_rc.clone(),
-                        view.holder.clone()
-                        );
-
-                    cmd.add("add empty", ui::command::add_empty, cd.clone());
-                    cmd.add("remove selected", ui::command::remove_selected, cd.clone());
-                    cmd.add("set scene camera", ui::command::set_scene_camera, cd.clone());
-                    */
-
                     let scene_actions : &[(&str, extern fn(*const c_void, *const c_char))]
                     = &[
                     ("add empty", ui::command::add_empty),
@@ -646,7 +614,8 @@ pub struct GameView
     scene : Rc<RefCell<scene::Scene>>,
     name : String,
     pub state : i32,
-    input : input::Input
+    input : input::Input,
+    pub config : ui::WidgetConfig
 }
 
 
@@ -685,7 +654,8 @@ impl GameView {
             name : "cacayop".to_owned(),
             state : 0,
             glview : ptr::null(),
-            input : input::Input::new()
+            input : input::Input::new(),
+            config : ui::WidgetConfig::new() //TODO
             //camera : camera todo
         };
 
@@ -734,8 +704,20 @@ impl GameView {
         self.render.resize(w, h);
     }
 
-    pub fn set_visible(&self, b : bool)
+    pub fn visible(&self) -> bool
     {
+        self.config.visible
+    }
+
+    pub fn get_config(&self) -> ui::WidgetConfig
+    {
+        self.config.clone()
+    }
+
+    pub fn set_visible(&mut self, b : bool)
+    {
+        self.config.visible = b;
+
         if b {
             unsafe { ui::evas_object_show(self.window); }
         }
@@ -771,8 +753,8 @@ pub extern fn gv_resize_cb(v : *const c_void, w : c_int, h : c_int) {
 }
 
 pub extern fn gv_close_cb(data : *mut c_void) {
-    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(data)};
-    container.holder.borrow_mut().gameview = None;
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(data)};
+    container.gameview = None;
 }
 
 extern fn gv_key_down(
