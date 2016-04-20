@@ -274,7 +274,7 @@ pub extern fn item_selected(data : *const c_void) -> ()
     let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
-    println!("item_selected ! {} ", o.read().unwrap().name);
+    println!("item_selected ! {}, but this function does nothing for now ", o.read().unwrap().name);
 }
 
 pub extern fn can_expand(data : *const c_void) -> bool
@@ -325,40 +325,13 @@ pub extern fn selected(
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(tsd)};
     let tree : &Tree = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
-    //let tsd : &TreeSelectData = unsafe {mem::transmute(tsd)};
-
-    /*
-    if tsd.tree.borrow_state() == BorrowState::Writing {
-        return;
-    }
-    */
 
     let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
 
-    //TODO
     println!("TODO do the following in widget container 'handle' ");
     container.handle_event(ui::Event::SelectObject(o.clone()), tree.id);
-
-    /*
-    match tsd.control.borrow_state() {
-        BorrowState::Unused => {
-            let mut l = Vec::new();
-            l.push(o.read().unwrap().id.clone());
-            tsd.control.borrow_mut().select_by_id(&mut l);
-        },
-        _ => { println!("control already borrowed : tree sel ->add_ob"); return;}
-    };
-
-    match tsd.property.borrow_state() {
-        BorrowState::Unused => {
-            tsd.property.borrow_mut().set_object(&*o.read().unwrap());
-        },
-        _ => { println!("property already borrowed : tree sel ->add_ob"); return;}
-    };
-    */
-
 }
 
 pub extern fn unselected(

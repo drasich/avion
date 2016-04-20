@@ -502,10 +502,6 @@ impl Property
 
     pub fn update_object(&self, object : &PropertyShow, but : &str)
     {
-        for (f,pv) in &*self.pv.borrow() {
-            println!("UPDATEOBJECt contains property : Val : {}", f);
-        }
-
         // update_widget might add/remove/update self.pv so we have to copy it
         // and check
         let copy = self.pv.borrow().clone();
@@ -525,7 +521,6 @@ impl Property
             let yep = make_vec_from_string(f);
             match find_property_show(object, yep.clone()) {
                 Some(ppp) => {
-                    println!("I find the property : {:?}", yep);
                     ppp.update_widget(*pv);
                 },
                 None => {
@@ -543,7 +538,6 @@ impl Property
         added_name : Option<&str>,
         ) -> *const PropertyValue
     {
-        println!("____added node : {}, container : {}", name, has_container);
         let f = CString::new(name.as_bytes()).unwrap();
         let mut pv = unsafe {
             let test = if has_container {
@@ -586,7 +580,6 @@ impl Property
     }
 
     pub fn add_vec(&self, ps : &PropertyShow, name : &str, len : usize) {
-        println!("____added vec : {}", name);
         let f = CString::new(name.as_bytes()).unwrap();
         let pv = unsafe {
             property_list_vec_add(
@@ -743,7 +736,6 @@ pub extern fn register_change_string(
         }
     };
 
-    println!("register change string,,, the string is {}, action {}", ss, action);
     if action == 1 && old != ptr::null() {
         let oldchar = old as *const i8;
         let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
@@ -810,11 +802,9 @@ pub extern fn register_change_enum(
                 return
             }
         };
-        println!("enum changed with old,  {}, {}, {} ", sso, ss, action);
         changed_enum(widget_cb_data, name, &ss);
     }
     else {
-        println!("enum changed no old,  {}, {} ", ss, action);
         changed_enum(widget_cb_data, name, &ss);
     }
 }
@@ -1042,11 +1032,8 @@ pub extern fn expand(
             panic!("problem with the path");
         }
     };
-    println!("I expand the value {} ", path);
 
     let vs = make_vec_from_string(&path.to_owned());
-
-    println!("expand : {:?}", vs);
 
     let o = match container.get_selected_object() {
         Some(ob) => ob,
@@ -1060,7 +1047,6 @@ pub extern fn expand(
     match find_property_show(&*or, vs.clone()) {
         Some(ppp) => {
             //p.create_entries(&*ppp, vs.clone());
-            println!("I found and create {:?} ", vs);
             ppp.create_widget(p, path , 1, false);
             p.config.expand.insert(path.to_owned());
         },
@@ -1093,14 +1079,11 @@ pub extern fn contract(
             return;}
     };
 
-    println!("I contract the path {} ", path);
-
     p.config.expand.remove(path);
 
     let clone = p.pv.borrow().clone();
 
     for (key,pv) in &clone {
-        println!("cccccccccccccccccontract  start with key '{}' ", key);
         let starts_with_path = {
             let ks : &str = key.as_ref();
             ks.starts_with(path) && ks != path
@@ -1108,7 +1091,6 @@ pub extern fn contract(
 
         //if key.as_ref().starts_with(path) && key.as_ref() != path  {
         if starts_with_path {
-            println!("yes, '{}' starts with '{}'", key, path);
             match p.pv.borrow_mut().remove(key) {
                 Some(_) => println!("yes I removed {}", key),
                 None => println!("could not find {}", key)
@@ -1227,7 +1209,6 @@ impl PropertyShow for f64 {
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
     {
-        println!("adding field : {}", field);
         let f = CString::new(field.as_bytes()).unwrap();
         unsafe {
             let pv = property_list_float_add(
@@ -1260,7 +1241,6 @@ impl PropertyShow for String {
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
     {
-        println!("adding string field : {}", field);
         let f = CString::new(field.as_bytes()).unwrap();
         let v = CString::new(self.as_bytes()).unwrap();
 
@@ -1338,7 +1318,6 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
                 None => "None"
             };
 
-            println!(".......type value : {}", type_value);
             let v = CString::new(type_value.as_bytes()).unwrap();
 
             unsafe {
@@ -1348,7 +1327,6 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
                     v.as_ptr());
 
                 if pv != ptr::null() {
-                    println!("ADDING : {}", field);
                     property.pv.borrow_mut().insert(field.to_owned(), pv);
                 }
 
@@ -1442,8 +1420,6 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
     {
-        println!("___ add vec ::: field::::: {}, {}", field, depth);
-
         if depth < 0 {
             return None;
         }
@@ -1457,15 +1433,13 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
             if self.is_empty() {
                 //add "no item" item
             }
-        println!("create widget VECCCCCCCCCCCCCCCCCCCCCCCC++++++++++++++");
+
             for (n,i) in self.iter().enumerate() {
                 let mut nf = String::from(field);
                 nf.push_str("/");
                 nf.push_str(n.to_string().as_str());
-                println!("___ Vec : try to create widget for {}", nf );
                 if let Some(ref mut pv) = i.create_widget(property, nf.as_str(), depth -1, true) {
                     unsafe {
-                        println!("___ Vec : success, trying to add single vec" );
                         let pv = property_list_single_vec_add(
                             property.jk_property_list,
                             *pv,
@@ -1501,7 +1475,6 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                     None
                 }
                 else {
-                    println!("return something");
                     Some(&self[index] as &PropertyShow)
                 }
             }
@@ -1513,7 +1486,6 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
     }
 
     fn update_widget(&self, pv : *const PropertyValue) {
-        println!("update widget VECCCCCCCCCCCCCCCCCCCCCCCC");
         unsafe { property_list_vec_update(pv, self.len() as c_int); }
         unsafe { property_expand(pv); }
         /*
@@ -1554,8 +1526,6 @@ impl PropertyShow for CompData
         let field = yo.as_ref();
         */
 
-        println!("create widget for COMPDATA ___________________________ depth {}, field {}", depth, field);
-
 
         if depth < 0 {
             return None;
@@ -1579,8 +1549,6 @@ impl PropertyShow for CompData
 
         if depth > 0
         {
-            println!(">>>>>0--> compdata property show for : {}, {}, {}", field, depth, kind );
-
             match *self {
                 CompData::Player(ref p) => {
                     return p.create_widget(property, field, depth, has_container);
@@ -1670,8 +1638,6 @@ impl ui::PropertyShow for Orientation {
         depth : i32,
         has_container : bool ) -> Option<*const ui::PropertyValue>
     {
-        println!("...................DEPTH, field, has container  : {}, {}, {}",
-                 depth, field, has_container);
         if depth == 0 {
             let type_value = match *self {
                 Orientation::AngleXYZ(_) => "AngleXYZ",
@@ -1874,7 +1840,6 @@ pub extern fn panel_move(
     widget_cb_data : *const c_void,
     x : c_int, y : c_int, w : c_int, h : c_int)
 {
-    println!("panel geom !!!!!!!!! {}, {}, {}, {}", x, y, w, h);
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
     let mut p : &mut Property = unsafe {mem::transmute(wcb.widget)};
 
@@ -1901,7 +1866,6 @@ pub extern fn vec_add(
             return;}
     };
 
-    println!("TODO vec add : {}", path);
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     //let p : &Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
@@ -1929,7 +1893,6 @@ pub extern fn vec_del(
             return;}
     };
 
-    println!("TODO vec del : {}", path);
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     //let p : & Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
