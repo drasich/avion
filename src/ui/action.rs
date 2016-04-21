@@ -215,21 +215,6 @@ pub extern fn scene_rename(data : *const c_void, name : *const c_char)
     ui::scene_rename(container, action.view_id, s);
 }
 
-fn create_gameview_window(
-    container : *const ui::WidgetContainer,
-    camera : Rc<RefCell<camera::Camera>>,
-    scene : Rc<RefCell<scene::Scene>>
-    ) -> Box<ui::view::GameView>
-{
-    let win = unsafe {
-        ui::jk_window_new(ui::view::gv_close_cb, mem::transmute(container))
-    };
-
-    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(container)};
-
-    ui::view::GameView::new(win, camera, scene, container.resource.clone())
-}
-
 pub extern fn open_game_view(data : *const c_void)
 {
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
@@ -247,7 +232,7 @@ pub extern fn open_game_view(data : *const c_void)
         return;
     };
 
-    let gv = create_gameview_window(wcb.container, camera, scene);
+    let gv = ui::create_gameview_window(wcb.container, camera, scene);
 
     container.set_gameview(gv);
 }
@@ -269,7 +254,7 @@ pub extern fn play_scene(data : *const c_void)
         return;
     };
 
-    let gv = create_gameview_window(wcb.container, camera, scene);
+    let gv = ui::create_gameview_window(wcb.container, camera, scene);
     container.set_gameview(gv);
 
         println!("ADDDDDDDD animator");

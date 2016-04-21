@@ -294,6 +294,17 @@ pub extern fn init_cb(data: *mut c_void) -> () {
         }
     }
 
+    if let Some((camera, scene)) = container.can_create_gameview() {
+        let gv = create_gameview_window(unsafe {mem::transmute(app_data.container)}, camera, scene);
+        container.set_gameview(gv);
+
+        println!("ADDDDDDDD animator");
+        unsafe {
+            //ui::ecore_animator_add(ui::update_play_cb, mem::transmute(wcb.container));
+        }
+
+    }
+
     while let Some(mut v) = master.views.pop_front() {
 
         let pc = if let Some(ref p) = wc.property {
@@ -1494,9 +1505,9 @@ impl WidgetContainer
         self._set_scene(scene);
     }
 
-    pub fn set_scene(&mut self, name : &str)
+    pub fn get_or_load_scene(&mut self, name : &str) -> Rc<RefCell<scene::Scene>>
     {
-        let scene = self.scenes.entry(String::from(name)).or_insert(
+        self.scenes.entry(String::from(name)).or_insert(
             {
                 let mut ns = scene::Scene::new_from_file(name, &*self.resource);
 
@@ -1508,7 +1519,12 @@ impl WidgetContainer
                 }
 
                 Rc::new(RefCell::new(ns))
-            }).clone();
+            }).clone()
+    }
+
+    pub fn set_scene(&mut self, name : &str)
+    {
+        let scene = self.get_or_load_scene(name);
 
         self._set_scene(scene);
     }
@@ -1989,3 +2005,19 @@ pub extern fn file_changed(
         }
     }
 }
+
+pub fn create_gameview_window(
+    container : *const ui::WidgetContainer,
+    camera : Rc<RefCell<camera::Camera>>,
+    scene : Rc<RefCell<scene::Scene>>
+    ) -> Box<ui::view::GameView>
+{
+    let win = unsafe {
+        ui::jk_window_new(ui::view::gv_close_cb, mem::transmute(container))
+    };
+
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(container)};
+
+    ui::view::GameView::new(win, camera, scene, container.resource.clone())
+}
+

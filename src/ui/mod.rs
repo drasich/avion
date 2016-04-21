@@ -33,6 +33,8 @@ pub use self::def::{
     ecore_animator_add,
     update_play_cb,
 
+    create_gameview_window,
+
     evas_object_show,
     evas_object_hide,
 };
