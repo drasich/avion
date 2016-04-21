@@ -1,4 +1,6 @@
 - open game scene on start if it was open
+- fix : camera properties are not showed...
+- undo and redo only works when the view has focus
 - multiple view
 - check if option some/none in property works correctly
 - update view when resource is done loading
