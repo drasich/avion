@@ -232,7 +232,7 @@ pub extern fn open_game_view(data : *const c_void)
         return;
     };
 
-    let gv = ui::create_gameview_window(wcb.container, camera, scene);
+    let gv = ui::create_gameview_window(wcb.container, camera, scene, &ui::WidgetConfig::new());
 
     container.set_gameview(gv);
 }
@@ -254,7 +254,7 @@ pub extern fn play_scene(data : *const c_void)
         return;
     };
 
-    let gv = ui::create_gameview_window(wcb.container, camera, scene);
+    let gv = ui::create_gameview_window(wcb.container, camera, scene, &ui::WidgetConfig::new());
     container.set_gameview(gv);
 
         println!("ADDDDDDDD animator");

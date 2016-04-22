@@ -626,7 +626,8 @@ impl GameView {
         win : *const ui::Evas_Object,
         camera : Rc<RefCell<camera::Camera>>,
         scene : Rc<RefCell<scene::Scene>>,
-        resource : Rc<resource::ResourceGroup>
+        resource : Rc<resource::ResourceGroup>,
+        config : ui::WidgetConfig
         ) -> Box<GameView>
     {
         /*
@@ -655,11 +656,12 @@ impl GameView {
             state : 0,
             glview : ptr::null(),
             input : input::Input::new(),
-            config : ui::WidgetConfig::new() //TODO
+            config : config.clone()
             //camera : camera todo
         };
 
-        let glview = unsafe { ui::jk_glview_new(
+
+        v.glview = unsafe { ui::jk_glview_new(
                 win,
                 //mem::transmute(&*v.render),
                 mem::transmute(&*v),
@@ -669,7 +671,7 @@ impl GameView {
                 gv_key_down,
                 ) };
 
-        v.glview = glview;
+        v.set_visible(config.visible);
 
         return v;
     }

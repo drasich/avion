@@ -295,7 +295,17 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     }
 
     if let Some((camera, scene)) = container.can_create_gameview() {
-        let gv = create_gameview_window(unsafe {mem::transmute(app_data.container)}, camera, scene);
+        let gc = if let Some(gc) = wc.gameview {
+            gc
+        }
+        else {
+            WidgetConfig::new()
+        };
+        let gv = create_gameview_window(
+            unsafe {mem::transmute(app_data.container)},
+            camera,
+            scene,
+            &gc);
         container.set_gameview(gv);
 
         println!("ADDDDDDDD animator");
@@ -2009,7 +2019,8 @@ pub extern fn file_changed(
 pub fn create_gameview_window(
     container : *const ui::WidgetContainer,
     camera : Rc<RefCell<camera::Camera>>,
-    scene : Rc<RefCell<scene::Scene>>
+    scene : Rc<RefCell<scene::Scene>>,
+    config : &WidgetConfig
     ) -> Box<ui::view::GameView>
 {
     let win = unsafe {
@@ -2018,6 +2029,6 @@ pub fn create_gameview_window(
 
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(container)};
 
-    ui::view::GameView::new(win, camera, scene, container.resource.clone())
+    ui::view::GameView::new(win, camera, scene, container.resource.clone(), config.clone())
 }
 
