@@ -400,16 +400,22 @@ impl Property
 
     pub fn set_prop_cell(&self, p : Rc<RefCell<PropertyUser>>, title : &str)
     {
-        self._set_prop(&*p.borrow().as_show(), title);
+        // the {} are for ending the borrow
+        {
         let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
-        *cur = Some(RefMut::Cell(p));
+        *cur = Some(RefMut::Cell(p.clone()));
+        }
+        self._set_prop(&*p.borrow().as_show(), title);
     }
 
     pub fn set_prop_arc(&self, p : Arc<RwLock<PropertyUser>>, title : &str)
     {
-        self._set_prop(&*p.read().unwrap().as_show(), title);
+        // the {} are for ending the borrow
+        {
         let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
-        *cur = Some(RefMut::Arc(p));
+        *cur = Some(RefMut::Arc(p.clone()));
+        }
+        self._set_prop(&*p.read().unwrap().as_show(), title);
     }
 
     fn _set_prop(&self, p : &PropertyShow, title : &str)
@@ -1036,25 +1042,40 @@ pub extern fn expand(
 
     let vs = make_vec_from_string(&path.to_owned());
 
-    let o = match container.get_selected_object() {
-        Some(ob) => ob,
-        None => {
-            println!("no selected objectttttttttttttt");
-            return;
+    //TODO factorize this and others
+    println!("factorize this and others");
+    if let Some(ref cur) = *p.current.borrow() {
+        match *cur {
+            RefMut::Arc(ref a) =>
+            {
+                match find_property_show(&*a.read().unwrap().as_show(), vs.clone()) {
+                    Some(ppp) => {
+                        ppp.create_widget(p, path , 1, false);
+                        p.config.expand.insert(path.to_owned());
+                    },
+                    None => {
+                        println!("could not find property {:?} ", vs);
+                    }
+                };
+            },
+            RefMut::Cell(ref c) =>
+            {
+                match find_property_show(&*c.borrow().as_show(), vs.clone()) {
+                    Some(ppp) => {
+                        ppp.create_widget(p, path , 1, false);
+                        p.config.expand.insert(path.to_owned());
+                    },
+                    None => {
+                        println!("could not find property {:?} ", vs);
+                    }
+                };
+            }
         }
-    };
+    }
+    else {
+        println!("no current prop....... {}", path);
+    }
 
-    let or = o.read().unwrap();
-    match find_property_show(&*or, vs.clone()) {
-        Some(ppp) => {
-            //p.create_entries(&*ppp, vs.clone());
-            ppp.create_widget(p, path , 1, false);
-            p.config.expand.insert(path.to_owned());
-        },
-        None => {
-            println!("could not find property {:?} ", vs);
-        }
-    };
 }
 
 pub extern fn contract(
@@ -1302,6 +1323,36 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
         (**self).to_update()
     }
 }
+
+impl<T : PropertyShow> PropertyShow for Rc<RefCell<T>> {
+
+    fn create_widget(
+        &self,
+        property : &Property,
+        field : &str,
+        depth : i32,
+        has_container : bool ) -> Option<*const PropertyValue>
+    {
+        self.borrow().create_widget(property ,field, depth, has_container)
+    }
+
+    fn get_property(&self, field : &str) -> Option<&PropertyShow>
+    {
+        println!("TODO return Ref<PropertyShow>");
+        None //TODO self.borrow().get_property(field)
+    }
+
+    fn is_node(&self) -> bool
+    {
+        self.borrow().is_node()
+    }
+
+    fn to_update(&self) -> ShouldUpdate
+    {
+        self.borrow().to_update()
+    }
+}
+
 
 impl<T : PropertyShow> PropertyShow for Option<T> {
 
@@ -1801,7 +1852,7 @@ property_show_impl!(component::player::Enemy,[name]);
 property_show_impl!(component::player::Collider,[name]);
 property_show_impl!(armature::ArmaturePath,[name]);
 
-property_show_impl!(scene::Scene,[name]);
+property_show_impl!(scene::Scene,[name,camera]);
 property_show_impl!(camera::Camera,[data]);
 property_show_impl!(camera::CameraData,[far,near]);
 
