@@ -18,6 +18,7 @@ use uuid;
 use uuid::Uuid;
 
 use dormin::scene;
+use dormin::camera;
 use dormin::object;
 use ui::{Window, ButtonCallback};
 use ui;
@@ -1801,6 +1802,8 @@ property_show_impl!(component::player::Collider,[name]);
 property_show_impl!(armature::ArmaturePath,[name]);
 
 property_show_impl!(scene::Scene,[name]);
+property_show_impl!(camera::Camera,[data]);
+property_show_impl!(camera::CameraData,[far,near]);
 
 fn make_vec_from_string(s : &str) -> Vec<String>
 {

@@ -1,4 +1,5 @@
 - open game scene on start if it was open
+- add camera for scene in property show
 - fix : camera properties are not showed...
 - undo and redo only works when the view has focus
 - multiple view
