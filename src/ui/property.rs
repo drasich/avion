@@ -493,10 +493,13 @@ impl Property
             }
 
             if f.starts_with(prop) {
-                let yep = make_vec_from_string(f);
-                if let Some(ppp) = find_property_show(object, yep.clone()) {
-                    ppp.update_widget(*pv);
-                }
+                let yep = make_vec_from_str(f);
+                //if let Some(ppp) = find_property_show(object, yep.clone()) {
+                    //ppp.update_widget(*pv);
+                //}
+                //let test = |ps| {};
+                object.update_property(yep, *pv);
+                //object.callclosure(&test);
             }
         }
     }
@@ -519,7 +522,7 @@ impl Property
                 println!("buuuuuuuuuuuuuuuuuuuuuuuuuut: {} ", f);
                 continue;
             }
-            let yep = make_vec_from_string(f);
+            let yep = make_vec_from_str(f);
             match find_property_show(object, yep.clone()) {
                 Some(ppp) => {
                     ppp.update_widget(*pv);
@@ -1034,7 +1037,7 @@ pub extern fn expand(
         }
     };
 
-    let vs = make_vec_from_string(&path.to_owned());
+    let vs = make_vec_from_str(&path.to_owned());
 
     let o = match container.get_selected_object() {
         Some(ob) => ob,
@@ -1177,6 +1180,41 @@ pub trait PropertyShow
         None
     }
 
+    fn callclosure(&self, f : &Fn(&PropertyShow)) where Self : Sized
+    {
+        f(self);
+    }
+
+    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    {
+        println!("default update property : {:?}", path);
+        if path.is_empty() {
+            self.update_widget(pv);
+        }
+    }
+
+    /*
+    fn find_and_update_property(&self, field : &str, pv : *const PropertyValue)
+    {
+        let path = make_vec_from_str(field);
+
+        match path.len() {
+            0 =>  self.update_widget(pv),
+            _ => {
+                macro with field
+                match p.get_property(path[0].as_ref()) {
+                    Some(ppp) => {
+                        find_and_update_property_show(ppp, path[1..].to_vec())
+                    },
+                    None => {
+                        None
+                    }
+                }
+            }
+        }
+    }
+    */
+
     fn is_node(&self) -> bool
     {
         false
@@ -1292,6 +1330,11 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
         (**self).get_property(field)
     }
 
+    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    {
+        (**self).update_property(path, pv);
+    }
+
     fn is_node(&self) -> bool
     {
         (**self).is_node()
@@ -1300,6 +1343,46 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
     fn to_update(&self) -> ShouldUpdate
     {
         (**self).to_update()
+    }
+}
+
+impl<T : PropertyShow> PropertyShow for Rc<RefCell<T>> {
+
+    fn create_widget(
+        &self,
+        property : &Property,
+        field : &str,
+        depth : i32,
+        has_container : bool ) -> Option<*const PropertyValue>
+    {
+        //(**self).create_widget(property ,field, depth, has_container)
+        self.borrow().create_widget(property ,field, depth, has_container)
+    }
+
+    fn get_property(&self, field : &str) -> Option<&PropertyShow>
+    {
+        //(**self).get_property(field)
+        //(**self).get_property(field)
+        None
+    }
+
+    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    {
+        //(**self).update_property(path, pv);
+        self.borrow().update_property(path, pv);
+    }
+
+
+    fn is_node(&self) -> bool
+    {
+        //(**self).is_node()
+        self.borrow().is_node()
+    }
+
+    fn to_update(&self) -> ShouldUpdate
+    {
+        //(**self).to_update()
+        self.borrow().to_update()
     }
 }
 
@@ -1763,6 +1846,22 @@ macro_rules! property_show_methods(
                 }
             }
 
+            fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+            {
+                if path.is_empty() {
+                    self.update_widget(pv);
+                    return;
+                }
+
+                match path[0].as_str() {
+                $(
+                    stringify!($member) => self.$member.update_property(path[1..].to_vec(), pv),
+                 )+
+                    _ => {}
+                }
+            }
+
+
             fn is_node(&self) -> bool
             {
                 true
@@ -1805,7 +1904,7 @@ property_show_impl!(scene::Scene,[name]);
 property_show_impl!(camera::Camera,[data]);
 property_show_impl!(camera::CameraData,[far,near]);
 
-fn make_vec_from_string(s : &str) -> Vec<String>
+fn make_vec_from_str(s : &str) -> Vec<String>
 {
     let v: Vec<&str> = s.split('/').collect();
 
