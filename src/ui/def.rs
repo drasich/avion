@@ -1749,21 +1749,6 @@ pub enum Event
     Empty
 }
 
-fn join_string(path : &Vec<String>) -> String
-{
-    let mut s = String::new();
-    let mut first = true;
-    for v in path {
-        if !first {
-            s.push('/');
-        }
-        s.push_str(v.as_ref());
-        first = false;
-    }
-
-    s
-}
-
 fn make_vec_from_str(s : &str) -> Vec<String>
 {
     let v: Vec<&str> = s.split('/').collect();
