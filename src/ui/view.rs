@@ -704,6 +704,8 @@ impl GameView {
     fn resize(&mut self, w : c_int, h : c_int)
     {
         self.render.resize(w, h);
+        self.config.w = w;
+        self.config.h = h;
     }
 
     pub fn visible(&self) -> bool

@@ -2012,6 +2012,8 @@ pub fn create_gameview_window(
         ui::jk_window_new(ui::view::gv_close_cb, mem::transmute(container))
     };
 
+    unsafe { evas_object_resize(win, config.w, config.h); }
+
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(container)};
 
     ui::view::GameView::new(win, camera, scene, container.resource.clone(), config.clone())
