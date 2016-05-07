@@ -758,7 +758,9 @@ pub extern fn gv_resize_cb(v : *const c_void, w : c_int, h : c_int) {
 
 pub extern fn gv_close_cb(data : *mut c_void) {
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(data)};
-    container.gameview = None;
+    if let Some(ref mut gv) = container.gameview {
+        gv.set_visible(false);
+    }
 }
 
 extern fn gv_key_down(
