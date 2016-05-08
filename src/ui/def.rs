@@ -1749,21 +1749,6 @@ pub enum Event
     Empty
 }
 
-fn join_string(path : &Vec<String>) -> String
-{
-    let mut s = String::new();
-    let mut first = true;
-    for v in path {
-        if !first {
-            s.push('/');
-        }
-        s.push_str(v.as_ref());
-        first = false;
-    }
-
-    s
-}
-
 fn make_vec_from_str(s : &str) -> Vec<String>
 {
     let v: Vec<&str> = s.split('/').collect();
@@ -2026,6 +2011,8 @@ pub fn create_gameview_window(
     let win = unsafe {
         ui::jk_window_new(ui::view::gv_close_cb, mem::transmute(container))
     };
+
+    unsafe { evas_object_resize(win, config.w, config.h); }
 
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(container)};
 

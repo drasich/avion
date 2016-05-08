@@ -1,6 +1,6 @@
 use std::rc::Rc;
-use std::cell::{RefCell, BorrowState};
-use std::sync::{RwLock, Arc};
+use std::cell::{Cell,RefCell, BorrowState};
+use std::sync::{RwLock, Arc,Mutex};
 use libc::{c_char, c_void, c_int, c_uint, c_float};
 use std::collections::{LinkedList};
 use std::mem;
@@ -78,7 +78,10 @@ pub struct View
     pub uuid : uuid::Uuid,
 
     pub width : i32,
-    pub height : i32
+    pub height : i32,
+    pub updating : Cell<bool>,
+    pub loading_resource : Mutex<usize>,
+    pub last_draw : usize
 }
 
 impl View
@@ -121,7 +124,10 @@ impl View
             uuid : uuid::Uuid::new_v4(),
 
             width : w,
-            height : h
+            height : h,
+            updating : Cell::new(false),
+            loading_resource : Mutex::new(0),
+            last_draw : 0
         };
 
         return v;
@@ -233,11 +239,11 @@ impl View
         self.render.init();
     }
 
-    fn draw(&mut self, context : &context::Context)
+    fn draw(&mut self, context : &context::Context) -> bool
     {
         let scene = match context.scene {
             Some(ref s) => s.borrow(),
-            None => return
+            None => return false
         };
 
         let obs = &scene.objects;
@@ -262,7 +268,22 @@ impl View
             dragger.scale_to_camera(&*self.camera.borrow());
         }
 
-        self.render.draw(obs, sel, &self.dragger.borrow().get_objects());
+        let win = if let Some(w) = self.window {
+            w
+        }
+        else {
+            ptr::null()
+        };
+
+        let finish = |b| {
+            println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~render finished");
+        };
+
+        let not_loaded = self.render.draw(obs, sel, &self.dragger.borrow().get_objects(), &finish);
+        self.updating.set(false);
+        self.last_draw = *self.loading_resource.lock().unwrap();
+
+        not_loaded > 0
     }
 
     fn resize(&mut self, w : c_int, h : c_int)
@@ -306,7 +327,12 @@ impl View
 
     pub fn request_update(&self)
     {
+        if self.updating.get() {
+            return;
+        }
+
         if let Some(w) = self.window {
+            self.updating.set(true);
             unsafe {ui::jk_window_request_update(w);}
         }
     }
@@ -589,13 +615,35 @@ pub extern fn init_cb(v : *mut View) -> () {
     return view.init_render();
 }
 
+pub extern fn request_update_again(data : *const c_void) -> bool
+{
+    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    let view : &mut View = unsafe {mem::transmute(wcb.widget)};
+    let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    if let Ok(lr) = view.loading_resource.try_lock() {
+        if *lr == 0 {
+            view.request_update();
+            return false;
+        }
+    }
+    true
+}
+
+
 pub extern fn draw_cb(v : *mut View) -> () {
 
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(v)};
     let view : &mut View = unsafe {mem::transmute(wcb.widget)};
     let container : &Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    return view.draw(&*container.context);
+    let draw_not_done = view.draw(&*container.context);
+
+    if draw_not_done {
+        unsafe {
+            ui::ecore_animator_add(request_update_again, mem::transmute(wcb));
+        }
+    }
 }
 
 pub extern fn resize_cb(v : *mut View, w : c_int, h : c_int) -> () {
@@ -704,6 +752,8 @@ impl GameView {
     fn resize(&mut self, w : c_int, h : c_int)
     {
         self.render.resize(w, h);
+        self.config.w = w;
+        self.config.h = h;
     }
 
     pub fn visible(&self) -> bool
@@ -756,7 +806,9 @@ pub extern fn gv_resize_cb(v : *const c_void, w : c_int, h : c_int) {
 
 pub extern fn gv_close_cb(data : *mut c_void) {
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(data)};
-    container.gameview = None;
+    if let Some(ref mut gv) = container.gameview {
+        gv.set_visible(false);
+    }
 }
 
 extern fn gv_key_down(
