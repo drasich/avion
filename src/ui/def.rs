@@ -410,7 +410,9 @@ impl WidgetConfig
 pub struct ViewConfig
 {
     window : WidgetConfig,
-    scene : Option<String>
+    scene : Option<String>,
+    camera_position : vec::Vec3,
+    camera_orientation : transform::Orientation
 }
 
 #[derive(RustcDecodable, RustcEncodable, Clone)]
@@ -457,7 +459,9 @@ impl WindowConfig {
                         Some(s.borrow().name.clone())
                     },
                     None => None
-                }
+                },
+                camera_position : vec::Vec3::zero(),
+                camera_orientation : transform::Orientation::new_quat()
             };
             wc.views.push(vc);
         }
@@ -483,7 +487,9 @@ impl WindowConfig {
                 h : 500,
                 visible : true
             },
-            scene : None
+            scene : None,
+            camera_position : vec::Vec3::zero(),
+            camera_orientation : transform::Orientation::new_quat()
             /*
             property : WidgetConfig{
                 x : 0,

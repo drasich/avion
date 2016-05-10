@@ -80,7 +80,7 @@ pub struct View
     pub width : i32,
     pub height : i32,
     pub updating : Cell<bool>,
-    pub loading_resource : Mutex<usize>,
+    pub loading_resource : Arc<Mutex<usize>>,
     pub last_draw : usize
 }
 
@@ -126,7 +126,7 @@ impl View
             width : w,
             height : h,
             updating : Cell::new(false),
-            loading_resource : Mutex::new(0),
+            loading_resource : Arc::new(Mutex::new(0)),
             last_draw : 0
         };
 
@@ -276,10 +276,10 @@ impl View
         };
 
         let finish = |b| {
-            println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~render finished");
+            //println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~render finished");
         };
 
-        let not_loaded = self.render.draw(obs, sel, &self.dragger.borrow().get_objects(), &finish);
+        let not_loaded = self.render.draw(obs, sel, &self.dragger.borrow().get_objects(), &finish, self.loading_resource.clone());
         self.updating.set(false);
         self.last_draw = *self.loading_resource.lock().unwrap();
 
