@@ -73,7 +73,7 @@ pub struct View
     //pub dragger : Arc<RwLock<object::Object>>,
     dragger : Rc<RefCell<dragger::DraggerManager>>,
 
-    camera : Rc<RefCell<camera::Camera>>,
+    pub camera : Rc<RefCell<camera::Camera>>,
     pub resource : Rc<resource::ResourceGroup>,
     pub uuid : uuid::Uuid,
 
@@ -90,15 +90,19 @@ impl View
         resource : Rc<resource::ResourceGroup>,
         container : &mut Box<ui::WidgetContainer>,
         w : i32,
-        h : i32
+        h : i32,
+        camera : camera::Camera
         ) -> View
     {
+        /*
         let camera = Rc::new(RefCell::new(container.factory.create_camera()));
         {
             let mut cam = camera.borrow_mut();
             cam.pan(&vec::Vec3::new(100f64,20f64,100f64));
             cam.lookat(vec::Vec3::new(0f64,5f64,0f64));
         }
+        */
+        let camera = Rc::new(RefCell::new(camera));
 
 
         let dragger = Rc::new(RefCell::new(dragger::DraggerManager::new(&container.factory, &*resource)));

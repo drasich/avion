@@ -272,7 +272,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 
     for v in &wc.views {
         let wc = &v.window;
-        let view = box View::new(master.resource.clone(), container,wc.w,wc.h);
+        let view = box View::new(master.resource.clone(), container,v.window.w,v.window.h, v.camera.clone());
         master.views.push_back(view);
         if let Some(ref scene) = v.scene {
             container.set_scene(scene.as_str());
@@ -411,8 +411,7 @@ pub struct ViewConfig
 {
     window : WidgetConfig,
     scene : Option<String>,
-    camera_position : vec::Vec3,
-    camera_orientation : transform::Orientation
+    camera : camera::Camera,
 }
 
 #[derive(RustcDecodable, RustcEncodable, Clone)]
@@ -460,8 +459,7 @@ impl WindowConfig {
                     },
                     None => None
                 },
-                camera_position : vec::Vec3::zero(),
-                camera_orientation : transform::Orientation::new_quat()
+                camera : v.camera.borrow().clone()
             };
             wc.views.push(vc);
         }
@@ -478,6 +476,8 @@ impl WindowConfig {
             gameview : None
         };
 
+        /*
+
         let vc = ViewConfig {
             //window : WidgetConfig::new( unsafe { window_object_get(win) })
             window : WidgetConfig{
@@ -488,21 +488,11 @@ impl WindowConfig {
                 visible : true
             },
             scene : None,
-            camera_position : vec::Vec3::zero(),
-            camera_orientation : transform::Orientation::new_quat()
-            /*
-            property : WidgetConfig{
-                x : 0,
-                y : 0,
-                w : 100,
-                h : 400,
-                visible : true
-            }
-            */
         };
 
         wc.views.push(vc);
 
+        */
         wc
     }
 
