@@ -667,7 +667,8 @@ pub struct GameView
     name : String,
     pub state : i32,
     input : input::Input,
-    pub config : ui::WidgetConfig
+    pub config : ui::WidgetConfig,
+    pub loading_resource : Arc<Mutex<usize>>,
 }
 
 
@@ -708,7 +709,8 @@ impl GameView {
             state : 0,
             glview : ptr::null(),
             input : input::Input::new(),
-            config : config.clone()
+            config : config.clone(),
+            loading_resource : Arc::new(Mutex::new(0))
             //camera : camera todo
         };
 
@@ -746,7 +748,7 @@ impl GameView {
     }
 
     fn draw(&mut self) {
-        self.render.draw(&self.scene.borrow().objects);
+        self.render.draw(&self.scene.borrow().objects, self.loading_resource.clone());
     }
 
     fn init(&mut self) {

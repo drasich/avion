@@ -641,12 +641,7 @@ impl ListWidget
                 evas_object_resize(o, 150, 300);
             }
 
-            let cs = util::string_to_cstring(entries);
-            self.entries = cs.into_iter().map( |x| x.as_ptr()).collect();
-
-            unsafe {
-                jklist_set_names(o, self.entries.as_ptr() as *const c_void, self.entries.len() as size_t);
-            }
+            self.show_list_common(o, entries);
         }
     }
 
@@ -660,12 +655,17 @@ impl ListWidget
                 //evas_object_resize(o, 150, 300);
             }
 
-            let cs = util::string_to_cstring(entries);
-            self.entries = cs.into_iter().map( |x| x.as_ptr()).collect();
+            self.show_list_common(o,entries);
+        }
+    }
 
-            unsafe {
-                jklist_set_names(o, self.entries.as_ptr() as *const c_void, self.entries.len() as size_t);
-            }
+    fn show_list_common(&mut self, obj : *const Evas_Object, entries : Vec<String>) 
+    {
+        let cs = util::string_to_cstring(entries);
+        self.entries = cs.iter().map( |x| x.as_ptr()).collect();
+
+        unsafe {
+            jklist_set_names(obj, self.entries.as_ptr() as *const c_void, self.entries.len() as size_t);
         }
     }
 }
