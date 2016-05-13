@@ -1563,7 +1563,7 @@ impl WidgetContainer
     pub fn play_gameview(&mut self) -> bool
     {
         if let Some(ref mut gv) = self.gameview {
-            gv.state = 0;
+            gv.state = 1;
             true
         }
         else {

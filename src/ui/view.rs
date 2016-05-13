@@ -731,13 +731,14 @@ impl GameView {
     }
 
     pub fn update(&mut self) -> bool {
-        if self.state == 0 {
+        if self.state == 1 {
             self.scene.borrow_mut().update(0.01f64, &self.input);
             unsafe { jk_glview_request_update(self.glview); }
             self.input.clear();
             true
         }
         else {
+            //unsafe { jk_glview_request_update(self.glview); }
             false
         }
     }
@@ -747,8 +748,9 @@ impl GameView {
         unsafe { jk_glview_request_update(self.glview); }
     }
 
-    fn draw(&mut self) {
-        self.render.draw(&self.scene.borrow().objects, self.loading_resource.clone());
+    fn draw(&mut self) -> bool
+    {
+        self.render.draw(&self.scene.borrow().objects, self.loading_resource.clone())
     }
 
     fn init(&mut self) {
@@ -793,11 +795,36 @@ pub extern fn gv_init_cb(v : *const c_void) {
     }
 }
 
+pub extern fn request_update_again_gv(data : *const c_void) -> bool
+{
+    unsafe {
+    //let gv : *mut GameView =  unsafe {mem::transmute(data)};
+    let gv : &mut GameView =  unsafe {mem::transmute(data)};
+
+    //if let Ok(lr) = (*gv).loading_resource.try_lock() {
+    if let Ok(lr) = gv.loading_resource.try_lock() {
+        if *lr == 0 {
+            //(*gv).request_update();
+            gv.request_update();
+            return false;
+        }
+    }
+    }
+    true
+}
+
+
 pub extern fn gv_draw_cb(v : *const c_void) {
     unsafe {
         let gv : *mut GameView = mem::transmute(v);
         //println!("draw {}", (*gv).name);
-        (*gv).draw();
+        let draw_not_done = (*gv).draw();
+
+        if draw_not_done && (*gv).state == 0 {
+            unsafe {
+                ui::ecore_animator_add(request_update_again_gv, mem::transmute(v));
+            }
+    }
     }
 }
 

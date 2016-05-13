@@ -1,4 +1,7 @@
-- update view when resource is done loading
+- remove the automatic scrolling in list -> remove transform from components? and stop using genlist? 
+  use box? or genlist without tree, expand stuff...
+  with box I can press tab to go to the next stuff, with genlist I can't
+- clean code of update view when resource is done loading
 - add camera for scene in property show
 - fix : camera properties are not showed...
 - undo and redo only works when the view has focus
