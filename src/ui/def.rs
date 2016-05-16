@@ -24,7 +24,7 @@ use dormin::geometry;
 use dormin::vec;
 use dormin::scene;
 use dormin::object;
-use ui::{Tree,Property,RefMut,PropertyUser,PropertyConfig,View,Command,Action,GameView};
+use ui::{Tree,Property,RefMut,PropertyUser,PropertyConfig,View,Command,Action,GameView,ShouldUpdate};
 use ui;
 use dormin::factory;
 use operation;
@@ -734,7 +734,7 @@ impl WidgetContainer
                 //else if must_update(&*o.read().unwrap(), name)
                 let ups = must_update(&*o.read().unwrap(), name);
                 for up in &ups {
-                    if let ui::property::ShouldUpdate::Mesh = *up {
+                    if let ui::ShouldUpdate::Mesh = *up {
                         let mut ob = o.write().unwrap();
                         let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
                         if let Some(ref mr) = omr {
@@ -1892,7 +1892,7 @@ pub extern fn select_list(data : *const c_void, name : *const c_char)
     container.set_scene(s);
 }
 
-fn must_update(p : &ui::property::PropertyShow, path : &str) -> Vec<ui::property::ShouldUpdate>
+fn must_update(p : &ui::PropertyShow, path : &str) -> Vec<ui::ShouldUpdate>
 {
     let vs: Vec<&str> = path.split('/').collect();
 

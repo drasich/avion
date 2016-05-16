@@ -21,6 +21,8 @@ use dormin::scene;
 use dormin::camera;
 use dormin::object;
 use ui::{Window, ButtonCallback};
+use ui::{ChangedFunc, RegisterChangeFunc, PropertyTreeFunc, PropertyValue, PropertyConfig, PropertyUser,
+PropertyShow, PropertyId, RefMut, Elm_Object_Item, ShouldUpdate};
 use ui;
 use dormin::property;
 use operation;
@@ -36,26 +38,6 @@ use dormin::component::CompData;
 use dormin::armature;
 use dormin::transform::Orientation;
 
-#[repr(C)]
-pub struct Elm_Object_Item;
-
-pub type ChangedFunc = extern fn(
-    object : *const c_void,
-    name : *const c_char,
-    data : *const c_void);
-
-pub type RegisterChangeFunc = extern fn(
-    object : *const c_void,
-    name : *const c_char,
-    old : *const c_void,
-    new : *const c_void,
-    action_type : c_int
-    );
-
-pub type PropertyTreeFunc = extern fn(
-    property : *const c_void,
-    object : *const c_void,
-    parent : *const Elm_Object_Item);
 
 #[repr(C)]
 pub struct JkProperty;
@@ -63,8 +45,6 @@ pub struct JkProperty;
 pub struct JkPropertySet;
 #[repr(C)]
 pub struct JkPropertyList;
-#[repr(C)]
-pub struct PropertyValue;
 
 #[link(name = "png")]
 
@@ -80,49 +60,6 @@ pub struct PropertyValue;
 //#[link(name = "GLESv2")]
 #[link(name = "joker")]
 extern {
-    /*
-    fn window_property_new(window : *const Window) -> *const JkProperty;
-    fn property_register_cb(
-        property : *const JkProperty,
-        changed : extern fn(object : *const c_void, data : *const c_void),
-        get : extern fn(data : *const c_void) -> *const c_char
-        );
-
-    fn property_data_set(
-        property : *const JkProperty,
-        data : *const c_void
-        );
-
-    fn jk_property_set_new(window : *const Window) -> *const JkPropertySet;
-    fn jk_property_set_data_set(set : *const JkPropertySet, data : *const c_void);
-
-    fn jk_property_set_register_cb(
-        property : *const JkPropertySet,
-        data : *const Property,
-        changed_float : ChangedFunc,
-        changed_string : ChangedFunc,
-        );
-
-    fn property_set_string_add(
-        ps : *const JkPropertySet,
-        name : *const c_char,
-        value : *const c_char
-        );
-
-    fn property_set_float_add(
-        ps : *const JkPropertySet,
-        name : *const c_char,
-        value : c_float
-        );
-
-    fn property_set_node_add(
-        ps : *const JkPropertySet,
-        name : *const c_char
-        );
-
-    fn property_set_clear(
-        ps : *const JkPropertySet);
-        */
 
     fn jk_property_list_new(
         window : *const Window,
@@ -254,98 +191,6 @@ extern {
     fn property_list_enum_update(
         pv : *const ui::PropertyValue,
         value : *const c_char);
-}
-
-#[derive(RustcDecodable, RustcEncodable, Clone)]
-pub struct PropertyConfig
-{
-    x : i32,
-    y : i32,
-    w : i32,
-    h : i32,
-    expand : HashSet<String>
-}
-
-impl PropertyConfig
-{
-    pub fn new() -> PropertyConfig
-    {
-        PropertyConfig {
-            x: 10,
-            y: 10,
-            w: 100,
-            h : 400,
-            expand : HashSet::new()
-        }
-    }
-}
-
-pub trait PropertyId
-{
-    fn get_id(&self) -> uuid::Uuid;
-}
-
-impl PropertyId for object::Object
-{
-    fn get_id(&self) -> uuid::Uuid
-    {
-        return self.id
-    }
-}
-
-impl PropertyId for scene::Scene
-{
-    fn get_id(&self) -> uuid::Uuid
-    {
-        return self.id
-    }
-}
-
-
-pub trait PropertyUser : property::PropertyWrite + property::PropertyGet + PropertyShow + PropertyId {
-    fn as_show(&self) -> &PropertyShow;
-    fn as_write(&self) -> &property::PropertyWrite;
-    fn as_id(&self) -> &PropertyId;
-    fn as_get(&self) -> &property::PropertyGet;
-}
-
-impl<T: property::PropertyWrite + property::PropertyGet + PropertyShow + PropertyId > PropertyUser for T {
-
-    fn as_show(&self) -> &PropertyShow
-    {
-        self
-    }
-
-    fn as_write(&self) -> &property::PropertyWrite
-    {
-        self
-    }
-
-    fn as_get(&self) -> &property::PropertyGet
-    {
-        self
-    }
-
-    fn as_id(&self) -> &PropertyId
-    {
-        self
-    }
-}
-
-pub enum RefMut<T:?Sized> {
-    Arc(Arc<RwLock<T>>),
-    Cell(Rc<RefCell<T>>),
-}
-
-impl<T:?Sized> Clone for RefMut<T>
-{
-    fn clone(&self) -> RefMut<T>
-    {
-        match *self {
-            RefMut::Arc(ref a) => RefMut::Arc(a.clone()),
-            RefMut::Cell(ref c) => RefMut::Cell(c.clone()),
-        }
-    }
 }
 
 pub struct Property
@@ -1165,86 +1010,6 @@ impl WidgetUpdate for Property
     }
 }
 
-#[derive(Debug)]
-pub enum ShouldUpdate
-{
-    Nothing,
-    Mesh
-}
-
-pub trait PropertyShow
-{
-    fn create_widget(
-        &self,
-        property : &Property,
-        field : &str,
-        depth : i32,
-        has_container : bool ) -> Option<*const PropertyValue>;
-
-    fn update_widget(&self, pv : *const PropertyValue) {
-        //println!("update_widget not implemented for this type");
-    }
-
-    fn get_property(&self, field : &str) -> Option<&PropertyShow>
-    {
-        None
-    }
-
-    fn callclosure(&self, f : &Fn(&PropertyShow)) where Self : Sized
-    {
-        f(self);
-    }
-
-    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
-    {
-        println!("default update property : {:?}", path);
-        if path.is_empty() {
-            self.update_widget(pv);
-        }
-    }
-
-    fn find_and_create(&self, property : &Property, path : Vec<String>, start : usize)
-    {
-        println!("default create property : {:?}", path);
-        if path.is_empty() {
-            self.create_widget(property, "" , 1, false);
-        }
-    }
-
-
-    /*
-    fn find_and_update_property(&self, field : &str, pv : *const PropertyValue)
-    {
-        let path = make_vec_from_str(field);
-
-        match path.len() {
-            0 =>  self.update_widget(pv),
-            _ => {
-                macro with field
-                match p.get_property(path[0].as_ref()) {
-                    Some(ppp) => {
-                        find_and_update_property_show(ppp, path[1..].to_vec())
-                    },
-                    None => {
-                        None
-                    }
-                }
-            }
-        }
-    }
-    */
-
-    fn is_node(&self) -> bool
-    {
-        false
-    }
-
-    fn to_update(&self) -> ShouldUpdate
-    {
-        ShouldUpdate::Nothing
-    }
-}
-
 /*
 impl PropertyShow for vec::Quat {
 
@@ -1780,7 +1545,7 @@ impl ui::PropertyShow for Orientation {
         None
     }
 
-    fn update_widget(&self, pv : *const ui::property::PropertyValue) {
+    fn update_widget(&self, pv : *const PropertyValue) {
         let type_value = match *self {
             Orientation::AngleXYZ(_) => "AngleXYZ",
             Orientation::Quat(_) => "Quat"
@@ -2082,5 +1847,21 @@ fn join_string(path : &Vec<String>) -> String
     }
 
     s
+}
+
+impl PropertyId for object::Object
+{
+    fn get_id(&self) -> uuid::Uuid
+    {
+        return self.id
+    }
+}
+
+impl PropertyId for scene::Scene
+{
+    fn get_id(&self) -> uuid::Uuid
+    {
+        return self.id
+    }
 }
 

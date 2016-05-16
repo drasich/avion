@@ -45,7 +45,7 @@ extern {
 
     fn action_label_new(
         action : *const JkAction,
-        name : *const c_char) -> *const JkLabel;
+        name : *const c_char) -> *const ui::Evas_Object;
 
     fn jk_label_set(
         label : *const JkLabel,
@@ -137,7 +137,7 @@ impl Action
         }
     }
 
-    pub fn add_label(&self, name : &str) -> *const JkLabel
+    pub fn add_label(&self, name : &str) -> *const ui::Evas_Object
     {
         unsafe {
             action_label_new(
