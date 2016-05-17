@@ -21,7 +21,7 @@ use dormin::scene;
 use dormin::camera;
 use dormin::object;
 use ui::{Window, ButtonCallback, ChangedFunc, RegisterChangeFunc, 
-    PropertyTreeFunc, PropertyConfig, PropertyValue, RefMut, PropertyUser};
+    PropertyTreeFunc, PropertyConfig, PropertyValue, RefMut, PropertyUser, PropertyShow};
 use ui;
 use dormin::property;
 use operation;
@@ -42,8 +42,18 @@ pub struct JkPropertyBox;
 
 #[link(name = "joker")]
 extern {
-    fn jk_property_bow_new(window : *const Window) -> *const JkPropertyBox;
+    fn jk_property_box_new(
+        window : *const Window,
+        x : c_int,
+        y : c_int,
+        w : c_int,
+        h : c_int
+        ) -> *const JkPropertyBox;
 
+
+    fn property_box_clear(pl : *const JkPropertyBox);
+
+    /*
     pub fn jk_property_box_register_cb(
         property : *const JkPropertyBox,
         data : *const PropertyBox,
@@ -59,7 +69,6 @@ extern {
         panel_move : ui::PanelGeomFunc
         );
 
-    /*
     fn window_property_new(window : *const Window) -> *const JkProperty;
     fn property_register_cb(
         property : *const JkProperty,
@@ -106,7 +115,7 @@ extern {
 pub struct PropertyBox
 {
     pub name : String,
-    pub jk_property_list : *const JkPropertyBox,
+    pub jk_property : *const JkPropertyBox,
     pub pv : RefCell<HashMap<String, *const PropertyValue>>,
     visible : Cell<bool>,
     pub id : uuid::Uuid,
@@ -115,3 +124,62 @@ pub struct PropertyBox
 }
 
 
+impl PropertyBox
+{
+    pub fn new(
+        window : *const Window,
+        pc : &PropertyConfig
+        ) -> PropertyBox
+    {
+        PropertyBox {
+            name : String::from("property_box_name"),
+            jk_property : unsafe {jk_property_box_new(
+                    window,
+                    pc.x, pc.y, pc.w, pc.h)},
+            pv : RefCell::new(HashMap::new()),
+            visible: Cell::new(true),
+            id : uuid::Uuid::new_v4(),
+            config : pc.clone(),
+            current : RefCell::new(None)
+        }
+    }
+
+    pub fn set_prop_cell(&self, p : Rc<RefCell<PropertyUser>>, title : &str)
+    {
+        // the {} are for ending the borrow
+        {
+        let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
+        *cur = Some(RefMut::Cell(p.clone()));
+        }
+        self._set_prop(&*p.borrow().as_show(), title);
+    }
+
+    pub fn set_prop_arc(&self, p : Arc<RwLock<PropertyUser>>, title : &str)
+    {
+        // the {} are for ending the borrow
+        {
+        let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
+        *cur = Some(RefMut::Arc(p.clone()));
+        }
+        self._set_prop(&*p.read().unwrap().as_show(), title);
+    }
+
+    fn _set_prop(&self, p : &PropertyShow, title : &str)
+    {
+        unsafe { property_box_clear(self.jk_property); }
+        self.pv.borrow_mut().clear();
+
+        //TODO
+        /*
+        unsafe {
+            property_list_group_add(
+                self.jk_property,
+                CString::new(title.as_bytes()).unwrap().as_ptr());
+        }
+        //TODO replace ""
+        p.create_widget(self, "", 1, false);
+        */
+    }
+
+
+}
