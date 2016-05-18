@@ -1865,3 +1865,39 @@ impl PropertyId for scene::Scene
     }
 }
 
+
+
+
+pub trait PropertyWidget {
+
+    fn add_simple_item(&mut self, field : &str, item : *const PropertyValue);//, f : f64);
+    fn add_option(&mut self, field : &str);//, is_some : bool);
+    fn add_vec(&mut self, field : &str);//, is_some : bool);
+    fn add_vec_item(&mut self, widget_entry : *const PropertyValue, is_node : bool);
+
+    fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
+
+    fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize);
+    fn update_enum(&mut self, widget_entry : *const PropertyValue, s : String);
+
+}
+
+impl PropertyWidget for Property
+{
+    fn add_simple_item(&mut self, field : &str, item : *const PropertyValue)
+    {}
+    fn add_option(&mut self, field : &str)
+    {}
+    fn add_vec(&mut self, field : &str)
+    {}
+    fn add_vec_item(&mut self, widget_entry : *const PropertyValue, is_node : bool)
+    {}
+
+    fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool)
+    {}
+
+    fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize)
+    {}
+    fn update_enum(&mut self, widget_entry : *const PropertyValue, s : String)
+    {}
+}
