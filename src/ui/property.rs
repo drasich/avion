@@ -1035,10 +1035,17 @@ impl PropertyShow for f64 {
         let f = CString::new(field.as_bytes()).unwrap();
         println!("create f64 for : {}", field);
         unsafe {
-            let pv = property_list_float_add(
+            let mut pv = property_list_float_add(
                 property.jk_property_list,
                 f.as_ptr(),
                 *self as c_float);
+
+            if !has_container {
+                pv = property_list_single_item_add(
+                    property.jk_property_list,
+                    pv);
+            }
+
             if pv != ptr::null() {
                 property.pv.borrow_mut().insert(field.to_owned(), pv);
             }
@@ -1864,8 +1871,6 @@ impl PropertyId for scene::Scene
         return self.id
     }
 }
-
-
 
 
 pub trait PropertyWidget {
