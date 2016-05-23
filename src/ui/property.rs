@@ -436,31 +436,8 @@ impl Property
         return pv;
     }
 
-    pub fn add_vec(&self, ps : &PropertyShow, name : &str, len : usize) {
-        let f = CString::new(name.as_bytes()).unwrap();
-        let pv = unsafe {
-            property_list_vec_add(
-                self.jk_property_list,
-                f.as_ptr(),
-                len as c_int
-                )
-        };
-
-        if pv != ptr::null() {
-            self.pv.borrow_mut().insert(name.to_owned(), pv);
-        }
-
-        if self.config.expand.contains(name) {
-            unsafe {
-                property_expand(pv);
-            }
-        }
-    }
-
-
     pub fn add_enum(
         &self,
-        ps : &PropertyShow,
         path : &str,
         types : &str,
         value : &str,
@@ -1316,7 +1293,9 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 
         if depth == 0 && field != ""
         {
-            property.add_vec(self, field, self.len());
+            //TODO
+            //TODO
+            property.add_vec(field, self.len());
         }
 
         if depth > 0 {
@@ -1433,7 +1412,7 @@ impl PropertyShow for CompData
             let type_value = self.get_kind_string();
 
             let types = CompData::get_all_kind();
-            let pv = property.add_enum(self, field, types.as_str(), type_value.as_str(), has_container);
+            let pv = property.add_enum(field, types.as_str(), type_value.as_str(), has_container);
             return Some(pv);
         }
 
@@ -1535,7 +1514,7 @@ impl ui::PropertyShow for Orientation {
             };
 
             let types = "AngleXYZ/Quat";
-            property.add_enum(self, field, types, type_value, has_container);
+            property.add_enum(field, types, type_value, has_container);
         }
 
         if depth == 1 {
@@ -1875,34 +1854,141 @@ impl PropertyId for scene::Scene
 
 pub trait PropertyWidget {
 
-    fn add_simple_item(&mut self, field : &str, item : *const PropertyValue);//, f : f64);
-    fn add_option(&mut self, field : &str);//, is_some : bool);
-    fn add_vec(&mut self, field : &str);//, is_some : bool);
+    fn add_simple_item(&mut self, field : &str, item : *const PropertyValue) -> *const PropertyValue;
+    fn add_option(&mut self, field : &str, is_some : bool) -> *const PropertyValue;
+    fn add_vec(&self, field : &str, len : usize);
     fn add_vec_item(&mut self, widget_entry : *const PropertyValue, is_node : bool);
+    fn add_enum(&mut self, field : &str, enums : &str, value : &str);
 
     fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
 
     fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize);
-    fn update_enum(&mut self, widget_entry : *const PropertyValue, s : String);
+    fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str);
 
 }
 
 impl PropertyWidget for Property
 {
     fn add_simple_item(&mut self, field : &str, item : *const PropertyValue)
-    {}
-    fn add_option(&mut self, field : &str)
-    {}
-    fn add_vec(&mut self, field : &str)
-    {}
+        -> *const PropertyValue
+    {
+        unsafe {
+            property_list_single_item_add(
+                self.jk_property_list,
+                item)
+        }
+    }
+
+    fn add_option(&mut self, field : &str, is_some : bool) -> *const PropertyValue
+    {
+        let f = CString::new(field.as_bytes()).unwrap();
+        let type_value = match is_some {
+            true => "Some",
+            false => "None"
+        };
+
+        let v = CString::new(type_value.as_bytes()).unwrap();
+
+        unsafe {
+            let pv = property_list_option_add(
+                self.jk_property_list,
+                f.as_ptr(),
+                v.as_ptr());
+
+            if pv != ptr::null() {
+                self.pv.borrow_mut().insert(field.to_owned(), pv);
+            }
+
+            pv
+        }
+    }
+
+    fn add_vec(&self, name : &str, len : usize)
+    {
+        let f = CString::new(name.as_bytes()).unwrap();
+        let pv = unsafe {
+            property_list_vec_add(
+                self.jk_property_list,
+                f.as_ptr(),
+                len as c_int
+                )
+        };
+
+        if pv != ptr::null() {
+            self.pv.borrow_mut().insert(name.to_owned(), pv);
+        }
+
+        if self.config.expand.contains(name) {
+            unsafe {
+                property_expand(pv);
+            }
+        }
+    }
+
     fn add_vec_item(&mut self, widget_entry : *const PropertyValue, is_node : bool)
-    {}
+    {
+        unsafe {
+            let pv = property_list_single_vec_add(
+                self.jk_property_list,
+                widget_entry,
+                is_node
+                );
+
+            /*
+            if pv != ptr::null() {
+                self.pv.borrow_mut().insert(nf.clone(), pv);
+            }
+
+            if property.config.expand.contains(nf.as_str()) {
+                property_expand(pv);
+            }
+            */
+
+        }
+    }
+
+    fn add_enum(&mut self, field : &str, enums : &str, value : &str)
+    {
+        let f = CString::new(field.as_bytes()).unwrap();
+        let enums = CString::new(enums.as_bytes()).unwrap();
+        let v = CString::new(value.as_bytes()).unwrap();
+
+        let mut pv = unsafe {
+            property_list_enum_add(
+                self.jk_property_list,
+                f.as_ptr(),
+                enums.as_ptr(),
+                v.as_ptr())
+
+        };
+    }
 
     fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool)
-    {}
+    {
+        let s = match is_some {
+            true => "Some",
+            false => "None"
+        };
+
+        let v = CString::new(s.as_bytes()).unwrap();
+        unsafe {
+            property_list_option_update(
+                widget_entry,
+                v.as_ptr());
+        };
+    }
 
     fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize)
-    {}
-    fn update_enum(&mut self, widget_entry : *const PropertyValue, s : String)
-    {}
+    {
+        unsafe { property_list_vec_update(widget_entry, len as c_int); }
+        unsafe { property_expand(widget_entry); }
+    }
+
+    fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str)
+    {
+        let v = CString::new(value.as_bytes()).unwrap();
+        unsafe {
+            property_list_enum_update(widget_entry, v.as_ptr());
+        }
+    }
 }
