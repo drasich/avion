@@ -1011,22 +1011,18 @@ impl PropertyShow for f64 {
     {
         let f = CString::new(field.as_bytes()).unwrap();
         println!("create f64 for : {}", field);
-        unsafe {
-            let mut pv = property_list_float_add(
+        let pv = unsafe { 
+            property_list_float_add(
                 property.jk_property_list,
                 f.as_ptr(),
-                *self as c_float);
+                *self as c_float)
+        };
 
-            if !has_container {
-                pv = property_list_single_item_add(
-                    property.jk_property_list,
-                    pv);
-            }
-
-            if pv != ptr::null() {
-                property.pv.borrow_mut().insert(field.to_owned(), pv);
-            }
-
+        if !has_container {
+            property.add_simple_item(field, pv);
+            None
+        }
+        else {
             Some(pv)
         }
     }
@@ -1052,22 +1048,18 @@ impl PropertyShow for String {
         let f = CString::new(field.as_bytes()).unwrap();
         let v = CString::new(self.as_bytes()).unwrap();
 
-        unsafe {
-            let mut pv = property_list_string_add(
+        let pv = unsafe {
+            property_list_string_add(
                 property.jk_property_list,
                 f.as_ptr(),
-                v.as_ptr());
+                v.as_ptr())
+        };
 
-            if !has_container {
-                pv = property_list_single_item_add(
-                    property.jk_property_list,
-                    pv);
-            }
-
-            if pv != ptr::null() {
-                property.pv.borrow_mut().insert(field.to_owned(), pv);
-            }
-
+        if !has_container {
+            property.add_simple_item(field, pv);
+            None
+        }
+        else {
             Some(pv)
         }
     }
@@ -1172,25 +1164,9 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
         has_container : bool ) -> Option<*const PropertyValue>
     {
         if depth == 0 {
-            let f = CString::new(field.as_bytes()).unwrap();
-            let type_value = match *self {
-                Some(_) => "Some",
-                None => "None"
-            };
-
-            let v = CString::new(type_value.as_bytes()).unwrap();
-
             unsafe {
-                let pv = property_list_option_add(
-                    property.jk_property_list,
-                    f.as_ptr(),
-                    v.as_ptr());
-
-                if pv != ptr::null() {
-                    property.pv.borrow_mut().insert(field.to_owned(), pv);
-                }
-
-                return Some(pv);
+                property.add_option(field, self.is_some());
+                return None;
             }
         }
 
@@ -1309,22 +1285,8 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                 nf.push_str(n.to_string().as_str());
                 if let Some(ref mut pv) = i.create_widget(property, nf.as_str(), depth -1, true) {
                     unsafe {
-                        let pv = property_list_single_vec_add(
-                            property.jk_property_list,
-                            *pv,
-                            i.is_node()
-                            );
-
-                        if pv != ptr::null() {
-                            property.pv.borrow_mut().insert(nf.clone(), pv);
-                        }
-
-                        if property.config.expand.contains(nf.as_str()) {
-                            property_expand(pv);
-                        }
-
+                        property.add_vec_item(nf.as_str(), *pv, i.is_node());
                     }
-
                 }
                 else {
                     println!("___ Vec : failed" );
@@ -1854,11 +1816,11 @@ impl PropertyId for scene::Scene
 
 pub trait PropertyWidget {
 
-    fn add_simple_item(&mut self, field : &str, item : *const PropertyValue) -> *const PropertyValue;
-    fn add_option(&mut self, field : &str, is_some : bool) -> *const PropertyValue;
+    fn add_simple_item(&self, field : &str, item : *const PropertyValue);
+    fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue;
     fn add_vec(&self, field : &str, len : usize);
-    fn add_vec_item(&mut self, widget_entry : *const PropertyValue, is_node : bool);
-    fn add_enum(&mut self, field : &str, enums : &str, value : &str);
+    fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, is_node : bool);
+    fn add_enum(&self, field : &str, enums : &str, value : &str);
 
     fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
 
@@ -1869,17 +1831,18 @@ pub trait PropertyWidget {
 
 impl PropertyWidget for Property
 {
-    fn add_simple_item(&mut self, field : &str, item : *const PropertyValue)
-        -> *const PropertyValue
+    fn add_simple_item(&self, field : &str, item : *const PropertyValue)
     {
         unsafe {
             property_list_single_item_add(
                 self.jk_property_list,
-                item)
+                item);
         }
+
+        self.pv.borrow_mut().insert(field.to_owned(), item);
     }
 
-    fn add_option(&mut self, field : &str, is_some : bool) -> *const PropertyValue
+    fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue
     {
         let f = CString::new(field.as_bytes()).unwrap();
         let type_value = match is_some {
@@ -1925,7 +1888,7 @@ impl PropertyWidget for Property
         }
     }
 
-    fn add_vec_item(&mut self, widget_entry : *const PropertyValue, is_node : bool)
+    fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, is_node : bool)
     {
         unsafe {
             let pv = property_list_single_vec_add(
@@ -1934,20 +1897,17 @@ impl PropertyWidget for Property
                 is_node
                 );
 
-            /*
             if pv != ptr::null() {
-                self.pv.borrow_mut().insert(nf.clone(), pv);
+                self.pv.borrow_mut().insert(field.to_owned(), widget_entry);
             }
 
-            if property.config.expand.contains(nf.as_str()) {
-                property_expand(pv);
+            if self.config.expand.contains(field) {
+                property_expand(widget_entry);
             }
-            */
-
         }
     }
 
-    fn add_enum(&mut self, field : &str, enums : &str, value : &str)
+    fn add_enum(&self, field : &str, enums : &str, value : &str)
     {
         let f = CString::new(field.as_bytes()).unwrap();
         let enums = CString::new(enums.as_bytes()).unwrap();
