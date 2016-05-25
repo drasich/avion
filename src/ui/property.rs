@@ -335,6 +335,8 @@ impl Property
         // and check
         let copy = self.pv.borrow().clone();
 
+        println!("UPDATE OBJECT PROP '{}'", prop);
+
         for (f,pv) in &copy {
             match self.pv.borrow().get(f) {
                 Some(p) => if *p != *pv {
@@ -441,6 +443,7 @@ impl Property
         path : &str,
         types : &str,
         value : &str,
+        is_node : bool,
         has_container : bool
         ) -> *const PropertyValue
     {
@@ -448,7 +451,7 @@ impl Property
         let types = CString::new(types.as_bytes()).unwrap();
         let v = CString::new(value.as_bytes()).unwrap();
 
-        let mut pv = unsafe {
+        let pv = unsafe {
             property_list_enum_add(
                 self.jk_property_list,
                 f.as_ptr(),
@@ -458,21 +461,11 @@ impl Property
         };
 
         if !has_container {
-            unsafe {
-            pv = property_list_single_node_add(
-                self.jk_property_list,
-                pv);
+            if is_node {
+                self.add_node_t(path, pv);
             }
-        }
-
-
-        if pv != ptr::null() {
-            self.pv.borrow_mut().insert(path.to_owned(), pv);
-        }
-
-        if self.config.expand.contains(path) {
-            unsafe {
-                property_expand(pv);
+            else {
+                self.add_simple_item(path, pv);
             }
         }
 
@@ -1374,7 +1367,7 @@ impl PropertyShow for CompData
             let type_value = self.get_kind_string();
 
             let types = CompData::get_all_kind();
-            let pv = property.add_enum(field, types.as_str(), type_value.as_str(), has_container);
+            let pv = property.add_enum(field, types.as_str(), type_value.as_str(), true, has_container);
             return Some(pv);
         }
 
@@ -1476,7 +1469,7 @@ impl ui::PropertyShow for Orientation {
             };
 
             let types = "AngleXYZ/Quat";
-            property.add_enum(field, types, type_value, has_container);
+            property.add_enum(field, types, type_value, true, has_container);
         }
 
         if depth == 1 {
@@ -1492,6 +1485,36 @@ impl ui::PropertyShow for Orientation {
 
         None
     }
+
+    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    {
+        println!("update property orientation : {:?} ", path);
+        if path.is_empty() {
+            self.update_widget(pv);
+            return;
+        }
+
+        match *self {
+            Orientation::AngleXYZ(ref v) =>  {
+                match path[0].as_str() {
+                    "x" => v.x.update_property(path[1..].to_vec(), pv),
+                    "y" => v.y.update_property(path[1..].to_vec(), pv),
+                    "z" => v.z.update_property(path[1..].to_vec(), pv),
+                    _ => {}
+                }
+            },
+            Orientation::Quat(ref q) => {
+                match path[0].as_str() {
+                    "x" => q.x.update_property(path[1..].to_vec(), pv),
+                    "y" => q.y.update_property(path[1..].to_vec(), pv),
+                    "z" => q.z.update_property(path[1..].to_vec(), pv),
+                    "w" => q.w.update_property(path[1..].to_vec(), pv),
+                    _ => {}
+                }
+            }
+        }
+    }
+
 
     fn update_widget(&self, pv : *const PropertyValue) {
         let type_value = match *self {
@@ -1817,10 +1840,10 @@ impl PropertyId for scene::Scene
 pub trait PropertyWidget {
 
     fn add_simple_item(&self, field : &str, item : *const PropertyValue);
+    fn add_node_t(&self, field : &str, item : *const PropertyValue);
     fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue;
     fn add_vec(&self, field : &str, len : usize);
     fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, is_node : bool);
-    fn add_enum(&self, field : &str, enums : &str, value : &str);
 
     fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
 
@@ -1840,6 +1863,23 @@ impl PropertyWidget for Property
         }
 
         self.pv.borrow_mut().insert(field.to_owned(), item);
+    }
+
+    fn add_node_t(&self, field : &str, item : *const PropertyValue)
+    {
+        unsafe {
+            property_list_single_node_add(
+                self.jk_property_list,
+                item);
+        }
+
+        self.pv.borrow_mut().insert(field.to_owned(), item);
+
+        if self.config.expand.contains(field) {
+            unsafe {
+                property_expand(item);
+            }
+        }
     }
 
     fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue
@@ -1905,22 +1945,6 @@ impl PropertyWidget for Property
                 property_expand(widget_entry);
             }
         }
-    }
-
-    fn add_enum(&self, field : &str, enums : &str, value : &str)
-    {
-        let f = CString::new(field.as_bytes()).unwrap();
-        let enums = CString::new(enums.as_bytes()).unwrap();
-        let v = CString::new(value.as_bytes()).unwrap();
-
-        let mut pv = unsafe {
-            property_list_enum_add(
-                self.jk_property_list,
-                f.as_ptr(),
-                enums.as_ptr(),
-                v.as_ptr())
-
-        };
     }
 
     fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool)
