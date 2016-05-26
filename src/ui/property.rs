@@ -1318,6 +1318,34 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         }
         */
     }
+
+    fn find_and_create(&self, property : &Property, path : Vec<String>, start : usize)
+    {
+        println!("vec create property : {:?}", path);
+        if path.is_empty() {
+            println!("vec create property 000000 : empty path");
+            self.create_widget(property, "" , 0, false);
+            return;
+        }
+        else if start == path.len() -1 {
+            match path[start].parse::<usize>() {
+                Ok(index) => {
+                    self[index].create_widget(property, join_string(&path).as_str(),1, false);
+                },
+                _ => return
+            }
+        }
+        else {
+            match path[start].parse::<usize>() {
+                Ok(index) => {
+                    self[index].find_and_create(property, path, start + 1);
+                },
+                _ => return
+            }
+        }
+
+    }
+
 }
 
 impl PropertyShow for CompData
