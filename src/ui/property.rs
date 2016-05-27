@@ -22,7 +22,7 @@ use dormin::camera;
 use dormin::object;
 use ui::{Window, ButtonCallback};
 use ui::{ChangedFunc, RegisterChangeFunc, PropertyTreeFunc, PropertyValue, PropertyConfig, PropertyUser,
-PropertyShow, PropertyId, RefMut, Elm_Object_Item, ShouldUpdate};
+PropertyShow, PropertyId, RefMut, Elm_Object_Item, ShouldUpdate, PropertyWidget};
 use ui;
 use dormin::property;
 use operation;
@@ -97,7 +97,6 @@ extern {
         );
 
     fn property_list_node_add(
-        pl : *const JkPropertyList,
         path : *const c_char,
         added_name : *const c_char
         ) -> *const PropertyValue;
@@ -119,13 +118,11 @@ extern {
         );
 
     fn property_list_float_add(
-        ps : *const JkPropertyList,
         name : *const c_char,
         value : c_float
         ) -> *const PropertyValue;
 
     fn property_list_string_add(
-        ps : *const JkPropertyList,
         name : *const c_char,
         value : *const c_char
         ) -> *const PropertyValue;
@@ -159,7 +156,6 @@ extern {
         */
 
     fn property_list_enum_add(
-        ps : *const JkPropertyList,
         name : *const c_char,
         possible_values : *const c_char,
         value : *const c_char
@@ -410,7 +406,6 @@ impl Property
             };
             println!("adding node : {}", name);
             property_list_node_add(
-                self.jk_property_list,
                 f.as_ptr(),
                 test
                 )
@@ -418,21 +413,7 @@ impl Property
 
         if !has_container {
             println!(".......with single node : {}", name);
-            unsafe {
-            pv = property_list_single_node_add(
-                self.jk_property_list,
-                pv);
-            }
-        }
-
-        if pv != ptr::null() {
-            self.pv.borrow_mut().insert(name.to_owned(), pv);
-        }
-
-        if self.config.expand.contains(name) {
-            unsafe {
-                property_expand(pv);
-            }
+            self.add_node_t(name, pv);
         }
 
         return pv;
@@ -453,7 +434,6 @@ impl Property
 
         let pv = unsafe {
             property_list_enum_add(
-                self.jk_property_list,
                 f.as_ptr(),
                 types.as_ptr(),
                 v.as_ptr())
@@ -997,7 +977,7 @@ impl PropertyShow for f64 {
 
     fn create_widget(
         &self,
-        property : &Property,
+        property : &PropertyWidget,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1006,7 +986,6 @@ impl PropertyShow for f64 {
         println!("create f64 for : {}", field);
         let pv = unsafe { 
             property_list_float_add(
-                property.jk_property_list,
                 f.as_ptr(),
                 *self as c_float)
         };
@@ -1033,7 +1012,7 @@ impl PropertyShow for String {
 
     fn create_widget(
         &self,
-        property : &Property,
+        property : &PropertyWidget,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1043,7 +1022,6 @@ impl PropertyShow for String {
 
         let pv = unsafe {
             property_list_string_add(
-                property.jk_property_list,
                 f.as_ptr(),
                 v.as_ptr())
         };
@@ -1071,7 +1049,7 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
 
     fn create_widget(
         &self,
-        property : &Property,
+        property : &PropertyWidget,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1089,7 +1067,7 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
         (**self).update_property(path, pv);
     }
 
-    fn find_and_create(&self, property : &Property, path : Vec<String>, start : usize)
+    fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {
         (**self).find_and_create(property, path, start);
     }
@@ -1109,7 +1087,7 @@ impl<T : PropertyShow> PropertyShow for Rc<RefCell<T>> {
 
     fn create_widget(
         &self,
-        property : &Property,
+        property : &PropertyWidget,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1130,7 +1108,7 @@ impl<T : PropertyShow> PropertyShow for Rc<RefCell<T>> {
         self.borrow().update_property(path, pv);
     }
 
-    fn find_and_create(&self, property : &Property, path : Vec<String>, start : usize)
+    fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {
         self.borrow().find_and_create(property, path, start);
     }
@@ -1151,7 +1129,7 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
 
     fn create_widget(
         &self,
-        property : &Property,
+        property : &PropertyWidget,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1194,7 +1172,7 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
         };
     }
 
-    fn find_and_create(&self, property : &Property, path : Vec<String>, start : usize)
+    fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {
         if let Some(ref s) = *self {
                 s.find_and_create(property, path, start);
@@ -1216,7 +1194,7 @@ impl<T> PropertyShow for resource::ResTT<T>
 {
     fn create_widget(
         &self,
-        property : &Property,
+        property : &PropertyWidget,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1227,7 +1205,7 @@ impl<T> PropertyShow for resource::ResTT<T>
 
         if depth == 0 && field != ""
         {
-            property.add_node(self, field, has_container, None);
+            add_node(property, self, field, has_container, None);
         }
 
         if depth > 0 {
@@ -1251,7 +1229,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 {
     fn create_widget(
         &self,
-        property : &Property,
+        property : &PropertyWidget,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1319,11 +1297,9 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         */
     }
 
-    fn find_and_create(&self, property : &Property, path : Vec<String>, start : usize)
+    fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {
-        println!("vec create property : {:?}", path);
         if path.is_empty() {
-            println!("vec create property 000000 : empty path");
             self.create_widget(property, "" , 0, false);
             return;
         }
@@ -1352,7 +1328,7 @@ impl PropertyShow for CompData
 {
     fn create_widget(
         &self,
-        property : &Property,
+        property : &PropertyWidget,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
@@ -1395,7 +1371,7 @@ impl PropertyShow for CompData
             let type_value = self.get_kind_string();
 
             let types = CompData::get_all_kind();
-            let pv = property.add_enum(field, types.as_str(), type_value.as_str(), true, has_container);
+            let pv = add_enum(property, field, types.as_str(), type_value.as_str(), true, has_container);
             return Some(pv);
         }
 
@@ -1485,7 +1461,7 @@ impl ui::PropertyShow for Orientation {
 
     fn create_widget(
         &self,
-        property : &ui::Property,
+        property : &PropertyWidget,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const ui::PropertyValue>
@@ -1497,7 +1473,7 @@ impl ui::PropertyShow for Orientation {
             };
 
             let types = "AngleXYZ/Quat";
-            property.add_enum(field, types, type_value, true, has_container);
+            add_enum(property, field, types, type_value, true, has_container);
         }
 
         if depth == 1 {
@@ -1587,7 +1563,7 @@ macro_rules! property_show_methods(
 
             fn create_widget(
                 &self,
-                property : &Property,
+                property : &PropertyWidget,
                 field : &str,
                 depth : i32,
                 has_container : bool ) -> Option<*const PropertyValue>
@@ -1601,7 +1577,7 @@ macro_rules! property_show_methods(
 
                 if depth == 0 && field != ""
                 {
-                    property.add_node(self, field, has_container, None);
+                    add_node(property, self, field, has_container, None);
                 }
 
                 if depth > 0 {
@@ -1662,7 +1638,7 @@ macro_rules! property_show_methods(
                 }
             }
 
-            fn find_and_create(&self, property : &Property, path : Vec<String>, start : usize)
+            fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
             {
                 if path.is_empty() {
                     println!("macro create property 000000 : empty path");
@@ -1864,22 +1840,6 @@ impl PropertyId for scene::Scene
     }
 }
 
-
-pub trait PropertyWidget {
-
-    fn add_simple_item(&self, field : &str, item : *const PropertyValue);
-    fn add_node_t(&self, field : &str, item : *const PropertyValue);
-    fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue;
-    fn add_vec(&self, field : &str, len : usize);
-    fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, is_node : bool);
-
-    fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
-
-    fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize);
-    fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str);
-
-}
-
 impl PropertyWidget for Property
 {
     fn add_simple_item(&self, field : &str, item : *const PropertyValue)
@@ -2004,3 +1964,73 @@ impl PropertyWidget for Property
         }
     }
 }
+
+pub fn add_node(
+    property : &PropertyWidget,
+    ps : &PropertyShow,
+    name : &str,
+    has_container : bool,
+    added_name : Option<&str>,
+    ) -> *const PropertyValue
+{
+    let f = CString::new(name.as_bytes()).unwrap();
+    let mut pv = unsafe {
+        let test = if has_container {
+            if let Some(n) = added_name {
+                CString::new(n).unwrap().as_ptr()
+            }
+            else {
+                ptr::null()
+            }
+        }
+        else {
+            ptr::null()
+        };
+        println!("adding node : {}", name);
+        property_list_node_add(
+            f.as_ptr(),
+            test
+            )
+    };
+
+    if !has_container {
+        println!(".......with single node : {}", name);
+        property.add_node_t(name, pv);
+    }
+
+    return pv;
+}
+
+pub fn add_enum(
+    property : &PropertyWidget,
+    path : &str,
+    types : &str,
+    value : &str,
+    is_node : bool,
+    has_container : bool
+    ) -> *const PropertyValue
+{
+    let f = CString::new(path.as_bytes()).unwrap();
+    let types = CString::new(types.as_bytes()).unwrap();
+    let v = CString::new(value.as_bytes()).unwrap();
+
+    let pv = unsafe {
+        property_list_enum_add(
+            f.as_ptr(),
+            types.as_ptr(),
+            v.as_ptr())
+
+    };
+
+    if !has_container {
+        if is_node {
+            property.add_node_t(path, pv);
+        }
+        else {
+            property.add_simple_item(path, pv);
+        }
+    }
+
+    pv
+}
+

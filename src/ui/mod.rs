@@ -151,7 +151,7 @@ pub trait PropertyShow
 {
     fn create_widget(
         &self,
-        property : &Property,
+        property : &PropertyWidget,
         field : &str,
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>;
@@ -178,7 +178,7 @@ pub trait PropertyShow
         }
     }
 
-    fn find_and_create(&self, property : &Property, path : Vec<String>, start : usize)
+    fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {
         println!("default create property : {:?}", path);
         if path.is_empty() {
@@ -249,5 +249,19 @@ pub enum ShouldUpdate
 {
     Nothing,
     Mesh
+}
+
+pub trait PropertyWidget {
+
+    fn add_simple_item(&self, field : &str, item : *const PropertyValue);
+    fn add_node_t(&self, field : &str, item : *const PropertyValue);
+    fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue;
+    fn add_vec(&self, field : &str, len : usize);
+    fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, is_node : bool);
+
+    fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
+
+    fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize);
+    fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str);
 }
 
