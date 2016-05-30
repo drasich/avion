@@ -24,7 +24,7 @@ use dormin::geometry;
 use dormin::vec;
 use dormin::scene;
 use dormin::object;
-use ui::{Tree,Property,RefMut,PropertyUser,PropertyConfig,View,Command,Action,GameView,ShouldUpdate};
+use ui::{Tree,PropertyList,RefMut,PropertyUser,PropertyConfig,View,Command,Action,GameView,ShouldUpdate};
 use ui;
 use dormin::factory;
 use operation;
@@ -581,7 +581,7 @@ pub struct WidgetContainer
 {
     pub widgets : Vec<Box<Widget>>,
     pub tree : Option<Box<Tree>>,
-    pub property : Option<Rc<Property>>,
+    pub property : Option<Rc<PropertyList>>,
     pub command : Option<Box<Command>>,
     pub action : Option<Box<Action>>,
     views : Vec<Box<View>>,

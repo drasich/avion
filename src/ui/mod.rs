@@ -53,9 +53,9 @@ pub use self::tree::{Tree};
 pub use self::action::{Action,Position};
 pub use self::command::{Command};
 //pub use self::property::{Property,PropertyConfig,ChangedFunc,RefMut,PropertyUser};
-pub use self::property::{Property};
+pub use self::property_list::{PropertyList};
 //pub use self::property::{PropertyShow};
-pub use self::property::{JkPropertyList};
+//pub use self::property::{JkPropertyList};
 
 pub use self::view::{View, GameView, gv_close_cb};
 
@@ -65,6 +65,7 @@ mod command;
 pub mod def;
 pub mod property;
 pub mod property_box;
+pub mod property_list;
 pub mod view;
 //pub mod dragger;
 
