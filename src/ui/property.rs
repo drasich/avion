@@ -22,7 +22,7 @@ use dormin::camera;
 use dormin::object;
 use ui::{Window, ButtonCallback};
 use ui::{ChangedFunc, RegisterChangeFunc, PropertyTreeFunc, PropertyValue, PropertyConfig, PropertyUser,
-PropertyShow, PropertyId, RefMut, Elm_Object_Item, ShouldUpdate, PropertyWidget, PropertyList};
+PropertyShow, PropertyId, RefMut, Elm_Object_Item, ShouldUpdate, PropertyWidget, PropertyList, JkPropertyList};
 use ui;
 use dormin::property;
 use operation;
@@ -43,8 +43,6 @@ use dormin::transform::Orientation;
 pub struct JkProperty;
 #[repr(C)]
 pub struct JkPropertySet;
-#[repr(C)]
-pub struct JkPropertyList;
 
 #[link(name = "png")]
 
@@ -60,16 +58,6 @@ pub struct JkPropertyList;
 //#[link(name = "GLESv2")]
 #[link(name = "joker")]
 extern {
-
-    fn jk_property_list_new(
-        window : *const Window,
-        x : c_int,
-        y : c_int,
-        w : c_int,
-        h : c_int
-        ) -> *const JkPropertyList;
-
-    fn property_list_clear(pl : *const JkPropertyList);
 
     pub fn jk_property_list_register_cb(
         property : *const JkPropertyList,
@@ -91,31 +79,10 @@ extern {
         vec_add : RegisterChangeFunc,
         vec_del : RegisterChangeFunc);
 
-    fn property_list_group_add(
-        pl : *const JkPropertyList,
-        name : *const c_char
-        );
-
     fn property_list_node_add(
         path : *const c_char,
         added_name : *const c_char
         ) -> *const PropertyValue;
-
-    fn property_list_single_node_add(
-        pl : *const JkPropertyList,
-        val : *const PropertyValue,
-        ) -> *const PropertyValue;
-
-    fn property_list_vec_add(
-        pl : *const JkPropertyList,
-        name : *const c_char,
-        len : c_int
-        ) -> *const PropertyValue;
-
-    fn property_list_nodes_remove(
-        pl : *const JkPropertyList,
-        name : *const c_char
-        );
 
     fn property_list_float_add(
         name : *const c_char,
@@ -127,25 +94,10 @@ extern {
         value : *const c_char
         ) -> *const PropertyValue;
 
-    fn property_list_single_item_add(
-        ps : *const JkPropertyList,
-        container: *const PropertyValue,
-        ) -> *const PropertyValue;
-
-    fn property_list_single_vec_add(
-        ps : *const JkPropertyList,
-        container: *const PropertyValue,
-        is_node : bool
-        ) -> *const PropertyValue;
-
     fn property_list_node_vec_add(
         ps : *const JkPropertyList,
         container: *const PropertyValue,
         ) -> *const PropertyValue;
-
-    fn property_list_vec_update(
-        pv : *const PropertyValue,
-        len : c_int);
 
     /*
     fn property_list_vec_item_add(
@@ -161,12 +113,6 @@ extern {
         value : *const c_char
         ) -> *const PropertyValue;
 
-    fn property_list_option_add(
-        ps : *const JkPropertyList,
-        name : *const c_char,
-        value : *const c_char
-        ) -> *const PropertyValue;
-
     fn property_list_option_update(
         pv : *const PropertyValue,
         value : *const c_char);
@@ -179,14 +125,16 @@ extern {
         pv : *const PropertyValue,
         value : c_float);
 
-    fn property_expand(
-        pv : *const PropertyValue);
-
-    fn property_show(obj : *const JkPropertyList, b : bool);
-
-    fn property_list_enum_update(
+    pub fn property_list_enum_update(
         pv : *const ui::PropertyValue,
         value : *const c_char);
+
+    fn property_list_vec_update(
+        pv : *const PropertyValue,
+        len : c_int);
+
+    pub fn property_expand(
+        pv : *const PropertyValue);
 }
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
@@ -198,422 +146,6 @@ pub extern fn name_get(data : *const c_void) -> *const c_char {
     let cs = CString::new(o.read().unwrap().name.as_bytes()).unwrap();
     //println!("..........name get {:?}", cs);
     cs.as_ptr()
-}
-
-pub extern fn changed_set_float(
-    property : *const c_void,
-    name : *const c_char,
-    data : *const c_void) {
-
-    let f : & f64 = unsafe {mem::transmute(data)};
-    changed_set(property, name, None, f, 0);
-}
-
-pub extern fn changed_set_string(
-    property : *const c_void,
-    name : *const c_char,
-    data : *const c_void) {
-
-    let datachar = data as *const i8;
-    let s = unsafe {CStr::from_ptr(datachar).to_bytes()};
-    let ss = match str::from_utf8(s) {
-        Ok(sss) => sss.to_owned(),
-        _ => {
-            return;
-        }
-    };
-    changed_set(property, name, None, &ss, 0);
-}
-
-pub extern fn changed_set_enum(
-    property : *const c_void,
-    name : *const c_char,
-    data : *const c_void) {
-    println!("DOES NOT NO ANYTHING");
-}
-
-
-pub extern fn register_change_string(
-    property : *const c_void,
-    name : *const c_char,
-    old : *const c_void,
-    new : *const c_void,
-    action : c_int
-    ) {
-
-    let newchar = new as *const i8;
-    let s = unsafe {CStr::from_ptr(newchar).to_bytes()};
-    let ss = match str::from_utf8(s) {
-        Ok(sss) => sss.to_owned(),
-        _ => {
-            println!("error");
-            return;
-        }
-    };
-
-    if action == 1 && old != ptr::null() {
-        let oldchar = old as *const i8;
-        let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
-        let sso = match str::from_utf8(so) {
-            Ok(ssso) => ssso.to_owned(),
-            _ => {
-                println!("error");
-                return;
-            }
-        };
-
-        changed_set(property, name, Some(&sso), &ss, action);
-    }
-    else {
-        changed_set(property, name, None, &ss, action);
-    }
-}
-
-pub extern fn register_change_float(
-    property : *const c_void,
-    name : *const c_char,
-    old : *const c_void,
-    new : *const c_void,
-    action : c_int
-    ) {
-
-    let fnew : & f64 = unsafe {mem::transmute(new)};
-
-    if action == 1 && old != ptr::null() {
-        let fold : & f64 = unsafe {mem::transmute(old)};
-        changed_set(property, name, Some(fold), fnew, action);
-    }
-    else {
-        changed_set(property, name, None, fnew, action);
-    }
-}
-
-pub extern fn register_change_enum(
-    widget_cb_data : *const c_void,
-    name : *const c_char,
-    old : *const c_void,
-    new : *const c_void,
-    action : c_int
-    ) {
-
-    let newchar = new as *const i8;
-    let s = unsafe {CStr::from_ptr(newchar).to_bytes()};
-    let ss = match str::from_utf8(s) {
-        Ok(sss) => sss.to_owned(),
-        _ => {
-            println!("error");
-            return
-        }
-    };
-
-    //println!("the string is {}", ss);
-    if action == 1 && old != ptr::null() {
-        let oldchar = old as *const i8;
-        let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
-        let sso = match str::from_utf8(so) {
-            Ok(ssso) => ssso.to_owned(),
-            _ => {
-                println!("error");
-                return
-            }
-        };
-        changed_enum(widget_cb_data, name, &ss);
-    }
-    else {
-        changed_enum(widget_cb_data, name, &ss);
-    }
-}
-
-pub extern fn register_change_option(
-    widget_cb_data : *const c_void,
-    name : *const c_char,
-    old : *const c_void,
-    new : *const c_void,
-    action : c_int
-    ) {
-
-    let newchar = new as *const i8;
-    let s = unsafe {CStr::from_ptr(newchar).to_bytes()};
-    let ss = match str::from_utf8(s) {
-        Ok(sss) => sss.to_owned(),
-        _ => {
-            println!("error");
-            return
-        }
-    };
-
-    //println!("the string is {}", ss);
-    if old == ptr::null() {
-        println!("option : old is null, return");
-        return;
-    }
-
-    let oldchar = old as *const i8;
-    let so = unsafe {CStr::from_ptr(oldchar).to_bytes()};
-    let sso = match str::from_utf8(so) {
-        Ok(ssso) => ssso.to_owned(),
-        _ => {
-            println!("error");
-            return
-        }
-    };
-
-    changed_option(widget_cb_data, name, &sso, &ss);
-}
-
-fn get_str<'a>(cstr : *const c_char) -> Option<&'a str>
-{
-    let s = unsafe {CStr::from_ptr(cstr).to_bytes()};
-    str::from_utf8(s).ok()
-}
-
-fn get_widget_data<'a>(widget_data : *const c_void) -> (&'a mut ui::PropertyList, &'a mut Box<ui::WidgetContainer>)
-{
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
-    let p : &mut ui::PropertyList = unsafe {mem::transmute(wcb.widget)};
-    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
-
-    (p, container)
-}
-
-fn changed_set<T : Any+Clone+PartialEq>(
-    widget_data : *const c_void,
-    name : *const c_char,
-    old : Option<&T>,
-    new : &T,
-    action : i32
-    )
-{
-    let path = if let Some(p) = get_str(name) {
-        p
-    }
-    else {
-        return;
-    };
-
-    let (p, container) = get_widget_data(widget_data);
-
-    let change = match (old, action) {
-        (Some(oldd), 1) => {
-            if let Some(ref cur) = *p.current.borrow() {
-                container.request_operation_property_old_new(
-                    (*cur).clone(),
-                    path,
-                    box oldd.clone(),
-                    box new.clone())
-            }
-            else
-            {
-                println!("property widget doesn't seem to have a property set to it");
-                operation::Change::None
-                /*
-                container.request_operation_old_new(
-                    path,
-                    box oldd.clone(),
-                    box new.clone())
-                    */
-            }
-        },
-        _ => {
-            if let Some(ref cur) = *p.current.borrow() {
-                match *cur {
-                    RefMut::Arc(ref a) =>
-                        container.request_direct_change_property(&mut *a.write().unwrap(),path,new),
-                        RefMut::Cell(ref c) =>
-                            container.request_direct_change_property(&mut *c.borrow_mut(),path,new)
-                }
-            }
-            //container.request_direct_change(path, new)
-            else {
-                operation::Change::None
-            }
-        }
-    };
-
-    container.handle_change(&change, p.id);
-}
-
-fn changed_enum<T : Any+Clone+PartialEq>(
-    widget_data : *const c_void,
-    name : *const c_char,
-    new : &T,
-    )
-{
-    let path = if let Some(p) = get_str(name) {
-        p
-    }
-    else {
-        return;
-    };
-
-    let (p, container) = get_widget_data(widget_data);
-
-    let change = {
-        /*
-        container.request_operation_old_new_enum(
-            path,
-            box new.clone())
-            */
-
-        if let Some(ref cur) = *p.current.borrow() {
-
-            let option = match *cur {
-                RefMut::Arc(ref a) => a.read().unwrap().get_property_hier(path),
-                RefMut::Cell(ref c) => c.borrow().get_property_hier(path)
-            };
-
-            if let Some(old) = option {
-                container.request_operation_property_old_new_dontcheckequal(
-                    (*cur).clone(),
-                    path,
-                    old,
-                    box new.clone())
-            }
-            else {
-                operation::Change::None
-            }
-        }
-        else
-        {
-            println!("property widget doesn't seem to have a property set to it");
-            operation::Change::None
-        }
-
-    };
-
-    container.handle_change(&change, p.id);
-}
-
-fn changed_option(
-    widget_cb_data : *const c_void,
-    name : *const c_char,
-    old : &str,
-    new : &str
-    )
-{
-    let path = if let Some(p) = get_str(name) {
-        p
-    }
-    else {
-        return;
-    };
-
-    let (p, container) = get_widget_data(widget_cb_data);
-
-    let change = if let Some(ref cur) = *p.current.borrow() {
-
-        if new == "Some" {
-            container.request_operation_option_to_some(cur.clone(), path)
-        }
-        else {
-
-            let option = match *cur {
-                RefMut::Arc(ref a) => a.read().unwrap().get_property_hier(path),
-                RefMut::Cell(ref c) => c.borrow().get_property_hier(path)
-            };
-
-            if let Some(old) = option {
-                container.request_operation_option_to_none(
-                    (*cur).clone(),
-                    path,
-                    old)
-            }
-            else {
-                operation::Change::None
-            }
-            //container.request_operation_option_to_none(path)
-        }
-    }
-    else {
-        operation::Change::None
-    };
-
-    container.handle_change(&change, p.id);
-}
-
-pub extern fn expand(
-    widget_cb_data: *const c_void,
-    data : *const c_void,
-    parent : *const Elm_Object_Item) -> ()
-{
-    let datachar = data as *const i8;
-    let s = unsafe {CStr::from_ptr(datachar).to_bytes()};
-
-    let (p, container) = get_widget_data(widget_cb_data);
-
-    let path = match str::from_utf8(s) {
-        Ok(pp) => pp,
-        _ => {
-            panic!("problem with the path");
-        }
-    };
-
-    let vs = make_vec_from_str(&path.to_owned());
-
-    //TODO factorize this and others
-    println!("factorize this and others, the path is : {:?}", vs);
-    if let Some(ref cur) = *p.current.borrow() {
-        match *cur {
-            RefMut::Arc(ref a) =>
-            {
-                a.read().unwrap().find_and_create(p, vs.clone(), 0);
-
-            },
-            RefMut::Cell(ref c) =>
-            {
-                c.borrow().find_and_create(p, vs.clone(), 0);
-            }
-        }
-
-        p.config.expand.insert(path.to_owned());
-    }
-    else {
-        println!("no current prop....... {}", path);
-    }
-
-}
-
-pub extern fn contract(
-    widget_cb_data: *const c_void,
-    data : *const c_void,
-    parent : *const Elm_Object_Item) -> ()
-{
-    let (p,_) = get_widget_data(widget_cb_data);
-
-    unsafe {
-        property_list_nodes_remove(
-            p.jk_property_list,
-            data as *const c_char
-            );
-    };
-
-    let datachar = data as *const i8;
-    let s = unsafe {CStr::from_ptr(datachar).to_bytes()};
-    let path = match str::from_utf8(s) {
-        Ok(pp) => pp,
-        _ => {
-            println!("problem with the path");
-            return;}
-    };
-
-    p.config.expand.remove(path);
-
-    let clone = p.pv.borrow().clone();
-
-    for (key,pv) in &clone {
-        let starts_with_path = {
-            let ks : &str = key.as_ref();
-            ks.starts_with(path) && ks != path
-        };
-
-        //if key.as_ref().starts_with(path) && key.as_ref() != path  {
-        if starts_with_path {
-            match p.pv.borrow_mut().remove(key) {
-                Some(_) => println!("yes I removed {}", key),
-                None => println!("could not find {}", key)
-            }
-        }
-    }
 }
 
 impl WidgetUpdate for PropertyList
@@ -996,13 +528,10 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
     }
 
     fn update_widget(&self, pv : *const PropertyValue) {
+        
+        println!("TODO TODO call update_vec from property");
         unsafe { property_list_vec_update(pv, self.len() as c_int); }
         unsafe { property_expand(pv); }
-        /*
-        for i in self.iter() {
-            i.update_widget(pv);
-        }
-        */
     }
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
@@ -1416,7 +945,7 @@ property_show_impl!(scene::Scene,[name,camera]);
 property_show_impl!(camera::Camera,[data]);
 property_show_impl!(camera::CameraData,[far,near]);
 
-fn make_vec_from_str(s : &str) -> Vec<String>
+pub fn make_vec_from_str(s : &str) -> Vec<String>
 {
     let v: Vec<&str> = s.split('/').collect();
 
@@ -1545,131 +1074,6 @@ impl PropertyId for scene::Scene
     fn get_id(&self) -> uuid::Uuid
     {
         return self.id
-    }
-}
-
-impl PropertyWidget for PropertyList
-{
-    fn add_simple_item(&self, field : &str, item : *const PropertyValue)
-    {
-        unsafe {
-            property_list_single_item_add(
-                self.jk_property_list,
-                item);
-        }
-
-        self.pv.borrow_mut().insert(field.to_owned(), item);
-    }
-
-    fn add_node_t(&self, field : &str, item : *const PropertyValue)
-    {
-        unsafe {
-            property_list_single_node_add(
-                self.jk_property_list,
-                item);
-        }
-
-        self.pv.borrow_mut().insert(field.to_owned(), item);
-
-        if self.config.expand.contains(field) {
-            unsafe {
-                property_expand(item);
-            }
-        }
-    }
-
-    fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue
-    {
-        let f = CString::new(field.as_bytes()).unwrap();
-        let type_value = match is_some {
-            true => "Some",
-            false => "None"
-        };
-
-        let v = CString::new(type_value.as_bytes()).unwrap();
-
-        unsafe {
-            let pv = property_list_option_add(
-                self.jk_property_list,
-                f.as_ptr(),
-                v.as_ptr());
-
-            if pv != ptr::null() {
-                self.pv.borrow_mut().insert(field.to_owned(), pv);
-            }
-
-            pv
-        }
-    }
-
-    fn add_vec(&self, name : &str, len : usize)
-    {
-        let f = CString::new(name.as_bytes()).unwrap();
-        let pv = unsafe {
-            property_list_vec_add(
-                self.jk_property_list,
-                f.as_ptr(),
-                len as c_int
-                )
-        };
-
-        if pv != ptr::null() {
-            self.pv.borrow_mut().insert(name.to_owned(), pv);
-        }
-
-        if self.config.expand.contains(name) {
-            unsafe {
-                property_expand(pv);
-            }
-        }
-    }
-
-    fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, is_node : bool)
-    {
-        unsafe {
-            let pv = property_list_single_vec_add(
-                self.jk_property_list,
-                widget_entry,
-                is_node
-                );
-
-            if pv != ptr::null() {
-                self.pv.borrow_mut().insert(field.to_owned(), widget_entry);
-            }
-
-            if self.config.expand.contains(field) {
-                property_expand(widget_entry);
-            }
-        }
-    }
-
-    fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool)
-    {
-        let s = match is_some {
-            true => "Some",
-            false => "None"
-        };
-
-        let v = CString::new(s.as_bytes()).unwrap();
-        unsafe {
-            property_list_option_update(
-                widget_entry,
-                v.as_ptr());
-        };
-    }
-
-    fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize)
-    {
-        unsafe { property_list_vec_update(widget_entry, len as c_int); }
-        unsafe { property_expand(widget_entry); }
-    }
-
-    fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str)
-    {
-        let v = CString::new(value.as_bytes()).unwrap();
-        unsafe {
-            property_list_enum_update(widget_entry, v.as_ptr());
-        }
     }
 }
 

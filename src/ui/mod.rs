@@ -53,9 +53,10 @@ pub use self::tree::{Tree};
 pub use self::action::{Action,Position};
 pub use self::command::{Command};
 //pub use self::property::{Property,PropertyConfig,ChangedFunc,RefMut,PropertyUser};
-pub use self::property_list::{PropertyList};
+pub use self::property_list::{PropertyList,JkPropertyList};
 //pub use self::property::{PropertyShow};
 //pub use self::property::{JkPropertyList};
+pub use self::property::{make_vec_from_str,find_property_show};
 
 pub use self::view::{View, GameView, gv_close_cb};
 
@@ -260,9 +261,9 @@ pub trait PropertyWidget {
     fn add_vec(&self, field : &str, len : usize);
     fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, is_node : bool);
 
-    fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
+    //fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
 
-    fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize);
+    //fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize);
     fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str);
 }
 
