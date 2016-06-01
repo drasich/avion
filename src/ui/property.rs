@@ -39,11 +39,6 @@ use dormin::armature;
 use dormin::transform::Orientation;
 
 
-#[repr(C)]
-pub struct JkProperty;
-#[repr(C)]
-pub struct JkPropertySet;
-
 #[link(name = "png")]
 
 #[link(name = "ecore_evas")]
