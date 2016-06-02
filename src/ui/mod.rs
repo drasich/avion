@@ -56,7 +56,7 @@ pub use self::command::{Command};
 pub use self::property_list::{PropertyList,JkPropertyList};
 //pub use self::property::{PropertyShow};
 //pub use self::property::{JkPropertyList};
-pub use self::property::{make_vec_from_str,find_property_show};
+pub use self::property::{make_vec_from_str,find_property_show,JkPropertyCb};
 
 pub use self::view::{View, GameView, gv_close_cb};
 
@@ -265,5 +265,7 @@ pub trait PropertyWidget {
 
     //fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize);
     fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str);
+
+    fn get_current(&self) -> Option<RefMut<PropertyUser>>;
 }
 

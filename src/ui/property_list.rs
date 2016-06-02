@@ -93,9 +93,8 @@ extern {
         len : c_int
         ) -> *const PropertyValue;
 
+    pub fn property_list_cb_get(pl : *const JkPropertyList) -> *const ui::JkPropertyCb;
 }
-
-
 
 pub struct PropertyList
 {
@@ -105,7 +104,7 @@ pub struct PropertyList
     visible : Cell<bool>,
     pub id : uuid::Uuid,
     pub config : PropertyConfig,
-    pub current : RefCell<Option<RefMut<PropertyUser>>>
+    current : RefCell<Option<RefMut<PropertyUser>>>
 }
 
 impl PropertyList
@@ -933,6 +932,13 @@ impl PropertyWidget for PropertyList
         unsafe {
             ui::property::property_list_enum_update(widget_entry, v.as_ptr());
         }
+    }
+
+    fn get_current(&self) -> Option<RefMut<PropertyUser>>
+    {
+        let cur = self.current.borrow();// = Some(RefMut::Cell(p));
+        //cur
+        None
     }
 }
 

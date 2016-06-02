@@ -38,6 +38,8 @@ use dormin::component::CompData;
 use dormin::armature;
 use dormin::transform::Orientation;
 
+#[repr(C)]
+pub struct JkPropertyCb;
 
 #[link(name = "png")]
 
@@ -57,15 +59,6 @@ extern {
     pub fn jk_property_list_register_cb(
         property : *const JkPropertyList,
         data : *const PropertyList,
-        changed_float : ChangedFunc,
-        changed_string : ChangedFunc,
-        changed_enum : ChangedFunc,
-        register_change_string : RegisterChangeFunc,
-        register_change_float : RegisterChangeFunc,
-        register_change_enum : RegisterChangeFunc,
-        register_change_option : RegisterChangeFunc,
-        expand : PropertyTreeFunc,
-        contract : PropertyTreeFunc,
         panel_move : ui::PanelGeomFunc
         );
 
@@ -130,6 +123,19 @@ extern {
 
     pub fn property_expand(
         pv : *const PropertyValue);
+
+    pub fn jk_property_cb_register(
+        property : *const JkPropertyCb,
+        changed_float : ChangedFunc,
+        changed_string : ChangedFunc,
+        changed_enum : ChangedFunc,
+        register_change_string : RegisterChangeFunc,
+        register_change_float : RegisterChangeFunc,
+        register_change_enum : RegisterChangeFunc,
+        register_change_option : RegisterChangeFunc,
+        expand : PropertyTreeFunc,
+        contract : PropertyTreeFunc,
+        );
 }
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {

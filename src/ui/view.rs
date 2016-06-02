@@ -193,6 +193,11 @@ impl View
             ui::property::jk_property_list_register_cb(
                 p.jk_property_list,
                 mem::transmute(box pd),
+                ui::property::panel_move,
+                );
+
+            ui::property::jk_property_cb_register(
+                ui::property_list::property_list_cb_get(p.jk_property_list),
                 ui::property_list::changed_set_float,
                 ui::property_list::changed_set_string,
                 ui::property_list::changed_set_enum,
@@ -202,7 +207,6 @@ impl View
                 ui::property_list::register_change_option,
                 ui::property_list::expand,
                 ui::property_list::contract,
-                ui::property::panel_move,
                 );
 
             ui::property::jk_property_list_register_vec_cb(
