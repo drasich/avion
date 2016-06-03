@@ -936,9 +936,26 @@ impl PropertyWidget for PropertyList
 
     fn get_current(&self) -> Option<RefMut<PropertyUser>>
     {
-        let cur = self.current.borrow();// = Some(RefMut::Cell(p));
-        //cur
-        None
+        if let Some(ref cur) = *self.current.borrow() {
+            Some(cur.clone())
+        }
+        else {
+            None
+        }
+    }
+
+    fn set_current(&self, p : RefMut<PropertyUser>, title : &str)
+    {
+        let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
+        *cur = Some(p.clone());
+        //self._set_prop(&*p.borrow().as_show(), title);
+
+        match p {
+            RefMut::Arc(ref a) => 
+                self._set_prop(&*a.read().unwrap().as_show(), title),
+            RefMut::Cell(ref c) => 
+                self._set_prop(&*c.borrow().as_show(), title),
+        }
     }
 }
 

@@ -267,5 +267,6 @@ pub trait PropertyWidget {
     fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str);
 
     fn get_current(&self) -> Option<RefMut<PropertyUser>>;
+    fn set_current(&self, p : RefMut<PropertyUser>, title : &str);
 }
 

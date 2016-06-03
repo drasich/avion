@@ -581,7 +581,8 @@ pub struct WidgetContainer
 {
     pub widgets : Vec<Box<Widget>>,
     pub tree : Option<Box<Tree>>,
-    pub property : Option<Rc<PropertyList>>,
+    //pub property : Option<Rc<PropertyList>>,
+    pub property : Option<Rc<PropertyWidget>>,
     pub command : Option<Box<Command>>,
     pub action : Option<Box<Action>>,
     views : Vec<Box<View>>,
@@ -847,7 +848,8 @@ impl WidgetContainer
                     if let Some(ref mut p) = self.property {
                         if let Some(ref s) = self.context.scene {
                             //p.set_scene(&*s.borrow());
-                            p.set_prop_cell(s.clone(), "scene");
+                            //p.set_prop_cell(s.clone(), "scene");
+                            p.set_current(RefMut::Cell(s.clone()), "scene");
                         }
                     }
                 }
