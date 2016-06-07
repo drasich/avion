@@ -243,6 +243,7 @@ impl PropertyList
         for (f,pv) in &copy {
             match self.pv.borrow().get(f) {
                 Some(p) => if *p != *pv {
+                    panic!("different pointer???");
                     continue
                 },
                 None => continue
@@ -268,6 +269,7 @@ impl PropertyList
         for (f,pv) in &copy {
             match self.pv.borrow().get(f) {
                 Some(p) => if *p != *pv {
+                    panic!("different pointer???222");
                     continue
                 },
                 None => continue

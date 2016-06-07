@@ -21,7 +21,7 @@ use dormin::scene;
 use dormin::camera;
 use dormin::object;
 use ui::{Window, ButtonCallback, ChangedFunc, RegisterChangeFunc, 
-    PropertyTreeFunc, PropertyConfig, PropertyValue, RefMut, PropertyUser, PropertyShow};
+    PropertyTreeFunc, PropertyConfig, PropertyValue, RefMut, PropertyUser, PropertyShow, PropertyWidget};
 use ui;
 use dormin::property;
 use operation;
@@ -181,5 +181,91 @@ impl PropertyBox
         */
     }
 
+    pub fn update_object_property(&self, object : &PropertyShow, prop : &str)
+    {
 
+    }
+
+    pub fn update_object(&self, object : &PropertyShow, but : &str)
+    {
+
+    }
+
+    pub fn set_nothing(&self)
+    {
+        println!("TODO");
+    }
 }
+
+impl PropertyWidget for PropertyBox
+{
+    fn add_simple_item(&self, field : &str, item : *const PropertyValue)
+    {
+        println!("TODO");
+    }
+
+    fn add_node_t(&self, field : &str, item : *const PropertyValue)
+    {
+        println!("TODO");
+    }
+
+    fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue
+    {
+        println!("TODO");
+        ptr::null()
+    }
+
+    fn add_vec(&self, name : &str, len : usize)
+    {
+        println!("TODO");
+    }
+
+    fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, is_node : bool)
+    {
+        println!("TODO");
+    }
+
+    fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str)
+    {
+        println!("TODO");
+    }
+
+    fn get_current(&self) -> Option<RefMut<PropertyUser>>
+    {
+        if let Some(ref cur) = *self.current.borrow() {
+            Some(cur.clone())
+        }
+        else {
+            None
+        }
+    }
+
+    fn set_current(&self, p : RefMut<PropertyUser>, title : &str)
+    {
+        let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
+        *cur = Some(p.clone());
+        //self._set_prop(&*p.borrow().as_show(), title);
+
+        match p {
+            RefMut::Arc(ref a) => 
+                self._set_prop(&*a.read().unwrap().as_show(), title),
+            RefMut::Cell(ref c) => 
+                self._set_prop(&*c.borrow().as_show(), title),
+        }
+    }
+}
+
+impl ui::Widget for PropertyBox
+{
+    fn get_id(&self) -> Uuid
+    {
+        self.id
+    }
+
+    fn handle_change_prop(&self, prop_user : &PropertyUser, name : &str)
+    {
+        println!("TODO");
+        //self.update_object_property(prop_user.as_show(), name);
+    }
+}
+
