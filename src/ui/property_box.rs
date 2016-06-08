@@ -53,6 +53,14 @@ extern {
 
     fn property_box_clear(pl : *const JkPropertyBox);
 
+    pub fn jk_property_box_register_cb(
+        property : *const JkPropertyBox,
+        data : *const PropertyBox,
+        panel_move : ui::PanelGeomFunc
+        );
+
+    pub fn property_box_cb_get(pl : *const JkPropertyBox) -> *const ui::JkPropertyCb;
+
     /*
     pub fn jk_property_box_register_cb(
         property : *const JkPropertyBox,
@@ -195,6 +203,22 @@ impl PropertyBox
     {
         println!("TODO");
     }
+
+    pub fn set_visible(&self, b : bool)
+    {
+        self.visible.set(b);
+        unsafe {
+            println!("TODO visible");
+            //ui::property::property_show(self.jk_property, b);
+        }
+    }
+
+    pub fn visible(&self) -> bool
+    {
+        self.visible.get()
+    }
+
+
 }
 
 impl PropertyWidget for PropertyBox

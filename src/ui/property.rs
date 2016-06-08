@@ -56,17 +56,6 @@ pub struct JkPropertyCb;
 #[link(name = "joker")]
 extern {
 
-    pub fn jk_property_list_register_cb(
-        property : *const JkPropertyList,
-        data : *const PropertyList,
-        panel_move : ui::PanelGeomFunc
-        );
-
-    pub fn jk_property_list_register_vec_cb(
-        property : *const JkPropertyList,
-        vec_add : RegisterChangeFunc,
-        vec_del : RegisterChangeFunc);
-
     fn property_list_node_add(
         path : *const c_char,
         added_name : *const c_char
@@ -135,7 +124,11 @@ extern {
         register_change_option : RegisterChangeFunc,
         expand : PropertyTreeFunc,
         contract : PropertyTreeFunc,
+        vec_add : RegisterChangeFunc,
+        vec_del : RegisterChangeFunc,
         );
+
+    pub fn property_show(obj : *const JkPropertyList, b : bool);
 }
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {

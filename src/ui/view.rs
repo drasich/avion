@@ -146,7 +146,8 @@ impl View
         let w = unsafe {ui::window_new(self.width,self.height)};
         self.window = Some(w);
 
-        let p = Rc::new(ui::PropertyList::new(w, property_config));
+        //let p = Rc::new(ui::PropertyList::new(w, property_config));
+        let p = Rc::new(ui::PropertyBox::new(w, property_config));
         let mut t = box ui::Tree::new(w, tree_config);
 
         container.list.create(w);
@@ -190,14 +191,14 @@ impl View
         }
 
         unsafe {
-            ui::property::jk_property_list_register_cb(
-                p.jk_property_list,
+            ui::property_box::jk_property_box_register_cb(
+                p.jk_property,
                 mem::transmute(box pd),
                 ui::property::panel_move,
                 );
 
             ui::property::jk_property_cb_register(
-                ui::property_list::property_list_cb_get(p.jk_property_list),
+                ui::property_box::property_box_cb_get(p.jk_property),
                 ui::property_list::changed_set_float,
                 ui::property_list::changed_set_string,
                 ui::property_list::changed_set_enum,
@@ -207,10 +208,10 @@ impl View
                 ui::property_list::register_change_option,
                 ui::property_list::expand,
                 ui::property_list::contract,
-                );
+              //  );
 
-            ui::property::jk_property_list_register_vec_cb(
-                p.jk_property_list,
+            //ui::property::jk_property_box_register_vec_cb(
+             //   p.jk_property_list,
                 ui::property::vec_add,
                 ui::property::vec_del);
         }

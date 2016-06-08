@@ -582,8 +582,8 @@ pub struct WidgetContainer
 {
     pub widgets : Vec<Box<Widget>>,
     pub tree : Option<Box<Tree>>,
-    pub property : Option<Rc<PropertyList>>,
-    //pub property : Option<Rc<PropertyBox>>,
+    //pub property : Option<Rc<PropertyList>>,
+    pub property : Option<Rc<PropertyBox>>,
     //pub property : Option<Rc<PropertyWidget>>,
     pub command : Option<Box<Command>>,
     pub action : Option<Box<Action>>,

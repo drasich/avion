@@ -58,8 +58,6 @@ extern {
         name : *const c_char
         );
 
-    fn property_show(obj : *const JkPropertyList, b : bool);
-
     fn property_list_nodes_remove(
         pl : *const JkPropertyList,
         name : *const c_char
@@ -94,6 +92,17 @@ extern {
         ) -> *const PropertyValue;
 
     pub fn property_list_cb_get(pl : *const JkPropertyList) -> *const ui::JkPropertyCb;
+
+    pub fn jk_property_list_register_cb(
+        property : *const JkPropertyList,
+        data : *const PropertyList,
+        panel_move : ui::PanelGeomFunc
+        );
+
+    pub fn jk_property_list_register_vec_cb(
+        property : *const JkPropertyList,
+        vec_add : RegisterChangeFunc,
+        vec_del : RegisterChangeFunc);
 }
 
 pub struct PropertyList
@@ -367,7 +376,7 @@ impl PropertyList
     {
         self.visible.set(b);
         unsafe {
-            property_show(self.jk_property_list, b);
+            ui::property::property_show(self.jk_property_list, b);
         }
     }
 
