@@ -61,6 +61,11 @@ extern {
 
     pub fn property_box_cb_get(pl : *const JkPropertyBox) -> *const ui::JkPropertyCb;
 
+    fn property_box_single_item_add(
+        ps : *const JkPropertyBox,
+        container: *const PropertyValue,
+        ) -> *const PropertyValue;
+
     /*
     pub fn jk_property_box_register_cb(
         property : *const JkPropertyBox,
@@ -177,6 +182,7 @@ impl PropertyBox
         unsafe { property_box_clear(self.jk_property); }
         self.pv.borrow_mut().clear();
 
+        println!("TODO set prop in property box");
         //TODO
         /*
         unsafe {
@@ -184,9 +190,9 @@ impl PropertyBox
                 self.jk_property,
                 CString::new(title.as_bytes()).unwrap().as_ptr());
         }
+        */
         //TODO replace ""
         p.create_widget(self, "", 1, false);
-        */
     }
 
     pub fn update_object_property(&self, object : &PropertyShow, prop : &str)
@@ -218,14 +224,19 @@ impl PropertyBox
         self.visible.get()
     }
 
-
 }
 
 impl PropertyWidget for PropertyBox
 {
     fn add_simple_item(&self, field : &str, item : *const PropertyValue)
     {
-        println!("TODO");
+        unsafe {
+            property_box_single_item_add(
+                self.jk_property,
+                item);
+        }
+
+        self.pv.borrow_mut().insert(field.to_owned(), item);
     }
 
     fn add_node_t(&self, field : &str, item : *const PropertyValue)
