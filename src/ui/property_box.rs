@@ -66,6 +66,11 @@ extern {
         container: *const PropertyValue,
         ) -> *const PropertyValue;
 
+    fn property_box_single_node_add(
+        pl : *const JkPropertyBox,
+        val : *const PropertyValue,
+        ) -> *const PropertyValue;
+
     /*
     pub fn jk_property_box_register_cb(
         property : *const JkPropertyBox,
@@ -242,6 +247,13 @@ impl PropertyWidget for PropertyBox
     fn add_node_t(&self, field : &str, item : *const PropertyValue)
     {
         println!("TODO");
+        unsafe {
+            property_box_single_node_add(
+                self.jk_property,
+                item);
+        }
+
+        self.pv.borrow_mut().insert(field.to_owned(), item);
     }
 
     fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue
