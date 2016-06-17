@@ -246,12 +246,31 @@ impl PropertyWidget for PropertyBox
 
     fn add_node_t(&self, field : &str, item : *const PropertyValue)
     {
-        println!("TODO");
         unsafe {
             property_box_single_node_add(
                 self.jk_property,
                 item);
         }
+
+        let vs = ui::make_vec_from_str(field);//&field.to_owned());
+
+        if let Some(ref cur) = *self.current.borrow() {
+            match *cur {
+                RefMut::Arc(ref a) =>
+                {
+                    a.read().unwrap().find_and_create(self, vs.clone(), 0);
+
+                },
+                RefMut::Cell(ref c) =>
+                {
+                    c.borrow().find_and_create(self, vs.clone(), 0);
+                }
+            }
+        }
+        else {
+            println!("box, no current prop....... {}", field);
+        }
+
 
         self.pv.borrow_mut().insert(field.to_owned(), item);
     }
@@ -311,7 +330,7 @@ impl ui::Widget for PropertyBox
 
     fn handle_change_prop(&self, prop_user : &PropertyUser, name : &str)
     {
-        println!("TODO");
+        println!("TODO change prop");
         //self.update_object_property(prop_user.as_show(), name);
     }
 }
