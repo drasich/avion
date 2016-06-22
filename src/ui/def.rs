@@ -710,13 +710,18 @@ impl WidgetContainer
 
     pub fn handle_change(&mut self, change : &operation::Change, widget_origin: uuid::Uuid)
     {
+        println!("hangle change TEST 0");
+
         //if *change == operation::Change::None {
         if let operation::Change::None = *change {
             return;
         }
 
+        println!("hangle change TEST 1");
+
         match *change {
             operation::Change::DirectChange(ref name) => {
+                println!("hangle change DIRECT");
                 let o = match self.get_selected_object() {
                     Some(ob) => ob,
                     None => {
@@ -755,6 +760,7 @@ impl WidgetContainer
                 }
             },
             operation::Change::Objects(ref name, ref id_list) => {
+                println!("hangle change OBJECTS");
                 let sel = self.get_selected_object();
                 for id in id_list {
 
@@ -1673,7 +1679,8 @@ pub struct WidgetCbData
 {
     pub container : *const WidgetContainer,
     pub widget : *const c_void,
-    pub object : Option<*const Evas_Object>
+    pub object : Option<*const Evas_Object>,
+    pub widget2 : Option<Rc<PropertyWidget>>,
 }
 
 impl Clone for WidgetCbData {
@@ -1683,6 +1690,7 @@ impl Clone for WidgetCbData {
             container : self.container,
             widget : self.widget,
             object : self.object,
+            widget2 : self.widget2.clone(),
         }
     }
 }
@@ -1694,10 +1702,25 @@ impl WidgetCbData {
         println!("TODO free me");
         WidgetCbData {
             container : unsafe {mem::transmute(c)},
+            //widget : unsafe { mem::transmute(box widget)},
             widget : widget,
-            object : None
+            object : None,
+            widget2 : None,
         }
     }
+
+    pub fn new_with_widget(c : &Box<WidgetContainer>, widget : Rc<PropertyWidget> ) -> WidgetCbData
+    {
+        println!("TODO free me");
+        WidgetCbData {
+            container : unsafe {mem::transmute(c)},
+            //widget : unsafe { mem::transmute(box widget)},
+            widget : ptr::null(),
+            object : None,
+            widget2 : Some(widget),
+        }
+    }
+
 
     pub fn new(c : &WidgetContainer, widget : *const c_void) -> WidgetCbData
     {
@@ -1705,7 +1728,8 @@ impl WidgetCbData {
         WidgetCbData {
             container : unsafe {mem::transmute(c)},
             widget : widget,
-            object : None
+            object : None,
+            widget2 : None
         }
     }
 
@@ -1715,7 +1739,8 @@ impl WidgetCbData {
         WidgetCbData {
             container : unsafe {mem::transmute(c)},
             widget : widget,
-            object : Some(object)
+            object : Some(object),
+            widget2 : None
         }
     }
 }

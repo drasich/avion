@@ -158,7 +158,8 @@ impl View
         let command = box ui::Command::new(w);
 
         let tsd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*t)});
-        let pd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*p)});
+        //let pd = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*p)});
+        let pd = ui::WidgetCbData::new_with_widget(container, p.clone());
         let ad = ui::WidgetCbData::with_ptr(container, unsafe { mem::transmute(&*a)});
 
         a.add_button("new scene", ui::action::scene_new, ad.clone());

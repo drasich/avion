@@ -254,7 +254,7 @@ pub enum ShouldUpdate
     Mesh
 }
 
-pub trait PropertyWidget {
+pub trait PropertyWidget : Widget {
 
     fn add_simple_item(&self, field : &str, item : *const PropertyValue);
     fn add_node_t(&self, field : &str, item : *const PropertyValue);

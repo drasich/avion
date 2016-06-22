@@ -444,14 +444,37 @@ pub extern fn contract(
     }
 }
 
-fn get_widget_data<'a>(widget_data : *const c_void) -> (&'a mut ui::PropertyList, &'a mut Box<ui::WidgetContainer>)
+fn get_widget_data<'a>(widget_data : *const c_void) ->
+    (&'a mut ui::PropertyList, &'a mut Box<ui::WidgetContainer>)
 {
+    println!("GET WIDGET DATAAAAAAAAAAAAAAA");
+
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
-    let p : &mut ui::PropertyList = unsafe {mem::transmute(wcb.widget)};
+    //let p : &mut ui::PropertyList = unsafe {mem::transmute(wcb.widget)};
+    let p : &mut Box<ui::PropertyList> = unsafe {mem::transmute(wcb.widget)};
+    let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    //(p, container)
+    (&mut **p, container)
+}
+
+fn get_widget_data2<'a>(widget_data : *const c_void) ->
+    (Rc<ui::PropertyWidget>, &'a mut Box<ui::WidgetContainer>)
+{
+    let wcb : &ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
+    let p : Rc<ui::PropertyWidget> = if let Some(ref w) = wcb.widget2 {
+        w.clone()
+    }
+    else {
+        panic!("yopyop");
+    };
+    //let p : &mut Box<ui::PropertyWidget> = unsafe {mem::transmute(wcb.widget)};
+    //let p : *mut ui::PropertyWidget = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     (p, container)
 }
+
 
 fn changed_set<T : Any+Clone+PartialEq>(
     widget_data : *const c_void,
@@ -523,7 +546,7 @@ fn changed_enum<T : Any+Clone+PartialEq>(
         return;
     };
 
-    let (p, container) = get_widget_data(widget_data);
+    let (p, container) = get_widget_data2(widget_data);
 
     let change = {
         /*
@@ -532,7 +555,8 @@ fn changed_enum<T : Any+Clone+PartialEq>(
             box new.clone())
             */
 
-        if let Some(ref cur) = *p.current.borrow() {
+        //if let Some(ref cur) = *p.current.borrow() {
+        if let Some(ref cur) = p.get_current() {
 
             let option = match *cur {
                 RefMut::Arc(ref a) => a.read().unwrap().get_property_hier(path),
@@ -558,7 +582,7 @@ fn changed_enum<T : Any+Clone+PartialEq>(
 
     };
 
-    container.handle_change(&change, p.id);
+    container.handle_change(&change, p.get_id());
 }
 
 fn changed_option(
@@ -744,8 +768,8 @@ pub extern fn register_change_enum(
     old : *const c_void,
     new : *const c_void,
     action : c_int
-    ) {
-
+    )
+{
     let newchar = new as *const i8;
     let s = unsafe {CStr::from_ptr(newchar).to_bytes()};
     let ss = match str::from_utf8(s) {

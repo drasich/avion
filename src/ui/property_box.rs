@@ -202,7 +202,31 @@ impl PropertyBox
 
     pub fn update_object_property(&self, object : &PropertyShow, prop : &str)
     {
+        println!("TODO update_object_property for box");
 
+        let copy = self.pv.borrow().clone();
+
+        println!("UPDATE OBJECT PROP '{}'", prop);
+
+        for (f,pv) in &copy {
+            match self.pv.borrow().get(f) {
+                Some(p) => if *p != *pv {
+                    panic!("different pointer???");
+                    continue
+                },
+                None => continue
+            }
+
+            if f.starts_with(prop) {
+                let yep = ui::make_vec_from_str(f);
+                //if let Some(ppp) = find_property_show(object, yep.clone()) {
+                    //ppp.update_widget(*pv);
+                //}
+                //let test = |ps| {};
+                object.update_property(yep, *pv);
+                //object.callclosure(&test);
+            }
+        }
     }
 
     pub fn update_object(&self, object : &PropertyShow, but : &str)
@@ -330,8 +354,7 @@ impl ui::Widget for PropertyBox
 
     fn handle_change_prop(&self, prop_user : &PropertyUser, name : &str)
     {
-        println!("TODO change prop");
-        //self.update_object_property(prop_user.as_show(), name);
+        self.update_object_property(prop_user.as_show(), name);
     }
 }
 
