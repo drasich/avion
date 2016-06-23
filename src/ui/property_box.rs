@@ -71,6 +71,11 @@ extern {
         val : *const PropertyValue,
         ) -> *const PropertyValue;
 
+    fn property_box_enum_update(
+        pb : *const JkPropertyBox,
+        pv : *const PropertyValue,
+        value : *const c_char);
+
     /*
     pub fn jk_property_box_register_cb(
         property : *const JkPropertyBox,
@@ -223,7 +228,7 @@ impl PropertyBox
                     //ppp.update_widget(*pv);
                 //}
                 //let test = |ps| {};
-                object.update_property(yep, *pv);
+                object.update_property(self,yep, *pv);
                 //object.callclosure(&test);
             }
         }
@@ -315,9 +320,13 @@ impl PropertyWidget for PropertyBox
         println!("TODO");
     }
 
-    fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str)
+    fn update_enum(&self, widget_entry : *const PropertyValue, value : &str)
     {
-        println!("TODO");
+        println!("TODO   !!!!! update enum BOX ::::::::::: {}", value);
+        let v = CString::new(value.as_bytes()).unwrap();
+        unsafe {
+            property_box_enum_update(self.jk_property, widget_entry, v.as_ptr());
+        }
     }
 
     fn get_current(&self) -> Option<RefMut<PropertyUser>>

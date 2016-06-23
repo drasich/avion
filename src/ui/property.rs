@@ -233,7 +233,7 @@ impl PropertyShow for f64 {
         }
     }
 
-    fn update_widget(&self, pv : *const PropertyValue) {
+    fn update_widget(&self, widget : &PropertyWidget, pv : *const PropertyValue) {
         unsafe {
             property_list_float_update(
                 pv,
@@ -269,7 +269,7 @@ impl PropertyShow for String {
         }
     }
 
-    fn update_widget(&self, pv : *const PropertyValue) {
+    fn update_widget(&self, widget : &PropertyWidget, pv : *const PropertyValue) {
         let v = CString::new(self.as_bytes()).unwrap();
         unsafe {
             property_list_string_update(
@@ -296,9 +296,9 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
         (**self).get_property(field)
     }
 
-    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    fn update_property(&self, widget : &PropertyWidget, path : Vec<String>, pv :*const PropertyValue)
     {
-        (**self).update_property(path, pv);
+        (**self).update_property(widget, path, pv);
     }
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
@@ -336,10 +336,10 @@ impl<T : PropertyShow> PropertyShow for Rc<RefCell<T>> {
         None
     }
 
-    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    fn update_property(&self, widget : &PropertyWidget, path : Vec<String>, pv :*const PropertyValue)
     {
         //(**self).update_property(path, pv);
-        self.borrow().update_property(path, pv);
+        self.borrow().update_property(widget, path, pv);
     }
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
@@ -393,7 +393,7 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
         }
     }
 
-    fn update_widget(&self, pv : *const PropertyValue) {
+    fn update_widget(&self, widget : &PropertyWidget, pv : *const PropertyValue) {
         let s = match *self {
             Some(_) => "Some",
             None => "None"
@@ -521,7 +521,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         }
     }
 
-    fn update_widget(&self, pv : *const PropertyValue) {
+    fn update_widget(&self, widget : &PropertyWidget, pv : *const PropertyValue) {
         
         println!("TODO TODO call update_vec from property");
         unsafe { property_list_vec_update(pv, self.len() as c_int); }
@@ -624,16 +624,16 @@ impl PropertyShow for CompData
         None
     }
 
-    fn update_widget(&self, pv : *const PropertyValue) {
+    fn update_widget(&self, widget : &PropertyWidget, pv : *const PropertyValue) {
         match *self {
             CompData::Player(ref p) => {
-                p.update_widget(pv);
+                p.update_widget(widget, pv);
             },
             CompData::ArmaturePath(ref p) => {
-                p.update_widget(pv);
+                p.update_widget(widget, pv);
             },
             CompData::MeshRender(ref p) => {
-                p.update_widget(pv);
+                p.update_widget(widget, pv);
             },
             _ => {println!("not yet implemented");}
         }
@@ -721,29 +721,29 @@ impl ui::PropertyShow for Orientation {
         None
     }
 
-    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    fn update_property(&self, widget : &PropertyWidget, path : Vec<String>, pv :*const PropertyValue)
     {
         println!("update property orientation : {:?} ", path);
         if path.is_empty() {
-            self.update_widget(pv);
+            self.update_widget(widget, pv);
             return;
         }
 
         match *self {
             Orientation::AngleXYZ(ref v) =>  {
                 match path[0].as_str() {
-                    "x" => v.x.update_property(path[1..].to_vec(), pv),
-                    "y" => v.y.update_property(path[1..].to_vec(), pv),
-                    "z" => v.z.update_property(path[1..].to_vec(), pv),
+                    "x" => v.x.update_property(widget, path[1..].to_vec(), pv),
+                    "y" => v.y.update_property(widget, path[1..].to_vec(), pv),
+                    "z" => v.z.update_property(widget, path[1..].to_vec(), pv),
                     _ => {}
                 }
             },
             Orientation::Quat(ref q) => {
                 match path[0].as_str() {
-                    "x" => q.x.update_property(path[1..].to_vec(), pv),
-                    "y" => q.y.update_property(path[1..].to_vec(), pv),
-                    "z" => q.z.update_property(path[1..].to_vec(), pv),
-                    "w" => q.w.update_property(path[1..].to_vec(), pv),
+                    "x" => q.x.update_property(widget, path[1..].to_vec(), pv),
+                    "y" => q.y.update_property(widget, path[1..].to_vec(), pv),
+                    "z" => q.z.update_property(widget, path[1..].to_vec(), pv),
+                    "w" => q.w.update_property(widget, path[1..].to_vec(), pv),
                     _ => {}
                 }
             }
@@ -751,16 +751,19 @@ impl ui::PropertyShow for Orientation {
     }
 
 
-    fn update_widget(&self, pv : *const PropertyValue) {
+    fn update_widget(&self, widget : &PropertyWidget, pv : *const PropertyValue) {
         let type_value = match *self {
             Orientation::AngleXYZ(_) => "AngleXYZ",
             Orientation::Quat(_) => "Quat"
         };
 
+        widget.update_enum(pv, type_value);
+        /*
         let v = CString::new(type_value.as_bytes()).unwrap();
         unsafe {
             property_list_enum_update(pv, v.as_ptr());
         }
+        */
     }
 
     fn get_property(&self, field : &str) -> Option<&ui::PropertyShow>
@@ -854,16 +857,16 @@ macro_rules! property_show_methods(
                 }
             }
 
-            fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+            fn update_property(&self, widget : &PropertyWidget, path : Vec<String>, pv :*const PropertyValue)
             {
                 if path.is_empty() {
-                    self.update_widget(pv);
+                    self.update_widget(widget, pv);
                     return;
                 }
 
                 match path[0].as_str() {
                 $(
-                    stringify!($member) => self.$member.update_property(path[1..].to_vec(), pv),
+                    stringify!($member) => self.$member.update_property(widget, path[1..].to_vec(), pv),
                  )+
                     _ => {}
                 }

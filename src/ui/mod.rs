@@ -159,7 +159,7 @@ pub trait PropertyShow
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>;
 
-    fn update_widget(&self, pv : *const PropertyValue) {
+    fn update_widget(&self, property : &PropertyWidget, pv : *const PropertyValue) {
         //println!("update_widget not implemented for this type");
     }
 
@@ -173,11 +173,11 @@ pub trait PropertyShow
         f(self);
     }
 
-    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    fn update_property(&self, property : &PropertyWidget, path : Vec<String>, pv :*const PropertyValue)
     {
         println!("default update property : {:?}", path);
         if path.is_empty() {
-            self.update_widget(pv);
+            self.update_widget(property,pv);
         }
     }
 
@@ -265,7 +265,7 @@ pub trait PropertyWidget : Widget {
     //fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
 
     //fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize);
-    fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str);
+    fn update_enum(&self, widget_entry : *const PropertyValue, value : &str);
 
     fn get_current(&self) -> Option<RefMut<PropertyUser>>;
     fn set_current(&self, p : RefMut<PropertyUser>, title : &str);
