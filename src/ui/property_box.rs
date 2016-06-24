@@ -76,6 +76,11 @@ extern {
         pv : *const PropertyValue,
         value : *const c_char);
 
+    fn property_box_remove(
+        pb : *const JkPropertyBox,
+        value : *const PropertyValue);
+
+
     /*
     pub fn jk_property_box_register_cb(
         property : *const JkPropertyBox,
@@ -320,13 +325,36 @@ impl PropertyWidget for PropertyBox
         println!("TODO");
     }
 
-    fn update_enum(&self, widget_entry : *const PropertyValue, value : &str)
+    fn update_enum(&self, path : &str, widget_entry : *const PropertyValue, value : &str)
     {
         println!("TODO   !!!!! update enum BOX ::::::::::: {}", value);
         let v = CString::new(value.as_bytes()).unwrap();
         unsafe {
             property_box_enum_update(self.jk_property, widget_entry, v.as_ptr());
+
         }
+
+        /*
+        let copy = self.pv.borrow().clone();
+
+        println!("UPDATE OBJECT PROP '{}'", prop);
+
+        for (f,pv) in &copy {
+            match self.pv.borrow().get(f) {
+                Some(p) => if *p != *pv {
+                    panic!("different pointer???");
+                    continue
+                },
+                None => continue
+            }
+
+            if f != value && f.starts_with(val) {
+                property_box_remove(self.jk_property, pv);
+            }
+        }
+        */
+
+
     }
 
     fn get_current(&self) -> Option<RefMut<PropertyUser>>

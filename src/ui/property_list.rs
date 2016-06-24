@@ -961,7 +961,7 @@ impl PropertyWidget for PropertyList
     }
     */
 
-    fn update_enum(&self, widget_entry : *const PropertyValue, value : &str)
+    fn update_enum(&self, path : &str, widget_entry : *const PropertyValue, value : &str)
     {
         let v = CString::new(value.as_bytes()).unwrap();
         unsafe {

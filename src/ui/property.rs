@@ -726,6 +726,13 @@ impl ui::PropertyShow for Orientation {
         println!("update property orientation : {:?} ", path);
         if path.is_empty() {
             self.update_widget(widget, pv);
+
+            let type_value = match *self {
+                Orientation::AngleXYZ(_) => "AngleXYZ",
+                Orientation::Quat(_) => "Quat"
+            };
+
+            widget.update_enum(join_string(&path).as_str(),pv, type_value);
             return;
         }
 
@@ -757,7 +764,7 @@ impl ui::PropertyShow for Orientation {
             Orientation::Quat(_) => "Quat"
         };
 
-        widget.update_enum(pv, type_value);
+        //widget.update_enum(pv, type_value);
         /*
         let v = CString::new(type_value.as_bytes()).unwrap();
         unsafe {
