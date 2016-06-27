@@ -264,7 +264,7 @@ impl PropertyList
                     //ppp.update_widget(*pv);
                 //}
                 //let test = |ps| {};
-                object.update_property(self, yep, *pv);
+                object.update_property(self, prop, yep, *pv);
                 //object.callclosure(&test);
             }
         }
@@ -447,7 +447,7 @@ pub extern fn contract(
 fn get_widget_data<'a>(widget_data : *const c_void) ->
     (&'a mut ui::PropertyList, &'a mut Box<ui::WidgetContainer>)
 {
-    println!("GET WIDGET DATAAAAAAAAAAAAAAA");
+    println!("GET WIDGET DATAAAAAAAAAAAAAAA, this is old so crash, use get_widget_data2");
 
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
     //let p : &mut ui::PropertyList = unsafe {mem::transmute(wcb.widget)};

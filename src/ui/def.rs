@@ -1657,7 +1657,7 @@ impl WidgetContainer
             //for w in &self.widgets {
             if let Some(w) = w.upgrade() {
                 if w.get_id() == widget_id {
-                    println!("same id as the widget so get out");
+                    println!("same id as the widget so get out (but right now the continue is commented)");
                     //continue;
                 }
 

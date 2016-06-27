@@ -214,10 +214,11 @@ impl PropertyBox
     {
         println!("TODO update_object_property for box");
 
-        let copy = self.pv.borrow().clone();
+        //let copy = self.pv.borrow().clone();
 
-        println!("UPDATE OBJECT PROP '{}'", prop);
+        println!("boxxxxx UPDATE OBJECT PROP '{}'", prop);
 
+        /*
         for (f,pv) in &copy {
             match self.pv.borrow().get(f) {
                 Some(p) => if *p != *pv {
@@ -237,6 +238,20 @@ impl PropertyBox
                 //object.callclosure(&test);
             }
         }
+
+        match self.pv.borrow().get(prop) {
+            Some(p) => {
+                let yep = ui::make_vec_from_str(prop);
+                println!("boxxxxx UPDATE OBJECT PROP 2222222222 '{:?}'", yep);
+                object.update_property(self, yep, *p);
+                println!("boxxxxx UPDATE OBJECT PROP 33333333333333333333333333 end ");
+            },
+            None => {}
+        }
+        */
+
+        //object.update_property(self, prop, prop);
+
     }
 
     pub fn update_object(&self, object : &PropertyShow, but : &str)
@@ -327,19 +342,19 @@ impl PropertyWidget for PropertyBox
 
     fn update_enum(&self, path : &str, widget_entry : *const PropertyValue, value : &str)
     {
-        println!("TODO   !!!!! update enum BOX ::::::::::: {}", value);
+        println!("TODO   !!!!! [{}] update enum BOX ::::::::::: {}", path, value);
         let v = CString::new(value.as_bytes()).unwrap();
         unsafe {
             property_box_enum_update(self.jk_property, widget_entry, v.as_ptr());
 
         }
 
-        /*
         let copy = self.pv.borrow().clone();
 
-        println!("UPDATE OBJECT PROP '{}'", prop);
+        //println!("UPDATE OBJECT PROP '{}'", prop);
 
         for (f,pv) in &copy {
+            /*
             match self.pv.borrow().get(f) {
                 Some(p) => if *p != *pv {
                     panic!("different pointer???");
@@ -347,12 +362,14 @@ impl PropertyWidget for PropertyBox
                 },
                 None => continue
             }
+            */
 
-            if f != value && f.starts_with(val) {
-                property_box_remove(self.jk_property, pv);
+            println!("check this value '{}' with '{}'", f, path);
+
+            if f != path && f.starts_with(path) {
+                unsafe { property_box_remove(self.jk_property, *pv); }
             }
         }
-        */
 
 
     }

@@ -173,10 +173,10 @@ pub trait PropertyShow
         f(self);
     }
 
-    fn update_property(&self, property : &PropertyWidget, path : Vec<String>, pv :*const PropertyValue)
+    fn update_property(&self, property : &PropertyWidget, all_path : &str, local_path : Vec<String>, pv :*const PropertyValue)
     {
-        println!("default update property : {:?}", path);
-        if path.is_empty() {
+        println!("default update property : {:?}", local_path);
+        if local_path.is_empty() {
             self.update_widget(property,pv);
         }
     }
