@@ -159,7 +159,7 @@ pub trait PropertyShow
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>;
 
-    fn update_widget(&self, property : &PropertyWidget, pv : *const PropertyValue) {
+    fn update_widget(&self, pv : *const PropertyValue) {
         //println!("update_widget not implemented for this type");
     }
 
@@ -173,11 +173,13 @@ pub trait PropertyShow
         f(self);
     }
 
-    fn update_property(&self, property : &PropertyWidget, all_path : &str, local_path : Vec<String>, pv :*const PropertyValue)
+    fn update_property(&self, widget : &PropertyWidget, all_path : &str, local_path : Vec<String>)
     {
         println!("default update property : {:?}", local_path);
         if local_path.is_empty() {
-            self.update_widget(property,pv);
+            if let Some(pv) = widget.get_property(all_path) {
+                self.update_widget(pv);
+            }
         }
     }
 
@@ -269,5 +271,11 @@ pub trait PropertyWidget : Widget {
 
     fn get_current(&self) -> Option<RefMut<PropertyUser>>;
     fn set_current(&self, p : RefMut<PropertyUser>, title : &str);
+
+    fn get_property(&self, path : &str) -> Option<*const PropertyValue> 
+    {
+        println!("PropertyWidget, 'get_property' not implemented no return None");
+        None
+    }
 }
 

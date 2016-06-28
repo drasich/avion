@@ -264,7 +264,7 @@ impl PropertyList
                     //ppp.update_widget(*pv);
                 //}
                 //let test = |ps| {};
-                object.update_property(self, prop, yep, *pv);
+                object.update_property(self, prop, yep);
                 //object.callclosure(&test);
             }
         }
@@ -292,7 +292,7 @@ impl PropertyList
             let yep = ui::make_vec_from_str(f);
             match ui::find_property_show(object, yep.clone()) {
                 Some(ppp) => {
-                    ppp.update_widget(self, *pv);
+                    ppp.update_widget(*pv);
                 },
                 None => {
                     println!("could not find prop : {:?}", yep);
