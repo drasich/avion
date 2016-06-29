@@ -159,6 +159,14 @@ pub trait PropertyShow
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>;
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        None
+    }
+
+    fn create_widget_inside(&self, parent : *const PropertyValue)
+    {}
+
     fn update_widget(&self, pv : *const PropertyValue) {
         //println!("update_widget not implemented for this type");
     }

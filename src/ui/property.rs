@@ -234,6 +234,19 @@ impl PropertyShow for f64 {
         }
     }
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        let f = CString::new(field.as_bytes()).unwrap();
+        println!("create f64 for : {}", field);
+        let pv = unsafe { 
+            property_list_float_add(
+                f.as_ptr(),
+                *self as c_float)
+        };
+
+        Some(pv)
+    }
+
     fn update_widget(&self, pv : *const PropertyValue) {
         unsafe {
             property_list_float_update(
@@ -1169,20 +1182,25 @@ pub fn add_enum(
 fn create_the_widget(
         widget : &PropertyWidget,
         property_show : &PropertyShow,
+        all_path : &str,
         field : &str,
-        depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
 {
-    let pv = property_show.create_widget(field, depth);
+    if let Some(pv) = property_show.create_widget_itself(field) {
 
-    if !has_container {
-        property.add_simple_item(field, pv);
-        None
-    }
-    else {
+        if !has_container {
+            widget.add_simple_item(all_path + field, pv);
+            property_show.create_widget_inside(pv, all_path + field);
+
+            None
+        }
+        else {
             Some(pv)
         }
-
+    }
+    else {
+        None
+    }
 }
 */
 
