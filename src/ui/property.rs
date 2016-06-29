@@ -734,7 +734,17 @@ impl ui::PropertyShow for Orientation {
                     Orientation::Quat(_) => "Quat"
                 };
 
-                widget.update_enum(join_string(&path).as_str(),pv, type_value);
+                //widget.update_enum(join_string(&path).as_str(),pv, type_value);
+                widget.update_enum(all_path, pv, type_value);
+
+                match *self {
+                    Orientation::AngleXYZ(ref v) =>  {
+                        v.create_widget(widget, all_path, 1, false);
+                    },
+                    Orientation::Quat(ref q) => {
+                        q.create_widget(widget, all_path, 1, false);
+                    }
+                };
             }
             return;
         }
@@ -1154,4 +1164,25 @@ pub fn add_enum(
 
     pv
 }
+
+/*
+fn create_the_widget(
+        widget : &PropertyWidget,
+        property_show : &PropertyShow,
+        field : &str,
+        depth : i32,
+        has_container : bool ) -> Option<*const PropertyValue>
+{
+    let pv = property_show.create_widget(field, depth);
+
+    if !has_container {
+        property.add_simple_item(field, pv);
+        None
+    }
+    else {
+            Some(pv)
+        }
+
+}
+*/
 

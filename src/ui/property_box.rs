@@ -250,7 +250,8 @@ impl PropertyBox
         }
         */
 
-        //object.update_property(self, prop, prop);
+        let yep = ui::make_vec_from_str(prop);
+        object.update_property(self, prop, yep);
 
     }
 
@@ -397,6 +398,12 @@ impl PropertyWidget for PropertyBox
                 self._set_prop(&*c.borrow().as_show(), title),
         }
     }
+
+    fn get_property(&self, path : &str) -> Option<*const PropertyValue> 
+    {
+        self.pv.borrow().get(path).map( |o| *o)
+    }
+
 }
 
 impl ui::Widget for PropertyBox
