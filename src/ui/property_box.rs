@@ -279,12 +279,21 @@ impl PropertyBox
         self.visible.get()
     }
 
+    fn find_parent_of(&self, path : &str) -> Option<*const PropertyValue>
+    {
+        let mut v : Vec<&str> = path.split("/").collect();
+        None
+    }
+
 }
+
 
 impl PropertyWidget for PropertyBox
 {
     fn add_simple_item(&self, field : &str, item : *const PropertyValue)
     {
+        let parent = self.find_parent_of(field);
+
         unsafe {
             property_box_single_item_add(
                 self.jk_property,

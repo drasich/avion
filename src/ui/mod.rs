@@ -164,7 +164,7 @@ pub trait PropertyShow
         None
     }
 
-    fn create_widget_inside(&self, parent : *const PropertyValue)
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
     {}
 
     fn update_widget(&self, pv : *const PropertyValue) {

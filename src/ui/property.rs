@@ -61,6 +61,10 @@ extern {
         added_name : *const c_char
         ) -> *const PropertyValue;
 
+    fn property_node_add(
+        path : *const c_char
+        ) -> *const PropertyValue;
+
     fn property_list_float_add(
         name : *const c_char,
         value : c_float
@@ -281,6 +285,20 @@ impl PropertyShow for String {
         else {
             Some(pv)
         }
+    }
+
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        let f = CString::new(field.as_bytes()).unwrap();
+        let v = CString::new(self.as_bytes()).unwrap();
+
+        let pv = unsafe {
+            property_list_string_add(
+                f.as_ptr(),
+                v.as_ptr())
+        };
+
+        Some(pv)
     }
 
     fn update_widget(&self, pv : *const PropertyValue) {
@@ -848,19 +866,35 @@ macro_rules! property_show_methods(
                 }
 
                 if depth > 0 {
+                    self.create_widget_inside(field, property);
+                }
+
+                None
+            }
+
+            fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+            {
+                Some(add_node2(field))
+            }
+
+            fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+            {
                 $(
-                    let s = if field != "" {
-                        field.to_owned()
+                    let s = if path != "" {
+                        path.to_owned()
                             + "/"
                             + stringify!($member)
                     }else {
                         stringify!($member).to_owned()
                     };
-                    self.$member.create_widget(property, s.as_ref(), depth-1, has_container);
-                 )+
-                }
+                    //self.$member.create_widget(property, s.as_ref(), depth-1, has_container);
+                    if let Some(pv) = self.$member.create_widget_itself(stringify!($member)) {
+                        widget.add_simple_item(s.as_str(), pv);
 
-                None
+                        self.$member.create_widget_inside(s.as_str(), widget);
+                    }
+                 )+
+
             }
 
             /*
@@ -1144,6 +1178,17 @@ pub fn add_node(
 
     return pv;
 }
+
+pub fn add_node2(
+    name : &str
+    ) -> *const PropertyValue
+{
+    let f = CString::new(name.as_bytes()).unwrap();
+    unsafe {
+        property_node_add(f.as_ptr())
+    }
+}
+
 
 pub fn add_enum(
     property : &PropertyWidget,
