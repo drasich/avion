@@ -38,6 +38,8 @@ use dormin::component::CompData;
 use dormin::armature;
 use dormin::transform::Orientation;
 
+use util::join_string;
+
 #[repr(C)]
 pub struct JkPropertyCb;
 
@@ -753,6 +755,33 @@ impl ui::PropertyShow for Orientation {
         None
     }
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        let type_value = match *self {
+            Orientation::AngleXYZ(_) => "AngleXYZ",
+            Orientation::Quat(_) => "Quat"
+        };
+
+        let types = "AngleXYZ/Quat";
+        Some(add_enum2(field, types, type_value))
+    }
+
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+    {
+        
+        let ps : &PropertyShow = match *self {
+            Orientation::AngleXYZ(ref v) =>  {
+                v
+            },
+            Orientation::Quat(ref q) => {
+                q
+            }
+        };
+
+        ps.create_widget_inside(path, widget);
+    }
+
+
     fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
     {
         println!("update property orientation with path : {:?} ", path);
@@ -768,6 +797,7 @@ impl ui::PropertyShow for Orientation {
                 //widget.update_enum(join_string(&path).as_str(),pv, type_value);
                 widget.update_enum(all_path, pv, type_value);
 
+                /*
                 match *self {
                     Orientation::AngleXYZ(ref v) =>  {
                         v.create_widget(widget, all_path, 1, false);
@@ -776,6 +806,8 @@ impl ui::PropertyShow for Orientation {
                         q.create_widget(widget, all_path, 1, false);
                     }
                 };
+                */
+                self.create_widget_inside(all_path, widget);
             }
             return;
         }
@@ -1111,22 +1143,6 @@ pub extern fn vec_del(
     //ui::add_empty(container, action.view_id);
 }
 
-
-fn join_string(path : &Vec<String>) -> String
-{
-    let mut s = String::new();
-    let mut first = true;
-    for v in path {
-        if !first {
-            s.push('/');
-        }
-        s.push_str(v.as_ref());
-        first = false;
-    }
-
-    s
-}
-
 impl PropertyId for object::Object
 {
     fn get_id(&self) -> uuid::Uuid
@@ -1222,6 +1238,25 @@ pub fn add_enum(
 
     pv
 }
+
+pub fn add_enum2(
+    path : &str,
+    types : &str,
+    value : &str
+    ) -> *const PropertyValue
+{
+    let f = CString::new(path.as_bytes()).unwrap();
+    let types = CString::new(types.as_bytes()).unwrap();
+    let v = CString::new(value.as_bytes()).unwrap();
+
+    unsafe {
+        property_list_enum_add(
+            f.as_ptr(),
+            types.as_ptr(),
+            v.as_ptr())
+    }
+}
+
 
 /*
 fn create_the_widget(

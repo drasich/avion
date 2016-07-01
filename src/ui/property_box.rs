@@ -36,6 +36,7 @@ use dormin::component;
 use dormin::component::CompData;
 use dormin::armature;
 use dormin::transform::Orientation;
+use util;
 
 #[repr(C)]
 pub struct JkPropertyBox;
@@ -63,7 +64,8 @@ extern {
 
     fn property_box_single_item_add(
         ps : *const JkPropertyBox,
-        container: *const PropertyValue,
+        pv: *const PropertyValue,
+        parent: *const PropertyValue,
         ) -> *const PropertyValue;
 
     fn property_box_single_node_add(
@@ -282,7 +284,14 @@ impl PropertyBox
     fn find_parent_of(&self, path : &str) -> Option<*const PropertyValue>
     {
         let mut v : Vec<&str> = path.split("/").collect();
-        None
+        if v.len() > 1 {
+            v.pop();
+            let s = util::join_str(&v);
+            self.pv.borrow().get(&s).map(|o| *o)
+        }
+        else {
+            None
+        }
     }
 
 }
@@ -292,12 +301,20 @@ impl PropertyWidget for PropertyBox
 {
     fn add_simple_item(&self, field : &str, item : *const PropertyValue)
     {
-        let parent = self.find_parent_of(field);
+        let parent = if let Some(pv) = self.find_parent_of(field)
+        {
+            println!("FOUND THE FATHER");
+            pv
+        }
+        else {
+            ptr::null()
+        };
 
         unsafe {
             property_box_single_item_add(
                 self.jk_property,
-                item);
+                item,
+                parent);
         }
 
         self.pv.borrow_mut().insert(field.to_owned(), item);
@@ -374,11 +391,13 @@ impl PropertyWidget for PropertyBox
             }
             */
 
+            /*
             println!("check this value '{}' with '{}'", f, path);
 
             if f != path && f.starts_with(path) {
                 unsafe { property_box_remove(self.jk_property, *pv); }
             }
+            */
         }
 
 
