@@ -491,11 +491,12 @@ fn changed_set<T : Any+Clone+PartialEq>(
         return;
     };
 
-    let (p, container) = get_widget_data(widget_data);
+    let (p, container) = get_widget_data2(widget_data);
 
     let change = match (old, action) {
         (Some(oldd), 1) => {
-            if let Some(ref cur) = *p.current.borrow() {
+            //if let Some(ref cur) = *p.current.borrow() {
+            if let Some(ref cur) = p.get_current() {
                 container.request_operation_property_old_new(
                     (*cur).clone(),
                     path,
@@ -515,7 +516,8 @@ fn changed_set<T : Any+Clone+PartialEq>(
             }
         },
         _ => {
-            if let Some(ref cur) = *p.current.borrow() {
+            //if let Some(ref cur) = *p.current.borrow() {
+            if let Some(ref cur) = p.get_current() {
                 match *cur {
                     RefMut::Arc(ref a) =>
                         container.request_direct_change_property(&mut *a.write().unwrap(),path,new),
@@ -530,7 +532,8 @@ fn changed_set<T : Any+Clone+PartialEq>(
         }
     };
 
-    container.handle_change(&change, p.id);
+    //container.handle_change(&change, p.id);
+    container.handle_change(&change, p.get_id());
 }
 
 fn changed_enum<T : Any+Clone+PartialEq>(

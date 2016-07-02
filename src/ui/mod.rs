@@ -183,9 +183,11 @@ pub trait PropertyShow
 
     fn update_property(&self, widget : &PropertyWidget, all_path : &str, local_path : Vec<String>)
     {
-        println!("default update property : {:?}", local_path);
+        println!("default update property : {}, {:?}", all_path, local_path);
         if local_path.is_empty() {
+            println!("path is empty");
             if let Some(pv) = widget.get_property(all_path) {
+                println!("found property");
                 self.update_widget(pv);
             }
         }

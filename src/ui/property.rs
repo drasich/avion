@@ -305,6 +305,7 @@ impl PropertyShow for String {
 
     fn update_widget(&self, pv : *const PropertyValue) {
         let v = CString::new(self.as_bytes()).unwrap();
+        println!("update string value with : {}", self);
         unsafe {
             property_list_string_update(
                 pv,
