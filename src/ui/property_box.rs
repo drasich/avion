@@ -259,6 +259,22 @@ impl PropertyBox
 
     pub fn update_object(&self, object : &PropertyShow, but : &str)
     {
+        for (f,pv) in self.pv.borrow().iter() {
+            let fstr : &str = f.as_ref();
+            if fstr == but {
+                println!("buuuuuuuuuuuuuuuuuuuuuuuuuut: {} ", f);
+                continue;
+            }
+            let yep = ui::make_vec_from_str(f);
+            match ui::find_property_show(object, yep.clone()) {
+                Some(ppp) => {
+                    ppp.update_widget(*pv);
+                },
+                None => {
+                    println!("could not find prop : {:?}", yep);
+                }
+            }
+        }
 
     }
 

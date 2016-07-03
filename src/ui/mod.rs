@@ -161,11 +161,14 @@ pub trait PropertyShow
 
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
+        println!("           not implemented, field is {}", field);
         None
     }
 
     fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
-    {}
+    {
+        println!("            not implemented, field is {}", path);
+    }
 
     fn update_widget(&self, pv : *const PropertyValue) {
         //println!("update_widget not implemented for this type");

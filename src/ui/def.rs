@@ -797,6 +797,7 @@ impl WidgetContainer
                         if *id == ob.id  {
                             if let Some(ref mut p) = self.property {
                                 if widget_origin != p.id {
+                                    println!("hangle change, callind update objects");
                                     p.update_object(&*ob, "");
                                 }
                             }
@@ -1167,6 +1168,7 @@ impl WidgetContainer
         name : &str,
         new : &Any) -> operation::Change
     {
+        println!("call from here 00 : {}", name);
         property.test_set_property_hier(name, new);
         operation::Change::DirectChange(String::from(name))
     }

@@ -82,6 +82,12 @@ extern {
         container: *const PropertyValue,
         ) -> *const PropertyValue;
 
+    fn property_vec_add(
+        path: *const c_char,
+        len : c_int
+        ) -> *const PropertyValue;
+
+
     /*
     fn property_list_vec_item_add(
         ps : *const JkPropertyList,
@@ -326,6 +332,16 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
         (**self).create_widget(property ,field, depth, has_container)
     }
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        (**self).create_widget_itself(field)
+    }
+
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)
+    {
+        (**self).create_widget_inside(path, widget);
+    }
+
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
         (**self).get_property(field)
@@ -537,6 +553,47 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         None
     }
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        println!("create widget itself vec");
+        let f = CString::new(field.as_bytes()).unwrap();
+        unsafe {
+            Some(property_vec_add(f.as_ptr(), self.len() as c_int))
+        }
+    }
+
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+    {
+        println!("TODO inside vec");
+        if self.is_empty() {
+            //add "no item" item
+        }
+
+        for (n,i) in self.iter().enumerate() {
+            let mut nf = String::from(path);
+            nf.push_str("/");
+            nf.push_str(n.to_string().as_str());
+            //chris
+            /*
+            if let Some(ref mut pv) = i.create_widget(property, nf.as_str(), depth -1, true) {
+                unsafe {
+                    property.add_vec_item(nf.as_str(), *pv, i.is_node());
+                    }
+            }
+            else {
+                println!("___ Vec : failed" );
+            }
+            */
+
+            if let Some(pv) = i.create_widget_itself(nf.as_str()) {
+                widget.add_simple_item(nf.as_str(), pv);
+
+                i.create_widget_inside(nf.as_str(), widget);
+            }
+        }
+    }
+
+
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
         match field.parse::<usize>() {
@@ -659,6 +716,35 @@ impl PropertyShow for CompData
         None
     }
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        println!("create widget itself, compdata");
+        let type_value = self.get_kind_string();
+
+        let types = CompData::get_all_kind();
+        Some(add_enum2(field, types.as_str(), type_value.as_str()))
+    }
+
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+    {
+
+        let ps : &PropertyShow = match *self {
+            CompData::Player(ref p) => {
+                p
+            },
+            CompData::ArmaturePath(ref p) => {
+                p
+            },
+            CompData::MeshRender(ref p) => {
+                p
+            },
+            _ => { println!("not yet implemented"); return; }
+        };
+
+        ps.create_widget_inside(path, widget);
+    }
+
+
     fn update_widget(&self, pv : *const PropertyValue) {
         match *self {
             CompData::Player(ref p) => {
@@ -769,7 +855,6 @@ impl ui::PropertyShow for Orientation {
 
     fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
     {
-        
         let ps : &PropertyShow = match *self {
             Orientation::AngleXYZ(ref v) =>  {
                 v
@@ -907,6 +992,7 @@ macro_rules! property_show_methods(
 
             fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
             {
+                println!("property show methods **{}**, create itself", field);
                 Some(add_node2(field))
             }
 
@@ -920,11 +1006,15 @@ macro_rules! property_show_methods(
                     }else {
                         stringify!($member).to_owned()
                     };
-                    //self.$member.create_widget(property, s.as_ref(), depth-1, has_container);
-                    if let Some(pv) = self.$member.create_widget_itself(stringify!($member)) {
+                    println!("**************** GOING to create THISSSSSSSSSS : {}, {}", s, stringify!($member));
+                    if let Some(pv) = self.$member.create_widget_itself(s.as_str()) {
+                        println!("**************** looks ok : {}, {}", s, stringify!($member));
                         widget.add_simple_item(s.as_str(), pv);
 
                         self.$member.create_widget_inside(s.as_str(), widget);
+                    }
+                    else {
+                        println!("**************** cannot add pv : {}, {}", s, stringify!($member));
                     }
                  )+
 

@@ -491,6 +491,8 @@ fn changed_set<T : Any+Clone+PartialEq>(
         return;
     };
 
+    println!("changed_set : {}", path);
+
     let (p, container) = get_widget_data2(widget_data);
 
     let change = match (old, action) {
@@ -682,6 +684,8 @@ pub extern fn changed_set_float(
     property : *const c_void,
     name : *const c_char,
     data : *const c_void) {
+
+    println!("changed_set_float");
 
     let f : & f64 = unsafe {mem::transmute(data)};
     changed_set(property, name, None, f, 0);
