@@ -959,10 +959,14 @@ macro_rules! property_show_methods(
 
             fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
             {
+                println!("macro... {}, {:?}", all_path, path);
+
                 if path.is_empty() {
-                    if let Some(pv) = widget.get_property(all_path) {
-                        self.update_widget(pv);
-                    }
+                    //update all
+                    $(
+                        let s = String::from(all_path) + "/" + stringify!($member);
+                        self.$member.update_property(widget, s.as_str(), Vec::new());
+                    )+
                     return;
                 }
 
