@@ -1172,20 +1172,6 @@ Option<&PropertyShow>
     }
 }
 
-pub extern fn panel_move(
-    widget_cb_data : *const c_void,
-    x : c_int, y : c_int, w : c_int, h : c_int)
-{
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
-    let mut p : &mut PropertyList = unsafe {mem::transmute(wcb.widget)};
-
-    p.config.x = x;
-    p.config.y = y;
-    p.config.w = w;
-    p.config.h = h;
-}
-
-
 pub extern fn vec_add(
     data : *const c_void,
     name : *const c_char,

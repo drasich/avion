@@ -46,6 +46,8 @@ pub use self::def::{
 
     evas_object_show,
     evas_object_hide,
+
+    WidgetPanel,
 };
 
 
