@@ -147,7 +147,10 @@ impl View
         self.window = Some(w);
 
         //let p = Rc::new(ui::PropertyList::new(w, property_config));
-        let p = Rc::new(ui::PropertyBox::new(w, property_config));
+        container.panel.config = property_config.clone();
+        container.panel.create(w);
+
+        let p = Rc::new(ui::PropertyBox::new(&*container.panel));//, property_config));
         let mut t = box ui::Tree::new(w, tree_config);
 
         container.list.create(w);
@@ -192,12 +195,6 @@ impl View
         }
 
         unsafe {
-            ui::property_box::jk_property_box_register_cb(
-                p.jk_property,
-                mem::transmute(box pd),
-                ui::property::panel_move,
-                );
-
             ui::property::jk_property_cb_register(
                 ui::property_box::property_box_cb_get(p.jk_property),
                 ui::property_list::changed_set_float,
@@ -235,7 +232,8 @@ impl View
         menu.add_button("+", ui::action::scene_new, ad.clone());
 
         container.tree = Some(t);
-        container.property = Some(p);
+        container.property = Some(p.clone());
+        container.panel.widget = Some(p);
         container.action = Some(a);
         container.command = Some(command);
         container.menu = Some(menu);

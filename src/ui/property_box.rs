@@ -43,22 +43,9 @@ pub struct JkPropertyBox;
 
 #[link(name = "joker")]
 extern {
-    fn jk_property_box_new(
-        window : *const Window,
-        x : c_int,
-        y : c_int,
-        w : c_int,
-        h : c_int
-        ) -> *const JkPropertyBox;
-
+    fn jk_property_box_new(eo : *const ui::Evas_Object) -> *const JkPropertyBox;
 
     fn property_box_clear(pl : *const JkPropertyBox);
-
-    pub fn jk_property_box_register_cb(
-        property : *const JkPropertyBox,
-        data : *const PropertyBox,
-        panel_move : ui::PanelGeomFunc
-        );
 
     pub fn property_box_cb_get(pl : *const JkPropertyBox) -> *const ui::JkPropertyCb;
 
@@ -84,21 +71,6 @@ extern {
 
 
     /*
-    pub fn jk_property_box_register_cb(
-        property : *const JkPropertyBox,
-        data : *const PropertyBox,
-        changed_float : ChangedFunc,
-        changed_string : ChangedFunc,
-        changed_enum : ChangedFunc,
-        register_change_string : RegisterChangeFunc,
-        register_change_float : RegisterChangeFunc,
-        register_change_enum : RegisterChangeFunc,
-        register_change_option : RegisterChangeFunc,
-        expand : PropertyTreeFunc,
-        contract : PropertyTreeFunc,
-        panel_move : ui::PanelGeomFunc
-        );
-
     fn window_property_new(window : *const Window) -> *const JkProperty;
     fn property_register_cb(
         property : *const JkProperty,
@@ -149,7 +121,7 @@ pub struct PropertyBox
     pub pv : RefCell<HashMap<String, *const PropertyValue>>,
     visible : Cell<bool>,
     pub id : uuid::Uuid,
-    pub config : PropertyConfig,
+    //pub config : PropertyConfig,
     pub current : RefCell<Option<RefMut<PropertyUser>>>
 }
 
@@ -157,19 +129,20 @@ pub struct PropertyBox
 impl PropertyBox
 {
     pub fn new(
-        window : *const Window,
-        pc : &PropertyConfig
+        panel : &ui::WidgetPanel,
+        //pc : &PropertyConfig
         ) -> PropertyBox
     {
         PropertyBox {
             name : String::from("property_box_name"),
             jk_property : unsafe {jk_property_box_new(
-                    window,
-                    pc.x, pc.y, pc.w, pc.h)},
+                    panel.eo,
+                    //pc.x, pc.y, pc.w, pc.h
+                    )},
             pv : RefCell::new(HashMap::new()),
             visible: Cell::new(true),
             id : uuid::Uuid::new_v4(),
-            config : pc.clone(),
+            //config : pc.clone(),
             current : RefCell::new(None)
         }
     }

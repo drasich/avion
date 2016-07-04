@@ -209,6 +209,18 @@ extern {
 
     pub fn ecore_animator_add(cb : AnimatorCallback, data : *const c_void) -> *const Ecore_Animator;
     fn jk_monitor_add(cb : MonitorCallback, data : *const c_void, path : *const c_char);
+
+    fn jk_panel_new(
+      w : *const Window,
+      x : c_int,
+      y : c_int,
+      width : c_int,
+      height : c_int,
+      mov : PanelGeomFunc,
+      resize : PanelGeomFunc,
+      data : *const c_void
+      ) -> *const Evas_Object;
+
 }
 
 fn object_geometry_get(obj : *const Evas_Object) -> (i32, i32, i32, i32)
@@ -430,10 +442,14 @@ impl WindowConfig {
     {
         let mut wc = WindowConfig {
             views : Vec::new(),
-            property : match c.property {
+
+            property : 
+                /*match c.property {
                 None => None,
                 Some(ref p) => Some(p.config.clone())
             },
+            */
+                Some(c.panel.config.clone()),
             tree : match c.tree {
                 None => None,
                 Some(ref t) => Some(t.get_config())
@@ -578,11 +594,63 @@ pub trait Widget
     fn get_id(&self) -> Uuid;
 }
 
+pub struct WidgetPanel
+{
+    visible : bool,
+    pub config : PropertyConfig,
+    pub widget : Option<Rc<PropertyBox>>,
+    pub eo : *const Evas_Object
+}
+
+impl WidgetPanel
+{
+    pub fn new(config : PropertyConfig, widget : Option<Rc<PropertyBox>>) -> WidgetPanel
+    {
+        WidgetPanel {
+            visible : true,
+            config : config,
+            widget : widget,
+            eo : ptr::null()
+        }
+    }
+
+    pub fn create(&mut self, win : *const Window)
+    {
+        self.eo = unsafe { jk_panel_new(
+                win,
+                self.config.x,
+                self.config.y,
+                self.config.w,
+                self.config.h,
+                panel_move,
+                panel_move,
+                mem::transmute(&self.config)
+                )
+        };
+    }
+}
+
+extern fn panel_move(
+    data : *const c_void,
+    x : c_int, y : c_int, w : c_int, h : c_int)
+{
+    //let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
+    //let mut p : &mut PropertyList = unsafe {mem::transmute(wcb.widget)};
+    let mut config : &mut PropertyConfig  = unsafe {mem::transmute(data)};
+
+    config.x = x;
+    config.y = y;
+    config.w = w;
+    config.h = h;
+}
+
+
 pub struct WidgetContainer
 {
     pub widgets : Vec<Box<Widget>>,
     pub tree : Option<Box<Tree>>,
     //pub property : Option<Rc<PropertyList>>,
+    pub panel :  Box<WidgetPanel>,
     pub property : Option<Rc<PropertyBox>>,
     //pub property : Option<Rc<PropertyWidget>>,
     pub command : Option<Box<Command>>,
@@ -689,6 +757,7 @@ impl WidgetContainer
         WidgetContainer {
             widgets : Vec::new(),
             tree : None,
+            panel : box WidgetPanel::new(PropertyConfig::new(), None),
             property : None,
             command : None,
             action : None,
