@@ -586,7 +586,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
             */
 
             if let Some(pv) = i.create_widget_itself(nf.as_str()) {
-                widget.add_simple_item(nf.as_str(), pv);
+                widget.add_vec_item(nf.as_str(), pv, false);
 
                 i.create_widget_inside(nf.as_str(), widget);
             }

@@ -55,6 +55,12 @@ extern {
         parent: *const PropertyValue,
         ) -> *const PropertyValue;
 
+    fn property_box_vec_item_add(
+        ps : *const JkPropertyBox,
+        pv: *const PropertyValue,
+        parent: *const PropertyValue,
+        ) -> *const PropertyValue;
+
     fn property_box_single_node_add(
         pl : *const JkPropertyBox,
         val : *const PropertyValue,
@@ -351,9 +357,27 @@ impl PropertyWidget for PropertyBox
         println!("TODO");
     }
 
-    fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, is_node : bool)
+    fn add_vec_item(&self, field : &str, item : *const PropertyValue, is_node :bool)
     {
-        println!("TODO");
+        //println!("TODO");
+
+        let parent = if let Some(pv) = self.find_parent_of(field)
+        {
+            println!("FOUND THE FATHER");
+            pv
+        }
+        else {
+            ptr::null()
+        };
+
+        unsafe {
+            property_box_vec_item_add(
+                self.jk_property,
+                item,
+                parent);
+        }
+
+        self.pv.borrow_mut().insert(field.to_owned(), item);
     }
 
     fn update_enum(&self, path : &str, widget_entry : *const PropertyValue, value : &str)
