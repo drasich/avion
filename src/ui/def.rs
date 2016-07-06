@@ -867,7 +867,8 @@ impl WidgetContainer
                             if let Some(ref mut p) = self.property {
                                 if widget_origin != p.id {
                                     println!("hangle change, calling update objects");
-                                    p.update_object(&*ob, "");
+                                    //p.update_object(&*ob, "");
+                                    p.update_object_property(&*ob, name);
                                 }
                             }
                         }

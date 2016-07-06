@@ -142,6 +142,8 @@ extern {
         );
 
     pub fn property_show(obj : *const JkPropertyList, b : bool);
+
+    fn property_box_children_clear(val : *const PropertyValue);
 }
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
@@ -614,12 +616,40 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         }
     }
 
-    fn update_widget(&self, pv : *const PropertyValue) {
-        
-        println!("TODO TODO call update_vec from property");
+    fn update_widget(&self, pv : *const PropertyValue)
+    {
+        println!("TODO TODO update len here (was: call update_vec from property)");
         unsafe { property_list_vec_update(pv, self.len() as c_int); }
         unsafe { property_expand(pv); }
     }
+
+    fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
+    {
+        println!("TODO update vec with path : {:?} ", path);
+        if path.is_empty() {
+            if let Some(pv) = widget.get_property(all_path) {
+
+                self.update_widget(pv);
+                unsafe {property_box_children_clear(pv);}
+
+                println!("TODO clear vec here");
+                //widget.update_enum(all_path, pv, type_value);
+
+                self.create_widget_inside(all_path, widget);
+            }
+            return;
+        }
+
+        match path[0].parse::<usize>() {
+            Ok(index) => {
+                self[index].update_property(widget, all_path, path[1..].to_vec());
+            }
+            _ => {
+            }
+        }
+
+    }
+
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {
