@@ -127,6 +127,7 @@ extern {
 
     pub fn jk_property_cb_register(
         property : *const JkPropertyCb,
+        data : *const c_void,
         changed_float : ChangedFunc,
         changed_string : ChangedFunc,
         changed_enum : ChangedFunc,
@@ -1191,6 +1192,8 @@ pub extern fn vec_add(
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     //let p : &Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    println!("VEC ADDDDDD");
 
     let change = container.request_operation_vec_add(path);
     container.handle_change(&change, uuid::Uuid::nil());//p.id);

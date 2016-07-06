@@ -197,6 +197,7 @@ impl View
         unsafe {
             ui::property::jk_property_cb_register(
                 ui::property_box::property_box_cb_get(p.jk_property),
+                mem::transmute(box pd),
                 ui::property_list::changed_set_float,
                 ui::property_list::changed_set_string,
                 ui::property_list::changed_set_enum,

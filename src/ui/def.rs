@@ -829,7 +829,7 @@ impl WidgetContainer
                 }
             },
             operation::Change::Objects(ref name, ref id_list) => {
-                println!("hangle change OBJECTS");
+                println!("hangle change OBJECTS :: {}",name);
                 let sel = self.get_selected_object();
                 for id in id_list {
 
@@ -866,7 +866,7 @@ impl WidgetContainer
                         if *id == ob.id  {
                             if let Some(ref mut p) = self.property {
                                 if widget_origin != p.id {
-                                    println!("hangle change, callind update objects");
+                                    println!("hangle change, calling update objects");
                                     p.update_object(&*ob, "");
                                 }
                             }
@@ -1277,6 +1277,7 @@ impl WidgetContainer
         path : &str)
         -> operation::Change
     {
+        println!("request operation add vec : {}", path);
         let v: Vec<&str> = path.split('/').collect();
 
         let mut vs = Vec::new();
