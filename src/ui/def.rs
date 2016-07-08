@@ -1324,10 +1324,14 @@ impl WidgetContainer
         };
 
         match v[v.len()-1].parse::<usize>() {
-            Ok(index) => self.request_operation(
+            Ok(index) => {
+                vs.pop();
+
+                self.request_operation(
                 vs,
                 operation::OperationData::VecDel(index, prop)//TODO index
-                ),
+                )
+            },
                 _ => operation::Change::None
         }
     }

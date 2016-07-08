@@ -353,14 +353,8 @@ impl OperationTrait for Operation
                     ob.del_item(s.as_ref(), i);
                     ids.push_back(ob.id.clone());
                 }
-
-                let mut parent = self.name.clone();
-                parent.pop();
-
-                let parent = join_string(&parent);
-                //return Change::Objects(s, ids);
                 println!("on vecdel, don't return change::Objects, return something like vecDel(parent, index)");
-                return Change::Objects(parent, ids);
+                return Change::Objects(s, ids);
             },
             /*
             OperationData::ToSome => {
