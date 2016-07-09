@@ -1042,7 +1042,7 @@ impl WidgetContainer
                             (prop, change)
                         },
                         dragger::Operation::Rotation(q) => {
-                            let prop = vec!["orientation".to_owned()];
+                            let prop = vec!["orientation".to_owned(), "*".to_owned()];
                             let cxoris = context.saved_oris.clone();
                             let mut saved_oris = Vec::with_capacity(cxoris.len());
                             for p in &cxoris {

@@ -372,11 +372,19 @@ impl OperationTrait for Operation
             OperationData::Vector(_,ref new) => {
                 let mut i = 0;
                 let s = join_string(&self.name);
+                let sp = if !self.name.is_empty() && self.name.last().unwrap() == "*" {
+                    let mut sp = self.name.clone();
+                    sp.pop();
+                    join_string(&sp)
+                }
+                else {
+                    s.clone()
+                };
                 let mut ids = LinkedList::new();
                 for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(
-                        s.as_ref(),
+                        sp.as_str(),
                         &*new[i]);
                     i = i +1;
                     ids.push_back(ob.id.clone());
@@ -475,11 +483,19 @@ impl OperationTrait for Operation
             OperationData::Vector(ref old,_) => {
                 let mut i = 0;
                 let s = join_string(&self.name);
+                let sp = if !self.name.is_empty() && self.name.last().unwrap() == "*" {
+                    let mut sp = self.name.clone();
+                    sp.pop();
+                    join_string(&sp)
+                }
+                else {
+                    s.clone()
+                };
                 let mut ids = LinkedList::new();
                 for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.test_set_property_hier(
-                        s.as_ref(),
+                        sp.as_str(),
                         &*old[i]);
                     i = i +1;
                     ids.push_back(ob.id.clone());
