@@ -840,7 +840,9 @@ impl WidgetContainer
                             }
                         };
                     }
-                    else if name.starts_with("comp_data/MeshRender") {
+                    //else if name.starts_with("comp_data/MeshRender") {
+                    else if name.starts_with("comp_data") {
+                        println!("TODO, only update when it was a mesh. right now 'MeshRender' is not in the property path..., maybe do a property path like comp_data/2/[MeshRender]mesh");
                         let scene = self.get_scene();
                         let oob = if let Some(ref sc) = scene {
                             let s = sc.borrow();
@@ -856,6 +858,9 @@ impl WidgetContainer
                             if let Some(ref mr) = omr {
                                 ob.mesh_render =
                                     Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
+                            }
+                            else {
+                                ob.mesh_render = None;
                             }
                         }
                     }
