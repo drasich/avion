@@ -1296,7 +1296,10 @@ impl WidgetContainer
         }
 
         let index = match v[v.len()-1].parse::<usize>() {
-            Ok(index) => index,
+            Ok(index) => {
+                vs.pop();
+                index
+            },
             _ => 0
         };
 
