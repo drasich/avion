@@ -842,7 +842,10 @@ impl WidgetContainer
                     }
                     //else if name.starts_with("comp_data/MeshRender") {
                     else if name.starts_with("comp_data") {
-                        println!("TODO, only update when it was a mesh. right now 'MeshRender' is not in the property path..., maybe do a property path like comp_data/2/[MeshRender]mesh");
+                        println!("TODO, only update when it was a mesh.
+                                 right now 'MeshRender' is not in the property path...,
+                                 maybe do a property path like comp_data/2/[MeshRender]mesh...
+                                 or check serde first");
                         let scene = self.get_scene();
                         let oob = if let Some(ref sc) = scene {
                             let s = sc.borrow();
