@@ -791,6 +791,37 @@ impl PropertyShow for CompData
         }
     }
 
+    fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
+    {
+        println!("update property CompData with path : {:?} ", path);
+        if path.is_empty() {
+            if let Some(pv) = widget.get_property(all_path) {
+                self.update_widget(pv);
+
+                let type_value = self.get_kind_string();
+                widget.update_enum(all_path, pv, type_value.as_str());
+                self.create_widget_inside(all_path, widget);
+            }
+            return;
+        }
+
+        let ppp : &PropertyShow = match *self {
+            CompData::Player(ref p) => {
+                p
+            },
+            CompData::ArmaturePath(ref p) => {
+                p
+            },
+            CompData::MeshRender(ref p) => {
+                p
+            },
+            _ => {println!("not yet implemented"); return;}
+        };
+
+        ppp.update_property(widget, all_path, path);
+    }
+
+
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
         if field != self.get_kind_string() {
@@ -898,7 +929,6 @@ impl ui::PropertyShow for Orientation {
         ps.create_widget_inside(path, widget);
     }
 
-
     fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
     {
         println!("update property orientation with path : {:?} ", path);
@@ -914,42 +944,18 @@ impl ui::PropertyShow for Orientation {
                 //widget.update_enum(join_string(&path).as_str(),pv, type_value);
                 widget.update_enum(all_path, pv, type_value);
 
-                /*
-                match *self {
-                    Orientation::AngleXYZ(ref v) =>  {
-                        v.create_widget(widget, all_path, 1, false);
-                    },
-                    Orientation::Quat(ref q) => {
-                        q.create_widget(widget, all_path, 1, false);
-                    }
-                };
-                */
                 self.create_widget_inside(all_path, widget);
             }
             return;
         }
 
-        match *self {
-            Orientation::AngleXYZ(ref v) =>  {
-                match path[0].as_str() {
-                    "x" => v.x.update_property(widget, all_path, path[1..].to_vec()),
-                    "y" => v.y.update_property(widget, all_path, path[1..].to_vec()),
-                    "z" => v.z.update_property(widget, all_path, path[1..].to_vec()),
-                    _ => {}
-                }
-            },
-            Orientation::Quat(ref q) => {
-                match path[0].as_str() {
-                    "x" => q.x.update_property(widget, all_path, path[1..].to_vec()),
-                    "y" => q.y.update_property(widget, all_path, path[1..].to_vec()),
-                    "z" => q.z.update_property(widget, all_path, path[1..].to_vec()),
-                    "w" => q.w.update_property(widget, all_path, path[1..].to_vec()),
-                    _ => {}
-                }
-            }
-        }
-    }
+        let ppp : &PropertyShow = match *self {
+            Orientation::AngleXYZ(ref v) => v,
+            Orientation::Quat(ref q) => q,
+        };
 
+        ppp.update_property(widget, all_path, path);
+    }
 
     fn update_widget(&self, pv : *const PropertyValue) {
         let type_value = match *self {
@@ -1082,10 +1088,15 @@ macro_rules! property_show_methods(
             {
                 println!("macro... {}, {:?}", all_path, path);
 
-                if path.is_empty() {
+                let mut pp = String::from(all_path);
+                if !path.is_empty() && path[0] == "*" {
+                    pp = pp.replace("/*", "");
+                }
+
+                if path.is_empty() || path[0] == "*" {
                     //update all
                     $(
-                        let s = String::from(all_path) + "/" + stringify!($member);
+                        let s = pp.clone() + "/" + stringify!($member);
                         self.$member.update_property(widget, s.as_str(), Vec::new());
                     )+
                     return;

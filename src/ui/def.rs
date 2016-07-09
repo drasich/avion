@@ -1583,7 +1583,7 @@ impl WidgetContainer
             i = i+1;
         }
 
-        operation::Change::DirectChange("orientation".to_owned())
+        operation::Change::DirectChange("orientation/*".to_owned())
     }
 
 
