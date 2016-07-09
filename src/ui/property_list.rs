@@ -264,7 +264,7 @@ impl PropertyList
                     //ppp.update_widget(*pv);
                 //}
                 //let test = |ps| {};
-                object.update_property(yep, *pv);
+                object.update_property(self, prop, yep);
                 //object.callclosure(&test);
             }
         }
@@ -447,7 +447,7 @@ pub extern fn contract(
 fn get_widget_data<'a>(widget_data : *const c_void) ->
     (&'a mut ui::PropertyList, &'a mut Box<ui::WidgetContainer>)
 {
-    println!("GET WIDGET DATAAAAAAAAAAAAAAA");
+    println!("GET WIDGET DATAAAAAAAAAAAAAAA, this is old so crash, use get_widget_data2");
 
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_data)};
     //let p : &mut ui::PropertyList = unsafe {mem::transmute(wcb.widget)};
@@ -491,11 +491,14 @@ fn changed_set<T : Any+Clone+PartialEq>(
         return;
     };
 
-    let (p, container) = get_widget_data(widget_data);
+    println!("changed_set : {}", path);
+
+    let (p, container) = get_widget_data2(widget_data);
 
     let change = match (old, action) {
         (Some(oldd), 1) => {
-            if let Some(ref cur) = *p.current.borrow() {
+            //if let Some(ref cur) = *p.current.borrow() {
+            if let Some(ref cur) = p.get_current() {
                 container.request_operation_property_old_new(
                     (*cur).clone(),
                     path,
@@ -515,7 +518,8 @@ fn changed_set<T : Any+Clone+PartialEq>(
             }
         },
         _ => {
-            if let Some(ref cur) = *p.current.borrow() {
+            //if let Some(ref cur) = *p.current.borrow() {
+            if let Some(ref cur) = p.get_current() {
                 match *cur {
                     RefMut::Arc(ref a) =>
                         container.request_direct_change_property(&mut *a.write().unwrap(),path,new),
@@ -530,7 +534,8 @@ fn changed_set<T : Any+Clone+PartialEq>(
         }
     };
 
-    container.handle_change(&change, p.id);
+    //container.handle_change(&change, p.id);
+    container.handle_change(&change, p.get_id());
 }
 
 fn changed_enum<T : Any+Clone+PartialEq>(
@@ -679,6 +684,8 @@ pub extern fn changed_set_float(
     property : *const c_void,
     name : *const c_char,
     data : *const c_void) {
+
+    println!("changed_set_float");
 
     let f : & f64 = unsafe {mem::transmute(data)};
     changed_set(property, name, None, f, 0);
@@ -961,7 +968,7 @@ impl PropertyWidget for PropertyList
     }
     */
 
-    fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str)
+    fn update_enum(&self, path : &str, widget_entry : *const PropertyValue, value : &str)
     {
         let v = CString::new(value.as_bytes()).unwrap();
         unsafe {

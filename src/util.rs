@@ -71,3 +71,34 @@ pub fn pass_slice()
             s.as_ptr() as *const c_void,
             s.len() as size_t); }
 }
+
+pub fn join_string(path : &Vec<String>) -> String
+{
+    let mut s = String::new();
+    let mut first = true;
+    for v in path {
+        if !first {
+            s.push('/');
+        }
+        s.push_str(v);
+        first = false;
+    }
+
+    s
+}
+
+pub fn join_str(path : &Vec<&str>) -> String
+{
+    let mut s = String::new();
+    let mut first = true;
+    for v in path {
+        if !first {
+            s.push('/');
+        }
+        s.push_str(*v);
+        first = false;
+    }
+
+    s
+}
+

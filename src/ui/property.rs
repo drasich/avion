@@ -38,6 +38,8 @@ use dormin::component::CompData;
 use dormin::armature;
 use dormin::transform::Orientation;
 
+use util::join_string;
+
 #[repr(C)]
 pub struct JkPropertyCb;
 
@@ -61,6 +63,10 @@ extern {
         added_name : *const c_char
         ) -> *const PropertyValue;
 
+    fn property_node_add(
+        path : *const c_char
+        ) -> *const PropertyValue;
+
     fn property_list_float_add(
         name : *const c_char,
         value : c_float
@@ -75,6 +81,12 @@ extern {
         ps : *const JkPropertyList,
         container: *const PropertyValue,
         ) -> *const PropertyValue;
+
+    fn property_vec_add(
+        path: *const c_char,
+        len : c_int
+        ) -> *const PropertyValue;
+
 
     /*
     fn property_list_vec_item_add(
@@ -115,6 +127,7 @@ extern {
 
     pub fn jk_property_cb_register(
         property : *const JkPropertyCb,
+        data : *const c_void,
         changed_float : ChangedFunc,
         changed_string : ChangedFunc,
         changed_enum : ChangedFunc,
@@ -129,6 +142,8 @@ extern {
         );
 
     pub fn property_show(obj : *const JkPropertyList, b : bool);
+
+    fn property_box_children_clear(val : *const PropertyValue);
 }
 
 pub extern fn name_get(data : *const c_void) -> *const c_char {
@@ -141,6 +156,7 @@ pub extern fn name_get(data : *const c_void) -> *const c_char {
     //println!("..........name get {:?}", cs);
     cs.as_ptr()
 }
+
 
 impl WidgetUpdate for PropertyList
 {
@@ -233,6 +249,19 @@ impl PropertyShow for f64 {
         }
     }
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        let f = CString::new(field.as_bytes()).unwrap();
+        println!("create f64 for : {}", field);
+        let pv = unsafe { 
+            property_list_float_add(
+                f.as_ptr(),
+                *self as c_float)
+        };
+
+        Some(pv)
+    }
+
     fn update_widget(&self, pv : *const PropertyValue) {
         unsafe {
             property_list_float_update(
@@ -269,8 +298,23 @@ impl PropertyShow for String {
         }
     }
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        let f = CString::new(field.as_bytes()).unwrap();
+        let v = CString::new(self.as_bytes()).unwrap();
+
+        let pv = unsafe {
+            property_list_string_add(
+                f.as_ptr(),
+                v.as_ptr())
+        };
+
+        Some(pv)
+    }
+
     fn update_widget(&self, pv : *const PropertyValue) {
         let v = CString::new(self.as_bytes()).unwrap();
+        println!("update string value with : {}", self);
         unsafe {
             property_list_string_update(
                 pv,
@@ -291,14 +335,24 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
         (**self).create_widget(property ,field, depth, has_container)
     }
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        (**self).create_widget_itself(field)
+    }
+
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)
+    {
+        (**self).create_widget_inside(path, widget);
+    }
+
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
         (**self).get_property(field)
     }
 
-    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    fn update_property(&self, widget : &PropertyWidget, all_path : &str, path : Vec<String>)
     {
-        (**self).update_property(path, pv);
+        (**self).update_property(widget, all_path, path);
     }
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
@@ -336,10 +390,10 @@ impl<T : PropertyShow> PropertyShow for Rc<RefCell<T>> {
         None
     }
 
-    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
     {
         //(**self).update_property(path, pv);
-        self.borrow().update_property(path, pv);
+        self.borrow().update_property(widget, all_path, path);
     }
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
@@ -502,6 +556,47 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         None
     }
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        println!("create widget itself vec");
+        let f = CString::new(field.as_bytes()).unwrap();
+        unsafe {
+            Some(property_vec_add(f.as_ptr(), self.len() as c_int))
+        }
+    }
+
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+    {
+        println!("TODO inside vec");
+        if self.is_empty() {
+            //add "no item" item
+        }
+
+        for (n,i) in self.iter().enumerate() {
+            let mut nf = String::from(path);
+            nf.push_str("/");
+            nf.push_str(n.to_string().as_str());
+            //chris
+            /*
+            if let Some(ref mut pv) = i.create_widget(property, nf.as_str(), depth -1, true) {
+                unsafe {
+                    property.add_vec_item(nf.as_str(), *pv, i.is_node());
+                    }
+            }
+            else {
+                println!("___ Vec : failed" );
+            }
+            */
+
+            if let Some(pv) = i.create_widget_itself(nf.as_str()) {
+                widget.add_vec_item(nf.as_str(), pv, false);
+
+                i.create_widget_inside(nf.as_str(), widget);
+            }
+        }
+    }
+
+
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
         match field.parse::<usize>() {
@@ -521,12 +616,40 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         }
     }
 
-    fn update_widget(&self, pv : *const PropertyValue) {
-        
-        println!("TODO TODO call update_vec from property");
+    fn update_widget(&self, pv : *const PropertyValue)
+    {
+        println!("TODO TODO update len here (was: call update_vec from property)");
         unsafe { property_list_vec_update(pv, self.len() as c_int); }
         unsafe { property_expand(pv); }
     }
+
+    fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
+    {
+        println!("TODO update vec with path : {:?} ", path);
+        if path.is_empty() {
+            if let Some(pv) = widget.get_property(all_path) {
+
+                self.update_widget(pv);
+                unsafe {property_box_children_clear(pv);}
+
+                println!("TODO clear vec here");
+                //widget.update_enum(all_path, pv, type_value);
+
+                self.create_widget_inside(all_path, widget);
+            }
+            return;
+        }
+
+        match path[0].parse::<usize>() {
+            Ok(index) => {
+                self[index].update_property(widget, all_path, path[1..].to_vec());
+            }
+            _ => {
+            }
+        }
+
+    }
+
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {
@@ -624,6 +747,35 @@ impl PropertyShow for CompData
         None
     }
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        println!("create widget itself, compdata");
+        let type_value = self.get_kind_string();
+
+        let types = CompData::get_all_kind();
+        Some(add_enum2(field, types.as_str(), type_value.as_str()))
+    }
+
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+    {
+
+        let ps : &PropertyShow = match *self {
+            CompData::Player(ref p) => {
+                p
+            },
+            CompData::ArmaturePath(ref p) => {
+                p
+            },
+            CompData::MeshRender(ref p) => {
+                p
+            },
+            _ => { println!("not yet implemented"); return; }
+        };
+
+        ps.create_widget_inside(path, widget);
+    }
+
+
     fn update_widget(&self, pv : *const PropertyValue) {
         match *self {
             CompData::Player(ref p) => {
@@ -638,6 +790,37 @@ impl PropertyShow for CompData
             _ => {println!("not yet implemented");}
         }
     }
+
+    fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
+    {
+        println!("update property CompData with path : {:?} ", path);
+        if path.is_empty() {
+            if let Some(pv) = widget.get_property(all_path) {
+                self.update_widget(pv);
+
+                let type_value = self.get_kind_string();
+                widget.update_enum(all_path, pv, type_value.as_str());
+                self.create_widget_inside(all_path, widget);
+            }
+            return;
+        }
+
+        let ppp : &PropertyShow = match *self {
+            CompData::Player(ref p) => {
+                p
+            },
+            CompData::ArmaturePath(ref p) => {
+                p
+            },
+            CompData::MeshRender(ref p) => {
+                p
+            },
+            _ => {println!("not yet implemented"); return;}
+        };
+
+        ppp.update_property(widget, all_path, path);
+    }
+
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
@@ -721,35 +904,58 @@ impl ui::PropertyShow for Orientation {
         None
     }
 
-    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
-        println!("update property orientation : {:?} ", path);
+        let type_value = match *self {
+            Orientation::AngleXYZ(_) => "AngleXYZ",
+            Orientation::Quat(_) => "Quat"
+        };
+
+        let types = "AngleXYZ/Quat";
+        Some(add_enum2(field, types, type_value))
+    }
+
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+    {
+        let ps : &PropertyShow = match *self {
+            Orientation::AngleXYZ(ref v) =>  {
+                v
+            },
+            Orientation::Quat(ref q) => {
+                q
+            }
+        };
+
+        ps.create_widget_inside(path, widget);
+    }
+
+    fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
+    {
+        println!("update property orientation with path : {:?} ", path);
         if path.is_empty() {
-            self.update_widget(pv);
+            if let Some(pv) = widget.get_property(all_path) {
+                self.update_widget(pv);
+
+                let type_value = match *self {
+                    Orientation::AngleXYZ(_) => "AngleXYZ",
+                    Orientation::Quat(_) => "Quat"
+                };
+
+                //widget.update_enum(join_string(&path).as_str(),pv, type_value);
+                widget.update_enum(all_path, pv, type_value);
+
+                self.create_widget_inside(all_path, widget);
+            }
             return;
         }
 
-        match *self {
-            Orientation::AngleXYZ(ref v) =>  {
-                match path[0].as_str() {
-                    "x" => v.x.update_property(path[1..].to_vec(), pv),
-                    "y" => v.y.update_property(path[1..].to_vec(), pv),
-                    "z" => v.z.update_property(path[1..].to_vec(), pv),
-                    _ => {}
-                }
-            },
-            Orientation::Quat(ref q) => {
-                match path[0].as_str() {
-                    "x" => q.x.update_property(path[1..].to_vec(), pv),
-                    "y" => q.y.update_property(path[1..].to_vec(), pv),
-                    "z" => q.z.update_property(path[1..].to_vec(), pv),
-                    "w" => q.w.update_property(path[1..].to_vec(), pv),
-                    _ => {}
-                }
-            }
-        }
-    }
+        let ppp : &PropertyShow = match *self {
+            Orientation::AngleXYZ(ref v) => v,
+            Orientation::Quat(ref q) => q,
+        };
 
+        ppp.update_property(widget, all_path, path);
+    }
 
     fn update_widget(&self, pv : *const PropertyValue) {
         let type_value = match *self {
@@ -757,10 +963,13 @@ impl ui::PropertyShow for Orientation {
             Orientation::Quat(_) => "Quat"
         };
 
+        //widget.update_enum(pv, type_value);
+        /*
         let v = CString::new(type_value.as_bytes()).unwrap();
         unsafe {
             property_list_enum_update(pv, v.as_ptr());
         }
+        */
     }
 
     fn get_property(&self, field : &str) -> Option<&ui::PropertyShow>
@@ -812,19 +1021,40 @@ macro_rules! property_show_methods(
                 }
 
                 if depth > 0 {
+                    self.create_widget_inside(field, property);
+                }
+
+                None
+            }
+
+            fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+            {
+                println!("property show methods **{}**, create itself", field);
+                Some(add_node2(field))
+            }
+
+            fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+            {
                 $(
-                    let s = if field != "" {
-                        field.to_owned()
+                    let s = if path != "" {
+                        path.to_owned()
                             + "/"
                             + stringify!($member)
                     }else {
                         stringify!($member).to_owned()
                     };
-                    self.$member.create_widget(property, s.as_ref(), depth-1, has_container);
-                 )+
-                }
+                    println!("**************** GOING to create THISSSSSSSSSS : {}, {}", s, stringify!($member));
+                    if let Some(pv) = self.$member.create_widget_itself(s.as_str()) {
+                        println!("**************** looks ok : {}, {}", s, stringify!($member));
+                        widget.add_simple_item(s.as_str(), pv);
 
-                None
+                        self.$member.create_widget_inside(s.as_str(), widget);
+                    }
+                    else {
+                        println!("**************** cannot add pv : {}, {}", s, stringify!($member));
+                    }
+                 )+
+
             }
 
             /*
@@ -854,16 +1084,27 @@ macro_rules! property_show_methods(
                 }
             }
 
-            fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+            fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
             {
-                if path.is_empty() {
-                    self.update_widget(pv);
+                println!("macro... {}, {:?}", all_path, path);
+
+                let mut pp = String::from(all_path);
+                if !path.is_empty() && path[0] == "*" {
+                    pp = pp.replace("/*", "");
+                }
+
+                if path.is_empty() || path[0] == "*" {
+                    //update all
+                    $(
+                        let s = pp.clone() + "/" + stringify!($member);
+                        self.$member.update_property(widget, s.as_str(), Vec::new());
+                    )+
                     return;
                 }
 
                 match path[0].as_str() {
                 $(
-                    stringify!($member) => self.$member.update_property(path[1..].to_vec(), pv),
+                    stringify!($member) => self.$member.update_property(widget, all_path, path[1..].to_vec()),
                  )+
                     _ => {}
                 }
@@ -973,20 +1214,6 @@ Option<&PropertyShow>
     }
 }
 
-pub extern fn panel_move(
-    widget_cb_data : *const c_void,
-    x : c_int, y : c_int, w : c_int, h : c_int)
-{
-    let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
-    let mut p : &mut PropertyList = unsafe {mem::transmute(wcb.widget)};
-
-    p.config.x = x;
-    p.config.y = y;
-    p.config.w = w;
-    p.config.h = h;
-}
-
-
 pub extern fn vec_add(
     data : *const c_void,
     name : *const c_char,
@@ -1006,6 +1233,8 @@ pub extern fn vec_add(
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     //let p : &Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+
+    println!("VEC ADDDDDD");
 
     let change = container.request_operation_vec_add(path);
     container.handle_change(&change, uuid::Uuid::nil());//p.id);
@@ -1037,22 +1266,6 @@ pub extern fn vec_del(
     let change = container.request_operation_vec_del(path);
     container.handle_change(&change, uuid::Uuid::nil());//p.id);
     //ui::add_empty(container, action.view_id);
-}
-
-
-fn join_string(path : &Vec<String>) -> String
-{
-    let mut s = String::new();
-    let mut first = true;
-    for v in path {
-        if !first {
-            s.push('/');
-        }
-        s.push_str(v.as_ref());
-        first = false;
-    }
-
-    s
 }
 
 impl PropertyId for object::Object
@@ -1107,6 +1320,17 @@ pub fn add_node(
     return pv;
 }
 
+pub fn add_node2(
+    name : &str
+    ) -> *const PropertyValue
+{
+    let f = CString::new(name.as_bytes()).unwrap();
+    unsafe {
+        property_node_add(f.as_ptr())
+    }
+}
+
+
 pub fn add_enum(
     property : &PropertyWidget,
     path : &str,
@@ -1139,4 +1363,49 @@ pub fn add_enum(
 
     pv
 }
+
+pub fn add_enum2(
+    path : &str,
+    types : &str,
+    value : &str
+    ) -> *const PropertyValue
+{
+    let f = CString::new(path.as_bytes()).unwrap();
+    let types = CString::new(types.as_bytes()).unwrap();
+    let v = CString::new(value.as_bytes()).unwrap();
+
+    unsafe {
+        property_list_enum_add(
+            f.as_ptr(),
+            types.as_ptr(),
+            v.as_ptr())
+    }
+}
+
+
+/*
+fn create_the_widget(
+        widget : &PropertyWidget,
+        property_show : &PropertyShow,
+        all_path : &str,
+        field : &str,
+        has_container : bool ) -> Option<*const PropertyValue>
+{
+    if let Some(pv) = property_show.create_widget_itself(field) {
+
+        if !has_container {
+            widget.add_simple_item(all_path + field, pv);
+            property_show.create_widget_inside(pv, all_path + field);
+
+            None
+        }
+        else {
+            Some(pv)
+        }
+    }
+    else {
+        None
+    }
+}
+*/
 

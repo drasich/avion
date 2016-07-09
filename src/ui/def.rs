@@ -209,6 +209,18 @@ extern {
 
     pub fn ecore_animator_add(cb : AnimatorCallback, data : *const c_void) -> *const Ecore_Animator;
     fn jk_monitor_add(cb : MonitorCallback, data : *const c_void, path : *const c_char);
+
+    fn jk_panel_new(
+      w : *const Window,
+      x : c_int,
+      y : c_int,
+      width : c_int,
+      height : c_int,
+      mov : PanelGeomFunc,
+      resize : PanelGeomFunc,
+      data : *const c_void
+      ) -> *const Evas_Object;
+
 }
 
 fn object_geometry_get(obj : *const Evas_Object) -> (i32, i32, i32, i32)
@@ -430,10 +442,14 @@ impl WindowConfig {
     {
         let mut wc = WindowConfig {
             views : Vec::new(),
-            property : match c.property {
+
+            property : 
+                /*match c.property {
                 None => None,
                 Some(ref p) => Some(p.config.clone())
             },
+            */
+                Some(c.panel.config.clone()),
             tree : match c.tree {
                 None => None,
                 Some(ref t) => Some(t.get_config())
@@ -578,11 +594,63 @@ pub trait Widget
     fn get_id(&self) -> Uuid;
 }
 
+pub struct WidgetPanel
+{
+    visible : bool,
+    pub config : PropertyConfig,
+    pub widget : Option<Rc<PropertyBox>>,
+    pub eo : *const Evas_Object
+}
+
+impl WidgetPanel
+{
+    pub fn new(config : PropertyConfig, widget : Option<Rc<PropertyBox>>) -> WidgetPanel
+    {
+        WidgetPanel {
+            visible : true,
+            config : config,
+            widget : widget,
+            eo : ptr::null()
+        }
+    }
+
+    pub fn create(&mut self, win : *const Window)
+    {
+        self.eo = unsafe { jk_panel_new(
+                win,
+                self.config.x,
+                self.config.y,
+                self.config.w,
+                self.config.h,
+                panel_move,
+                panel_move,
+                mem::transmute(&self.config)
+                )
+        };
+    }
+}
+
+extern fn panel_move(
+    data : *const c_void,
+    x : c_int, y : c_int, w : c_int, h : c_int)
+{
+    //let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
+    //let mut p : &mut PropertyList = unsafe {mem::transmute(wcb.widget)};
+    let mut config : &mut PropertyConfig  = unsafe {mem::transmute(data)};
+
+    config.x = x;
+    config.y = y;
+    config.w = w;
+    config.h = h;
+}
+
+
 pub struct WidgetContainer
 {
     pub widgets : Vec<Box<Widget>>,
     pub tree : Option<Box<Tree>>,
     //pub property : Option<Rc<PropertyList>>,
+    pub panel :  Box<WidgetPanel>,
     pub property : Option<Rc<PropertyBox>>,
     //pub property : Option<Rc<PropertyWidget>>,
     pub command : Option<Box<Command>>,
@@ -689,6 +757,7 @@ impl WidgetContainer
         WidgetContainer {
             widgets : Vec::new(),
             tree : None,
+            panel : box WidgetPanel::new(PropertyConfig::new(), None),
             property : None,
             command : None,
             action : None,
@@ -760,7 +829,7 @@ impl WidgetContainer
                 }
             },
             operation::Change::Objects(ref name, ref id_list) => {
-                println!("hangle change OBJECTS");
+                println!("hangle change OBJECTS :: {}",name);
                 let sel = self.get_selected_object();
                 for id in id_list {
 
@@ -771,7 +840,12 @@ impl WidgetContainer
                             }
                         };
                     }
-                    else if name.starts_with("comp_data/MeshRender") {
+                    //else if name.starts_with("comp_data/MeshRender") {
+                    else if name.starts_with("comp_data") {
+                        println!("TODO, only update when it was a mesh.
+                                 right now 'MeshRender' is not in the property path...,
+                                 maybe do a property path like comp_data/2/[MeshRender]mesh...
+                                 or check serde first");
                         let scene = self.get_scene();
                         let oob = if let Some(ref sc) = scene {
                             let s = sc.borrow();
@@ -788,6 +862,9 @@ impl WidgetContainer
                                 ob.mesh_render =
                                     Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
                             }
+                            else {
+                                ob.mesh_render = None;
+                            }
                         }
                     }
 
@@ -797,7 +874,9 @@ impl WidgetContainer
                         if *id == ob.id  {
                             if let Some(ref mut p) = self.property {
                                 if widget_origin != p.id {
-                                    p.update_object(&*ob, "");
+                                    println!("hangle change, calling update objects");
+                                    //p.update_object(&*ob, "");
+                                    p.update_object_property(&*ob, name);
                                 }
                             }
                         }
@@ -963,7 +1042,7 @@ impl WidgetContainer
                             (prop, change)
                         },
                         dragger::Operation::Rotation(q) => {
-                            let prop = vec!["orientation".to_owned()];
+                            let prop = vec!["orientation".to_owned(), "*".to_owned()];
                             let cxoris = context.saved_oris.clone();
                             let mut saved_oris = Vec::with_capacity(cxoris.len());
                             for p in &cxoris {
@@ -1167,6 +1246,7 @@ impl WidgetContainer
         name : &str,
         new : &Any) -> operation::Change
     {
+        println!("call from here 00 : {}", name);
         property.test_set_property_hier(name, new);
         operation::Change::DirectChange(String::from(name))
     }
@@ -1206,6 +1286,7 @@ impl WidgetContainer
         path : &str)
         -> operation::Change
     {
+        println!("request operation add vec : {}", path);
         let v: Vec<&str> = path.split('/').collect();
 
         let mut vs = Vec::new();
@@ -1215,7 +1296,10 @@ impl WidgetContainer
         }
 
         let index = match v[v.len()-1].parse::<usize>() {
-            Ok(index) => index,
+            Ok(index) => {
+                vs.pop();
+                index
+            },
             _ => 0
         };
 
@@ -1251,10 +1335,14 @@ impl WidgetContainer
         };
 
         match v[v.len()-1].parse::<usize>() {
-            Ok(index) => self.request_operation(
+            Ok(index) => {
+                vs.pop();
+
+                self.request_operation(
                 vs,
                 operation::OperationData::VecDel(index, prop)//TODO index
-                ),
+                )
+            },
                 _ => operation::Change::None
         }
     }
@@ -1495,7 +1583,7 @@ impl WidgetContainer
             i = i+1;
         }
 
-        operation::Change::DirectChange("orientation".to_owned())
+        operation::Change::DirectChange("orientation/*".to_owned())
     }
 
 
@@ -1657,7 +1745,7 @@ impl WidgetContainer
             //for w in &self.widgets {
             if let Some(w) = w.upgrade() {
                 if w.get_id() == widget_id {
-                    println!("same id as the widget so get out");
+                    println!("same id as the widget so get out (but right now the continue is commented)");
                     //continue;
                 }
 

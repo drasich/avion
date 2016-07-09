@@ -46,6 +46,8 @@ pub use self::def::{
 
     evas_object_show,
     evas_object_hide,
+
+    WidgetPanel,
 };
 
 
@@ -159,6 +161,17 @@ pub trait PropertyShow
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>;
 
+    fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
+    {
+        println!("           not implemented, field is {}", field);
+        None
+    }
+
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+    {
+        println!("            not implemented, field is {}", path);
+    }
+
     fn update_widget(&self, pv : *const PropertyValue) {
         //println!("update_widget not implemented for this type");
     }
@@ -173,11 +186,15 @@ pub trait PropertyShow
         f(self);
     }
 
-    fn update_property(&self, path : Vec<String>, pv :*const PropertyValue)
+    fn update_property(&self, widget : &PropertyWidget, all_path : &str, local_path : Vec<String>)
     {
-        println!("default update property : {:?}", path);
-        if path.is_empty() {
-            self.update_widget(pv);
+        println!("default update property : {}, {:?}", all_path, local_path);
+        if local_path.is_empty() {
+            println!("path is empty");
+            if let Some(pv) = widget.get_property(all_path) {
+                println!("found property");
+                self.update_widget(pv);
+            }
         }
     }
 
@@ -265,9 +282,15 @@ pub trait PropertyWidget : Widget {
     //fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
 
     //fn update_vec(&mut self, widget_entry : *const PropertyValue, len : usize);
-    fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str);
+    fn update_enum(&self, path : &str, widget_entry : *const PropertyValue, value : &str);
 
     fn get_current(&self) -> Option<RefMut<PropertyUser>>;
     fn set_current(&self, p : RefMut<PropertyUser>, title : &str);
+
+    fn get_property(&self, path : &str) -> Option<*const PropertyValue> 
+    {
+        println!("PropertyWidget, 'get_property' not implemented no return None");
+        None
+    }
 }
 

@@ -36,34 +36,29 @@ use dormin::component;
 use dormin::component::CompData;
 use dormin::armature;
 use dormin::transform::Orientation;
+use util;
 
 #[repr(C)]
 pub struct JkPropertyBox;
 
 #[link(name = "joker")]
 extern {
-    fn jk_property_box_new(
-        window : *const Window,
-        x : c_int,
-        y : c_int,
-        w : c_int,
-        h : c_int
-        ) -> *const JkPropertyBox;
-
+    fn jk_property_box_new(eo : *const ui::Evas_Object) -> *const JkPropertyBox;
 
     fn property_box_clear(pl : *const JkPropertyBox);
-
-    pub fn jk_property_box_register_cb(
-        property : *const JkPropertyBox,
-        data : *const PropertyBox,
-        panel_move : ui::PanelGeomFunc
-        );
 
     pub fn property_box_cb_get(pl : *const JkPropertyBox) -> *const ui::JkPropertyCb;
 
     fn property_box_single_item_add(
         ps : *const JkPropertyBox,
-        container: *const PropertyValue,
+        pv: *const PropertyValue,
+        parent: *const PropertyValue,
+        ) -> *const PropertyValue;
+
+    fn property_box_vec_item_add(
+        ps : *const JkPropertyBox,
+        pv: *const PropertyValue,
+        parent: *const PropertyValue,
         ) -> *const PropertyValue;
 
     fn property_box_single_node_add(
@@ -71,22 +66,17 @@ extern {
         val : *const PropertyValue,
         ) -> *const PropertyValue;
 
-    /*
-    pub fn jk_property_box_register_cb(
-        property : *const JkPropertyBox,
-        data : *const PropertyBox,
-        changed_float : ChangedFunc,
-        changed_string : ChangedFunc,
-        changed_enum : ChangedFunc,
-        register_change_string : RegisterChangeFunc,
-        register_change_float : RegisterChangeFunc,
-        register_change_enum : RegisterChangeFunc,
-        register_change_option : RegisterChangeFunc,
-        expand : PropertyTreeFunc,
-        contract : PropertyTreeFunc,
-        panel_move : ui::PanelGeomFunc
-        );
+    fn property_box_enum_update(
+        pb : *const JkPropertyBox,
+        pv : *const PropertyValue,
+        value : *const c_char);
 
+    fn property_box_remove(
+        pb : *const JkPropertyBox,
+        value : *const PropertyValue);
+
+
+    /*
     fn window_property_new(window : *const Window) -> *const JkProperty;
     fn property_register_cb(
         property : *const JkProperty,
@@ -137,7 +127,7 @@ pub struct PropertyBox
     pub pv : RefCell<HashMap<String, *const PropertyValue>>,
     visible : Cell<bool>,
     pub id : uuid::Uuid,
-    pub config : PropertyConfig,
+    //pub config : PropertyConfig,
     pub current : RefCell<Option<RefMut<PropertyUser>>>
 }
 
@@ -145,19 +135,20 @@ pub struct PropertyBox
 impl PropertyBox
 {
     pub fn new(
-        window : *const Window,
-        pc : &PropertyConfig
+        panel : &ui::WidgetPanel,
+        //pc : &PropertyConfig
         ) -> PropertyBox
     {
         PropertyBox {
             name : String::from("property_box_name"),
             jk_property : unsafe {jk_property_box_new(
-                    window,
-                    pc.x, pc.y, pc.w, pc.h)},
+                    panel.eo,
+                    //pc.x, pc.y, pc.w, pc.h
+                    )},
             pv : RefCell::new(HashMap::new()),
             visible: Cell::new(true),
             id : uuid::Uuid::new_v4(),
-            config : pc.clone(),
+            //config : pc.clone(),
             current : RefCell::new(None)
         }
     }
@@ -204,10 +195,11 @@ impl PropertyBox
     {
         println!("TODO update_object_property for box");
 
-        let copy = self.pv.borrow().clone();
+        //let copy = self.pv.borrow().clone();
 
-        println!("UPDATE OBJECT PROP '{}'", prop);
+        println!("boxxxxx UPDATE OBJECT PROP '{}'", prop);
 
+        /*
         for (f,pv) in &copy {
             match self.pv.borrow().get(f) {
                 Some(p) => if *p != *pv {
@@ -223,14 +215,45 @@ impl PropertyBox
                     //ppp.update_widget(*pv);
                 //}
                 //let test = |ps| {};
-                object.update_property(yep, *pv);
+                object.update_property(self,yep, *pv);
                 //object.callclosure(&test);
             }
         }
+
+        match self.pv.borrow().get(prop) {
+            Some(p) => {
+                let yep = ui::make_vec_from_str(prop);
+                println!("boxxxxx UPDATE OBJECT PROP 2222222222 '{:?}'", yep);
+                object.update_property(self, yep, *p);
+                println!("boxxxxx UPDATE OBJECT PROP 33333333333333333333333333 end ");
+            },
+            None => {}
+        }
+        */
+
+        let yep = ui::make_vec_from_str(prop);
+        object.update_property(self, prop, yep);
+
     }
 
     pub fn update_object(&self, object : &PropertyShow, but : &str)
     {
+        for (f,pv) in self.pv.borrow().iter() {
+            let fstr : &str = f.as_ref();
+            if fstr == but {
+                println!("buuuuuuuuuuuuuuuuuuuuuuuuuut: {} ", f);
+                continue;
+            }
+            let yep = ui::make_vec_from_str(f);
+            match ui::find_property_show(object, yep.clone()) {
+                Some(ppp) => {
+                    ppp.update_widget(*pv);
+                },
+                None => {
+                    println!("could not find prop : {:?}", yep);
+                }
+            }
+        }
 
     }
 
@@ -253,16 +276,40 @@ impl PropertyBox
         self.visible.get()
     }
 
+    fn find_parent_of(&self, path : &str) -> Option<*const PropertyValue>
+    {
+        let mut v : Vec<&str> = path.split("/").collect();
+        if v.len() > 1 {
+            v.pop();
+            let s = util::join_str(&v);
+            self.pv.borrow().get(&s).map(|o| *o)
+        }
+        else {
+            None
+        }
+    }
+
 }
+
 
 impl PropertyWidget for PropertyBox
 {
     fn add_simple_item(&self, field : &str, item : *const PropertyValue)
     {
+        let parent = if let Some(pv) = self.find_parent_of(field)
+        {
+            println!("FOUND THE FATHER");
+            pv
+        }
+        else {
+            ptr::null()
+        };
+
         unsafe {
             property_box_single_item_add(
                 self.jk_property,
-                item);
+                item,
+                parent);
         }
 
         self.pv.borrow_mut().insert(field.to_owned(), item);
@@ -310,14 +357,63 @@ impl PropertyWidget for PropertyBox
         println!("TODO");
     }
 
-    fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, is_node : bool)
+    fn add_vec_item(&self, field : &str, item : *const PropertyValue, is_node :bool)
     {
-        println!("TODO");
+        //println!("TODO");
+
+        let parent = if let Some(pv) = self.find_parent_of(field)
+        {
+            println!("FOUND THE FATHER");
+            pv
+        }
+        else {
+            ptr::null()
+        };
+
+        unsafe {
+            property_box_vec_item_add(
+                self.jk_property,
+                item,
+                parent);
+        }
+
+        self.pv.borrow_mut().insert(field.to_owned(), item);
     }
 
-    fn update_enum(&mut self, widget_entry : *const PropertyValue, value : &str)
+    fn update_enum(&self, path : &str, widget_entry : *const PropertyValue, value : &str)
     {
-        println!("TODO");
+        println!("TODO   !!!!! [{}] update enum BOX ::::::::::: {}", path, value);
+        let v = CString::new(value.as_bytes()).unwrap();
+        unsafe {
+            property_box_enum_update(self.jk_property, widget_entry, v.as_ptr());
+
+        }
+
+        let copy = self.pv.borrow().clone();
+
+        //println!("UPDATE OBJECT PROP '{}'", prop);
+
+        for (f,pv) in &copy {
+            /*
+            match self.pv.borrow().get(f) {
+                Some(p) => if *p != *pv {
+                    panic!("different pointer???");
+                    continue
+                },
+                None => continue
+            }
+            */
+
+            /*
+            println!("check this value '{}' with '{}'", f, path);
+
+            if f != path && f.starts_with(path) {
+                unsafe { property_box_remove(self.jk_property, *pv); }
+            }
+            */
+        }
+
+
     }
 
     fn get_current(&self) -> Option<RefMut<PropertyUser>>
@@ -343,6 +439,12 @@ impl PropertyWidget for PropertyBox
                 self._set_prop(&*c.borrow().as_show(), title),
         }
     }
+
+    fn get_property(&self, path : &str) -> Option<*const PropertyValue> 
+    {
+        self.pv.borrow().get(path).map( |o| *o)
+    }
+
 }
 
 impl ui::Widget for PropertyBox
