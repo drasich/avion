@@ -71,6 +71,10 @@ extern {
         pv : *const PropertyValue,
         value : *const c_char);
 
+    fn property_box_vec_update(
+        pv : *const PropertyValue,
+        len : c_int);
+
     fn property_box_remove(
         pb : *const JkPropertyBox,
         value : *const PropertyValue);
@@ -414,6 +418,14 @@ impl PropertyWidget for PropertyBox
         }
 
 
+    }
+
+    fn update_vec(&self, widget_entry : *const PropertyValue, len : usize)
+    {
+        unsafe {
+            property_box_vec_update(widget_entry, len as c_int);
+
+        }
     }
 
     fn get_current(&self) -> Option<RefMut<PropertyUser>>

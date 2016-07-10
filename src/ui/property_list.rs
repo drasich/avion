@@ -103,6 +103,13 @@ extern {
         property : *const JkPropertyList,
         vec_add : RegisterChangeFunc,
         vec_del : RegisterChangeFunc);
+
+    fn property_list_vec_update(
+        pv : *const PropertyValue,
+        len : c_int);
+
+    pub fn property_expand(
+        pv : *const PropertyValue);
 }
 
 pub struct PropertyList
@@ -873,7 +880,7 @@ impl PropertyWidget for PropertyList
 
         if self.config.expand.contains(field) {
             unsafe {
-                ui::property::property_expand(item);
+                property_expand(item);
             }
         }
     }
@@ -919,7 +926,7 @@ impl PropertyWidget for PropertyList
 
         if self.config.expand.contains(name) {
             unsafe {
-                ui::property::property_expand(pv);
+                property_expand(pv);
             }
         }
     }
@@ -938,7 +945,7 @@ impl PropertyWidget for PropertyList
             }
 
             if self.config.expand.contains(field) {
-                ui::property::property_expand(widget_entry);
+                property_expand(widget_entry);
             }
         }
     }
@@ -974,6 +981,12 @@ impl PropertyWidget for PropertyList
         unsafe {
             ui::property::property_list_enum_update(widget_entry, v.as_ptr());
         }
+    }
+
+    fn update_vec(&self, widget_entry : *const PropertyValue, len : usize)
+    {
+        unsafe { property_list_vec_update(widget_entry, len as c_int); }
+        unsafe { property_expand(widget_entry); }
     }
 
     fn get_current(&self) -> Option<RefMut<PropertyUser>>

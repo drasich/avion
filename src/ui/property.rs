@@ -118,13 +118,6 @@ extern {
         pv : *const ui::PropertyValue,
         value : *const c_char);
 
-    fn property_list_vec_update(
-        pv : *const PropertyValue,
-        len : c_int);
-
-    pub fn property_expand(
-        pv : *const PropertyValue);
-
     pub fn jk_property_cb_register(
         property : *const JkPropertyCb,
         data : *const c_void,
@@ -618,9 +611,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 
     fn update_widget(&self, pv : *const PropertyValue)
     {
-        println!("TODO TODO update len here (was: call update_vec from property)");
-        unsafe { property_list_vec_update(pv, self.len() as c_int); }
-        unsafe { property_expand(pv); }
+        println!("This does not do anything right now)");
     }
 
     fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
@@ -629,7 +620,8 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         if path.is_empty() {
             if let Some(pv) = widget.get_property(all_path) {
 
-                self.update_widget(pv);
+                //self.update_widget(pv);
+                widget.update_vec(pv, self.len());
                 unsafe {property_box_children_clear(pv);}
 
                 println!("TODO clear vec here");
