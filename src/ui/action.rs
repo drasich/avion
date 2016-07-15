@@ -244,6 +244,11 @@ pub extern fn play_scene(data : *const c_void)
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     if container.play_gameview() {
+        if container.anim.is_none() {
+            container.anim = Some( unsafe {
+                ui::ecore_animator_add(ui::update_play_cb, mem::transmute(wcb.container))
+            });
+        }
         return;
     }
 
@@ -257,10 +262,12 @@ pub extern fn play_scene(data : *const c_void)
     let gv = ui::create_gameview_window(wcb.container, camera, scene, &ui::WidgetConfig::new());
     container.set_gameview(gv);
 
-        println!("ADDDDDDDD animator");
-        unsafe {
-            ui::ecore_animator_add(ui::update_play_cb, mem::transmute(wcb.container));
-        }
+    //println!("ADDDDDDDD animator");
+    if container.anim.is_none() {
+        container.anim = Some( unsafe {
+            ui::ecore_animator_add(ui::update_play_cb, mem::transmute(wcb.container))
+        });
+    }
 }
 
 pub extern fn pause_scene(data : *const c_void)

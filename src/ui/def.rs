@@ -671,8 +671,9 @@ pub struct WidgetContainer
 
     pub name : String,
 
-    pub visible_prop : HashMap<Uuid, Weak<Widget>>
+    pub visible_prop : HashMap<Uuid, Weak<Widget>>,
 
+    pub anim : Option<*const Ecore_Animator>
 
 }
 
@@ -772,7 +773,8 @@ impl WidgetContainer
             list : box ListWidget { object : None, entries : Vec::new() },
             name : String::from("yoplaboum"),
             scenes : HashMap::new(),
-            visible_prop : HashMap::new()
+            visible_prop : HashMap::new(),
+            anim : None
 
         }
     }
