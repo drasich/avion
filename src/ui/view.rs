@@ -595,6 +595,7 @@ pub extern fn key_down(
 }
 
 
+/*
 //TODO remove
 fn create_repere(m : &mut mesh::Mesh, len : f64)
 {
@@ -614,6 +615,7 @@ fn create_repere(m : &mut mesh::Mesh, len : f64)
         vec::Vec3::zero(), vec::Vec3::new(0f64, 0f64, len));
     m.add_line(s, blue);
 }
+*/
 
 
 pub extern fn init_cb(v : *mut View) -> () {
