@@ -252,6 +252,8 @@ pub enum Change
     Scene(uuid::Uuid),
     ComponentChanged(uuid::Uuid, String),
 
+    VecDel(Vec<uuid::Uuid>, String, usize),
+
     RectVisibleSet(bool),
     RectSet(f32, f32, f32, f32),
     DraggerClicked,
@@ -345,16 +347,17 @@ impl OperationTrait for Operation
             OperationData::VecDel(i,_) => {
                 println!("vec del operation {:?}", self.name);
                 let s = join_string(&self.name);
-                let mut ids = LinkedList::new();
+                let mut ids = Vec::new();
                 for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     //TODO chris
                     println!("yeeeeeeeeeeeee call del_item : {}", ob.name);
                     ob.del_item(s.as_ref(), i);
-                    ids.push_back(ob.id.clone());
+                    ids.push(ob.id.clone());
                 }
                 println!("on vecdel, don't return change::Objects, return something like vecDel(parent, index)");
-                return Change::Objects(s, ids);
+                //return Change::Objects(s, ids);
+                return Change::VecDel(ids, s, i);
             },
             /*
             OperationData::ToSome => {
@@ -472,13 +475,14 @@ impl OperationTrait for Operation
             OperationData::VecDel(i,ref value) => {
                 println!("vec del operation undo {:?}", self.name);
                 let s = join_string(&self.name);
-                let mut ids = LinkedList::new();
+                let mut ids = Vec::new();
                 for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.add_item(s.as_ref(), i, &**value);
-                    ids.push_back(ob.id.clone());
+                    ids.push(ob.id.clone());
                 }
-                return Change::Objects(s, ids);
+                //return Change::Objects(s, ids);
+                return Change::VecDel(ids, s, i);
             },
             OperationData::Vector(ref old,_) => {
                 let mut i = 0;

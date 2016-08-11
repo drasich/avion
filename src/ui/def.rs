@@ -843,31 +843,8 @@ impl WidgetContainer
                         };
                     }
                     //else if name.starts_with("comp_data/MeshRender") {
-                    else if name.starts_with("comp_data") {
-                        println!("TODO, only update when it was a mesh.
-                                 right now 'MeshRender' is not in the property path...,
-                                 maybe do a property path like comp_data/2/[MeshRender]mesh...
-                                 or check serde first");
-                        let scene = self.get_scene();
-                        let oob = if let Some(ref sc) = scene {
-                            let s = sc.borrow();
-                            s.find_object_by_id(&id)
-                        } else {
-                            None
-                        };
-
-                        if let Some(o) = oob {
-                            let mut ob = o.write().unwrap();
-                            println!("please update mesh");
-                            let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
-                            if let Some(ref mr) = omr {
-                                ob.mesh_render =
-                                    Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&self.resource));
-                            }
-                            else {
-                                ob.mesh_render = None;
-                            }
-                        }
+                    else {
+                        check_mesh(name, self, *id);
                     }
 
                     if let Some(ref o) = sel {
@@ -877,6 +854,28 @@ impl WidgetContainer
                             if let Some(ref mut p) = self.property {
                                 if widget_origin != p.id {
                                     println!("hangle change, calling update objects");
+                                    //p.update_object(&*ob, "");
+                                    p.update_object_property(&*ob, name);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            operation::Change::VecDel(ref id_list, ref name, index) =>
+            {
+                let sel = self.get_selected_object();
+                for id in id_list {
+
+                    check_mesh(name, self, *id);
+                    if let Some(ref o) = sel {
+                        let ob = o.read().unwrap();
+
+                        if *id == ob.id  {
+                            if let Some(ref mut p) = self.property {
+                                if widget_origin != p.id {
+                                    println!("update object property, this needs more info than just update the value, must indicate it is a vec change.
+                                             so we dont remove and add all children again, and so the scroller doesnt make big jump");
                                     //p.update_object(&*ob, "");
                                     p.update_object_property(&*ob, name);
                                 }
@@ -2134,3 +2133,34 @@ pub fn create_gameview_window(
     ui::view::GameView::new(win, camera, scene, container.resource.clone(), config.clone())
 }
 
+
+fn check_mesh(name : &str, wc : &WidgetContainer, id : uuid::Uuid)
+{
+    if name.starts_with("comp_data") {
+        println!("TODO, only update when it was a mesh.
+                                 right now 'MeshRender' is not in the property path...,
+                                 maybe do a property path like comp_data/2/[MeshRender]mesh...
+                                 or check serde first");
+        let scene = wc.get_scene();
+        let oob = if let Some(ref sc) = scene {
+            let s = sc.borrow();
+            s.find_object_by_id(&id)
+        } else {
+            None
+        };
+
+        if let Some(o) = oob {
+            let mut ob = o.write().unwrap();
+            println!("please update mesh");
+            let omr = ob.get_comp_data_value::<component::mesh_render::MeshRender>();
+            if let Some(ref mr) = omr {
+                ob.mesh_render =
+                    Some(component::mesh_render::MeshRenderer::with_mesh_render(mr,&wc.resource));
+            }
+            else {
+                ob.mesh_render = None;
+            }
+        }
+    }
+
+}

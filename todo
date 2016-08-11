@@ -1,3 +1,5 @@
+- quand j'enleve un vec item avec -, ca reset la scroll list position.
+
 - remove the automatic scrolling in list -> remove transform from components? and stop using genlist? 
   use box? or genlist without tree, expand stuff...
   with box I can press tab to go to the next stuff, with genlist I can't
