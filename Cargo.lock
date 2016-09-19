@@ -22,7 +22,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "cypher-sys"
 version = "0.1.0"
-source = "git+https://github.com/drasich/cypher.git#afbf77e1876ba6c6f0738fea11cc6d38429a614f"
+source = "git+https://github.com/drasich/cypher.git#41470067d39a71c1cd0b22a9c9d823f49f343753"
 dependencies = [
  "gcc 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -32,7 +32,7 @@ dependencies = [
 [[package]]
 name = "dormin"
 version = "0.1.0"
-source = "git+https://github.com/indefini/dormin.git#436c439148da0bb5ee3284d071c6ee8720806363"
+source = "git+https://github.com/indefini/dormin.git#3157745380d4ecf6fed77187301e2d4cb2122cfa"
 dependencies = [
  "byteorder 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "cypher-sys 0.1.0 (git+https://github.com/drasich/cypher.git)",
@@ -53,7 +53,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "joker-sys"
 version = "0.1.0"
-source = "git+https://github.com/drasich/joker.git#147056a44973ce659eefa330d973e99703193ce4"
+source = "git+https://github.com/drasich/joker.git#c1f487c73d419744272335d2cc5845accc6c9d30"
 dependencies = [
  "cypher-sys 0.1.0 (git+https://github.com/drasich/cypher.git)",
  "gcc 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)",
