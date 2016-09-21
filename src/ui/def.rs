@@ -781,14 +781,14 @@ impl WidgetContainer
 
     pub fn handle_change(&mut self, change : &operation::Change, widget_origin: uuid::Uuid)
     {
-        println!("hangle change TEST 0");
+        println!("handle change TEST 0");
 
         //if *change == operation::Change::None {
         if let operation::Change::None = *change {
             return;
         }
 
-        println!("hangle change TEST 1");
+        println!("handle change TEST 1");
 
         match *change {
             operation::Change::DirectChange(ref name) => {
@@ -864,6 +864,7 @@ impl WidgetContainer
             },
             operation::Change::VecDel(ref id_list, ref name, index) =>
             {
+                println!("vec del del del del");
                 let sel = self.get_selected_object();
                 for id in id_list {
 
@@ -877,6 +878,7 @@ impl WidgetContainer
                                     println!("update object property, this needs more info than just update the value, must indicate it is a vec change.
                                              so we dont remove and add all children again, and so the scroller doesnt make big jump");
                                     //p.update_object(&*ob, "");
+                                    todo chris
                                     p.update_object_property(&*ob, name);
                                 }
                             }

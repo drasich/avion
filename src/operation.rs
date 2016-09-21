@@ -342,6 +342,7 @@ impl OperationTrait for Operation
                     ob.add_item(s.as_ref(), i, &String::from("empty"));
                     ids.push_back(ob.id.clone());
                 }
+                println!("on VecAdd, don't return change::Objects, return something like vecAdd(parent, index)");
                 return Change::Objects(s, ids);
             },
             OperationData::VecDel(i,_) => {
@@ -355,8 +356,6 @@ impl OperationTrait for Operation
                     ob.del_item(s.as_ref(), i);
                     ids.push(ob.id.clone());
                 }
-                println!("on vecdel, don't return change::Objects, return something like vecDel(parent, index)");
-                //return Change::Objects(s, ids);
                 return Change::VecDel(ids, s, i);
             },
             /*
