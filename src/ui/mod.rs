@@ -151,6 +151,12 @@ impl<T: PropertyWrite + PropertyGet + PropertyShow + PropertyId > PropertyUser f
     }
 }
 
+pub enum PropertyChange
+{
+    Value,
+	VecAdd(usize),
+	VecDel(usize),
+}
 
 pub trait PropertyShow
 {
@@ -197,6 +203,26 @@ pub trait PropertyShow
             }
         }
     }
+
+    fn update_property_new(&self, widget : &PropertyWidget, all_path : &str, local_path : Vec<String>, change : PropertyChange)
+    {
+        if let PropertyChange::Value = change {
+            self.update_property(widget, all_path, local_path);
+        }
+
+        /*
+        println!("VEC ADD : {}, {}", all_path, index);
+        let mut nf = String::from(all_path);
+        nf.push_str("/");
+        nf.push_str(index.to_string().as_str());
+
+        if let Some(pv) = self.create_widget_itself(nf.as_str()) {
+            widget.add_vec_item(nf.as_str(), pv, index);
+            self.create_widget_inside(nf.as_str(), widget);
+        }
+        */
+    }
+
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {

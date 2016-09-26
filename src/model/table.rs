@@ -1,8 +1,8 @@
-use factory;
-use object;
-use mesh;
+use dormin::factory;
+use dormin::object;
+use dormin::mesh;
 //use mesh_render;
-use resource;
+use dormin::resource;
 use std::sync::{Arc,RwLock};
 
 pub struct Table

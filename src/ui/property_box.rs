@@ -21,7 +21,7 @@ use dormin::scene;
 use dormin::camera;
 use dormin::object;
 use ui::{Window, ButtonCallback, ChangedFunc, RegisterChangeFunc, 
-    PropertyTreeFunc, PropertyConfig, PropertyValue, RefMut, PropertyUser, PropertyShow, PropertyWidget};
+    PropertyTreeFunc, PropertyConfig, PropertyValue, RefMut, PropertyUser, PropertyShow, PropertyWidget,PropertyChange};
 use ui;
 use dormin::property;
 use operation;
@@ -82,9 +82,6 @@ extern {
         pb : *const JkPropertyBox,
         pv : *const PropertyValue,
         len : c_int);
-
-    fn property_box_vec_update_after(
-        pb : *const JkPropertyBox);
 
     fn property_box_remove(
         pb : *const JkPropertyBox,
@@ -249,6 +246,12 @@ impl PropertyBox
         let yep = ui::make_vec_from_str(prop);
         object.update_property(self, prop, yep);
 
+    }
+
+    pub fn vec_add(&self, object : &PropertyShow, prop : &str, index : usize)
+    {
+        let yep = ui::make_vec_from_str(prop);
+        object.update_property_new(self, prop, yep, PropertyChange::VecAdd(index));
     }
 
     pub fn update_object(&self, object : &PropertyShow, but : &str)
@@ -463,8 +466,6 @@ impl PropertyWidget for PropertyBox
 
         }
 
-                //self.create_widget_inside(all_path, widget);
-        unsafe {property_box_vec_update_after(self.jk_property);}
     }
 
 

@@ -864,7 +864,7 @@ impl WidgetContainer
             },
             operation::Change::VecAdd(ref id_list, ref name, index) =>
             {
-                println!("vec add add add add");
+                println!("vec add add add add : {}", index);
                 let sel = self.get_selected_object();
                 for id in id_list {
 
@@ -874,11 +874,12 @@ impl WidgetContainer
 
                         if *id == ob.id  {
                             if let Some(ref mut p) = self.property {
-                                if widget_origin != p.id {
+                                //if widget_origin != p.id 
+				{
                                     println!("update object property, this needs more info than just update the value, must indicate it is a vec change.
                                              so we dont remove and add all children again, and so the scroller doesnt make big jump");
                                     //p.update_object(&*ob, "");
-                                    p.update_object_property(&*ob, name);
+                                    p.vec_add(&*ob, name, index);
                                 }
                             }
                         }

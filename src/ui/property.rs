@@ -22,7 +22,7 @@ use dormin::camera;
 use dormin::object;
 use ui::{Window, ButtonCallback};
 use ui::{ChangedFunc, RegisterChangeFunc, PropertyTreeFunc, PropertyValue, PropertyConfig, PropertyUser,
-PropertyShow, PropertyId, RefMut, Elm_Object_Item, ShouldUpdate, PropertyWidget, PropertyList, JkPropertyList};
+PropertyShow, PropertyId, RefMut, Elm_Object_Item, ShouldUpdate, PropertyWidget, PropertyList, JkPropertyList, PropertyChange};
 use ui;
 use dormin::property;
 use operation;
@@ -650,6 +650,33 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         }
 
     }
+
+    fn update_property_new(&self, widget : &PropertyWidget, all_path : &str, local_path : Vec<String>, change : PropertyChange)
+    {
+        match change {
+            PropertyChange::Value => {
+                self.update_property(widget, all_path, local_path);
+                return;
+            },
+            PropertyChange::VecAdd(index) => {
+
+                println!("VEC ADD : {}, {}", all_path, index);
+                let mut nf = String::from(all_path);
+                nf.push_str("/");
+                nf.push_str(index.to_string().as_str());
+
+                if let Some(pv) = self.create_widget_itself(nf.as_str()) {
+                    widget.add_vec_item(nf.as_str(), pv, index);
+                    self.create_widget_inside(nf.as_str(), widget);
+                }
+            },
+            PropertyChange::VecDel(index) => {
+                println!("TODO Vec del");
+            }
+        }
+    }
+
+
 
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)

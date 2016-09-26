@@ -70,11 +70,12 @@ mod factory;
 
 mod transform;
 
-mod model;
 
 mod component;
 use component::manager;
 */
+
+mod model;
 
 mod dragger;
 mod ui;
