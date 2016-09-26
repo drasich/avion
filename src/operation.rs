@@ -252,6 +252,7 @@ pub enum Change
     Scene(uuid::Uuid),
     ComponentChanged(uuid::Uuid, String),
 
+    VecAdd(Vec<uuid::Uuid>, String, usize),
     VecDel(Vec<uuid::Uuid>, String, usize),
 
     RectVisibleSet(bool),
@@ -336,14 +337,15 @@ impl OperationTrait for Operation
             OperationData::VecAdd(i) => {
                 println!("vec add operation {:?}, {}", self.name,i);
                 let s = join_string(&self.name);
-                let mut ids = LinkedList::new();
+                let mut ids = Vec::new();
                 for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.add_item(s.as_ref(), i, &String::from("empty"));
-                    ids.push_back(ob.id.clone());
+                    ids.push(ob.id.clone());
                 }
                 println!("on VecAdd, don't return change::Objects, return something like vecAdd(parent, index)");
-                return Change::Objects(s, ids);
+                //return Change::Objects(s, ids);
+                return Change::VecAdd(ids, s, i);
             },
             OperationData::VecDel(i,_) => {
                 println!("vec del operation {:?}", self.name);

@@ -61,6 +61,13 @@ extern {
         parent: *const PropertyValue,
         ) -> *const PropertyValue;
 
+    fn property_box_vec_item_del(
+        ps : *const JkPropertyBox,
+        pv: *const PropertyValue,
+        parent: *const PropertyValue,
+        index : c_int
+        ) -> *const PropertyValue;
+
     fn property_box_single_node_add(
         pl : *const JkPropertyBox,
         val : *const PropertyValue,
@@ -72,8 +79,12 @@ extern {
         value : *const c_char);
 
     fn property_box_vec_update(
+        pb : *const JkPropertyBox,
         pv : *const PropertyValue,
         len : c_int);
+
+    fn property_box_vec_update_after(
+        pb : *const JkPropertyBox);
 
     fn property_box_remove(
         pb : *const JkPropertyBox,
@@ -182,7 +193,7 @@ impl PropertyBox
         unsafe { property_box_clear(self.jk_property); }
         self.pv.borrow_mut().clear();
 
-        println!("TODO set prop in property box");
+        println!("TODO set prop in property box>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.");
         //TODO
         /*
         unsafe {
@@ -361,7 +372,7 @@ impl PropertyWidget for PropertyBox
         println!("TODO");
     }
 
-    fn add_vec_item(&self, field : &str, item : *const PropertyValue, is_node :bool)
+    fn add_vec_item(&self, field : &str, item : *const PropertyValue, index : usize)
     {
         //println!("TODO");
 
@@ -383,6 +394,31 @@ impl PropertyWidget for PropertyBox
 
         self.pv.borrow_mut().insert(field.to_owned(), item);
     }
+
+    fn del_vec_item(&self, field : &str, item : *const PropertyValue, index : usize)
+    {
+        //println!("TODO");
+
+        let parent = if let Some(pv) = self.find_parent_of(field)
+        {
+            println!("FOUND THE FATHER");
+            pv
+        }
+        else {
+            ptr::null()
+        };
+
+        unsafe {
+            property_box_vec_item_del(
+                self.jk_property,
+                item,
+                parent,
+                index as c_int);
+        }
+
+        self.pv.borrow_mut().insert(field.to_owned(), item);
+    }
+
 
     fn update_enum(&self, path : &str, widget_entry : *const PropertyValue, value : &str)
     {
@@ -423,10 +459,14 @@ impl PropertyWidget for PropertyBox
     fn update_vec(&self, widget_entry : *const PropertyValue, len : usize)
     {
         unsafe {
-            property_box_vec_update(widget_entry, len as c_int);
+            property_box_vec_update(self.jk_property, widget_entry, len as c_int);
 
         }
+
+                //self.create_widget_inside(all_path, widget);
+        unsafe {property_box_vec_update_after(self.jk_property);}
     }
+
 
     fn get_current(&self) -> Option<RefMut<PropertyUser>>
     {

@@ -225,6 +225,7 @@ impl PropertyShow for f64 {
         depth : i32,
         has_container : bool ) -> Option<*const PropertyValue>
     {
+        /*
         let f = CString::new(field.as_bytes()).unwrap();
         println!("create f64 for : {}", field);
         let pv = unsafe { 
@@ -240,6 +241,10 @@ impl PropertyShow for f64 {
         else {
             Some(pv)
         }
+
+        */
+        assert!(false, "check to see if still used");
+        None
     }
 
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
@@ -536,8 +541,10 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                 nf.push_str("/");
                 nf.push_str(n.to_string().as_str());
                 if let Some(ref mut pv) = i.create_widget(property, nf.as_str(), depth -1, true) {
+                    println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                    assert!(false, "just checking where this is called");
                     unsafe {
-                        property.add_vec_item(nf.as_str(), *pv, i.is_node());
+                        property.add_vec_item(nf.as_str(), *pv, n);
                     }
                 }
                 else {
@@ -582,7 +589,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
             */
 
             if let Some(pv) = i.create_widget_itself(nf.as_str()) {
-                widget.add_vec_item(nf.as_str(), pv, false);
+                widget.add_vec_item(nf.as_str(), pv, n);
 
                 i.create_widget_inside(nf.as_str(), widget);
             }
@@ -622,12 +629,14 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 
                 //self.update_widget(pv);
                 widget.update_vec(pv, self.len());
-                unsafe {property_box_children_clear(pv);}
+                //unsafe {property_box_children_clear(pv);}
 
-                println!("TODO clear vec here");
+                //println!("TODO clear vec here");
                 //widget.update_enum(all_path, pv, type_value);
 
-                self.create_widget_inside(all_path, widget);
+                //self.create_widget_inside(all_path, widget);
+
+                //widget.update_vec_after();
             }
             return;
         }

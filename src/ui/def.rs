@@ -862,6 +862,29 @@ impl WidgetContainer
                     }
                 }
             },
+            operation::Change::VecAdd(ref id_list, ref name, index) =>
+            {
+                println!("vec add add add add");
+                let sel = self.get_selected_object();
+                for id in id_list {
+
+                    check_mesh(name, self, *id);
+                    if let Some(ref o) = sel {
+                        let ob = o.read().unwrap();
+
+                        if *id == ob.id  {
+                            if let Some(ref mut p) = self.property {
+                                if widget_origin != p.id {
+                                    println!("update object property, this needs more info than just update the value, must indicate it is a vec change.
+                                             so we dont remove and add all children again, and so the scroller doesnt make big jump");
+                                    //p.update_object(&*ob, "");
+                                    p.update_object_property(&*ob, name);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             operation::Change::VecDel(ref id_list, ref name, index) =>
             {
                 println!("vec del del del del");
@@ -878,7 +901,6 @@ impl WidgetContainer
                                     println!("update object property, this needs more info than just update the value, must indicate it is a vec change.
                                              so we dont remove and add all children again, and so the scroller doesnt make big jump");
                                     //p.update_object(&*ob, "");
-                                    todo chris
                                     p.update_object_property(&*ob, name);
                                 }
                             }

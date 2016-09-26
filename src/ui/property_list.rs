@@ -931,8 +931,10 @@ impl PropertyWidget for PropertyList
         }
     }
 
-    fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, is_node : bool)
+    fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, index : usize)
     {
+        /*
+        I put this in comment because I remove is_node. I also added index.
         unsafe {
             let pv = property_list_single_vec_add(
                 self.jk_property_list,
@@ -948,7 +950,14 @@ impl PropertyWidget for PropertyList
                 property_expand(widget_entry);
             }
         }
+        */
     }
+
+    fn del_vec_item(&self, field : &str, widget_entry : *const PropertyValue, index : usize)
+    {
+        //TODO TODOTODO
+    }
+
 
     /*
     fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool)
