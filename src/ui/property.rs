@@ -353,6 +353,11 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
         (**self).update_property(widget, all_path, path);
     }
 
+    fn update_property_new(&self, widget : &PropertyWidget, all_path : &str, path : Vec<String>, change : PropertyChange)
+    {
+        (**self).update_property_new(widget, all_path, path, change);
+    }
+
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {
         (**self).find_and_create(property, path, start);
@@ -392,6 +397,12 @@ impl<T : PropertyShow> PropertyShow for Rc<RefCell<T>> {
     {
         //(**self).update_property(path, pv);
         self.borrow().update_property(widget, all_path, path);
+    }
+
+    fn update_property_new(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>, change : PropertyChange)
+    {
+        //(**self).update_property(path, pv);
+        self.borrow().update_property_new(widget, all_path, path, change);
     }
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
@@ -653,31 +664,43 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 
     fn update_property_new(&self, widget : &PropertyWidget, all_path : &str, local_path : Vec<String>, change : PropertyChange)
     {
-        match change {
-            PropertyChange::Value => {
-                self.update_property(widget, all_path, local_path);
-                return;
-            },
-            PropertyChange::VecAdd(index) => {
+        if local_path.is_empty() {
+            match change {
+                PropertyChange::Value => {
+                    panic!("error cannot change vec value");
+                },
+                PropertyChange::VecAdd(index) => {
 
-                println!("VEC ADD : {}, {}", all_path, index);
-                let mut nf = String::from(all_path);
-                nf.push_str("/");
-                nf.push_str(index.to_string().as_str());
+                    if !local_path.is_empty() {
+                        return;
+                    }
 
-                if let Some(pv) = self.create_widget_itself(nf.as_str()) {
-                    widget.add_vec_item(nf.as_str(), pv, index);
-                    self.create_widget_inside(nf.as_str(), widget);
+                    println!("VEC ADD : {}, {}", all_path, index);
+                    let mut nf = String::from(all_path);
+                    nf.push_str("/");
+                    nf.push_str(index.to_string().as_str());
+
+                    if let Some(pv) = self.create_widget_itself(nf.as_str()) {
+                        widget.add_vec_item(nf.as_str(), pv, index);
+                        self.create_widget_inside(nf.as_str(), widget);
+                    }
+                },
+                PropertyChange::VecDel(index) => {
+                    println!("TODO Vec del");
                 }
-            },
-            PropertyChange::VecDel(index) => {
-                println!("TODO Vec del");
+            }
+        }
+        else {
+            match local_path[0].parse::<usize>() {
+                Ok(index) => {
+                    self[index].update_property_new(widget, all_path, local_path[1..].to_vec(), change);
+                }
+                _ => {
+                    panic!("not an index");
+                }
             }
         }
     }
-
-
-
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {
@@ -849,6 +872,37 @@ impl PropertyShow for CompData
         ppp.update_property(widget, all_path, path);
     }
 
+    fn update_property_new(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>, change : PropertyChange)
+    {
+        println!("update property new CompData with path : {:?} ", path);
+        if path.is_empty() {
+            if let Some(pv) = widget.get_property(all_path) {
+                self.update_widget(pv);
+
+                let type_value = self.get_kind_string();
+                widget.update_enum(all_path, pv, type_value.as_str());
+                self.create_widget_inside(all_path, widget);
+            }
+            return;
+        }
+
+        let ppp : &PropertyShow = match *self {
+            CompData::Player(ref p) => {
+                p
+            },
+            CompData::ArmaturePath(ref p) => {
+                p
+            },
+            CompData::MeshRender(ref p) => {
+                p
+            },
+            _ => {println!("not yet implemented"); return;}
+        };
+
+        ppp.update_property_new(widget, all_path, path, change);
+    }
+
+
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
@@ -984,6 +1038,35 @@ impl ui::PropertyShow for Orientation {
 
         ppp.update_property(widget, all_path, path);
     }
+
+    fn update_property_new(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>, change : PropertyChange)
+    {
+        println!("update property orientation with path : {:?} ", path);
+        if path.is_empty() {
+            if let Some(pv) = widget.get_property(all_path) {
+                self.update_widget(pv);
+
+                let type_value = match *self {
+                    Orientation::AngleXYZ(_) => "AngleXYZ",
+                    Orientation::Quat(_) => "Quat"
+                };
+
+                //widget.update_enum(join_string(&path).as_str(),pv, type_value);
+                widget.update_enum(all_path, pv, type_value);
+
+                self.create_widget_inside(all_path, widget);
+            }
+            return;
+        }
+
+        let ppp : &PropertyShow = match *self {
+            Orientation::AngleXYZ(ref v) => v,
+            Orientation::Quat(ref q) => q,
+        };
+
+        ppp.update_property_new(widget, all_path, path, change);
+    }
+
 
     fn update_widget(&self, pv : *const PropertyValue) {
         let type_value = match *self {
@@ -1137,6 +1220,33 @@ macro_rules! property_show_methods(
                     _ => {}
                 }
             }
+
+            fn update_property_new(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>, change : PropertyChange)
+            {
+                println!("macro... {}, {:?}", all_path, path);
+
+                let mut pp = String::from(all_path);
+                if !path.is_empty() && path[0] == "*" {
+                    pp = pp.replace("/*", "");
+                }
+
+                if path.is_empty() || path[0] == "*" {
+                    //update all
+                    $(
+                        let s = pp.clone() + "/" + stringify!($member);
+                        self.$member.update_property_new(widget, s.as_str(), Vec::new(),change.clone());
+                    )+
+                    return;
+                }
+
+                match path[0].as_str() {
+                $(
+                    stringify!($member) => self.$member.update_property_new(widget, all_path, path[1..].to_vec(), change),
+                 )+
+                    _ => {}
+                }
+            }
+
 
             fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
             {
