@@ -664,12 +664,16 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 
     fn update_property_new(&self, widget : &PropertyWidget, all_path : &str, local_path : Vec<String>, change : PropertyChange)
     {
+        println!("______update property new : all_path : {}, local : {:?}",all_path, local_path);
+
         if local_path.is_empty() {
             match change {
                 PropertyChange::Value => {
                     panic!("error cannot change vec value");
                 },
                 PropertyChange::VecAdd(index) => {
+
+                    println!("update property new : vec add : {}", index);
 
                     if !local_path.is_empty() {
                         return;
@@ -680,9 +684,11 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                     nf.push_str("/");
                     nf.push_str(index.to_string().as_str());
 
-                    if let Some(pv) = self.create_widget_itself(nf.as_str()) {
+                    //if let Some(pv) = self.create_widget_itself(nf.as_str()) {
+                    if let Some(pv) = self[index].create_widget_itself(nf.as_str()) {
                         widget.add_vec_item(nf.as_str(), pv, index);
-                        self.create_widget_inside(nf.as_str(), widget);
+                        //self.create_widget_inside(nf.as_str(), widget);
+                        self[index].create_widget_inside(nf.as_str(), widget);
                     }
                 },
                 PropertyChange::VecDel(index) => {

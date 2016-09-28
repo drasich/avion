@@ -59,6 +59,7 @@ extern {
         ps : *const JkPropertyBox,
         pv: *const PropertyValue,
         parent: *const PropertyValue,
+        index : c_int,
         ) -> *const PropertyValue;
 
     fn property_box_vec_item_del(
@@ -392,7 +393,8 @@ impl PropertyWidget for PropertyBox
             property_box_vec_item_add(
                 self.jk_property,
                 item,
-                parent);
+                parent,
+                index as c_int);
         }
 
         self.pv.borrow_mut().insert(field.to_owned(), item);
