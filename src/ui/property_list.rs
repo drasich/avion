@@ -193,7 +193,7 @@ impl PropertyList
                 CString::new(title.as_bytes()).unwrap().as_ptr());
         }
         //TODO replace ""
-        p.create_widget(self, "", 1, false);
+        //p.create_widget(self, "", 1, false);
 
         self.add_tools();
     }

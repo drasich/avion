@@ -201,7 +201,8 @@ impl PropertyBox
         }
         */
         //TODO replace ""
-        p.create_widget(self, "", 1, false);
+        //p.create_widget(self, "", 1, false);
+        p.create_widget_inside("", self);
     }
 
     pub fn update_object_property(&self, object : &PropertyShow, prop : &str)

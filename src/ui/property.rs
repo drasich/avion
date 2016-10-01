@@ -218,35 +218,6 @@ impl PropertyShow for vec::Quat {
 
 impl PropertyShow for f64 {
 
-    fn create_widget(
-        &self,
-        property : &PropertyWidget,
-        field : &str,
-        depth : i32,
-        has_container : bool ) -> Option<*const PropertyValue>
-    {
-        /*
-        let f = CString::new(field.as_bytes()).unwrap();
-        println!("create f64 for : {}", field);
-        let pv = unsafe { 
-            property_list_float_add(
-                f.as_ptr(),
-                *self as c_float)
-        };
-
-        if !has_container {
-            property.add_simple_item(field, pv);
-            None
-        }
-        else {
-            Some(pv)
-        }
-
-        */
-        assert!(false, "check to see if still used");
-        None
-    }
-
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
         let f = CString::new(field.as_bytes()).unwrap();
@@ -270,31 +241,6 @@ impl PropertyShow for f64 {
 }
 
 impl PropertyShow for String {
-
-    fn create_widget(
-        &self,
-        property : &PropertyWidget,
-        field : &str,
-        depth : i32,
-        has_container : bool ) -> Option<*const PropertyValue>
-    {
-        let f = CString::new(field.as_bytes()).unwrap();
-        let v = CString::new(self.as_bytes()).unwrap();
-
-        let pv = unsafe {
-            property_list_string_add(
-                f.as_ptr(),
-                v.as_ptr())
-        };
-
-        if !has_container {
-            property.add_simple_item(field, pv);
-            None
-        }
-        else {
-            Some(pv)
-        }
-    }
 
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
@@ -322,16 +268,6 @@ impl PropertyShow for String {
 }
 
 impl<T : PropertyShow> PropertyShow for Box<T> {
-
-    fn create_widget(
-        &self,
-        property : &PropertyWidget,
-        field : &str,
-        depth : i32,
-        has_container : bool ) -> Option<*const PropertyValue>
-    {
-        (**self).create_widget(property ,field, depth, has_container)
-    }
 
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
@@ -376,16 +312,6 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
 
 impl<T : PropertyShow> PropertyShow for Rc<RefCell<T>> {
 
-    fn create_widget(
-        &self,
-        property : &PropertyWidget,
-        field : &str,
-        depth : i32,
-        has_container : bool ) -> Option<*const PropertyValue>
-    {
-        self.borrow().create_widget(property ,field, depth, has_container)
-    }
-
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
         //(**self).get_property(field)
@@ -423,29 +349,6 @@ impl<T : PropertyShow> PropertyShow for Rc<RefCell<T>> {
 }
 
 impl<T : PropertyShow> PropertyShow for Option<T> {
-
-    fn create_widget(
-        &self,
-        property : &PropertyWidget,
-        field : &str,
-        depth : i32,
-        has_container : bool ) -> Option<*const PropertyValue>
-    {
-        if depth == 0 {
-            unsafe {
-                property.add_option(field, self.is_some());
-                return None;
-            }
-        }
-
-        if depth == 1 {
-            if let Some(ref s) = *self {
-                return s.create_widget(property, field, depth, has_container);
-            };
-        }
-
-        None
-    }
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
@@ -489,30 +392,6 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
 
 impl<T> PropertyShow for resource::ResTT<T>
 {
-    fn create_widget(
-        &self,
-        property : &PropertyWidget,
-        field : &str,
-        depth : i32,
-        has_container : bool ) -> Option<*const PropertyValue>
-    {
-        if depth < 0 {
-            return None;
-        }
-
-        if depth == 0 && field != ""
-        {
-            add_node(property, self, field, has_container, None);
-        }
-
-        if depth > 0 {
-            let s = field.to_owned() + "/name";
-            return self.name.create_widget(property, s.as_ref(), depth-1, has_container);
-        }
-
-        None
-    }
-
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
         match field {
@@ -524,49 +403,6 @@ impl<T> PropertyShow for resource::ResTT<T>
 
 impl<T:PropertyShow> PropertyShow for Vec<T>
 {
-    fn create_widget(
-        &self,
-        property : &PropertyWidget,
-        field : &str,
-        depth : i32,
-        has_container : bool ) -> Option<*const PropertyValue>
-    {
-        if depth < 0 {
-            return None;
-        }
-
-        if depth == 0 && field != ""
-        {
-            //TODO
-            //TODO
-            property.add_vec(field, self.len());
-        }
-
-        if depth > 0 {
-            if self.is_empty() {
-                //add "no item" item
-            }
-
-            for (n,i) in self.iter().enumerate() {
-                let mut nf = String::from(field);
-                nf.push_str("/");
-                nf.push_str(n.to_string().as_str());
-                if let Some(ref mut pv) = i.create_widget(property, nf.as_str(), depth -1, true) {
-                    println!("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-                    assert!(false, "just checking where this is called");
-                    unsafe {
-                        property.add_vec_item(nf.as_str(), *pv, n);
-                    }
-                }
-                else {
-                    println!("___ Vec : failed" );
-                }
-            }
-        }
-
-        None
-    }
-
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
         println!("create widget itself vec");
@@ -710,14 +546,15 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {
+                    panic!("it came here");
         if path.is_empty() {
-            self.create_widget(property, "" , 0, false);
+            //self.create_widget(property, "" , 0, false);
             return;
         }
         else if start == path.len() -1 {
             match path[start].parse::<usize>() {
                 Ok(index) => {
-                    self[index].create_widget(property, join_string(&path).as_str(),1, false);
+                    //self[index].create_widget(property, join_string(&path).as_str(),1, false);
                 },
                 _ => return
             }
@@ -737,73 +574,6 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 
 impl PropertyShow for CompData
 {
-    fn create_widget(
-        &self,
-        property : &PropertyWidget,
-        field : &str,
-        depth : i32,
-        has_container : bool ) -> Option<*const PropertyValue>
-    {
-        let kind : String = self.get_kind_string();
-        let kindr : &str = kind.as_ref();
-        let ss = field.to_owned() + "/" + kindr;
-        //let ss = field.to_owned() + ":" + kindr;
-        let s : &str = ss.as_ref();
-
-        /*
-        let mut v : Vec<&str> = field.split('/').collect();
-
-        if v.len() >= 1 {
-            v.pop();
-        }
-
-        v.push(kindr);
-
-        //println!("--before compdata property show for : {}, {}, {}", field, depth, kind);
-
-        let yo : String = v.join("/");
-        let field = yo.as_ref();
-        */
-
-
-        if depth < 0 {
-            return None;
-        }
-
-        if depth == 0 && field != ""
-        {
-            /*
-            println!("00--> compdata property show for : {}, {}, {}", s, depth, kind );
-            //let pv = property.add_node(self, s, has_container);
-            let pv = property.add_node(self, field, has_container, Some(kindr));
-            return Some(pv);
-            */
-
-            let type_value = self.get_kind_string();
-
-            let types = CompData::get_all_kind();
-            let pv = add_enum(property, field, types.as_str(), type_value.as_str(), true, has_container);
-            return Some(pv);
-        }
-
-        if depth > 0
-        {
-            match *self {
-                CompData::Player(ref p) => {
-                    return p.create_widget(property, field, depth, has_container);
-                },
-                CompData::ArmaturePath(ref p) => {
-                    return p.create_widget(property, field, depth, has_container);
-                },
-                CompData::MeshRender(ref p) => {
-                    return p.create_widget(property, field, depth, has_container);
-                },
-                _ => {println!("not yet implemented"); }
-            }
-        }
-        None
-    }
-
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
         println!("create widget itself, compdata");
@@ -961,37 +731,6 @@ impl PropertyShow for CompData
 
 impl ui::PropertyShow for Orientation {
 
-    fn create_widget(
-        &self,
-        property : &PropertyWidget,
-        field : &str,
-        depth : i32,
-        has_container : bool ) -> Option<*const ui::PropertyValue>
-    {
-        if depth == 0 {
-            let type_value = match *self {
-                Orientation::AngleXYZ(_) => "AngleXYZ",
-                Orientation::Quat(_) => "Quat"
-            };
-
-            let types = "AngleXYZ/Quat";
-            add_enum(property, field, types, type_value, true, has_container);
-        }
-
-        if depth == 1 {
-            match *self {
-                Orientation::AngleXYZ(ref v) =>  {
-                    return v.create_widget(property, field, depth, has_container);
-                },
-                Orientation::Quat(ref q) => {
-                    return q.create_widget(property, field, depth, has_container)
-                }
-            };
-        }
-
-        None
-    }
-
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
         let type_value = match *self {
@@ -1118,32 +857,6 @@ impl ui::PropertyShow for Orientation {
 macro_rules! property_show_methods(
     ($my_type:ty, [ $($member:ident),+ ]) => (
 
-            fn create_widget(
-                &self,
-                property : &PropertyWidget,
-                field : &str,
-                depth : i32,
-                has_container : bool ) -> Option<*const PropertyValue>
-            {
-                if depth < 0 {
-                    return None;
-                }
-
-                println!("macro create widget : {}, {}", field, depth);
-
-
-                if depth == 0 && field != ""
-                {
-                    add_node(property, self, field, has_container, None);
-                }
-
-                if depth > 0 {
-                    self.create_widget_inside(field, property);
-                }
-
-                None
-            }
-
             fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
             {
                 println!("property show methods **{}**, create itself", field);
@@ -1256,16 +969,17 @@ macro_rules! property_show_methods(
 
             fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
             {
+                panic!("972");
                 if path.is_empty() {
                     println!("macro create property 000000 : empty path");
-                    self.create_widget(property, "" , 0, false);
+                    //self.create_widget(property, "" , 0, false);
                     return;
                 }
                 else if start == path.len() -1 {
                     match path[start].as_str() {
                         $(
                             stringify!($member) => {
-                                self.$member.create_widget(property, join_string(&path).as_str(),1, false);
+                                //self.$member.create_widget(property, join_string(&path).as_str(),1, false);
                             },
                             )+
                             _ => {}
@@ -1428,42 +1142,6 @@ impl PropertyId for scene::Scene
     }
 }
 
-pub fn add_node(
-    property : &PropertyWidget,
-    ps : &PropertyShow,
-    name : &str,
-    has_container : bool,
-    added_name : Option<&str>,
-    ) -> *const PropertyValue
-{
-    let f = CString::new(name.as_bytes()).unwrap();
-    let mut pv = unsafe {
-        let test = if has_container {
-            if let Some(n) = added_name {
-                CString::new(n).unwrap().as_ptr()
-            }
-            else {
-                ptr::null()
-            }
-        }
-        else {
-            ptr::null()
-        };
-        println!("adding node : {}", name);
-        property_list_node_add(
-            f.as_ptr(),
-            test
-            )
-    };
-
-    if !has_container {
-        println!(".......with single node : {}", name);
-        property.add_node_t(name, pv);
-    }
-
-    return pv;
-}
-
 pub fn add_node2(
     name : &str
     ) -> *const PropertyValue
@@ -1472,40 +1150,6 @@ pub fn add_node2(
     unsafe {
         property_node_add(f.as_ptr())
     }
-}
-
-
-pub fn add_enum(
-    property : &PropertyWidget,
-    path : &str,
-    types : &str,
-    value : &str,
-    is_node : bool,
-    has_container : bool
-    ) -> *const PropertyValue
-{
-    let f = CString::new(path.as_bytes()).unwrap();
-    let types = CString::new(types.as_bytes()).unwrap();
-    let v = CString::new(value.as_bytes()).unwrap();
-
-    let pv = unsafe {
-        property_list_enum_add(
-            f.as_ptr(),
-            types.as_ptr(),
-            v.as_ptr())
-
-    };
-
-    if !has_container {
-        if is_node {
-            property.add_node_t(path, pv);
-        }
-        else {
-            property.add_simple_item(path, pv);
-        }
-    }
-
-    pv
 }
 
 pub fn add_enum2(
@@ -1525,31 +1169,4 @@ pub fn add_enum2(
             v.as_ptr())
     }
 }
-
-
-/*
-fn create_the_widget(
-        widget : &PropertyWidget,
-        property_show : &PropertyShow,
-        all_path : &str,
-        field : &str,
-        has_container : bool ) -> Option<*const PropertyValue>
-{
-    if let Some(pv) = property_show.create_widget_itself(field) {
-
-        if !has_container {
-            widget.add_simple_item(all_path + field, pv);
-            property_show.create_widget_inside(pv, all_path + field);
-
-            None
-        }
-        else {
-            Some(pv)
-        }
-    }
-    else {
-        None
-    }
-}
-*/
 

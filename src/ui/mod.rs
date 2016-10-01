@@ -161,13 +161,6 @@ pub enum PropertyChange
 
 pub trait PropertyShow
 {
-    fn create_widget(
-        &self,
-        property : &PropertyWidget,
-        field : &str,
-        depth : i32,
-        has_container : bool ) -> Option<*const PropertyValue>;
-
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
         println!("           not implemented, field is {}", field);
@@ -215,9 +208,10 @@ pub trait PropertyShow
 
     fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
     {
+        panic!("in mod.rs");
         println!("default create property : {:?}", path);
         if path.is_empty() {
-            self.create_widget(property, "" , 1, false);
+            //self.create_widget(property, "" , 1, false);
         }
     }
 
