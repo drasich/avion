@@ -294,11 +294,6 @@ impl<T : PropertyShow> PropertyShow for Box<T> {
         (**self).update_property_new(widget, all_path, path, change);
     }
 
-    fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
-    {
-        (**self).find_and_create(property, path, start);
-    }
-
     fn is_node(&self) -> bool
     {
         (**self).is_node()
@@ -329,11 +324,6 @@ impl<T : PropertyShow> PropertyShow for Rc<RefCell<T>> {
     {
         //(**self).update_property(path, pv);
         self.borrow().update_property_new(widget, all_path, path, change);
-    }
-
-    fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
-    {
-        self.borrow().find_and_create(property, path, start);
     }
 
     fn is_node(&self) -> bool
@@ -370,13 +360,6 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
                 pv,
                 v.as_ptr());
         };
-    }
-
-    fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
-    {
-        if let Some(ref s) = *self {
-                s.find_and_create(property, path, start);
-        }
     }
 
     fn to_update(&self) -> ShouldUpdate
@@ -543,33 +526,6 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
             }
         }
     }
-
-    fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
-    {
-                    panic!("it came here");
-        if path.is_empty() {
-            //self.create_widget(property, "" , 0, false);
-            return;
-        }
-        else if start == path.len() -1 {
-            match path[start].parse::<usize>() {
-                Ok(index) => {
-                    //self[index].create_widget(property, join_string(&path).as_str(),1, false);
-                },
-                _ => return
-            }
-        }
-        else {
-            match path[start].parse::<usize>() {
-                Ok(index) => {
-                    self[index].find_and_create(property, path, start + 1);
-                },
-                _ => return
-            }
-        }
-
-    }
-
 }
 
 impl PropertyShow for CompData
@@ -965,36 +921,6 @@ macro_rules! property_show_methods(
                     _ => {}
                 }
             }
-
-
-            fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
-            {
-                panic!("972");
-                if path.is_empty() {
-                    println!("macro create property 000000 : empty path");
-                    //self.create_widget(property, "" , 0, false);
-                    return;
-                }
-                else if start == path.len() -1 {
-                    match path[start].as_str() {
-                        $(
-                            stringify!($member) => {
-                                //self.$member.create_widget(property, join_string(&path).as_str(),1, false);
-                            },
-                            )+
-                            _ => {}
-                    }
-                    return;
-                }
-
-                match path[start].as_str() {
-                $(
-                    stringify!($member) => self.$member.find_and_create(property, path, start + 1),
-                 )+
-                    _ => {}
-                }
-            }
-
 
             fn is_node(&self) -> bool
             {

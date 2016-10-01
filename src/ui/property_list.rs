@@ -669,12 +669,12 @@ pub extern fn expand(
         match *cur {
             RefMut::Arc(ref a) =>
             {
-                a.read().unwrap().find_and_create(p, vs.clone(), 0);
+                //a.read().unwrap().find_and_create(p, vs.clone(), 0);
 
             },
             RefMut::Cell(ref c) =>
             {
-                c.borrow().find_and_create(p, vs.clone(), 0);
+                //c.borrow().find_and_create(p, vs.clone(), 0);
             }
         }
 
@@ -866,23 +866,6 @@ impl PropertyWidget for PropertyList
         }
 
         self.pv.borrow_mut().insert(field.to_owned(), item);
-    }
-
-    fn add_node_t(&self, field : &str, item : *const PropertyValue)
-    {
-        unsafe {
-            property_list_single_node_add(
-                self.jk_property_list,
-                item);
-        }
-
-        self.pv.borrow_mut().insert(field.to_owned(), item);
-
-        if self.config.expand.contains(field) {
-            unsafe {
-                property_expand(item);
-            }
-        }
     }
 
     fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue
