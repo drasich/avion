@@ -64,10 +64,8 @@ extern {
 
     fn property_box_vec_item_del(
         ps : *const JkPropertyBox,
-        pv: *const PropertyValue,
         parent: *const PropertyValue,
-        index : c_int
-        ) -> *const PropertyValue;
+        index : c_int);
 
     fn property_box_single_node_add(
         pl : *const JkPropertyBox,
@@ -256,6 +254,12 @@ impl PropertyBox
         object.update_property_new(self, prop, yep, PropertyChange::VecAdd(index));
     }
 
+    pub fn vec_del(&self, object : &PropertyShow, prop : &str, index : usize)
+    {
+        let yep = ui::make_vec_from_str(prop);
+        object.update_property_new(self, prop, yep, PropertyChange::VecDel(index));
+    }
+
     pub fn update_object(&self, object : &PropertyShow, but : &str)
     {
         for (f,pv) in self.pv.borrow().iter() {
@@ -370,7 +374,7 @@ impl PropertyWidget for PropertyBox
         self.pv.borrow_mut().insert(field.to_owned(), item);
     }
 
-    fn del_vec_item(&self, field : &str, item : *const PropertyValue, index : usize)
+    fn del_vec_item(&self, field : &str, index : usize)
     {
         //println!("TODO");
 
@@ -386,12 +390,11 @@ impl PropertyWidget for PropertyBox
         unsafe {
             property_box_vec_item_del(
                 self.jk_property,
-                item,
                 parent,
                 index as c_int);
         }
 
-        self.pv.borrow_mut().insert(field.to_owned(), item);
+        self.pv.borrow_mut().remove(field);
     }
 
 

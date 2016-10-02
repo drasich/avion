@@ -511,7 +511,17 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                     }
                 },
                 PropertyChange::VecDel(index) => {
-                    println!("TODO Vec del");
+                    println!("update property new : vec del : {}", index);
+
+                    if !local_path.is_empty() {
+                        return;
+                    }
+
+                    println!("VEC DEL : {}, {}", all_path, index);
+                    let mut nf = String::from(all_path);
+                    nf.push_str("/");
+                    nf.push_str(index.to_string().as_str());
+                    widget.del_vec_item(nf.as_str(), index);
                 }
             }
         }

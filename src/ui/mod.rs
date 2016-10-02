@@ -275,7 +275,7 @@ pub trait PropertyWidget : Widget {
     fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue;
     fn add_vec(&self, field : &str, len : usize);
     fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, index : usize);
-    fn del_vec_item(&self, field : &str, widget_entry : *const PropertyValue, index : usize);
+    fn del_vec_item(&self, field : &str, index : usize);
 
     //fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
 

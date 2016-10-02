@@ -936,7 +936,7 @@ impl PropertyWidget for PropertyList
         */
     }
 
-    fn del_vec_item(&self, field : &str, widget_entry : *const PropertyValue, index : usize)
+    fn del_vec_item(&self, field : &str, index : usize)
     {
         //TODO TODOTODO
     }

@@ -901,8 +901,7 @@ impl WidgetContainer
                                 if widget_origin != p.id {
                                     println!("update object property, this needs more info than just update the value, must indicate it is a vec change.
                                              so we dont remove and add all children again, and so the scroller doesnt make big jump");
-                                    //p.update_object(&*ob, "");
-                                    p.update_object_property(&*ob, name);
+                                    p.vec_del(&*ob, name, index);
                                 }
                             }
                         }
