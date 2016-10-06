@@ -283,7 +283,6 @@ pub enum ShouldUpdate
 pub trait PropertyWidget : Widget {
 
     fn add_simple_item(&self, field : &str, item : *const PropertyValue);
-    fn add_node_t(&self, field : &str, item : *const PropertyValue);
     fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue;
     fn add_vec(&self, field : &str, len : usize);
     fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, index : usize);
