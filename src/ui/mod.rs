@@ -205,17 +205,6 @@ pub trait PropertyShow
         }
     }
 
-
-    fn find_and_create(&self, property : &PropertyWidget, path : Vec<String>, start : usize)
-    {
-        panic!("in mod.rs");
-        println!("default create property : {:?}", path);
-        if path.is_empty() {
-            //self.create_widget(property, "" , 1, false);
-        }
-    }
-
-
     /*
     fn find_and_update_property(&self, field : &str, pv : *const PropertyValue)
     {
@@ -286,7 +275,7 @@ pub trait PropertyWidget : Widget {
     fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue;
     fn add_vec(&self, field : &str, len : usize);
     fn add_vec_item(&self, field : &str, widget_entry : *const PropertyValue, index : usize);
-    fn del_vec_item(&self, field : &str, widget_entry : *const PropertyValue, index : usize);
+    fn del_vec_item(&self, field : &str, index : usize);
 
     //fn update_option(&mut self, widget_entry : *const PropertyValue, is_some : bool);
 

@@ -669,12 +669,12 @@ pub extern fn expand(
         match *cur {
             RefMut::Arc(ref a) =>
             {
-                a.read().unwrap().find_and_create(p, vs.clone(), 0);
+                //a.read().unwrap().find_and_create(p, vs.clone(), 0);
 
             },
             RefMut::Cell(ref c) =>
             {
-                c.borrow().find_and_create(p, vs.clone(), 0);
+                //c.borrow().find_and_create(p, vs.clone(), 0);
             }
         }
 
@@ -936,7 +936,7 @@ impl PropertyWidget for PropertyList
         */
     }
 
-    fn del_vec_item(&self, field : &str, widget_entry : *const PropertyValue, index : usize)
+    fn del_vec_item(&self, field : &str, index : usize)
     {
         //TODO TODOTODO
     }
