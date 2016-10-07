@@ -21,7 +21,7 @@ use dormin::scene;
 use dormin::camera;
 use dormin::object;
 use ui::{Window, ButtonCallback, ChangedFunc, RegisterChangeFunc, 
-    PropertyTreeFunc, PropertyConfig, PropertyValue, RefMut, PropertyUser, PropertyShow, PropertyWidget,PropertyChange};
+    PropertyTreeFunc, PropertyConfig, PropertyValue, RefMut, PropertyUser, PropertyShow, PropertyWidget,PropertyChange, NodeChildren, PropertyNode};
 use ui;
 use dormin::property;
 use operation;
@@ -135,11 +135,12 @@ pub struct PropertyBox
 {
     pub name : String,
     pub jk_property : *const JkPropertyBox,
-    pub pv : RefCell<HashMap<String, *const PropertyValue>>,
+    pv : RefCell<HashMap<String, *const PropertyValue>>,
     visible : Cell<bool>,
     pub id : uuid::Uuid,
     //pub config : PropertyConfig,
-    pub current : RefCell<Option<RefMut<PropertyUser>>>
+    current : RefCell<Option<RefMut<PropertyUser>>>,
+    nodes : NodeChildren
 }
 
 
@@ -160,7 +161,8 @@ impl PropertyBox
             visible: Cell::new(true),
             id : uuid::Uuid::new_v4(),
             //config : pc.clone(),
-            current : RefCell::new(None)
+            current : RefCell::new(None),
+            nodes : NodeChildren::None
         }
     }
 

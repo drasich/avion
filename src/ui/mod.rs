@@ -4,7 +4,7 @@ use libc::{c_char, c_void, c_int, c_float};
 use std::collections::{HashMap,HashSet};
 use std::sync::{Arc,RwLock};
 use std::cell::RefCell;
-use std::rc::Rc;
+use std::rc::{Rc,Weak};
 use uuid;
 
 pub use self::def::{
@@ -292,3 +292,31 @@ pub trait PropertyWidget : Widget {
     }
 }
 
+pub enum NodeChildren
+{
+    None,
+    Map(HashMap<String,Rc<PropertyNode>>),
+    Vec(Vec<Rc<PropertyNode>>),
+}
+
+pub struct PropertyNode
+{
+    value : *const PropertyValue,
+    children : NodeChildren,
+    parent : Option<Weak<PropertyNode>>
+}
+
+impl PropertyNode
+{
+    fn new(
+        value : *const PropertyValue,
+        parent : Option<Weak<PropertyNode>>)
+        -> PropertyNode
+    {
+        PropertyNode {
+            value : value,
+            children : NodeChildren::None,
+            parent : parent
+        }
+    }
+}
