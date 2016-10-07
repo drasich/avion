@@ -140,7 +140,7 @@ pub struct PropertyBox
     pub id : uuid::Uuid,
     //pub config : PropertyConfig,
     current : RefCell<Option<RefMut<PropertyUser>>>,
-    nodes : NodeChildren
+    nodes : RefCell<NodeChildren>
 }
 
 
@@ -162,7 +162,7 @@ impl PropertyBox
             id : uuid::Uuid::new_v4(),
             //config : pc.clone(),
             current : RefCell::new(None),
-            nodes : NodeChildren::None
+            nodes : RefCell::new(NodeChildren::None)
         }
     }
 
@@ -190,6 +190,7 @@ impl PropertyBox
     {
         unsafe { property_box_clear(self.jk_property); }
         self.pv.borrow_mut().clear();
+        *self.nodes.borrow_mut() = NodeChildren::None;
 
         println!("TODO set prop in property box>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.");
         //TODO
@@ -281,6 +282,7 @@ impl PropertyBox
             }
         }
 
+        self.nodes.borrow().update(object, but);
     }
 
     pub fn set_nothing(&self)

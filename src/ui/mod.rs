@@ -320,3 +320,42 @@ impl PropertyNode
         }
     }
 }
+
+impl NodeChildren {
+    pub fn update(&self, ps : &PropertyShow, but : &str)
+    {
+        match *self {
+            NodeChildren::None => {},
+            NodeChildren::Map(ref m) => {
+                for (f,pn) in m.iter() {
+                    let fstr : &str = f.as_ref();
+                    if fstr == but {
+                        println!("buuuuuuuuuuuuuuuuuuuuuuuuuut: {} ", fstr);
+                        continue;
+                    }
+                    let but = if but.starts_with(fstr) {
+                        let (left, right) = but.split_at(fstr.len()+1);
+                        right
+                    }
+                    else {
+                        ""
+                    };
+                    match ps.get_property(f) {
+                        Some(ppp) => {
+                            ppp.update_widget(pn.value);
+                            pn.children.update(ppp, but);
+                        },
+                        None => {
+                            println!("could not find prop : {:?}", f);
+                        }
+                    }
+                }
+
+
+            },
+            _ => {}
+        }
+    }
+}
+
+
