@@ -317,6 +317,12 @@ impl PropertyBox
         }
     }
 
+    fn get_node(&self, path : &str) -> Option<Weak<PropertyNode>>
+    {
+        self.nodes.borrow().get_node(path)
+    }
+
+
 }
 
 

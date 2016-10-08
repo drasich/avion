@@ -319,6 +319,11 @@ impl PropertyNode
             parent : parent
         }
     }
+
+    fn get_node(&self, path : &str) -> Option<Weak<PropertyNode>>
+    {
+        self.children.get_node(path)
+    }
 }
 
 impl NodeChildren {
@@ -356,6 +361,42 @@ impl NodeChildren {
             _ => {}
         }
     }
+
+    fn get_node(&self, path : &str) -> Option<Weak<PropertyNode>>
+    {
+        let mut v : Vec<&str> = path.splitn(2,"/").collect();
+
+        if v.is_empty() {
+            return None;
+        }
+
+        match *self {
+            NodeChildren::Vec(ref vec) => {
+                if let Ok(index) = v[0].parse::<usize>() {
+                    println!("TODO getnode for vec");
+                    None
+                }
+                else {
+                    None
+                }
+            },
+            NodeChildren::Map(ref m) => {
+                match m.get(v[0]) { //.map(|o| *o) {
+                    Some(node) => {
+                        if v.len() == 1 {
+                            Some(Rc::downgrade(node))
+                        }
+                        else {
+                            node.get_node(v[1])
+                        }
+                    },
+                    None => None
+                }
+            },
+            _ => None
+        }
+    }
+
 }
 
 
