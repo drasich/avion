@@ -322,7 +322,6 @@ impl PropertyBox
         self.nodes.borrow().get_node(path)
     }
 
-
 }
 
 
@@ -339,6 +338,22 @@ impl PropertyWidget for PropertyBox
             ptr::null()
         };
 
+        let parent_node = if let Some(pv) = self.get_node(field)
+        {
+            if let Some(rcv) = pv.upgrade()
+            {
+                Some(rcv)
+            }
+            else {
+                panic!("cannot updgrade the value");
+            }
+        }
+        else {
+            None
+        };
+
+        let parent_value = if let Some(parent_node)
+
         unsafe {
             property_box_single_item_add(
                 self.jk_property,
@@ -347,6 +362,7 @@ impl PropertyWidget for PropertyBox
         }
 
         self.pv.borrow_mut().insert(field.to_owned(), item);
+
     }
 
     fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue
