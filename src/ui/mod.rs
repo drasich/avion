@@ -295,22 +295,22 @@ pub trait PropertyWidget : Widget {
 pub enum NodeChildren
 {
     None,
-    Map(HashMap<String,Rc<PropertyNode>>),
-    Vec(Vec<Rc<PropertyNode>>),
+    Map(HashMap<String,Rc<RefCell<PropertyNode>>>),
+    Vec(Vec<Rc<RefCell<PropertyNode>>>),
 }
 
 pub struct PropertyNode
 {
     value : *const PropertyValue,
     children : NodeChildren,
-    parent : Option<Weak<PropertyNode>>
+    parent : Option<Weak<RefCell<PropertyNode>>>
 }
 
 impl PropertyNode
 {
     fn new(
         value : *const PropertyValue,
-        parent : Option<Weak<PropertyNode>>)
+        parent : Option<Weak<RefCell<PropertyNode>>>)
         -> PropertyNode
     {
         PropertyNode {
@@ -320,10 +320,16 @@ impl PropertyNode
         }
     }
 
-    fn get_node(&self, path : &str) -> Option<Weak<PropertyNode>>
+    fn get_node(&self, path : &str) -> Option<Weak<RefCell<PropertyNode>>>
     {
         self.children.get_node(path)
     }
+}
+
+pub fn node_add_child(field : &str, parent : Rc<RefCell<PropertyNode>>, child : Rc<RefCell<PropertyNode>>)
+{
+    child.borrow_mut().parent = Some(Rc::downgrade(&parent));
+    parent.borrow_mut().children.add_node(field, child);
 }
 
 impl NodeChildren {
@@ -347,8 +353,8 @@ impl NodeChildren {
                     };
                     match ps.get_property(f) {
                         Some(ppp) => {
-                            ppp.update_widget(pn.value);
-                            pn.children.update(ppp, but);
+                            ppp.update_widget(pn.borrow().value);
+                            pn.borrow().children.update(ppp, but);
                         },
                         None => {
                             println!("could not find prop : {:?}", f);
@@ -362,7 +368,7 @@ impl NodeChildren {
         }
     }
 
-    fn get_node(&self, path : &str) -> Option<Weak<PropertyNode>>
+    fn get_node(&self, path : &str) -> Option<Weak<RefCell<PropertyNode>>>
     {
         let mut v : Vec<&str> = path.splitn(2,"/").collect();
 
@@ -387,13 +393,35 @@ impl NodeChildren {
                             Some(Rc::downgrade(node))
                         }
                         else {
-                            node.get_node(v[1])
+                            node.borrow().get_node(v[1])
                         }
                     },
                     None => None
                 }
             },
             _ => None
+        }
+    }
+
+    fn add_node(&mut self, field : &str, node : Rc<RefCell<PropertyNode>>)
+    {
+        match *self {
+            NodeChildren::Vec(ref mut vec) => {
+                if let Ok(index) = field.parse::<usize>() {
+                    vec.insert(index, node);
+                }
+                else {
+                    panic!("cannot add to vec");
+                }
+            },
+            NodeChildren::Map(ref mut map) => {
+                map.insert(field.to_owned(), node);
+            },
+            NodeChildren::None => {
+                let mut map = HashMap::new();
+                map.insert(field.to_owned(), node);
+                *self = NodeChildren::Map(map)
+            }
         }
     }
 

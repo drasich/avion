@@ -317,28 +317,27 @@ impl PropertyBox
         }
     }
 
-    fn get_node(&self, path : &str) -> Option<Weak<PropertyNode>>
+    fn get_node(&self, path : &str) -> Option<Weak<RefCell<PropertyNode>>>
     {
         self.nodes.borrow().get_node(path)
     }
 
-}
-
-
-impl PropertyWidget for PropertyBox
-{
-    fn add_simple_item(&self, field : &str, item : *const PropertyValue)
+    fn add_common(&self, path : &str, item : *const PropertyValue) ->
+        *const PropertyValue
     {
-        let parent = if let Some(pv) = self.find_parent_of(field)
-        {
-            println!("FOUND THE FATHER");
-            pv
+        let mut v : Vec<&str> = path.rsplitn(2,"/").collect();
+
+        let (parent_path, field_name) = if v.len() == 2 {
+            (v[1],v[0])
+        }
+        else if v.len() == 1 {
+            ("", v[0])
         }
         else {
-            ptr::null()
+            panic!("property pb");
         };
 
-        let parent_node = if let Some(pv) = self.get_node(field)
+        let parent_node = if let Some(pv) = self.get_node(parent_path)
         {
             if let Some(rcv) = pv.upgrade()
             {
@@ -352,16 +351,88 @@ impl PropertyWidget for PropertyBox
             None
         };
 
-        let parent_value = if let Some(parent_node)
+        let parent_value = if let Some(ref n) = parent_node {
+            n.borrow().value
+        }
+        else {
+            ptr::null()
+        };
+
+        if let Some(n) = parent_node {
+            ui::node_add_child(
+                field_name,
+                n,
+                Rc::new(RefCell::new(PropertyNode::new(item, None))));
+        }
+        else {
+            self.nodes.borrow_mut().add_node(
+                field_name,
+                Rc::new(RefCell::new(PropertyNode::new(item, None))));
+        };
+
+        parent_value
+    }
+
+}
+
+
+impl PropertyWidget for PropertyBox
+{
+    fn add_simple_item(&self, field : &str, item : *const PropertyValue)
+    {
+        let mut v : Vec<&str> = field.rsplitn(2,"/").collect();
+
+        let (parent_path, field_name) = if v.len() == 2 {
+            (v[1],v[0])
+        }
+        else if v.len() == 1 {
+            ("", v[0])
+        }
+        else {
+            panic!("property pb");
+        };
+
+        let parent_node = if let Some(pv) = self.get_node(parent_path)
+        {
+            if let Some(rcv) = pv.upgrade()
+            {
+                Some(rcv)
+            }
+            else {
+                panic!("cannot updgrade the value");
+            }
+        }
+        else {
+            None
+        };
+
+        let parent_value = if let Some(ref n) = parent_node {
+            n.borrow().value
+        }
+        else {
+            ptr::null()
+        };
 
         unsafe {
             property_box_single_item_add(
                 self.jk_property,
                 item,
-                parent);
+                parent_value);
         }
 
         self.pv.borrow_mut().insert(field.to_owned(), item);
+
+        if let Some(n) = parent_node {
+            ui::node_add_child(
+                field_name,
+                n,
+                Rc::new(RefCell::new(PropertyNode::new(item, None))));
+        }
+        else {
+            self.nodes.borrow_mut().add_node(
+                field_name,
+                Rc::new(RefCell::new(PropertyNode::new(item, None))));
+        };
 
     }
 
