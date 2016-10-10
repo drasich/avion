@@ -324,6 +324,11 @@ impl PropertyNode
     {
         self.children.get_node(path)
     }
+
+    fn del_child(&mut self, field : &str)
+    {
+        self.children.del_node(field)
+    }
 }
 
 pub fn node_add_child(field : &str, parent : Rc<RefCell<PropertyNode>>, child : Rc<RefCell<PropertyNode>>)
@@ -331,6 +336,7 @@ pub fn node_add_child(field : &str, parent : Rc<RefCell<PropertyNode>>, child : 
     child.borrow_mut().parent = Some(Rc::downgrade(&parent));
     parent.borrow_mut().children.add_node(field, child);
 }
+
 
 impl NodeChildren {
     pub fn update(&self, ps : &PropertyShow, but : &str)
@@ -425,6 +431,25 @@ impl NodeChildren {
         }
     }
 
+    fn del_node(&mut self, field : &str)
+    {
+        match *self {
+            NodeChildren::Vec(ref mut vec) => {
+                if let Ok(index) = field.parse::<usize>() {
+                    vec.remove(index);
+                }
+                else {
+                    panic!("cannot remove from vec");
+                }
+            },
+            NodeChildren::Map(ref mut map) => {
+                map.remove(field);
+            },
+            NodeChildren::None => {
+                    panic!("there was nothing");
+            }
+        }
+    }
 }
 
 

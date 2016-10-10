@@ -135,7 +135,6 @@ pub struct PropertyBox
 {
     pub name : String,
     pub jk_property : *const JkPropertyBox,
-    pv : RefCell<HashMap<String, *const PropertyValue>>,
     visible : Cell<bool>,
     pub id : uuid::Uuid,
     //pub config : PropertyConfig,
@@ -157,7 +156,6 @@ impl PropertyBox
                     panel.eo,
                     //pc.x, pc.y, pc.w, pc.h
                     )},
-            pv : RefCell::new(HashMap::new()),
             visible: Cell::new(true),
             id : uuid::Uuid::new_v4(),
             //config : pc.clone(),
@@ -189,7 +187,6 @@ impl PropertyBox
     fn _set_prop(&self, p : &PropertyShow, title : &str)
     {
         unsafe { property_box_clear(self.jk_property); }
-        self.pv.borrow_mut().clear();
         *self.nodes.borrow_mut() = NodeChildren::None;
 
         println!("TODO set prop in property box>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.");
@@ -209,42 +206,7 @@ impl PropertyBox
     pub fn update_object_property(&self, object : &PropertyShow, prop : &str)
     {
         println!("TODO update_object_property for box");
-
-        //let copy = self.pv.borrow().clone();
-
         println!("boxxxxx UPDATE OBJECT PROP '{}'", prop);
-
-        /*
-        for (f,pv) in &copy {
-            match self.pv.borrow().get(f) {
-                Some(p) => if *p != *pv {
-                    panic!("different pointer???");
-                    continue
-                },
-                None => continue
-            }
-
-            if f.starts_with(prop) {
-                let yep = ui::make_vec_from_str(f);
-                //if let Some(ppp) = find_property_show(object, yep.clone()) {
-                    //ppp.update_widget(*pv);
-                //}
-                //let test = |ps| {};
-                object.update_property(self,yep, *pv);
-                //object.callclosure(&test);
-            }
-        }
-
-        match self.pv.borrow().get(prop) {
-            Some(p) => {
-                let yep = ui::make_vec_from_str(prop);
-                println!("boxxxxx UPDATE OBJECT PROP 2222222222 '{:?}'", yep);
-                object.update_property(self, yep, *p);
-                println!("boxxxxx UPDATE OBJECT PROP 33333333333333333333333333 end ");
-            },
-            None => {}
-        }
-        */
 
         let yep = ui::make_vec_from_str(prop);
         object.update_property(self, prop, yep);
@@ -265,23 +227,6 @@ impl PropertyBox
 
     pub fn update_object(&self, object : &PropertyShow, but : &str)
     {
-        for (f,pv) in self.pv.borrow().iter() {
-            let fstr : &str = f.as_ref();
-            if fstr == but {
-                println!("buuuuuuuuuuuuuuuuuuuuuuuuuut: {} ", f);
-                continue;
-            }
-            let yep = ui::make_vec_from_str(f);
-            match ui::find_property_show(object, yep.clone()) {
-                Some(ppp) => {
-                    ppp.update_widget(*pv);
-                },
-                None => {
-                    println!("could not find prop : {:?}", yep);
-                }
-            }
-        }
-
         self.nodes.borrow().update(object, but);
     }
 
@@ -302,19 +247,6 @@ impl PropertyBox
     pub fn visible(&self) -> bool
     {
         self.visible.get()
-    }
-
-    fn find_parent_of(&self, path : &str) -> Option<*const PropertyValue>
-    {
-        let mut v : Vec<&str> = path.split("/").collect();
-        if v.len() > 1 {
-            v.pop();
-            let s = util::join_str(&v);
-            self.pv.borrow().get(&s).map(|o| *o)
-        }
-        else {
-            None
-        }
     }
 
     fn get_node(&self, path : &str) -> Option<Weak<RefCell<PropertyNode>>>
@@ -373,14 +305,10 @@ impl PropertyBox
         parent_value
     }
 
-}
-
-
-impl PropertyWidget for PropertyBox
-{
-    fn add_simple_item(&self, field : &str, item : *const PropertyValue)
+    fn del_common(&self, path : &str) ->
+        *const PropertyValue
     {
-        let mut v : Vec<&str> = field.rsplitn(2,"/").collect();
+        let mut v : Vec<&str> = path.rsplitn(2,"/").collect();
 
         let (parent_path, field_name) = if v.len() == 2 {
             (v[1],v[0])
@@ -413,27 +341,32 @@ impl PropertyWidget for PropertyBox
             ptr::null()
         };
 
+        if let Some(n) = parent_node {
+            n.borrow_mut().del_child(field_name);
+        }
+        else {
+            self.nodes.borrow_mut().del_node(field_name);
+        };
+
+        parent_value
+    }
+
+
+}
+
+
+impl PropertyWidget for PropertyBox
+{
+    fn add_simple_item(&self, path : &str, item : *const PropertyValue)
+    {
+        let parent_value = self.add_common(path, item);
+
         unsafe {
             property_box_single_item_add(
                 self.jk_property,
                 item,
                 parent_value);
         }
-
-        self.pv.borrow_mut().insert(field.to_owned(), item);
-
-        if let Some(n) = parent_node {
-            ui::node_add_child(
-                field_name,
-                n,
-                Rc::new(RefCell::new(PropertyNode::new(item, None))));
-        }
-        else {
-            self.nodes.borrow_mut().add_node(
-                field_name,
-                Rc::new(RefCell::new(PropertyNode::new(item, None))));
-        };
-
     }
 
     fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue
@@ -447,51 +380,31 @@ impl PropertyWidget for PropertyBox
         println!("TODO");
     }
 
-    fn add_vec_item(&self, field : &str, item : *const PropertyValue, index : usize)
+    fn add_vec_item(&self, path : &str, item : *const PropertyValue, index : usize)
     {
-        //println!("TODO");
-
-        let parent = if let Some(pv) = self.find_parent_of(field)
-        {
-            println!("FOUND THE FATHER");
-            pv
-        }
-        else {
-            ptr::null()
-        };
+        let parent_value = self.add_common(path, item);
 
         unsafe {
             property_box_vec_item_add(
                 self.jk_property,
                 item,
-                parent,
+                parent_value,
                 index as c_int);
         }
 
-        self.pv.borrow_mut().insert(field.to_owned(), item);
     }
 
-    fn del_vec_item(&self, field : &str, index : usize)
+    fn del_vec_item(&self, path : &str, index : usize)
     {
         //println!("TODO");
-
-        let parent = if let Some(pv) = self.find_parent_of(field)
-        {
-            println!("FOUND THE FATHER");
-            pv
-        }
-        else {
-            ptr::null()
-        };
+        let parent_value = self.del_common(path);
 
         unsafe {
             property_box_vec_item_del(
                 self.jk_property,
-                parent,
+                parent_value,
                 index as c_int);
         }
-
-        self.pv.borrow_mut().remove(field);
     }
 
 
@@ -503,32 +416,6 @@ impl PropertyWidget for PropertyBox
             property_box_enum_update(self.jk_property, widget_entry, v.as_ptr());
 
         }
-
-        let copy = self.pv.borrow().clone();
-
-        //println!("UPDATE OBJECT PROP '{}'", prop);
-
-        for (f,pv) in &copy {
-            /*
-            match self.pv.borrow().get(f) {
-                Some(p) => if *p != *pv {
-                    panic!("different pointer???");
-                    continue
-                },
-                None => continue
-            }
-            */
-
-            /*
-            println!("check this value '{}' with '{}'", f, path);
-
-            if f != path && f.starts_with(path) {
-                unsafe { property_box_remove(self.jk_property, *pv); }
-            }
-            */
-        }
-
-
     }
 
     fn update_vec(&self, widget_entry : *const PropertyValue, len : usize)
@@ -567,7 +454,13 @@ impl PropertyWidget for PropertyBox
 
     fn get_property(&self, path : &str) -> Option<*const PropertyValue> 
     {
-        self.pv.borrow().get(path).map( |o| *o)
+        //self.pv.borrow().get(path).map( |o| *o)
+        if let Some(n) = self.get_node(path) {
+            n.upgrade().map(|o| o.borrow().value)
+        }
+        else {
+            None
+        }
     }
 
 }
