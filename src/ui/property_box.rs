@@ -57,6 +57,7 @@ extern {
 
     fn property_box_vec_item_add(
         ps : *const JkPropertyBox,
+        cb_data : *const Weak<RefCell<PropertyNode>>,
         pv: *const PropertyValue,
         parent: *const PropertyValue,
         index : c_int,
@@ -255,7 +256,7 @@ impl PropertyBox
     }
 
     fn add_common(&self, path : &str, item : *const PropertyValue) ->
-        *const PropertyValue
+        (*const PropertyValue, Rc<RefCell<PropertyNode>>)
     {
         let mut v : Vec<&str> = path.rsplitn(2,"/").collect();
 
@@ -290,19 +291,21 @@ impl PropertyBox
             ptr::null()
         };
 
+        let new_node = Rc::new(RefCell::new(PropertyNode::new(item, None)));
+
         if let Some(n) = parent_node {
             ui::node_add_child(
                 field_name,
                 n,
-                Rc::new(RefCell::new(PropertyNode::new(item, None))));
+                new_node.clone());
         }
         else {
             self.nodes.borrow_mut().add_node(
                 field_name,
-                Rc::new(RefCell::new(PropertyNode::new(item, None))));
+                new_node.clone());
         };
 
-        parent_value
+        (parent_value, new_node)
     }
 
     fn del_common(&self, path : &str) ->
@@ -359,7 +362,7 @@ impl PropertyWidget for PropertyBox
 {
     fn add_simple_item(&self, path : &str, item : *const PropertyValue)
     {
-        let parent_value = self.add_common(path, item);
+        let (parent_value, node) = self.add_common(path, item);
 
         unsafe {
             property_box_single_item_add(
@@ -382,11 +385,12 @@ impl PropertyWidget for PropertyBox
 
     fn add_vec_item(&self, path : &str, item : *const PropertyValue, index : usize)
     {
-        let parent_value = self.add_common(path, item);
+        let (parent_value, node) = self.add_common(path, item);
 
         unsafe {
             property_box_vec_item_add(
                 self.jk_property,
+                mem::transmute(Rc::downgrade(&node)),
                 item,
                 parent_value,
                 index as c_int);

@@ -207,10 +207,6 @@ impl View
                 ui::property_list::register_change_option,
                 ui::property_list::expand,
                 ui::property_list::contract,
-              //  );
-
-            //ui::property::jk_property_box_register_vec_cb(
-             //   p.jk_property_list,
                 ui::property::vec_add,
                 ui::property::vec_del);
         }

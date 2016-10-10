@@ -303,7 +303,8 @@ pub struct PropertyNode
 {
     value : *const PropertyValue,
     children : NodeChildren,
-    parent : Option<Weak<RefCell<PropertyNode>>>
+    parent : Option<Weak<RefCell<PropertyNode>>>,
+    test : String
 }
 
 impl PropertyNode
@@ -316,7 +317,8 @@ impl PropertyNode
         PropertyNode {
             value : value,
             children : NodeChildren::None,
-            parent : parent
+            parent : parent,
+            test : String::from("just testing STUGG")
         }
     }
 

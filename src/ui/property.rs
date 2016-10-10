@@ -1024,6 +1024,18 @@ pub extern fn vec_add(
             return;}
     };
 
+    //TODO testing....
+    let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(old)};
+    let node = if let Some(n) = node.upgrade() {
+        println!("-----------------node is ok ? : {}", n.borrow().test);
+        n
+    }
+    else {
+        panic!("problem with node");
+    };
+
+    //println!("-----------------node is ok ? : {}", node.borrow().path);
+
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     //let p : &Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
