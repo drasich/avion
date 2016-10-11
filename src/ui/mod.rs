@@ -295,7 +295,7 @@ pub trait PropertyWidget : Widget {
 pub enum NodeChildren
 {
     None,
-    Map(HashMap<String,Rc<RefCell<PropertyNode>>>),
+    Struct(HashMap<String,Rc<RefCell<PropertyNode>>>),
     Vec(Vec<Rc<RefCell<PropertyNode>>>),
 }
 
@@ -304,21 +304,23 @@ pub struct PropertyNode
     value : *const PropertyValue,
     children : NodeChildren,
     parent : Option<Weak<RefCell<PropertyNode>>>,
-    test : String
+    name : String
 }
 
 impl PropertyNode
 {
     fn new(
+        name : &str, 
         value : *const PropertyValue,
-        parent : Option<Weak<RefCell<PropertyNode>>>)
+        //parent : Option<Weak<RefCell<PropertyNode>>>
+        )
         -> PropertyNode
     {
         PropertyNode {
             value : value,
             children : NodeChildren::None,
-            parent : parent,
-            test : String::from("just testing STUGG")
+            parent : None,
+            name : String::from(name)
         }
     }
 
@@ -345,7 +347,7 @@ impl NodeChildren {
     {
         match *self {
             NodeChildren::None => {},
-            NodeChildren::Map(ref m) => {
+            NodeChildren::Struct(ref m) => {
                 for (f,pn) in m.iter() {
                     let fstr : &str = f.as_ref();
                     if fstr == but {
@@ -394,7 +396,7 @@ impl NodeChildren {
                     None
                 }
             },
-            NodeChildren::Map(ref m) => {
+            NodeChildren::Struct(ref m) => {
                 match m.get(v[0]) { //.map(|o| *o) {
                     Some(node) => {
                         if v.len() == 1 {
@@ -417,18 +419,21 @@ impl NodeChildren {
             NodeChildren::Vec(ref mut vec) => {
                 if let Ok(index) = field.parse::<usize>() {
                     vec.insert(index, node);
+                    for i in (index+1)..vec.len() {
+                        vec[i].borrow_mut().name = i.to_string();
+                    }
                 }
                 else {
                     panic!("cannot add to vec");
                 }
             },
-            NodeChildren::Map(ref mut map) => {
+            NodeChildren::Struct(ref mut map) => {
                 map.insert(field.to_owned(), node);
             },
             NodeChildren::None => {
                 let mut map = HashMap::new();
                 map.insert(field.to_owned(), node);
-                *self = NodeChildren::Map(map)
+                *self = NodeChildren::Struct(map)
             }
         }
     }
@@ -439,12 +444,15 @@ impl NodeChildren {
             NodeChildren::Vec(ref mut vec) => {
                 if let Ok(index) = field.parse::<usize>() {
                     vec.remove(index);
+                    for i in (index)..vec.len() {
+                        vec[i].borrow_mut().name = i.to_string();
+                    }
                 }
                 else {
                     panic!("cannot remove from vec");
                 }
             },
-            NodeChildren::Map(ref mut map) => {
+            NodeChildren::Struct(ref mut map) => {
                 map.remove(field);
             },
             NodeChildren::None => {

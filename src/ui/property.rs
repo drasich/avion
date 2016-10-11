@@ -1027,7 +1027,7 @@ pub extern fn vec_add(
     //TODO testing....
     let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(old)};
     let node = if let Some(n) = node.upgrade() {
-        println!("-----------------node is ok ? : {}", n.borrow().test);
+        println!("-----------------node is ok ? : {}", n.borrow().name);
         n
     }
     else {

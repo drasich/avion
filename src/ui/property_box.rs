@@ -291,7 +291,7 @@ impl PropertyBox
             ptr::null()
         };
 
-        let new_node = Rc::new(RefCell::new(PropertyNode::new(item, None)));
+        let new_node = Rc::new(RefCell::new(PropertyNode::new(field_name, item)));
 
         if let Some(n) = parent_node {
             ui::node_add_child(
