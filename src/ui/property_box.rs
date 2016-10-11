@@ -51,6 +51,7 @@ extern {
 
     fn property_box_single_item_add(
         ps : *const JkPropertyBox,
+        cb_data : *const Weak<RefCell<PropertyNode>>,
         pv: *const PropertyValue,
         parent: *const PropertyValue,
         ) -> *const PropertyValue;
@@ -367,6 +368,7 @@ impl PropertyWidget for PropertyBox
         unsafe {
             property_box_single_item_add(
                 self.jk_property,
+                mem::transmute(Rc::downgrade(&node)),
                 item,
                 parent_value);
         }

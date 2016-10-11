@@ -1308,11 +1308,12 @@ impl WidgetContainer
 
     pub fn request_operation_vec_add(
         &mut self,
-        path : &str)
+        node : Rc<RefCell<ui::PropertyNode>>)
         -> operation::Change
     {
-        //todo
-        println!("request operation add vec : {}", path);
+        let node = node.borrow();
+        let path = &node.get_path();
+        println!("$$$$$$$$$$$$$$$$request operation add vec : {}", path);
         let v: Vec<&str> = path.split('/').collect();
 
         let mut vs = Vec::new();
@@ -1337,10 +1338,12 @@ impl WidgetContainer
 
     pub fn request_operation_vec_del(
         &mut self,
-        path : &str
+        node : Rc<RefCell<ui::PropertyNode>>
         )
         -> operation::Change
     {
+        let node = node.borrow();
+        let path = &node.get_path();
         let v: Vec<&str> = path.split('/').collect();
 
         let mut vs = Vec::new();

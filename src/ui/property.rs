@@ -1010,22 +1010,12 @@ Option<&PropertyShow>
 
 pub extern fn vec_add(
     data : *const c_void,
-    name : *const c_char,
+    property : *const c_void,
     old : *const c_void,
     new : *const c_void,
     action : c_int)
 {
-    let s = unsafe {CStr::from_ptr(name).to_bytes()};
-
-    let path = match str::from_utf8(s) {
-        Ok(pp) => pp,
-        _ => {
-            println!("problem with the path");
-            return;}
-    };
-
-    //TODO testing....
-    let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(old)};
+    let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
     let node = if let Some(n) = node.upgrade() {
         println!("-----------------node is ok ? : {}", n.borrow().name);
         n
@@ -1042,34 +1032,31 @@ pub extern fn vec_add(
 
     println!("VEC ADDDDDD");
 
-    let change = container.request_operation_vec_add(path);
+    let change = container.request_operation_vec_add(node);
     container.handle_change(&change, uuid::Uuid::nil());//p.id);
     //ui::add_empty(container, action.view_id);
 }
 
 pub extern fn vec_del(
     data : *const c_void,
-    name : *const c_char,
+    property : *const c_void,
     old : *const c_void,
     new : *const c_void,
     action : c_int)
 {
-    println!("TODO vec del");
-
-    let s = unsafe {CStr::from_ptr(name).to_bytes()};
-
-    let path = match str::from_utf8(s) {
-        Ok(pp) => pp,
-        _ => {
-            println!("problem with the path");
-            return;}
+    let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
+    let node = if let Some(n) = node.upgrade() {
+        n
+    }
+    else {
+        panic!("problem with node");
     };
 
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     //let p : & Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    let change = container.request_operation_vec_del(path);
+    let change = container.request_operation_vec_del(node);
     container.handle_change(&change, uuid::Uuid::nil());//p.id);
     //ui::add_empty(container, action.view_id);
 }

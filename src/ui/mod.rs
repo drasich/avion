@@ -76,12 +76,12 @@ pub mod view;
 
 pub type ChangedFunc = extern fn(
     object : *const c_void,
-    name : *const c_char,
+    property : *const c_void,
     data : *const c_void);
 
 pub type RegisterChangeFunc = extern fn(
-    object : *const c_void,
-    name : *const c_char,
+    app : *const c_void,
+    property : *const c_void,
     old : *const c_void,
     new : *const c_void,
     action_type : c_int
@@ -332,6 +332,25 @@ impl PropertyNode
     fn del_child(&mut self, field : &str)
     {
         self.children.del_node(field)
+    }
+
+    fn get_path(&self) -> String
+    {
+        let mut path = String::new();
+        if let Some(ref p) = self.parent {
+            if let Some(p) = p.upgrade() {
+                path.push_str(&p.borrow().get_path());
+            }
+
+        }
+
+        if !path.is_empty() {
+            path.push('/');
+        }
+
+        path.push_str(&self.name);
+
+        return path;
     }
 }
 

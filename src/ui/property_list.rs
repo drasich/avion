@@ -485,18 +485,23 @@ fn get_widget_data2<'a>(widget_data : *const c_void) ->
 
 fn changed_set<T : Any+Clone+PartialEq>(
     widget_data : *const c_void,
-    name : *const c_char,
+    property : *const c_void,
     old : Option<&T>,
     new : &T,
     action : i32
     )
 {
-    let path = if let Some(p) = get_str(name) {
-        p
+    let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
+    let node = if let Some(n) = node.upgrade() {
+        println!("node is : {} ", n.borrow().name);
+        n
     }
     else {
-        return;
+        panic!("problem with node");
     };
+
+    let node = node.borrow();
+    let path = &node.get_path();
 
     println!("changed_set : {}", path);
 
@@ -547,16 +552,20 @@ fn changed_set<T : Any+Clone+PartialEq>(
 
 fn changed_enum<T : Any+Clone+PartialEq>(
     widget_data : *const c_void,
-    name : *const c_char,
+    property : *const c_void,
     new : &T,
     )
 {
-    let path = if let Some(p) = get_str(name) {
-        p
+    let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
+    let node = if let Some(n) = node.upgrade() {
+        n
     }
     else {
-        return;
+        panic!("problem with node");
     };
+
+    let node = node.borrow();
+    let path = &node.get_path();
 
     let (p, container) = get_widget_data2(widget_data);
 
@@ -599,17 +608,21 @@ fn changed_enum<T : Any+Clone+PartialEq>(
 
 fn changed_option(
     widget_cb_data : *const c_void,
-    name : *const c_char,
+    property : *const c_void,
     old : &str,
     new : &str
     )
 {
-    let path = if let Some(p) = get_str(name) {
-        p
+    let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
+    let node = if let Some(n) = node.upgrade() {
+        n
     }
     else {
-        return;
+        panic!("problem with node");
     };
+
+    let node = node.borrow();
+    let path = &node.get_path();
 
     let (p, container) = get_widget_data(widget_cb_data);
 
@@ -688,19 +701,19 @@ pub extern fn expand(
 
 
 pub extern fn changed_set_float(
+    app_data : *const c_void,
     property : *const c_void,
-    name : *const c_char,
     data : *const c_void) {
 
     println!("changed_set_float");
 
     let f : & f64 = unsafe {mem::transmute(data)};
-    changed_set(property, name, None, f, 0);
+    changed_set(app_data, property, None, f, 0);
 }
 
 pub extern fn changed_set_string(
+    app_data : *const c_void,
     property : *const c_void,
-    name : *const c_char,
     data : *const c_void) {
 
     let datachar = data as *const i8;
@@ -711,19 +724,19 @@ pub extern fn changed_set_string(
             return;
         }
     };
-    changed_set(property, name, None, &ss, 0);
+    changed_set(app_data, property, None, &ss, 0);
 }
 
 pub extern fn changed_set_enum(
+    app_data : *const c_void,
     property : *const c_void,
-    name : *const c_char,
     data : *const c_void) {
     println!("DOES NOT NO ANYTHING");
 }
 
 pub extern fn register_change_string(
+    app_data : *const c_void,
     property : *const c_void,
-    name : *const c_char,
     old : *const c_void,
     new : *const c_void,
     action : c_int
@@ -750,16 +763,16 @@ pub extern fn register_change_string(
             }
         };
 
-        changed_set(property, name, Some(&sso), &ss, action);
+        changed_set(app_data, property, Some(&sso), &ss, action);
     }
     else {
-        changed_set(property, name, None, &ss, action);
+        changed_set(app_data, property, None, &ss, action);
     }
 }
 
 pub extern fn register_change_float(
+    app_data : *const c_void,
     property : *const c_void,
-    name : *const c_char,
     old : *const c_void,
     new : *const c_void,
     action : c_int
@@ -769,16 +782,16 @@ pub extern fn register_change_float(
 
     if action == 1 && old != ptr::null() {
         let fold : & f64 = unsafe {mem::transmute(old)};
-        changed_set(property, name, Some(fold), fnew, action);
+        changed_set(app_data, property, Some(fold), fnew, action);
     }
     else {
-        changed_set(property, name, None, fnew, action);
+        changed_set(app_data, property, None, fnew, action);
     }
 }
 
 pub extern fn register_change_enum(
     widget_cb_data : *const c_void,
-    name : *const c_char,
+    property : *const c_void,
     old : *const c_void,
     new : *const c_void,
     action : c_int
@@ -805,16 +818,16 @@ pub extern fn register_change_enum(
                 return
             }
         };
-        changed_enum(widget_cb_data, name, &ss);
+        changed_enum(widget_cb_data, property, &ss);
     }
     else {
-        changed_enum(widget_cb_data, name, &ss);
+        changed_enum(widget_cb_data, property, &ss);
     }
 }
 
 pub extern fn register_change_option(
     widget_cb_data : *const c_void,
-    name : *const c_char,
+    property : *const c_void,
     old : *const c_void,
     new : *const c_void,
     action : c_int
@@ -846,7 +859,7 @@ pub extern fn register_change_option(
         }
     };
 
-    changed_option(widget_cb_data, name, &sso, &ss);
+    changed_option(widget_cb_data, property, &sso, &ss);
 }
 
 fn get_str<'a>(cstr : *const c_char) -> Option<&'a str>
