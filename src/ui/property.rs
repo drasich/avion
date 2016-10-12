@@ -1025,20 +1025,20 @@ pub extern fn vec_add(
         panic!("VEC ADD :: cannot upgrade rc, node");
     };
 
-    //println!("-----------------node is ok ? : {}", node.borrow().path);
-
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     //let p : &Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     println!("VEC ADDDDDD");
 
-    let change = container.request_operation_vec_add(node);
+    let change = container.request_operation_vec_add(node.clone());
+        println!("-----------------miiiiiid : {}, {}, {}", Rc::strong_count(&node), Rc::weak_count(&node), node.borrow().name);
     container.handle_change(&change, uuid::Uuid::nil());//p.id);
     //ui::add_empty(container, action.view_id);
     
     //TODO there should still be one in the nodes tree
     //mem::forget(node);
+        println!("-----------------ending : {}, {}, {}", Rc::strong_count(&node), Rc::weak_count(&node), node.borrow().name);
 }
 
 pub extern fn vec_del(

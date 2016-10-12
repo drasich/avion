@@ -260,7 +260,7 @@ impl PropertyBox
     fn add_common(&self, path : &str, item : *const PropertyValue) ->
         (*const PropertyValue, Rc<RefCell<PropertyNode>>)
     {
-        let mut v : Vec<&str> = path.rsplitn(2,"/").collect();
+        let v : Vec<&str> = path.rsplitn(2,"/").collect();
 
         let (parent_path, field_name) = if v.len() == 2 {
             (v[1],v[0])
@@ -287,6 +287,7 @@ impl PropertyBox
         };
 
         let parent_value = if let Some(ref n) = parent_node {
+            n.borrow().print_stuff();
             n.borrow().value
         }
         else {

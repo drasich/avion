@@ -352,6 +352,12 @@ impl PropertyNode
 
         return path;
     }
+
+    fn print_stuff(&self)
+    {
+        println!(">>>my name is ::: {} \n\n", self.name);
+        self.children.print_stuff();
+    }
 }
 
 pub fn node_add_child(field : &str, parent : Rc<RefCell<PropertyNode>>, child : Rc<RefCell<PropertyNode>>)
@@ -450,9 +456,18 @@ impl NodeChildren {
                 map.insert(field.to_owned(), node);
             },
             NodeChildren::None => {
-                let mut map = HashMap::new();
-                map.insert(field.to_owned(), node);
-                *self = NodeChildren::Struct(map)
+                //TODO temporary
+                // children type should be set when creating the node
+                if let Ok(index) = field.parse::<usize>() {
+                    let mut vec = Vec::new();
+                    vec.push(node);
+                    *self = NodeChildren::Vec(vec)
+                }
+                else {
+                    let mut map = HashMap::new();
+                    map.insert(field.to_owned(), node);
+                    *self = NodeChildren::Struct(map)
+                }
             }
         }
     }
@@ -478,6 +493,26 @@ impl NodeChildren {
                     panic!("there was nothing");
             }
         }
+    }
+
+    fn print_stuff(&self)
+    {
+        match *self {
+            NodeChildren::Vec(ref vec) => {
+                    println!("it's a vec : {}", vec.len());
+                for i in 0..vec.len() {
+                    let name = &vec[i].borrow().name;
+                    println!("{}, {} : {}, {}", i, name, Rc::strong_count(&vec[i]), Rc::weak_count(&vec[i]));
+                }
+            },
+            NodeChildren::Struct(ref map) => {
+                    println!("it's a struct");
+            },
+            NodeChildren::None => {
+                    println!("there was nothing");
+            }
+        }
+
     }
 }
 
