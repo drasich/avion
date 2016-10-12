@@ -560,7 +560,7 @@ fn changed_enum<T : Any+Clone+PartialEq>(
     new : &T,
     )
 {
-    let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
+    let node : &Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
     let node = if let Some(n) = node.upgrade() {
         n
     }

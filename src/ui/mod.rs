@@ -478,7 +478,7 @@ impl NodeChildren {
             NodeChildren::Vec(ref mut vec) => {
                 if let Ok(index) = field.parse::<usize>() {
                     vec.remove(index);
-                    for i in (index)..vec.len() {
+                    for i in index..vec.len() {
                         vec[i].borrow_mut().name = i.to_string();
                     }
                 }

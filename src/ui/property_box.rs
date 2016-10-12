@@ -314,7 +314,7 @@ impl PropertyBox
     fn del_common(&self, path : &str) ->
         *const PropertyValue
     {
-        let mut v : Vec<&str> = path.rsplitn(2,"/").collect();
+        let v : Vec<&str> = path.rsplitn(2,"/").collect();
 
         let (parent_path, field_name) = if v.len() == 2 {
             (v[1],v[0])
@@ -367,9 +367,6 @@ impl PropertyWidget for PropertyBox
     {
         let (parent_value, node) = self.add_common(path, item);
 
-        //let ptr = unsafe { mem::transmute(box Rc::downgrade(&node)) };
-        //println!("SIMPLE ITEM '{}' : {:?}", path, ptr);
-
         unsafe {
             property_box_single_item_add(
                 self.jk_property,
@@ -394,8 +391,6 @@ impl PropertyWidget for PropertyBox
     {
         let (parent_value, node) = self.add_common(path, item);
 
-        println!("adding a vec item!!!!!!!!!!!!!!!!!!!1 : {}, {}", path, index);
-
         unsafe {
             property_box_vec_item_add(
                 self.jk_property,
@@ -409,7 +404,6 @@ impl PropertyWidget for PropertyBox
 
     fn del_vec_item(&self, path : &str, index : usize)
     {
-        //println!("TODO");
         let parent_value = self.del_common(path);
 
         unsafe {
