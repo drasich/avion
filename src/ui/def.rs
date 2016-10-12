@@ -1311,8 +1311,8 @@ impl WidgetContainer
         node : Rc<RefCell<ui::PropertyNode>>)
         -> operation::Change
     {
-        let node = node.borrow();
-        let path = &node.get_path();
+        let nodeb = node.borrow();
+        let path = &nodeb.get_path();
         println!("$$$$$$$$$$$$$$$$request operation add vec : {}", path);
         let v: Vec<&str> = path.split('/').collect();
 
@@ -1330,10 +1330,13 @@ impl WidgetContainer
             _ => 0
         };
 
+            println!("AFTER counts : {}, {}", Rc::strong_count(&node), Rc::weak_count(&node));
+
         self.request_operation(
             vs,
             operation::OperationData::VecAdd(index)
             )
+
     }
 
     pub fn request_operation_vec_del(

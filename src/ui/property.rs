@@ -1015,13 +1015,14 @@ pub extern fn vec_add(
     new : *const c_void,
     action : c_int)
 {
-    let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
+    println!("vec add PTRRRRR : {:?}", property);
+    let node : &Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
     let node = if let Some(n) = node.upgrade() {
-        println!("-----------------node is ok ? : {}", n.borrow().name);
+        println!("-----------------node is ok ? : {}, {}, {}", Rc::strong_count(&n), Rc::weak_count(&n), n.borrow().name);
         n
     }
     else {
-        panic!("problem with node");
+        panic!("VEC ADD :: cannot upgrade rc, node");
     };
 
     //println!("-----------------node is ok ? : {}", node.borrow().path);
@@ -1035,6 +1036,9 @@ pub extern fn vec_add(
     let change = container.request_operation_vec_add(node);
     container.handle_change(&change, uuid::Uuid::nil());//p.id);
     //ui::add_empty(container, action.view_id);
+    
+    //TODO there should still be one in the nodes tree
+    //mem::forget(node);
 }
 
 pub extern fn vec_del(
@@ -1044,7 +1048,7 @@ pub extern fn vec_del(
     new : *const c_void,
     action : c_int)
 {
-    let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
+    let node : &Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
     let node = if let Some(n) = node.upgrade() {
         n
     }

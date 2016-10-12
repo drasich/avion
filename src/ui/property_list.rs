@@ -491,7 +491,11 @@ fn changed_set<T : Any+Clone+PartialEq>(
     action : i32
     )
 {
-    let node : Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
+    //let s : &String = unsafe {mem::transmute(property)};
+    //println!("SSSSSSSSSSSSSSS : {}", s);
+
+    //return;
+    let node : &Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
     let node = if let Some(n) = node.upgrade() {
         println!("node is : {} ", n.borrow().name);
         n
@@ -705,7 +709,7 @@ pub extern fn changed_set_float(
     property : *const c_void,
     data : *const c_void) {
 
-    println!("changed_set_float");
+    println!("changed_set_float : {:?}", property);
 
     let f : & f64 = unsafe {mem::transmute(data)};
     changed_set(app_data, property, None, f, 0);

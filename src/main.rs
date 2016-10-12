@@ -3,6 +3,7 @@
 //#![feature(slicing_syntax)]
 #![feature(box_syntax)]
 #![feature(borrow_state)]
+#![feature(rc_counts)]
 
 //TODO remove
 #![allow(unused_variables)]

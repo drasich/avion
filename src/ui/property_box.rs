@@ -51,14 +51,15 @@ extern {
 
     fn property_box_single_item_add(
         ps : *const JkPropertyBox,
-        cb_data : *const Weak<RefCell<PropertyNode>>,
+        //cb_data : *const Weak<RefCell<PropertyNode>>,
+        cb_data : *const c_void,
         pv: *const PropertyValue,
         parent: *const PropertyValue,
         ) -> *const PropertyValue;
 
     fn property_box_vec_item_add(
         ps : *const JkPropertyBox,
-        cb_data : *const Weak<RefCell<PropertyNode>>,
+        cb_data : *const c_void,
         pv: *const PropertyValue,
         parent: *const PropertyValue,
         index : c_int,
@@ -365,10 +366,13 @@ impl PropertyWidget for PropertyBox
     {
         let (parent_value, node) = self.add_common(path, item);
 
+        //let ptr = unsafe { mem::transmute(box Rc::downgrade(&node)) };
+        //println!("SIMPLE ITEM '{}' : {:?}", path, ptr);
+
         unsafe {
             property_box_single_item_add(
                 self.jk_property,
-                mem::transmute(Rc::downgrade(&node)),
+                mem::transmute(box Rc::downgrade(&node)),
                 item,
                 parent_value);
         }
@@ -389,10 +393,12 @@ impl PropertyWidget for PropertyBox
     {
         let (parent_value, node) = self.add_common(path, item);
 
+        println!("adding a vec item!!!!!!!!!!!!!!!!!!!1 : {}, {}", path, index);
+
         unsafe {
             property_box_vec_item_add(
                 self.jk_property,
-                mem::transmute(Rc::downgrade(&node)),
+                mem::transmute(box Rc::downgrade(&node)),
                 item,
                 parent_value,
                 index as c_int);
