@@ -258,7 +258,8 @@ impl PropertyBox
     }
 
     fn add_common(&self, path : &str, item : *const PropertyValue) ->
-        (*const PropertyValue, Rc<RefCell<PropertyNode>>)
+        //(*const PropertyValue, Rc<RefCell<PropertyNode>>)
+        (Option<Rc<RefCell<PropertyNode>>>, Rc<RefCell<PropertyNode>>)
     {
         let v : Vec<&str> = path.rsplitn(2,"/").collect();
 
@@ -286,20 +287,12 @@ impl PropertyBox
             None
         };
 
-        let parent_value = if let Some(ref n) = parent_node {
-            n.borrow().print_stuff();
-            n.borrow().value
-        }
-        else {
-            ptr::null()
-        };
-
         let new_node = Rc::new(RefCell::new(PropertyNode::new(field_name, item)));
 
-        if let Some(n) = parent_node {
+        if let Some(ref n) = parent_node {
             ui::node_add_child(
                 field_name,
-                n,
+                n.clone(),
                 new_node.clone());
         }
         else {
@@ -308,7 +301,7 @@ impl PropertyBox
                 new_node.clone());
         };
 
-        (parent_value, new_node)
+        (parent_node, new_node)
     }
 
     fn del_common(&self, path : &str) ->
@@ -365,7 +358,14 @@ impl PropertyWidget for PropertyBox
 {
     fn add_simple_item(&self, path : &str, item : *const PropertyValue)
     {
-        let (parent_value, node) = self.add_common(path, item);
+        let (parent, node) = self.add_common(path, item);
+
+        let parent_value = if let Some(ref n) = parent {
+            n.borrow().value
+        }
+        else {
+            ptr::null()
+        };
 
         unsafe {
             property_box_single_item_add(
@@ -389,7 +389,14 @@ impl PropertyWidget for PropertyBox
 
     fn add_vec_item(&self, path : &str, item : *const PropertyValue, index : usize)
     {
-        let (parent_value, node) = self.add_common(path, item);
+        let (parent, node) = self.add_common(path, item);
+
+        let parent_value = if let Some(ref n) = parent {
+            n.borrow().value
+        }
+        else {
+            ptr::null()
+        };
 
         unsafe {
             property_box_vec_item_add(

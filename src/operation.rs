@@ -463,13 +463,13 @@ impl OperationTrait for Operation
             OperationData::VecAdd(i) => {
                 println!("vec add operation undo {:?}, {}", self.name, i);
                 let s = join_string(&self.name);
-                let mut ids = LinkedList::new();
+                let mut ids = Vec::new();
                 for o in &self.objects {
                     let mut ob = o.write().unwrap();
                     ob.del_item(s.as_ref(), i);
-                    ids.push_back(ob.id.clone());
+                    ids.push(ob.id.clone());
                 }
-                return Change::Objects(s, ids);
+                return Change::VecDel(ids, s, i);
             },
             OperationData::VecDel(i,ref value) => {
                 println!("vec del operation undo {:?}", self.name);
@@ -481,7 +481,7 @@ impl OperationTrait for Operation
                     ids.push(ob.id.clone());
                 }
                 //return Change::Objects(s, ids);
-                return Change::VecDel(ids, s, i);
+                return Change::VecAdd(ids, s, i);
             },
             OperationData::Vector(ref old,_) => {
                 let mut i = 0;
