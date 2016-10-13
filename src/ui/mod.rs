@@ -358,6 +358,10 @@ impl PropertyNode
         println!(">>>my name is ::: {} \n\n", self.name);
         self.children.print_stuff();
     }
+
+    fn get_child_count(&self) -> usize {
+        self.children.get_count()
+    }
 }
 
 pub fn node_add_child(field : &str, parent : Rc<RefCell<PropertyNode>>, child : Rc<RefCell<PropertyNode>>)
@@ -510,6 +514,21 @@ impl NodeChildren {
             },
             NodeChildren::None => {
                     println!("there was nothing");
+            }
+        }
+    }
+
+    fn get_count(&self) -> usize
+    {
+        match *self {
+            NodeChildren::Vec(ref vec) => {
+                vec.len()
+            },
+            NodeChildren::Struct(ref map) => {
+                map.len()
+            },
+            NodeChildren::None => {
+                0
             }
         }
 

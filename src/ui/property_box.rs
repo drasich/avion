@@ -258,7 +258,6 @@ impl PropertyBox
     }
 
     fn add_common(&self, path : &str, item : *const PropertyValue) ->
-        //(*const PropertyValue, Rc<RefCell<PropertyNode>>)
         (Option<Rc<RefCell<PropertyNode>>>, Rc<RefCell<PropertyNode>>)
     {
         let v : Vec<&str> = path.rsplitn(2,"/").collect();
@@ -305,7 +304,7 @@ impl PropertyBox
     }
 
     fn del_common(&self, path : &str) ->
-        *const PropertyValue
+        Option<Rc<RefCell<PropertyNode>>>
     {
         let v : Vec<&str> = path.rsplitn(2,"/").collect();
 
@@ -333,21 +332,14 @@ impl PropertyBox
             None
         };
 
-        let parent_value = if let Some(ref n) = parent_node {
-            n.borrow().value
-        }
-        else {
-            ptr::null()
-        };
-
-        if let Some(n) = parent_node {
+        if let Some(ref n) = parent_node {
             n.borrow_mut().del_child(field_name);
         }
         else {
             self.nodes.borrow_mut().del_node(field_name);
         };
 
-        parent_value
+        parent_node
     }
 
 
@@ -407,12 +399,24 @@ impl PropertyWidget for PropertyBox
                 index as c_int);
         }
 
+        if let Some(ref p) = parent {
+            self.update_vec(parent_value, p.borrow().get_child_count());
+        }
     }
 
     fn del_vec_item(&self, path : &str, index : usize)
     {
-        let parent_value = self.del_common(path);
+        let parent_node = self.del_common(path);
 
+        let parent_value = if let Some(ref p) = parent_node {
+            let p = p.borrow();
+            self.update_vec(p.value, p.get_child_count());
+            p.value
+        }
+        else {
+            ptr::null()
+        };
+        
         unsafe {
             property_box_vec_item_del(
                 self.jk_property,
