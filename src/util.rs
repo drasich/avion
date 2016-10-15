@@ -1,8 +1,9 @@
 use std::sync::{RwLock, Arc};
-use std::collections::LinkedList;
 use std::fs;
 use std::mem;
-
+use std::ffi::{CString, CStr};
+use std::str;
+use libc::{c_void, c_int, size_t, c_char};
 
 use dormin::vec;
 use dormin::object;
@@ -33,9 +34,6 @@ pub fn get_files_in_dir(path : &str) -> Vec<PathBuf>
     files.map(|x| x.unwrap().path()).collect()
 }
 
-use std::ffi::{CString, CStr};
-use std::str;
-use libc::{c_void, c_int, size_t, c_char};
 #[link(name = "joker")]
 extern {
     fn do_something_with_slice(slice : *const c_void, len : size_t);

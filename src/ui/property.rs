@@ -3,17 +3,12 @@ use std::collections::{HashMap,HashSet};
 use libc::{c_char, c_void, c_int, c_float};
 use std::str;
 use std::mem;
-//use std::collections::{LinkedList,Deque};
-use std::collections::{LinkedList};
 use std::ptr;
-use std::rc::Rc;
+use std::rc::{Rc,Weak};
 use std::cell::{Cell, RefCell, BorrowState};
-use std::rc::Weak;
-use std::any::{Any};//, AnyRefExt};
-use std::ffi::CString;
+use std::any::{Any};
 use std::ffi;
-use std::ffi::CStr;
-use core::marker;
+use std::ffi::{CStr,CString};
 use uuid;
 use uuid::Uuid;
 
@@ -58,28 +53,18 @@ pub struct JkPropertyCb;
 #[link(name = "joker")]
 extern {
 
-    fn property_list_node_add(
-        path : *const c_char,
-        added_name : *const c_char
-        ) -> *const PropertyValue;
-
     fn property_node_add(
         path : *const c_char
         ) -> *const PropertyValue;
 
-    fn property_list_float_add(
+    fn property_float_add(
         name : *const c_char,
         value : c_float
         ) -> *const PropertyValue;
 
-    fn property_list_string_add(
+    fn property_string_add(
         name : *const c_char,
         value : *const c_char
-        ) -> *const PropertyValue;
-
-    fn property_list_node_vec_add(
-        ps : *const JkPropertyList,
-        container: *const PropertyValue,
         ) -> *const PropertyValue;
 
     fn property_vec_add(
@@ -87,16 +72,7 @@ extern {
         len : c_int
         ) -> *const PropertyValue;
 
-
-    /*
-    fn property_list_vec_item_add(
-        ps : *const JkPropertyList,
-        name : *const c_char,
-        value : *const c_char
-        ) -> *const PropertyValue;
-        */
-
-    fn property_list_enum_add(
+    fn property_enum_new(
         name : *const c_char,
         possible_values : *const c_char,
         value : *const c_char
@@ -223,7 +199,7 @@ impl PropertyShow for f64 {
         let f = CString::new(field.as_bytes()).unwrap();
         println!("create f64 for : {}", field);
         let pv = unsafe { 
-            property_list_float_add(
+            property_float_add(
                 f.as_ptr(),
                 *self as c_float)
         };
@@ -248,7 +224,7 @@ impl PropertyShow for String {
         let v = CString::new(self.as_bytes()).unwrap();
 
         let pv = unsafe {
-            property_list_string_add(
+            property_string_add(
                 f.as_ptr(),
                 v.as_ptr())
         };
@@ -546,7 +522,7 @@ impl PropertyShow for CompData
         let type_value = self.get_kind_string();
 
         let types = CompData::get_all_kind();
-        Some(add_enum2(field, types.as_str(), type_value.as_str()))
+        Some(add_enum(field, types.as_str(), type_value.as_str()))
     }
 
     fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
@@ -705,7 +681,7 @@ impl ui::PropertyShow for Orientation {
         };
 
         let types = "AngleXYZ/Quat";
-        Some(add_enum2(field, types, type_value))
+        Some(add_enum(field, types, type_value))
     }
 
     fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
@@ -826,7 +802,7 @@ macro_rules! property_show_methods(
             fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
             {
                 println!("property show methods **{}**, create itself", field);
-                Some(add_node2(field))
+                Some(add_node(field))
             }
 
             fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
@@ -852,23 +828,6 @@ macro_rules! property_show_methods(
                  )+
 
             }
-
-            /*
-            fn get_children(&self) -> Option<LinkedList<&PropertyShow>>
-            {
-                let mut list = LinkedList::new();
-                $(
-                    list.push_back(&self.$member as &PropertyShow);
-                 )+
-
-                if list.len() > 0 {
-                    Some(list)
-                }
-                else {
-                    None
-                }
-            }
-            */
 
             fn get_property(&self, field : &str) -> Option<&PropertyShow>
             {
@@ -1081,7 +1040,7 @@ impl PropertyId for scene::Scene
     }
 }
 
-pub fn add_node2(
+pub fn add_node(
     name : &str
     ) -> *const PropertyValue
 {
@@ -1091,7 +1050,7 @@ pub fn add_node2(
     }
 }
 
-pub fn add_enum2(
+pub fn add_enum(
     path : &str,
     types : &str,
     value : &str
@@ -1102,7 +1061,7 @@ pub fn add_enum2(
     let v = CString::new(value.as_bytes()).unwrap();
 
     unsafe {
-        property_list_enum_add(
+        property_enum_new(
             f.as_ptr(),
             types.as_ptr(),
             v.as_ptr())

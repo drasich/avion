@@ -4,9 +4,8 @@ use libc::{c_char, c_void, c_int, c_float};
 use std::str;
 use std::mem;
 use std::ptr;
-use std::rc::Rc;
+use std::rc::{Rc,Weak};
 use std::cell::{Cell, RefCell, BorrowState};
-use std::rc::Weak;
 use std::ffi;
 use std::ffi::{CStr,CString};
 use uuid;
@@ -25,15 +24,18 @@ pub struct JkPropertyBox;
 
 #[link(name = "joker")]
 extern {
-    fn jk_property_box_new(eo : *const ui::Evas_Object) -> *const JkPropertyBox;
+    fn jk_property_box_new(
+        eo : *const ui::Evas_Object)
+        -> *const JkPropertyBox;
 
     fn property_box_clear(pl : *const JkPropertyBox);
 
-    pub fn property_box_cb_get(pl : *const JkPropertyBox) -> *const ui::JkPropertyCb;
+    pub fn property_box_cb_get(
+        pl : *const JkPropertyBox
+        ) -> *const ui::JkPropertyCb;
 
     fn property_box_single_item_add(
         ps : *const JkPropertyBox,
-        //cb_data : *const Weak<RefCell<PropertyNode>>,
         cb_data : *const c_void,
         pv: *const PropertyValue,
         parent: *const PropertyValue,
@@ -70,50 +72,6 @@ extern {
     fn property_box_remove(
         pb : *const JkPropertyBox,
         value : *const PropertyValue);
-
-
-    /*
-    fn window_property_new(window : *const Window) -> *const JkProperty;
-    fn property_register_cb(
-        property : *const JkProperty,
-        changed : extern fn(object : *const c_void, data : *const c_void),
-        get : extern fn(data : *const c_void) -> *const c_char
-        );
-
-    fn property_data_set(
-        property : *const JkProperty,
-        data : *const c_void
-        );
-
-    fn jk_property_set_data_set(set : *const JkPropertyBox, data : *const c_void);
-
-    fn jk_property_set_register_cb(
-        property : *const JkPropertyBox,
-        data : *const Property,
-        changed_float : ChangedFunc,
-        changed_string : ChangedFunc,
-        );
-
-    fn property_set_string_add(
-        ps : *const JkPropertyBox,
-        name : *const c_char,
-        value : *const c_char
-        );
-
-    fn property_set_float_add(
-        ps : *const JkPropertyBox,
-        name : *const c_char,
-        value : c_float
-        );
-
-    fn property_set_node_add(
-        ps : *const JkPropertyBox,
-        name : *const c_char
-        );
-
-    fn property_set_clear(
-        ps : *const JkPropertyBox);
-        */
 }
 
 pub struct PropertyBox
@@ -122,7 +80,6 @@ pub struct PropertyBox
     pub jk_property : *const JkPropertyBox,
     visible : Cell<bool>,
     pub id : uuid::Uuid,
-    //pub config : PropertyConfig,
     current : RefCell<Option<RefMut<PropertyUser>>>,
     nodes : RefCell<NodeChildren>
 }
@@ -132,18 +89,15 @@ impl PropertyBox
 {
     pub fn new(
         panel : &ui::WidgetPanel,
-        //pc : &PropertyConfig
         ) -> PropertyBox
     {
         PropertyBox {
             name : String::from("property_box_name"),
             jk_property : unsafe {jk_property_box_new(
                     panel.eo,
-                    //pc.x, pc.y, pc.w, pc.h
                     )},
             visible: Cell::new(true),
             id : uuid::Uuid::new_v4(),
-            //config : pc.clone(),
             current : RefCell::new(None),
             nodes : RefCell::new(NodeChildren::None)
         }
