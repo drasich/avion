@@ -54,11 +54,6 @@ extern {
         parent: *const PropertyValue,
         index : c_int);
 
-    fn property_box_single_node_add(
-        pl : *const JkPropertyBox,
-        val : *const PropertyValue,
-        ) -> *const PropertyValue;
-
     fn property_box_enum_update(
         pb : *const JkPropertyBox,
         pv : *const PropertyValue,
@@ -68,10 +63,6 @@ extern {
         pb : *const JkPropertyBox,
         pv : *const PropertyValue,
         len : c_int);
-
-    fn property_box_remove(
-        pb : *const JkPropertyBox,
-        value : *const PropertyValue);
 }
 
 pub struct PropertyBox
