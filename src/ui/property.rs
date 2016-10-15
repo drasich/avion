@@ -802,9 +802,7 @@ macro_rules! property_show_impl(
 property_show_impl!(vec::Vec3,[x,y,z]);
 property_show_impl!(vec::Quat,[x,y,z,w]);
 property_show_impl!(transform::Transform,[position,orientation]);
-//property_show_impl!(mesh_render::MeshRender,[mesh,material]);
 property_show_impl!(object::Object,
-                     //[name,position,orientation,scale]);
                      [name,position,orientation,scale,comp_data,comp_lua]);
 
 property_show_impl!(component::mesh_render::MeshRender,[mesh,material], ShouldUpdate::Mesh);
@@ -833,8 +831,6 @@ pub fn make_vec_from_str(s : &str) -> Vec<String>
 pub fn find_property_show(p : &PropertyShow, path : Vec<String>) ->
 Option<&PropertyShow>
 {
-    //let vs = make_vec_from_string(&field.to_owned());
-
     match path.len() {
         0 =>  None,
         1 => p.get_property(path[0].as_ref()),
@@ -858,10 +854,8 @@ pub extern fn vec_add(
     new : *const c_void,
     action : c_int)
 {
-    println!("vec add PTRRRRR : {:?}", property);
     let node : &Weak<RefCell<ui::PropertyNode>> = unsafe {mem::transmute(property)};
     let node = if let Some(n) = node.upgrade() {
-        println!("-----------------node is ok ? : {}, {}, {}", Rc::strong_count(&n), Rc::weak_count(&n), n.borrow().name);
         n
     }
     else {
@@ -869,19 +863,10 @@ pub extern fn vec_add(
     };
 
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
-    //let p : &Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
-    println!("VEC ADDDDDD");
-
     let change = container.request_operation_vec_add(node.clone());
-        println!("-----------------miiiiiid : {}, {}, {}", Rc::strong_count(&node), Rc::weak_count(&node), node.borrow().name);
     container.handle_change(&change, uuid::Uuid::nil());//p.id);
-    //ui::add_empty(container, action.view_id);
-    
-    //TODO there should still be one in the nodes tree
-    //mem::forget(node);
-        println!("-----------------ending : {}, {}, {}", Rc::strong_count(&node), Rc::weak_count(&node), node.borrow().name);
 }
 
 pub extern fn vec_del(
@@ -900,12 +885,10 @@ pub extern fn vec_del(
     };
 
     let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
-    //let p : & Property = unsafe {mem::transmute(wcb.widget)};
     let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
 
     let change = container.request_operation_vec_del(node);
-    container.handle_change(&change, uuid::Uuid::nil());//p.id);
-    //ui::add_empty(container, action.view_id);
+    container.handle_change(&change, uuid::Uuid::nil());
 }
 
 impl PropertyId for object::Object
