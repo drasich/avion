@@ -568,8 +568,7 @@ fn changed_enum<T : Any+Clone+PartialEq>(
         panic!("problem with node");
     };
 
-    let node = node.borrow();
-    let path = &node.get_path();
+    let path = &node.borrow().get_path();
 
     let (p, container) = get_widget_data2(widget_data);
 

@@ -283,6 +283,7 @@ impl PropertyBox
             }
         }
         else {
+            println!("could not find parent : {}", parent_path );
             None
         };
 

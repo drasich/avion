@@ -418,10 +418,16 @@ impl NodeChildren {
         match *self {
             NodeChildren::Vec(ref vec) => {
                 if let Ok(index) = v[0].parse::<usize>() {
-                    println!("TODO getnode for vec");
-                    None
+                    let n = &vec[index];
+                    if v.len() == 1 {
+                        Some(Rc::downgrade(n))
+                    }
+                    else {
+                        n.borrow().get_node(v[1])
+                    }
                 }
                 else {
+                    panic!("not an index : {}", v[0]);
                     None
                 }
             },
