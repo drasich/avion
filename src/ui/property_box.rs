@@ -3,39 +3,21 @@ use std::collections::{HashMap,HashSet};
 use libc::{c_char, c_void, c_int, c_float};
 use std::str;
 use std::mem;
-//use std::collections::{LinkedList,Deque};
-use std::collections::{LinkedList};
 use std::ptr;
 use std::rc::Rc;
 use std::cell::{Cell, RefCell, BorrowState};
 use std::rc::Weak;
-use std::any::{Any};//, AnyRefExt};
-use std::ffi::CString;
 use std::ffi;
-use std::ffi::CStr;
-use core::marker;
+use std::ffi::{CStr,CString};
 use uuid;
 use uuid::Uuid;
 
-use dormin::scene;
-use dormin::camera;
-use dormin::object;
 use ui::{Window, ButtonCallback, ChangedFunc, RegisterChangeFunc, 
     PropertyTreeFunc, PropertyConfig, PropertyValue, RefMut, PropertyUser, PropertyShow, PropertyWidget,PropertyChange, NodeChildren, PropertyNode};
 use ui;
 use dormin::property;
 use operation;
 use control::WidgetUpdate;
-use dormin::vec;
-use dormin::transform;
-use dormin::resource;
-use dormin::mesh;
-use dormin::material;
-use dormin::property::PropertyGet;
-use dormin::component;
-use dormin::component::CompData;
-use dormin::armature;
-use dormin::transform::Orientation;
 use util;
 
 #[repr(C)]
@@ -169,21 +151,13 @@ impl PropertyBox
 
     pub fn set_prop_cell(&self, p : Rc<RefCell<PropertyUser>>, title : &str)
     {
-        // the {} are for ending the borrow
-        {
-        let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
-        *cur = Some(RefMut::Cell(p.clone()));
-        }
+        *self.current.borrow_mut() = Some(RefMut::Cell(p.clone()));
         self._set_prop(&*p.borrow().as_show(), title);
     }
 
     pub fn set_prop_arc(&self, p : Arc<RwLock<PropertyUser>>, title : &str)
     {
-        // the {} are for ending the borrow
-        {
-        let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
-        *cur = Some(RefMut::Arc(p.clone()));
-        }
+        *self.current.borrow_mut() = Some(RefMut::Arc(p.clone()));
         self._set_prop(&*p.read().unwrap().as_show(), title);
     }
 
@@ -191,29 +165,13 @@ impl PropertyBox
     {
         unsafe { property_box_clear(self.jk_property); }
         *self.nodes.borrow_mut() = NodeChildren::None;
-
-        println!("TODO set prop in property box>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.");
-        //TODO
-        /*
-        unsafe {
-            property_list_group_add(
-                self.jk_property,
-                CString::new(title.as_bytes()).unwrap().as_ptr());
-        }
-        */
-        //TODO replace ""
-        //p.create_widget(self, "", 1, false);
         p.create_widget_inside("", self);
     }
 
     pub fn update_object_property(&self, object : &PropertyShow, prop : &str)
     {
-        println!("TODO update_object_property for box");
-        println!("boxxxxx UPDATE OBJECT PROP '{}'", prop);
-
         let yep = ui::make_vec_from_str(prop);
         object.update_property(self, prop, yep);
-
     }
 
     pub fn vec_add(&self, object : &PropertyShow, prop : &str, index : usize)
@@ -235,15 +193,14 @@ impl PropertyBox
 
     pub fn set_nothing(&self)
     {
-        println!("TODO");
+        panic!("TODO, panic to see where this is called");
     }
 
     pub fn set_visible(&self, b : bool)
     {
         self.visible.set(b);
         unsafe {
-            println!("TODO visible");
-            //ui::property::property_show(self.jk_property, b);
+            panic!("TODO visible");
         }
     }
 
@@ -269,7 +226,7 @@ impl PropertyBox
             ("", v[0])
         }
         else {
-            panic!("property pb");
+            panic!("property box add : path is empty.");
         };
 
         let parent_node = if let Some(pv) = self.get_node(parent_path)
@@ -283,7 +240,6 @@ impl PropertyBox
             }
         }
         else {
-            println!("could not find parent : {}", parent_path );
             None
         };
 
@@ -316,7 +272,7 @@ impl PropertyBox
             ("", v[0])
         }
         else {
-            panic!("property pb");
+            panic!("property box del item : path is empty");
         };
 
         let parent_node = if let Some(pv) = self.get_node(parent_path)
@@ -342,8 +298,6 @@ impl PropertyBox
 
         parent_node
     }
-
-
 }
 
 
@@ -371,13 +325,13 @@ impl PropertyWidget for PropertyBox
 
     fn add_option(&self, field : &str, is_some : bool) -> *const PropertyValue
     {
-        println!("TODO");
+        panic!("TODO, add option");
         ptr::null()
     }
 
     fn add_vec(&self, name : &str, len : usize)
     {
-        println!("TODO");
+        panic!("TODO, add vec");
     }
 
     fn add_vec_item(&self, path : &str, item : *const PropertyValue, index : usize)
@@ -426,10 +380,8 @@ impl PropertyWidget for PropertyBox
         }
     }
 
-
     fn update_enum(&self, path : &str, widget_entry : *const PropertyValue, value : &str)
     {
-        println!("TODO   !!!!! [{}] update enum BOX ::::::::::: {}", path, value);
         let v = CString::new(value.as_bytes()).unwrap();
         unsafe {
             property_box_enum_update(self.jk_property, widget_entry, v.as_ptr());
@@ -446,7 +398,6 @@ impl PropertyWidget for PropertyBox
 
     }
 
-
     fn get_current(&self) -> Option<RefMut<PropertyUser>>
     {
         if let Some(ref cur) = *self.current.borrow() {
@@ -459,9 +410,7 @@ impl PropertyWidget for PropertyBox
 
     fn set_current(&self, p : RefMut<PropertyUser>, title : &str)
     {
-        let mut cur = self.current.borrow_mut();// = Some(RefMut::Cell(p));
-        *cur = Some(p.clone());
-        //self._set_prop(&*p.borrow().as_show(), title);
+        *self.current.borrow_mut() = Some(p.clone());
 
         match p {
             RefMut::Arc(ref a) => 
@@ -473,7 +422,6 @@ impl PropertyWidget for PropertyBox
 
     fn get_property(&self, path : &str) -> Option<*const PropertyValue> 
     {
-        //self.pv.borrow().get(path).map( |o| *o)
         if let Some(n) = self.get_node(path) {
             n.upgrade().map(|o| o.borrow().value)
         }
