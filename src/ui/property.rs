@@ -53,21 +53,21 @@ pub struct JkPropertyCb;
 #[link(name = "joker")]
 extern {
 
-    fn property_node_add(
+    fn property_node_new(
         path : *const c_char
         ) -> *const PropertyValue;
 
-    fn property_float_add(
+    fn property_float_new(
         name : *const c_char,
         value : c_float
         ) -> *const PropertyValue;
 
-    fn property_string_add(
+    fn property_string_new(
         name : *const c_char,
         value : *const c_char
         ) -> *const PropertyValue;
 
-    fn property_vec_add(
+    fn property_vec_new(
         path: *const c_char,
         len : c_int
         ) -> *const PropertyValue;
@@ -82,17 +82,13 @@ extern {
         pv : *const PropertyValue,
         value : *const c_char);
 
-    fn property_list_string_update(
+    fn property_string_update(
         pv : *const PropertyValue,
         value : *const c_char);
 
-    fn property_list_float_update(
+    fn property_float_update(
         pv : *const PropertyValue,
         value : c_float);
-
-    pub fn property_list_enum_update(
-        pv : *const ui::PropertyValue,
-        value : *const c_char);
 
     pub fn jk_property_cb_register(
         property : *const JkPropertyCb,
@@ -150,7 +146,7 @@ impl WidgetUpdate for PropertyList
         match new.downcast_ref::<f64>() {
             Some(v) => {
                 unsafe {
-                    property_list_float_update(
+                    property_float_update(
                         *pv,
                         *v as c_float);
                 };
@@ -165,7 +161,7 @@ impl WidgetUpdate for PropertyList
             Some(s) => {
                 let v = CString::new(s.as_bytes()).unwrap();
                 unsafe {
-                    property_list_string_update(
+                    property_string_update(
                         *pv,
                         v.as_ptr());
                 };
@@ -197,9 +193,8 @@ impl PropertyShow for f64 {
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
         let f = CString::new(field.as_bytes()).unwrap();
-        println!("create f64 for : {}", field);
         let pv = unsafe { 
-            property_float_add(
+            property_float_new(
                 f.as_ptr(),
                 *self as c_float)
         };
@@ -209,7 +204,7 @@ impl PropertyShow for f64 {
 
     fn update_widget(&self, pv : *const PropertyValue) {
         unsafe {
-            property_list_float_update(
+            property_float_update(
                 pv,
                 *self as c_float);
         };
@@ -224,7 +219,7 @@ impl PropertyShow for String {
         let v = CString::new(self.as_bytes()).unwrap();
 
         let pv = unsafe {
-            property_string_add(
+            property_string_new(
                 f.as_ptr(),
                 v.as_ptr())
         };
@@ -236,7 +231,7 @@ impl PropertyShow for String {
         let v = CString::new(self.as_bytes()).unwrap();
         println!("update string value with : {}", self);
         unsafe {
-            property_list_string_update(
+            property_string_update(
                 pv,
                 v.as_ptr());
         };
@@ -364,51 +359,34 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 {
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
-        println!("create widget itself vec");
         let f = CString::new(field.as_bytes()).unwrap();
         unsafe {
-            Some(property_vec_add(f.as_ptr(), self.len() as c_int))
+            Some(property_vec_new(f.as_ptr(), self.len() as c_int))
         }
     }
 
     fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
     {
-        println!("TODO inside vec");
         if self.is_empty() {
-            //add "no item" item
+            //TODO? add "no item" item
         }
 
         for (n,i) in self.iter().enumerate() {
             let mut nf = String::from(path);
             nf.push_str("/");
             nf.push_str(n.to_string().as_str());
-            //chris
-            /*
-            if let Some(ref mut pv) = i.create_widget(property, nf.as_str(), depth -1, true) {
-                unsafe {
-                    property.add_vec_item(nf.as_str(), *pv, i.is_node());
-                    }
-            }
-            else {
-                println!("___ Vec : failed" );
-            }
-            */
-
             if let Some(pv) = i.create_widget_itself(nf.as_str()) {
                 widget.add_vec_item(nf.as_str(), pv, n);
-
                 i.create_widget_inside(nf.as_str(), widget);
             }
         }
     }
-
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
         match field.parse::<usize>() {
             Ok(index) => {
                 if self.is_empty() || index > self.len() -1 {
-                    println!("5555555555555555555get property of vec :: index is too big, or list is empty : {}, {}", index, self.len());
                     None
                 }
                 else {
@@ -416,7 +394,6 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
                 }
             }
             _ => {
-                println!("$$$$$$$$$$$$$$$ Vec return none for field {}", field);
                 None
             }
         }
@@ -424,25 +401,14 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 
     fn update_widget(&self, pv : *const PropertyValue)
     {
-        println!("This does not do anything right now)");
+        panic!("This does not do anything right now)");
     }
 
     fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
     {
-        println!("TODO update vec with path : {:?} ", path);
         if path.is_empty() {
             if let Some(pv) = widget.get_property(all_path) {
-
-                //self.update_widget(pv);
                 widget.update_vec(pv, self.len());
-                //unsafe {property_box_children_clear(pv);}
-
-                //println!("TODO clear vec here");
-                //widget.update_enum(all_path, pv, type_value);
-
-                //self.create_widget_inside(all_path, widget);
-
-                //widget.update_vec_after();
             }
             return;
         }
@@ -459,41 +425,30 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
 
     fn update_property_new(&self, widget : &PropertyWidget, all_path : &str, local_path : Vec<String>, change : PropertyChange)
     {
-        println!("______update property new : all_path : {}, local : {:?}",all_path, local_path);
-
         if local_path.is_empty() {
             match change {
                 PropertyChange::Value => {
                     panic!("error cannot change vec value");
                 },
                 PropertyChange::VecAdd(index) => {
-
-                    println!("update property new : vec add : {}", index);
-
                     if !local_path.is_empty() {
                         return;
                     }
 
-                    println!("VEC ADD : {}, {}", all_path, index);
                     let mut nf = String::from(all_path);
                     nf.push_str("/");
                     nf.push_str(index.to_string().as_str());
 
-                    //if let Some(pv) = self.create_widget_itself(nf.as_str()) {
                     if let Some(pv) = self[index].create_widget_itself(nf.as_str()) {
                         widget.add_vec_item(nf.as_str(), pv, index);
-                        //self.create_widget_inside(nf.as_str(), widget);
                         self[index].create_widget_inside(nf.as_str(), widget);
                     }
                 },
                 PropertyChange::VecDel(index) => {
-                    println!("update property new : vec del : {}", index);
-
                     if !local_path.is_empty() {
                         return;
                     }
 
-                    println!("VEC DEL : {}, {}", all_path, index);
                     let mut nf = String::from(all_path);
                     nf.push_str("/");
                     nf.push_str(index.to_string().as_str());
@@ -518,14 +473,12 @@ impl PropertyShow for CompData
 {
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
     {
-        println!("create widget itself, compdata");
         let type_value = self.get_kind_string();
-
         let types = CompData::get_all_kind();
         Some(add_enum(field, types.as_str(), type_value.as_str()))
     }
 
-    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)
     {
 
         let ps : &PropertyShow = match *self {
@@ -562,7 +515,6 @@ impl PropertyShow for CompData
 
     fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
     {
-        println!("update property CompData with path : {:?} ", path);
         if path.is_empty() {
             if let Some(pv) = widget.get_property(all_path) {
                 self.update_widget(pv);
@@ -592,7 +544,6 @@ impl PropertyShow for CompData
 
     fn update_property_new(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>, change : PropertyChange)
     {
-        println!("update property new CompData with path : {:?} ", path);
         if path.is_empty() {
             if let Some(pv) = widget.get_property(all_path) {
                 self.update_widget(pv);
@@ -760,14 +711,6 @@ impl ui::PropertyShow for Orientation {
             Orientation::AngleXYZ(_) => "AngleXYZ",
             Orientation::Quat(_) => "Quat"
         };
-
-        //widget.update_enum(pv, type_value);
-        /*
-        let v = CString::new(type_value.as_bytes()).unwrap();
-        unsafe {
-            property_list_enum_update(pv, v.as_ptr());
-        }
-        */
     }
 
     fn get_property(&self, field : &str) -> Option<&ui::PropertyShow>
@@ -1046,7 +989,7 @@ pub fn add_node(
 {
     let f = CString::new(name.as_bytes()).unwrap();
     unsafe {
-        property_node_add(f.as_ptr())
+        property_node_new(f.as_ptr())
     }
 }
 

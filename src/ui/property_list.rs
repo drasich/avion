@@ -110,6 +110,10 @@ extern {
 
     pub fn property_expand(
         pv : *const PropertyValue);
+
+    pub fn property_list_enum_update(
+        pv : *const ui::PropertyValue,
+        value : *const c_char);
 }
 
 pub struct PropertyList
@@ -914,7 +918,7 @@ impl PropertyWidget for PropertyList
     {
         let v = CString::new(value.as_bytes()).unwrap();
         unsafe {
-            ui::property::property_list_enum_update(widget_entry, v.as_ptr());
+            property_list_enum_update(widget_entry, v.as_ptr());
         }
     }
 
