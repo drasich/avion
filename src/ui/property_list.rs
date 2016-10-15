@@ -114,6 +114,8 @@ extern {
     pub fn property_list_enum_update(
         pv : *const ui::PropertyValue,
         value : *const c_char);
+
+    fn property_show(obj : *const JkPropertyList, b : bool);
 }
 
 pub struct PropertyList
@@ -316,7 +318,7 @@ impl PropertyList
     {
         self.visible.set(b);
         unsafe {
-            ui::property::property_show(self.jk_property_list, b);
+            property_show(self.jk_property_list, b);
         }
     }
 

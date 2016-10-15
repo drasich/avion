@@ -1,13 +1,10 @@
 use std::sync::{RwLock, Arc};
-use std::collections::{HashMap,HashSet};
+use std::collections::{HashMap};
 use libc::{c_char, c_void, c_int, c_float};
-use std::str;
-use std::mem;
-use std::ptr;
+use std::{str,mem,ptr,ffi};
 use std::rc::{Rc,Weak};
 use std::cell::{Cell, RefCell, BorrowState};
 use std::any::{Any};
-use std::ffi;
 use std::ffi::{CStr,CString};
 use uuid;
 use uuid::Uuid;
@@ -32,8 +29,6 @@ use dormin::component;
 use dormin::component::CompData;
 use dormin::armature;
 use dormin::transform::Orientation;
-
-use util::join_string;
 
 #[repr(C)]
 pub struct JkPropertyCb;
@@ -105,23 +100,7 @@ extern {
         vec_add : RegisterChangeFunc,
         vec_del : RegisterChangeFunc,
         );
-
-    pub fn property_show(obj : *const JkPropertyList, b : bool);
-
-    fn property_box_children_clear(val : *const PropertyValue);
 }
-
-pub extern fn name_get(data : *const c_void) -> *const c_char {
-
-    let o : &Arc<RwLock<object::Object>> = unsafe {
-        mem::transmute(data)
-    };
-
-    let cs = CString::new(o.read().unwrap().name.as_bytes()).unwrap();
-    //println!("..........name get {:?}", cs);
-    cs.as_ptr()
-}
-
 
 impl WidgetUpdate for PropertyList
 {
@@ -130,9 +109,6 @@ impl WidgetUpdate for PropertyList
         name : &str,
         new : &Any)
     {
-
-        //println!("property update changed {}", name);
-        //
         let pvs = self.pv.borrow();
 
         let pv = match pvs.get(&name.to_owned()) {
@@ -175,19 +151,6 @@ impl WidgetUpdate for PropertyList
     }
 }
 
-/*
-impl PropertyShow for vec::Quat {
-
-    fn create_entries(
-        &mut self,
-        property:&mut Property,
-        path : Vec<String>)
-    {
-        println!("quuuuuuuuuuuuuuuuaaaaaaaaaaaaaaaaaaaaaaat {} ", path);
-    }
-}
-*/
-
 impl PropertyShow for f64 {
 
     fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
@@ -229,7 +192,6 @@ impl PropertyShow for String {
 
     fn update_widget(&self, pv : *const PropertyValue) {
         let v = CString::new(self.as_bytes()).unwrap();
-        println!("update string value with : {}", self);
         unsafe {
             property_string_update(
                 pv,
@@ -280,26 +242,22 @@ impl<T : PropertyShow> PropertyShow for Rc<RefCell<T>> {
 
     fn get_property(&self, field : &str) -> Option<&PropertyShow>
     {
-        //(**self).get_property(field)
-        //(**self).get_property(field)
+        panic!("panic to see if this is called");
         None
     }
 
     fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
     {
-        //(**self).update_property(path, pv);
         self.borrow().update_property(widget, all_path, path);
     }
 
     fn update_property_new(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>, change : PropertyChange)
     {
-        //(**self).update_property(path, pv);
         self.borrow().update_property_new(widget, all_path, path, change);
     }
 
     fn is_node(&self) -> bool
     {
-        //(**self).is_node()
         self.borrow().is_node()
     }
 
@@ -341,7 +299,6 @@ impl<T : PropertyShow> PropertyShow for Option<T> {
             None => ShouldUpdate::Nothing
         }
     }
-
 }
 
 impl<T> PropertyShow for resource::ResTT<T>
@@ -365,7 +322,7 @@ impl<T:PropertyShow> PropertyShow for Vec<T>
         }
     }
 
-    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+    fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)
     {
         if self.is_empty() {
             //TODO? add "no item" item
@@ -651,7 +608,6 @@ impl ui::PropertyShow for Orientation {
 
     fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
     {
-        println!("update property orientation with path : {:?} ", path);
         if path.is_empty() {
             if let Some(pv) = widget.get_property(all_path) {
                 self.update_widget(pv);
@@ -661,7 +617,6 @@ impl ui::PropertyShow for Orientation {
                     Orientation::Quat(_) => "Quat"
                 };
 
-                //widget.update_enum(join_string(&path).as_str(),pv, type_value);
                 widget.update_enum(all_path, pv, type_value);
 
                 self.create_widget_inside(all_path, widget);
@@ -679,7 +634,6 @@ impl ui::PropertyShow for Orientation {
 
     fn update_property_new(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>, change : PropertyChange)
     {
-        println!("update property orientation with path : {:?} ", path);
         if path.is_empty() {
             if let Some(pv) = widget.get_property(all_path) {
                 self.update_widget(pv);
@@ -689,7 +643,6 @@ impl ui::PropertyShow for Orientation {
                     Orientation::Quat(_) => "Quat"
                 };
 
-                //widget.update_enum(join_string(&path).as_str(),pv, type_value);
                 widget.update_enum(all_path, pv, type_value);
 
                 self.create_widget_inside(all_path, widget);
@@ -744,11 +697,10 @@ macro_rules! property_show_methods(
 
             fn create_widget_itself(&self, field : &str) -> Option<*const PropertyValue>
             {
-                println!("property show methods **{}**, create itself", field);
                 Some(add_node(field))
             }
 
-            fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
+            fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)
             {
                 $(
                     let s = if path != "" {
@@ -758,18 +710,11 @@ macro_rules! property_show_methods(
                     }else {
                         stringify!($member).to_owned()
                     };
-                    println!("**************** GOING to create THISSSSSSSSSS : {}, {}", s, stringify!($member));
                     if let Some(pv) = self.$member.create_widget_itself(s.as_str()) {
-                        println!("**************** looks ok : {}, {}", s, stringify!($member));
                         widget.add_simple_item(s.as_str(), pv);
-
                         self.$member.create_widget_inside(s.as_str(), widget);
                     }
-                    else {
-                        println!("**************** cannot add pv : {}, {}", s, stringify!($member));
-                    }
                  )+
-
             }
 
             fn get_property(&self, field : &str) -> Option<&PropertyShow>
@@ -784,8 +729,6 @@ macro_rules! property_show_methods(
 
             fn update_property(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>)
             {
-                println!("macro... {}, {:?}", all_path, path);
-
                 let mut pp = String::from(all_path);
                 if !path.is_empty() && path[0] == "*" {
                     pp = pp.replace("/*", "");
@@ -810,8 +753,6 @@ macro_rules! property_show_methods(
 
             fn update_property_new(&self, widget : &PropertyWidget, all_path: &str, path : Vec<String>, change : PropertyChange)
             {
-                println!("macro... {}, {:?}", all_path, path);
-
                 let mut pp = String::from(all_path);
                 if !path.is_empty() && path[0] == "*" {
                     pp = pp.replace("/*", "");
