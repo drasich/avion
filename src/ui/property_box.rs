@@ -138,7 +138,8 @@ impl PropertyBox
 
     pub fn set_nothing(&self)
     {
-        println!("TODO set_nothing : clear the property list");
+        unsafe { property_box_clear(self.jk_property); }
+        *self.nodes.borrow_mut() = NodeChildren::None;
     }
 
     pub fn set_visible(&self, b : bool)
