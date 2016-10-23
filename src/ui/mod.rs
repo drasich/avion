@@ -169,7 +169,8 @@ pub trait PropertyShow
 
     fn create_widget_inside(&self, path : &str, widget : &PropertyWidget)//, parent : *const PropertyValue)
     {
-        println!("            not implemented, field is {}", path);
+        // do nothing by default
+        // implement if vec, map etc...
     }
 
     fn update_widget(&self, pv : *const PropertyValue) {
