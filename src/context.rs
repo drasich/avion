@@ -128,5 +128,27 @@ impl Context
         }
     }
 
+    pub fn has_object_with_id(&self, id : &uuid::Uuid) -> bool
+    {
+        for o in &self.selected {
+            if *id == o.read().unwrap().id {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    pub fn has_object(&self, ob : &object::Object) -> bool
+    {
+        for o in &self.selected {
+            if ob.id == o.read().unwrap().id {
+                return true;
+            }
+        }
+
+        false
+    }
+
 }
 

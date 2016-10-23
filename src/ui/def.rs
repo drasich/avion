@@ -781,14 +781,10 @@ impl WidgetContainer
 
     pub fn handle_change(&mut self, change : &operation::Change, widget_origin: uuid::Uuid)
     {
-        println!("handle change TEST 0");
-
         //if *change == operation::Change::None {
         if let operation::Change::None = *change {
             return;
         }
-
-        println!("handle change TEST 1");
 
         match *change {
             operation::Change::DirectChange(ref name) => {
@@ -955,6 +951,7 @@ impl WidgetContainer
                         t.select_objects(ids);
                     }
                 }
+                println!("selected changed");
 
                 if sel.is_empty() {
                     if let Some(ref mut p) = self.property {
@@ -1138,12 +1135,14 @@ impl WidgetContainer
         match event {
             Event::SelectObject(ob) => {
                 println!("selected : {}", ob.read().unwrap().name);
+                return;
                 let mut l = Vec::new();
                 l.push(ob.read().unwrap().id.clone());
                 self.select_by_id(&mut l);
                 self.handle_change(&operation::Change::SelectedChange, widget_origin);
             },
             Event::UnselectObject(ob) => {
+                return;
                 println!("unselected : {}", ob.read().unwrap().name);
                 let mut l = LinkedList::new();
                 l.push_back(ob.read().unwrap().id.clone());

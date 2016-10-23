@@ -348,15 +348,27 @@ impl Control
                         None => return list
                     };
 
-                    let mut oblist = Vec::new();
+                    let mut obvec = Vec::new();
+                    let mut has_changed = false;
                     for o in &s.borrow().objects {
                         let b = intersection::is_object_in_planes(planes.as_ref(), &*o.read().unwrap());
                         if b {
-                            oblist.push(o.clone());
+                            if !context.has_object(&*o.read().unwrap()) {
+                                has_changed = true;
+                            }
+                            obvec.push(o.clone());
                         }
                     }
 
-                    list.push_back(operation::Change::ChangeSelected(oblist));
+                    if !has_changed {
+                        if context.selected.len() != obvec.len() {
+                                has_changed = true;
+                        }
+                    }
+
+                    if has_changed {
+                        list.push_back(operation::Change::ChangeSelected(obvec));
+                    }
 
                 }
             }

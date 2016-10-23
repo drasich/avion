@@ -138,7 +138,7 @@ impl PropertyBox
 
     pub fn set_nothing(&self)
     {
-        panic!("TODO, panic to see where this is called");
+        println!("TODO set_nothing : clear the property list");
     }
 
     pub fn set_visible(&self, b : bool)
