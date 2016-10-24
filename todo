@@ -1,6 +1,8 @@
+- tree selection is not working
+  -> search also for tree in this todo
+
 - make display of property faster : create and save objects in a pool?
 - object link
-
 
 - clean code of update view when resource is done loading
 - add camera for scene in property show
@@ -22,8 +24,6 @@
 - be able to save the current "playing scene"
 
 
-
-- add/change compdata : confirm it works
 - remove child of object : view dormin and how to change the scene.
   def.rs : remove_selected_objects, must save parents info, must check and not remove child if the parent will be removed anyway
   unless the scene structure changed we must remove children from the scene

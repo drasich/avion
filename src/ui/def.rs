@@ -1371,7 +1371,7 @@ impl WidgetContainer
 
                 self.request_operation(
                 vs,
-                operation::OperationData::VecDel(index, prop)//TODO index
+                operation::OperationData::VecDel(index, prop)
                 )
             },
                 _ => operation::Change::None
