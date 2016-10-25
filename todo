@@ -1,16 +1,20 @@
+PROPERTY
+- press tab in property : focus is not working property
+- add camera for scene in property show
+- check if option some/none in property works correctly
+- make display of property faster : create and save objects in a pool?
+- transform property update_changed in propertyshow.update_widget
+
+
 - tree selection is not working
   -> search also for tree in this todo
 
-- make display of property faster : create and save objects in a pool?
 - object link
 
 - clean code of update view when resource is done loading
-- add camera for scene in property show
 - fix : camera properties are not showed...
 - undo and redo only works when the view has focus
 - multiple view
-- check if option some/none in property works correctly
-- press tab in property : focus
 - resources : instead of writing the name make a selection window (and still be able to write the name)
 - todo over operations
 - update input for gameview
@@ -53,7 +57,6 @@ TODO
 
 - when we changed property of a compdata, we have to reinit his components...
 - separate texture and img
-- transform property update_changed in propertyshow.update_widget
 
   - for each objects of the scene, keep a list of references of ui objects that use
   this objects, so when the objects changed we can update the ui.
