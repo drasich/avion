@@ -1,3 +1,4 @@
+precision highp float;
 uniform sampler2D texture;
 uniform sampler2D texture_all;
 uniform vec2 resolution;

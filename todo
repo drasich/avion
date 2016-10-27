@@ -1,4 +1,5 @@
 PROPERTY
+- change the cursor for jk_entry (check spinner)
 - press tab in property : focus is not working property
 - add camera for scene in property show
 - check if option some/none in property works correctly
