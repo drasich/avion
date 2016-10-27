@@ -1,4 +1,6 @@
+#ifdef GL_ES
 precision highp float;
+#endif
 uniform sampler2D texture;
 uniform sampler2D texture_all;
 uniform vec2 resolution;
