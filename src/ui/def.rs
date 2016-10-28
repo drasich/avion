@@ -284,7 +284,6 @@ pub extern fn init_cb(data: *mut c_void) -> () {
     let wc = WindowConfig::load();
 
     for v in &wc.views {
-        let wc = &v.window;
         let view = box View::new(master.resource.clone(), container,v.window.w,v.window.h, v.camera.clone());
         master.views.push_back(view);
         if let Some(ref scene) = v.scene {
