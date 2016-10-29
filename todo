@@ -1,30 +1,45 @@
+BUG
+- press p, and game crashes
+
 PROPERTY
-- change the cursor for jk_entry (check spinner)
-- press tab in property : focus is not working property
+- press tab in property : focus is not working property : bug in phab
 - add camera for scene in property show
+- fix : camera properties are not showed...
 - check if option some/none in property works correctly
 - make display of property faster : create and save objects in a pool?
 - transform property update_changed in propertyshow.update_widget
 
-
-- tree selection is not working
-  -> search also for tree in this todo
-
+PROPERTY - SERIALIZATION
 - object link
+  -> be able to represent any struct with a widget, look at serde for more tricks
 
-- clean code of update view when resource is done loading
-- fix : camera properties are not showed...
-- undo and redo only works when the view has focus
+
+TREE
+- tree selection is not working
+- make tree a widget like property
+- tree : make another widget to replace genlist tree? :
+  change object order?
+  change object parent,
+  remove one object with suppr,
+  remove all seleted object with suppr,
+  rename object
+  copy object
+
+VIEW
 - multiple view
-- resources : instead of writing the name make a selection window (and still be able to write the name)
-- todo over operations
 - update input for gameview
 - make camera view or just show the gameview while working.
 - views update : scene changed so update the views.
+
+RESOURCE SELECTION WIDGET
+- resources : instead of writing the name make a selection window (and still be able to write the name)
+
+OTHER
+- clean code of update view when resource is done loading
+- todo over operations
 - represent the camera with somthing visible and selectable
   + differentiate between current camera and other cameras.
 - be able to set camera of the scene -> scene settings (when nothing selected?)
-  -> be able to represent any struct with a widget, look at serde for more tricks
 - restore previous scene when closing the gameview.
 - be able to save the current "playing scene"
 
@@ -34,13 +49,6 @@ PROPERTY
   unless the scene structure changed we must remove children from the scene
 
 - update material/shader in live, reread files.
-- tree : make another widget to replace genlist tree? :
-  change object order?
-  change object parent,
-  remove one object with suppr,
-  remove all seleted object with suppr,
-  rename object
-  copy object
 
 TODO in def.rs
 
@@ -52,8 +60,6 @@ DONE
 
 TODO
 - save window pos/size, widget pos/size
-- spinner entry undo/redo problem
-- make tree a widget like property
 - focus when writing data in entries
 
 - when we changed property of a compdata, we have to reinit his components...
