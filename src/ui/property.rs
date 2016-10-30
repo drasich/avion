@@ -37,7 +37,6 @@ pub struct JkPropertyCb;
 
 #[link(name = "ecore_evas")]
 #[link(name = "ecore_file")]
-#[link(name = "ecore_input")]
 #[link(name = "elementary")]
 #[link(name = "eina")]
 #[link(name = "eet")]

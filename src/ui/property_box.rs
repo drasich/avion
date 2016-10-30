@@ -145,9 +145,7 @@ impl PropertyBox
     pub fn set_visible(&self, b : bool)
     {
         self.visible.set(b);
-        unsafe {
-            panic!("TODO visible");
-        }
+        panic!("TODO visible");
     }
 
     pub fn visible(&self) -> bool
