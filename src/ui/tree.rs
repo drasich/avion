@@ -274,7 +274,7 @@ pub extern fn item_selected(data : *const c_void) -> ()
     let o : &Arc<RwLock<object::Object>> = unsafe {
         mem::transmute(data)
     };
-    println!("item_selected ! {}, but this function does nothing for now ", o.read().unwrap().name);
+    println!("item_selected callback ! {}, but this function does nothing for now ", o.read().unwrap().name);
 }
 
 pub extern fn can_expand(data : *const c_void) -> bool
@@ -330,7 +330,7 @@ pub extern fn selected(
         mem::transmute(data)
     };
 
-    println!("TODO do the following in widget container 'handle' ");
+    println!("selected callback, TODO do the following in widget container 'handle' ");
     container.handle_event(ui::Event::SelectObject(o.clone()), tree.id);
 }
 

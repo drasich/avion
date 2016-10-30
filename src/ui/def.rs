@@ -1133,16 +1133,14 @@ impl WidgetContainer
     {
         match event {
             Event::SelectObject(ob) => {
-                println!("selected : {}", ob.read().unwrap().name);
-                return;
+                println!("event, selected : {}", ob.read().unwrap().name);
                 let mut l = Vec::new();
                 l.push(ob.read().unwrap().id.clone());
                 self.select_by_id(&mut l);
                 self.handle_change(&operation::Change::SelectedChange, widget_origin);
             },
             Event::UnselectObject(ob) => {
-                return;
-                println!("unselected : {}", ob.read().unwrap().name);
+                println!("event, unselected : {}", ob.read().unwrap().name);
                 let mut l = LinkedList::new();
                 l.push_back(ob.read().unwrap().id.clone());
                 self.unselect(&l);
