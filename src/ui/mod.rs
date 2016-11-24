@@ -48,6 +48,7 @@ pub use self::def::{
     evas_object_hide,
 
     WidgetPanel,
+    WidgetPanelConfig
 };
 
 
@@ -98,6 +99,7 @@ pub struct PropertyValue;
 #[derive(RustcDecodable, RustcEncodable, Clone)]
 pub struct PropertyConfig
 {
+    visible : bool,
     x : i32,
     y : i32,
     w : i32,
@@ -110,6 +112,7 @@ impl PropertyConfig
     pub fn new() -> PropertyConfig
     {
         PropertyConfig {
+            visible : true,
             x: 10,
             y: 10,
             w: 100,

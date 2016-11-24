@@ -329,12 +329,7 @@ pub extern fn init_cb(data: *mut c_void) -> () {
 
     while let Some(mut v) = master.views.pop_front() {
 
-        let pc = if let Some(ref p) = wc.property {
-            p.clone()
-        }
-        else {
-            ui::PropertyConfig::new()
-        };
+        let pc = wc.property.clone();
         let tc = if let Some(ref t) = wc.tree {
             t.clone()
         }
@@ -430,7 +425,7 @@ pub struct ViewConfig
 pub struct WindowConfig
 {
     views: Vec<ViewConfig>,
-    property : Option<PropertyConfig>,
+    property : WidgetPanelConfig,
     tree : Option<WidgetConfig>,
     gameview : Option<WidgetConfig>
 }
@@ -442,13 +437,7 @@ impl WindowConfig {
         let mut wc = WindowConfig {
             views : Vec::new(),
 
-            property : 
-                /*match c.property {
-                None => None,
-                Some(ref p) => Some(p.config.clone())
-            },
-            */
-                Some(c.panel.config.clone()),
+            property : c.panel.config.clone(),
             tree : match c.tree {
                 None => None,
                 Some(ref t) => Some(t.get_config())
@@ -487,7 +476,7 @@ impl WindowConfig {
     {
         let mut wc = WindowConfig {
             views : Vec::new(),
-            property : None,
+            property : WidgetPanelConfig::default(),
             tree : None,
             gameview : None
         };
@@ -595,18 +584,40 @@ pub trait Widget
 
 pub struct WidgetPanel
 {
-    visible : bool,
-    pub config : PropertyConfig,
+    pub config : WidgetPanelConfig,
     pub widget : Option<Rc<PropertyBox>>,
     pub eo : *const Evas_Object
 }
 
+#[derive(RustcDecodable, RustcEncodable, Clone)]
+pub struct WidgetPanelConfig
+{
+    visible : bool,
+    x : i32,
+    y : i32,
+    w : i32,
+    h : i32,
+}
+
+impl Default for WidgetPanelConfig
+{
+    fn default() -> WidgetPanelConfig
+    {
+        WidgetPanelConfig {
+            visible : true,
+            x : 0i32,
+            y : 0i32,
+            w : 100i32,
+            h : 400i32,
+        }
+    }
+}
+
 impl WidgetPanel
 {
-    pub fn new(config : PropertyConfig, widget : Option<Rc<PropertyBox>>) -> WidgetPanel
+    pub fn new(config : WidgetPanelConfig, widget : Option<Rc<PropertyBox>>) -> WidgetPanel
     {
         WidgetPanel {
-            visible : true,
             config : config,
             widget : widget,
             eo : ptr::null()
@@ -626,6 +637,25 @@ impl WidgetPanel
                 mem::transmute(&self.config)
                 )
         };
+
+        let is_visible = self.config.visible;
+        self.set_visible(is_visible);
+    }
+
+    pub fn visible(&self) -> bool
+    {
+        self.config.visible
+    }
+
+    pub fn set_visible(&mut self, b : bool)
+    {
+        self.config.visible = b;
+        if b {
+            unsafe { evas_object_show(self.eo); }
+        }
+        else {
+            unsafe { evas_object_hide(self.eo); }
+        }
     }
 }
 
@@ -633,9 +663,7 @@ extern fn panel_move(
     data : *const c_void,
     x : c_int, y : c_int, w : c_int, h : c_int)
 {
-    //let wcb : & ui::WidgetCbData = unsafe {mem::transmute(widget_cb_data)};
-    //let mut p : &mut PropertyList = unsafe {mem::transmute(wcb.widget)};
-    let mut config : &mut PropertyConfig  = unsafe {mem::transmute(data)};
+    let mut config : &mut WidgetPanelConfig  = unsafe {mem::transmute(data)};
 
     config.x = x;
     config.y = y;
@@ -757,7 +785,7 @@ impl WidgetContainer
         WidgetContainer {
             widgets : Vec::new(),
             tree : None,
-            panel : box WidgetPanel::new(PropertyConfig::new(), None),
+            panel : box WidgetPanel::new(WidgetPanelConfig::default(), None),
             property : None,
             command : None,
             action : None,

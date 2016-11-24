@@ -69,10 +69,9 @@ pub struct PropertyBox
 {
     pub name : String,
     pub jk_property : *const JkPropertyBox,
-    visible : Cell<bool>,
     pub id : uuid::Uuid,
     current : RefCell<Option<RefMut<PropertyUser>>>,
-    nodes : RefCell<NodeChildren>
+    nodes : RefCell<NodeChildren>,
 }
 
 
@@ -87,7 +86,6 @@ impl PropertyBox
             jk_property : unsafe {jk_property_box_new(
                     panel.eo,
                     )},
-            visible: Cell::new(true),
             id : uuid::Uuid::new_v4(),
             current : RefCell::new(None),
             nodes : RefCell::new(NodeChildren::None)
@@ -140,17 +138,6 @@ impl PropertyBox
     {
         unsafe { property_box_clear(self.jk_property); }
         *self.nodes.borrow_mut() = NodeChildren::None;
-    }
-
-    pub fn set_visible(&self, b : bool)
-    {
-        self.visible.set(b);
-        panic!("TODO visible");
-    }
-
-    pub fn visible(&self) -> bool
-    {
-        self.visible.get()
     }
 
     fn get_node(&self, path : &str) -> Option<Weak<RefCell<PropertyNode>>>

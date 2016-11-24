@@ -140,7 +140,7 @@ impl View
     pub fn init(
         &mut self,
         container : &mut Box<ui::WidgetContainer>,
-        property_config : &ui::PropertyConfig,
+        property_config : &ui::WidgetPanelConfig,
         tree_config : &ui::WidgetConfig,
         ) -> () {
         let w = unsafe {ui::window_new(self.width,self.height)};
@@ -550,13 +550,9 @@ pub extern fn key_down(
                 return;
             },
             "p" => {
-                if let Some(ref mut p) = container.property {
-                    let b = p.visible();
-                    p.set_visible(!b);
-                }
-                else {
-                    println!("container does not have a property");
-                }
+                let p = &mut container.panel;
+                let b = p.visible();
+                p.set_visible(!b);
                 return;
             },
             "a" => {

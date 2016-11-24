@@ -147,3 +147,21 @@ dependencies = [
  "rustc-serialize 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
+[metadata]
+"checksum byteorder 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)" = "96c8b41881888cc08af32d47ac4edd52bc7fa27fef774be47a92443756451304"
+"checksum cypher-sys 0.1.0 (git+https://github.com/drasich/cypher.git)" = "<none>"
+"checksum dormin 0.1.0 (git+https://github.com/indefini/dormin.git)" = "<none>"
+"checksum gcc 0.3.24 (registry+https://github.com/rust-lang/crates.io-index)" = "fe63973b8ab2a04612370bb02df84a61510f575144032fa7b6952bf4b6f9ab4c"
+"checksum joker-sys 0.1.0 (git+https://github.com/drasich/joker.git)" = "<none>"
+"checksum lazy_static 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)" = "547fd11b0400fbab39f7a6df53c648cfb01b977233015d9e0784d595a5a6c449"
+"checksum libc 0.2.7 (registry+https://github.com/rust-lang/crates.io-index)" = "4870ef6725dde13394134e587e4ab4eca13cb92e916209a31c851b49131d3c75"
+"checksum libz-sys 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "e6dbfdc35ee8705ce3ab8f751aaea41a4f84e376260c5a57a50ffa080752b766"
+"checksum lua 0.3.0 (git+https://github.com/indefini/rust-lua.git)" = "<none>"
+"checksum pkg-config 0.3.7 (registry+https://github.com/rust-lang/crates.io-index)" = "56a1585b8fe029b445ae5599d72dcbb38f5860d456a83fdfb79a0d419322ebea"
+"checksum png 0.1.0 (git+https://github.com/indefini/rust-png.git)" = "<none>"
+"checksum png_sys 1.6.16 (git+https://github.com/indefini/rust-png.git)" = "<none>"
+"checksum rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)" = "2791d88c6defac799c3f20d74f094ca33b9332612d9aef9078519c82e4fe04a5"
+"checksum rustc-serialize 0.3.16 (git+https://github.com/indefini/rustc-serialize.git)" = "<none>"
+"checksum rustc-serialize 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)" = "9cf81518cd579f8a9c58c0a71328bdb9be15c754181261da82583092dc8a7ff0"
+"checksum toml 0.1.27 (git+https://github.com/alexcrichton/toml-rs)" = "<none>"
+"checksum uuid 0.1.18 (git+https://github.com/rust-lang/uuid.git)" = "<none>"
