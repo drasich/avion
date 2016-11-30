@@ -96,9 +96,9 @@
       "name": "skeleton002",
       "id": "4f08ca14-c83c-4792-9142-45dde59bfbef",
       "position": {
-        "x": -57.86761937255896,
-        "y": 3.3250925028884093,
-        "z": 27.81980023857011
+        "x": 0.0,
+        "y": -0.18859681341831647,
+        "z": 27.303541286081686
       },
       "orientation": {
         "variant": "AngleXYZ",
@@ -106,7 +106,7 @@
           {
             "x": 1631.699969,
             "y": 80.599997,
-            "z": -175.29996599997133
+            "z": -175.29996599996548
           }
         ]
       },
@@ -136,9 +136,9 @@
       "name": "plane",
       "id": "88aaa2da-888e-4f33-b1e5-2cd24847c82c",
       "position": {
-        "x": 184.80000000000427,
-        "y": 0.0,
-        "z": -2000.0
+        "x": null,
+        "y": null,
+        "z": null
       },
       "orientation": {
         "variant": "AngleXYZ",
@@ -183,7 +183,7 @@
         "fields": [
           {
             "x": 0.0,
-            "y": 0.32457800000004067,
+            "y": 0.3245780000000515,
             "z": 0.0,
             "w": 0.9458590000000276
           }
@@ -203,9 +203,9 @@
       "name": "flatstuff",
       "id": "1aa09ecc-51c0-4963-b180-36c02066a73c",
       "position": {
-        "x": -41.83963775634763,
+        "x": -41.83963775634638,
         "y": 0.0,
-        "z": 0.029050484336330944
+        "z": 0.02905048433633095
       },
       "orientation": {
         "variant": "Quat",
@@ -241,7 +241,7 @@
           "variant": "MeshRender",
           "fields": [
             {
-              "mesh": "model/flatstuff.mesh",
+              "mesh": "model/flatstuff.meshfdd fdfds dfa f sfs f ",
               "material": "material/color.mat"
             }
           ]
@@ -315,6 +315,37 @@
         }
       ],
       "comp_lua": []
+    },
+    {
+      "name": "build_mesh_test",
+      "id": "458d6bbc-0164-4be3-a3d0-3ed359966dd9",
+      "position": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "orientation": {
+        "variant": "Quat",
+        "fields": [
+          {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0,
+            "w": 1.0
+          }
+        ]
+      },
+      "scale": {
+        "x": 1.0,
+        "y": 1.0,
+        "z": 1.0
+      },
+      "children": [],
+      "components": [],
+      "comp_data": [],
+      "comp_lua": [
+        "lua/build_mesh.lua"
+      ]
     }
   ],
   "camera": {
@@ -328,7 +359,7 @@
       "height": 64.0,
       "height_base": 500,
       "yaw": -0.7848980000000016,
-      "pitch": -0.10572300000001365,
+      "pitch": -0.10572300000001625,
       "roll": 0.0,
       "clear_color": {
         "x": 0.0,
@@ -366,7 +397,7 @@
         "fields": [
           {
             "x": 0.0,
-            "y": 0.32457800000004067,
+            "y": 0.3245780000000515,
             "z": 0.0,
             "w": 0.9458590000000276
           }

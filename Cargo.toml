@@ -38,8 +38,8 @@ features = ["evas"]
 [dependencies.toml]
 git = "https://github.com/alexcrichton/toml-rs"
 
-[dependencies.uuid]
-git = "https://github.com/rust-lang/uuid.git"
+#[dependencies.uuid]
+#git = "https://github.com/rust-lang/uuid.git"
 #git = "https://github.com/drasich/uuid.git"
 
 [dependencies.rustc-serialize]
@@ -60,6 +60,8 @@ lazy_static = "0.1.*"
 #hlua = "0.1"
 libc = "*"
 #clippy = "*"
+uuid = {version = "0.3.1", features = [ "v4", "rustc-serialize" ] }
+libloading = "0.3"
 
 
 

@@ -283,5 +283,61 @@ pub extern fn pause_scene(data : *const c_void)
     }
 }
 
+use std::env;
+use std::path::Path;
+use std::process::{Command, Stdio};
+use std::thread;
+use std::time::Duration;
+extern crate libloading;
+pub extern fn compile_test(data : *const c_void)
+{
+    //let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
+    //let action : &Action = unsafe {mem::transmute(wcb.widget)};
+    //let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
+    
+
+    thread::spawn(|| {
+    
+        let child = Command::new("cargo").arg("build")
+        .current_dir("/home/chris/code/compload")
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("failed to execute");
+
+        let output = child.wait_with_output().expect("failed with child");
+        println!("this is the out output {}", String::from_utf8_lossy(&output.stdout));
+        println!("this is the error output {}", String::from_utf8_lossy(&output.stderr));
+
+        let lib = if let Ok(l) = libloading::Library::new("/home/chris/code/compload/target/debug/libcompload.so") {
+            l
+        }
+        else {
+            println!("no lib");
+            return;
+        };
+
+        unsafe {
+            let fun  : libloading::Symbol<unsafe extern fn() ->i32> = if let Ok(f) = lib.get(b"get_my_i32") {
+                f
+            }
+            else {
+                return;
+            };
+            println!("{}",fun());
+            /*
+            let func  : libloading::Symbol<unsafe extern fn() ->i32> = if let Ok(f) = lib.get(b"get_my_i32") {
+                f
+            }
+            else {
+            println!("no symbol");
+                return;
+            };
+            let yep = func();
+            //println!("no prob : {}", yep);
+            */
+        }
+    });
+}
 
 

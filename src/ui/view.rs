@@ -180,6 +180,11 @@ impl View
             ui::action::play_scene,
             ad.clone());
 
+        a.add_button(
+            "compile_test",
+            ui::action::compile_test,
+            ad.clone());
+
         unsafe {
             ui::tree::tree_register_cb(
                 t.jk_tree,
@@ -560,6 +565,15 @@ pub extern fn key_down(
                     let b = a.visible();
                     a.set_visible(!b);
                 }
+                return;
+            },
+            "c" => {
+                let center = vec::Vec3::zero();
+                let mut cam = view.camera.borrow_mut();
+                let pos = center + cam.object.read().unwrap().orientation.rotate_vec3(&vec::Vec3::new(0f64,0f64,100f64));
+                cam.set_position(pos);
+                cam.set_center(&center);
+                view.request_update();
                 return;
             },
             "f" => {
