@@ -288,17 +288,27 @@ use std::path::Path;
 use std::process::{Command, Stdio};
 use std::thread;
 use std::time::Duration;
+use std::fs;
 extern crate libloading;
+static mut libi : Option<i32> = None;
+
 pub extern fn compile_test(data : *const c_void)
 {
     //let wcb : & ui::WidgetCbData = unsafe {mem::transmute(data)};
     //let action : &Action = unsafe {mem::transmute(wcb.widget)};
     //let container : &mut Box<ui::WidgetContainer> = unsafe {mem::transmute(wcb.container)};
     
+    //let suf = unsafe { libi += 1; libi };
+    let old = unsafe { libi };
+    let suf = unsafe {
+        let val = libi.map_or(0, |v| v + 1); 
+        libi = Some(val);
+        val
+    };
 
-    thread::spawn(|| {
+    thread::spawn(move || {
     
-        let child = Command::new("cargo").arg("build")
+        let child = Command::new("cargo").arg("build")//.arg("--release")
         .current_dir("/home/chris/code/compload")
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -309,7 +319,20 @@ pub extern fn compile_test(data : *const c_void)
         println!("this is the out output {}", String::from_utf8_lossy(&output.stdout));
         println!("this is the error output {}", String::from_utf8_lossy(&output.stderr));
 
-        let lib = if let Ok(l) = libloading::Library::new("/home/chris/code/compload/target/debug/libcompload.so") {
+        let path = "/home/chris/code/compload/target/debug/libcompload.so";
+        let dest = "/home/chris/code/avion/libcompload.so".to_owned() + &suf.to_string();
+
+        if let Some(o) = old { 
+            let old_file = "/home/chris/code/avion/libcompload.so".to_owned() + &o.to_string();
+            fs::remove_file(old_file);
+        }
+
+        fs::copy(path, &dest);
+
+        
+
+        //let lib = if let Ok(l) = libloading::Library::new("/home/chris/code/compload/target/release/libcompload.so") {
+        let lib = if let Ok(l) = libloading::Library::new(dest) {
             l
         }
         else {
