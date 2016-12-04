@@ -348,17 +348,15 @@ pub extern fn compile_test(data : *const c_void)
                 return;
             };
             println!("{}",fun());
-            /*
-            let func  : libloading::Symbol<unsafe extern fn() ->i32> = if let Ok(f) = lib.get(b"get_my_i32") {
+
+            let build_mesh : libloading::Symbol<unsafe extern fn()> = if let Ok(f) = lib.get(b"build_mesh") {
                 f
             }
             else {
-            println!("no symbol");
                 return;
             };
-            let yep = func();
-            //println!("no prob : {}", yep);
-            */
+
+            build_mesh();
         }
     });
 }

@@ -1947,12 +1947,6 @@ pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)
 
     o.position = position;
 
-
-    let ao =  Arc::new(RwLock::new(o));
-
-    let mut list = Vec::new();
-    list.push(ao.clone());
-
     let s = if let Some(ref s) = container.context.scene {
         s.clone()
     }
@@ -1960,6 +1954,7 @@ pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)
         return;
     };
 
+    let ao =  Arc::new(RwLock::new(o));
     let mut vec = Vec::new();
     vec.push(ao.clone());
 
@@ -1970,11 +1965,11 @@ pub fn add_empty(container : &mut WidgetContainer, view_id : Uuid)
     let vs = Vec::new();
     let addob = container.request_operation(
             vs,
-            operation::OperationData::SceneAddObjects(s.clone(),parent,vec)
+            operation::OperationData::SceneAddObjects(s.clone(),parent,vec.clone())
             );
 
     ops.push(addob);
-    ops.push(operation::Change::ChangeSelected(list));
+    ops.push(operation::Change::ChangeSelected(vec));
 
     for op in &ops {
         container.handle_change(op, view_id);
