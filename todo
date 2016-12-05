@@ -1,5 +1,30 @@
+RECENT
+- must make editor api, for mesh test builder?
+-> EDITOR LIB 
+
+EDITOR_LIB
+first build a static library that depends on joker, and later move dynamic part from it.
+
+should/can be dynamic:
+util
+- control could be dynamic I guess...., it does save a state : CameraRotation, Dragger, MultipleSelection, but we could reset this, or separate the module in 2.
+- model : of course dynamic
+
+
+should be static to save state :
+- context
+- operation and undo stack : (should b if must save the stack between reload : static
+otherwise clean the stack. we could add a closure type in the operation data to be more flexible.
+
+don't know yet:
+- all dragger stuff could be static for now, as I don't need to change it for now.
+- ui start with static for now and move to dynamic?
+
+
+
+
+
 BUG
-- press p, and game crashes
 
 PROPERTY
 - press tab in property : focus is not working property : bug in phab
