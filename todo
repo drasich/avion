@@ -59,6 +59,10 @@ VIEW
 RESOURCE SELECTION WIDGET
 - resources : instead of writing the name make a selection window (and still be able to write the name)
 
+SCRIPT
+- investigate dyon
+- investigate haskell + hint
+
 OTHER
 - clean code of update view when resource is done loading
 - todo over operations
