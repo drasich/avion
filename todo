@@ -3,7 +3,8 @@ RECENT
 -> EDITOR LIB 
 
 EDITOR_LIB
-first build a static library that depends on joker, and later move dynamic part from it.
+first build a static library that depends on joker, and later create another dynamic from it to be able to reload.
+for now just static, to be able to call functions from it.
 
 should/can be dynamic:
 util
