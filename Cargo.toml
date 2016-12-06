@@ -52,6 +52,9 @@ git = "https://github.com/indefini/rustc-serialize.git"
 #git = "https://github.com/kballard/rust-lua.git"
 git = "https://github.com/indefini/rust-lua.git"
 
+[dependencies.pulse]
+git = "https://github.com/indefini/pulse.git"
+
 [dependencies]
 #rustc-serialize = "0.3.14"
 #toml = "0.1"

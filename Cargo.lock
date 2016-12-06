@@ -10,6 +10,7 @@ dependencies = [
  "libloading 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "lua 0.3.0 (git+https://github.com/indefini/rust-lua.git)",
  "png 0.1.0 (git+https://github.com/indefini/rust-png.git)",
+ "pulse 0.1.0 (git+https://github.com/indefini/pulse.git)",
  "rustc-serialize 0.3.16 (git+https://github.com/indefini/rustc-serialize.git)",
  "toml 0.1.27 (git+https://github.com/alexcrichton/toml-rs)",
  "uuid 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -182,6 +183,15 @@ version = "1.6.16"
 source = "git+https://github.com/indefini/rust-png.git#81f5fc68cec331c376d3a9db5ac8a05efce5a07b"
 dependencies = [
  "libz-sys 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "pulse"
+version = "0.1.0"
+source = "git+https://github.com/indefini/pulse.git#bc59ca8341a7acfb18aa58495785ca8ab0d0c1de"
+dependencies = [
+ "dormin 0.1.0 (git+https://github.com/indefini/dormin.git)",
+ "rustc-serialize 0.3.16 (git+https://github.com/indefini/rustc-serialize.git)",
 ]
 
 [[package]]

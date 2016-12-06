@@ -1,6 +1,3 @@
-//#![feature(log_syntax)]
-//#![feature(trace_macros)]
-//#![feature(slicing_syntax)]
 #![feature(box_syntax)]
 #![feature(borrow_state)]
 #![feature(rc_counts)]
@@ -15,16 +12,6 @@
 #![feature(plugin)]
 //#![plugin(clippy)]
 
-extern crate rustc_serialize;
-extern crate byteorder;
-extern crate libc;
-//extern crate sync;
-extern crate png;
-extern crate toml;
-//extern crate debug;
-extern crate uuid;
-extern crate core;
-
 #[macro_use]
 extern crate lazy_static;
 
@@ -32,8 +19,8 @@ extern crate lazy_static;
 extern crate lua;
 
 extern crate dormin;
+extern crate pulse;
 
-//use serialize::{json, Encodable, Encoder, Decoder, Decodable};
 use std::collections::HashMap;
 use std::sync::{RwLock, Arc};
 //use std::rc::Rc;
@@ -45,45 +32,10 @@ use std::io::{self, Write};
 use std::path::Path;
 use std::process;
 
-/*
-#[macro_use]
-use dormin::property;
-
-use dormin::resource;
-mod shader;
-mod material;
-mod armature;
-mod mesh;
-//mod mesh_render;
-mod render;
-mod object;
-mod uniform;
-mod matrix;
-mod vec;
-mod camera;
-mod scene;
-mod texture;
-mod geometry;
-mod intersection;
-mod fbo;
-mod factory;
-
-
-mod transform;
-
-
-mod component;
-use component::manager;
-*/
-
 mod model;
 
-mod dragger;
-mod ui;
-mod operation;
-mod context;
-mod control;
-mod util;
+use pulse::util;
+use pulse::ui;
 
 use dormin::component;
 
