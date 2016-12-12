@@ -325,20 +325,18 @@ name = "image/base_skeleton_col.png"
 
 
 
-    let mut container = box ui::WidgetContainer::new();
+    let mut container = Arc::new(RwLock::new(ui::WidgetContainer::new()));
 
     unsafe {
         let appdata = ui::AppCbData{
-            container : mem::transmute(&container)  };
+            container : container.clone()  };
 
         ui::init_callback_set(
             ui::init_cb,
-            //mem::transmute(box m.clone()));
             mem::transmute(box appdata.clone()));
 
         ui::exit_callback_set(
             ui::exit_cb,
-            //mem::transmute(box m.clone()));
             mem::transmute(box appdata));
     }
 
