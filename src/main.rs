@@ -20,6 +20,7 @@ extern crate lua;
 
 extern crate dormin;
 extern crate pulse;
+extern crate libc;
 
 use std::collections::HashMap;
 use std::sync::{RwLock, Arc};
@@ -31,6 +32,7 @@ use std::mem;
 use std::io::{self, Write};
 use std::path::Path;
 use std::process;
+use libc::{c_void};
 
 mod model;
 
@@ -333,11 +335,11 @@ name = "image/base_skeleton_col.png"
 
         ui::init_callback_set(
             ui::init_cb,
-            mem::transmute(box appdata.clone()));
+            &appdata as *const _ as *const c_void);
 
         ui::exit_callback_set(
             ui::exit_cb,
-            mem::transmute(box appdata));
+            &appdata as *const _ as *const c_void);
     }
 
     unsafe {
