@@ -327,12 +327,10 @@ name = "image/base_skeleton_col.png"
 
 
 
-    let mut container = Arc::new(RwLock::new(ui::WidgetContainer::new()));
+
+    let appdata = ui::AppCbData::new();
 
     unsafe {
-        let appdata = ui::AppCbData{
-            container : container.clone()  };
-
         ui::init_callback_set(
             ui::init_cb,
             &appdata as *const _ as *const c_void);
