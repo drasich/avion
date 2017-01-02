@@ -1,7 +1,9 @@
 RECENT
 - must make editor api, for mesh test builder?
--> EDITOR LIB 
-- must make camera diplay : with lines, like blender?
+  -> EDITOR LIB 
+- must make camera diplay : with transparent mesh?
+ look at how draggers are drawn?
+
 
 EDITOR_LIB
 first build a static library that depends on joker, and later create another dynamic from it to be able to reload.
