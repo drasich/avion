@@ -4,7 +4,6 @@ RECENT
 - must make camera diplay : with transparent mesh?
  look at how draggers are drawn?
 
-
 EDITOR_LIB
 first build a static library that depends on joker, and later create another dynamic from it to be able to reload.
 for now just static, to be able to call functions from it.
@@ -23,9 +22,6 @@ otherwise clean the stack. we could add a closure type in the operation data to 
 don't know yet:
 - all dragger stuff could be static for now, as I don't need to change it for now.
 - ui start with static for now and move to dynamic?
-
-
-
 
 
 BUG
